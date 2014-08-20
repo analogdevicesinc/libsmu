@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <thread>
 
 class Device;
 class Signal;
@@ -42,6 +43,9 @@ public:
 	void update_nonblocking(std::function<void()>);
 
 protected:
+	void start_usb_thread();
+	std::thread m_usb_thread;
+	bool m_usb_thread_loop;
 	libusb_context* m_usb_cx;
 	std::shared_ptr<Device> probe_device(libusb_device* device);
 	std::shared_ptr<Device> find_existing_device(libusb_device* device);

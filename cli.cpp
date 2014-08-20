@@ -13,5 +13,6 @@ int main() {
 
 	for (auto i: session->m_available_devices) {
 		cout << "Device" << endl;
+		session->add_device(&*i);
 	}
 }

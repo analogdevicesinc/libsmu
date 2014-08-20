@@ -22,9 +22,20 @@ Session::Session()
 Session::~Session()
 {
 	// Run device destructors before libusb_exit
+	m_usb_thread_loop = 0;
 	m_devices.clear();
 	m_available_devices.clear();
+	if (m_usb_thread.joinable()) {
+		m_usb_thread.join();
+	}
 	libusb_exit(m_usb_cx);
+}
+
+void Session::start_usb_thread() {
+	m_usb_thread_loop = true;
+	m_usb_thread = std::thread([=]() {
+		while(m_usb_thread_loop) libusb_handle_events(m_usb_cx);
+	});
 }
 
 int Session::update_available_devices()
@@ -86,6 +97,9 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 }
 
 Device* Session::add_device(Device* device) {
+	if (m_devices.size() == 0) {
+		start_usb_thread();
+	}
 	m_devices.insert(device);
 	device->added();
 	return device;
