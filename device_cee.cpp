@@ -8,8 +8,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#define EP_BULK_IN 0x81
-#define EP_BULK_OUT 0x02
+#define EP_IN 0x81
+#define EP_OUT 0x02
 
 #define CMD_CONFIG_CAPTURE 0x80
 #define CMD_CONFIG_GAIN 0x65
@@ -224,6 +224,45 @@ void CEE_Device::set_current_limit(unsigned mode) {
 	m_current_limit = mode;
 }
 
+/// Runs in USB thread
+extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t){
+	std::cerr << "cee_in_completion" << endl;
+	if (!t->user_data){
+		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
+		return;
+	}
+
+	CEE_Device *dev = (CEE_Device *) t->user_data;
+	std::lock_guard<std::mutex> lock(dev->m_state);
+
+	if (t->status == LIBUSB_TRANSFER_COMPLETED){
+		dev->handle_in_transfer(t);
+		dev->submit_in_transfer(t);
+	}else{
+		std::cerr << "ITransfer error "<< t->status << " " << t << std::endl;
+		//TODO: notify main thread of error
+	}
+}
+
+/// Runs in USB thread
+extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t){
+	std::cerr << "cee_out_completion" << endl;
+
+	if (!t->user_data) {
+		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
+		return;
+	}
+
+	CEE_Device *dev = (CEE_Device *) t->user_data;
+	std::lock_guard<std::mutex> lock(dev->m_state);
+
+	if (t->status == LIBUSB_TRANSFER_COMPLETED){
+		dev->submit_out_transfer(t);
+	}else{
+		std::cerr << "OTransfer error "<< t->status << " " << t << std::endl;
+	}
+}
+
 void CEE_Device::configure(uint64_t rate) {
 	double sampleTime = 1/rate;
 	m_xmega_per = round(sampleTime * (double) CEE_timer_clock);
@@ -231,9 +270,118 @@ void CEE_Device::configure(uint64_t rate) {
 	sampleTime = m_xmega_per / (double) CEE_timer_clock; // convert back to get the actual sample time;
 
 	unsigned transfers = 4;
-	unsigned packets_per_transfer = ceil(BUFFER_TIME / (sampleTime * 10) / transfers);
+	m_packets_per_transfer = ceil(BUFFER_TIME / (sampleTime * 10) / transfers);
 
-	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << packets_per_transfer  << m_current_limit << std::endl;
+	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(IN_packet),  1000, cee_in_completion,  this);
+	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(OUT_packet), 1000, cee_out_completion, this);
+
+	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
+}
+
+uint16_t CEE_Device::encode_out(int mode, float val, uint32_t igain){
+	const bool rawMode = 0;
+	if (rawMode){
+		return constrain(val, 0, 4095);
+	}else{
+		int v = 0;
+		if (mode == SVMI){
+			val = constrain(val, 0, 5.0);
+			v = 4095*val/5.0;
+		}else if (mode == SIMV){
+			val = constrain(val, -m_current_limit, m_current_limit);
+			v = 4095*(1.25+(igain/CEE_current_gain_scale)*val/1000.0)/2.5;
+		}
+		if (v > 4095) v=4095;
+		if (v < 0) v = 0;
+		return v;
+	}
+	return 0;
+}
+
+bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
+	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
+		std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
+
+		uint8_t mode_a = 0;
+		uint8_t mode_b = 0;
+
+		for (int p=0; p<m_packets_per_transfer; p++) {
+			OUT_packet *pkt = &((OUT_packet *)t->buffer)[p];
+			pkt->mode_a = mode_a;
+			pkt->mode_b = mode_b;
+
+
+			for (int i=0; i<OUT_SAMPLES_PER_PACKET; i++){
+				float val_a = 0;
+				float val_b = 0;
+
+				pkt->data[i].pack(
+					encode_out((CEE_chanmode)mode_a, val_a, m_cal.current_gain_a),
+					encode_out((CEE_chanmode)mode_b, val_b, m_cal.current_gain_b)
+				);
+				m_out_sampleno++;
+			}
+		}
+
+		int r = libusb_submit_transfer(t);
+		//if (r != 0) {
+			cerr << "libusb_submit_transfer out " << r << endl;
+		//}
+		return true;
+	}
+	return false;
+}
+
+bool CEE_Device::submit_in_transfer(libusb_transfer* t) {
+	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
+		std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
+		int r = libusb_submit_transfer(t);
+		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
+		//if (r != 0) {
+			cerr << "libusb_submit_transfer in " << r << endl;
+		//}
+		return true;
+	}
+	return false;
+}
+
+void CEE_Device::handle_in_transfer(libusb_transfer* t) {
+	std::cerr << "handle_in_transfer " << m_in_sampleno << std::endl;
+	bool rawMode = 0;
+	float v_factor = 5.0/2048.0;
+	float i_factor_a = 2.5/2048.0/(m_cal.current_gain_a/CEE_current_gain_scale)*1000.0 / 2;
+	float i_factor_b = 2.5/2048.0/(m_cal.current_gain_b/CEE_current_gain_scale)*1000.0 / 2;
+	if (rawMode) v_factor = i_factor_a = i_factor_b = 1;
+
+	for (int p=0; p<m_packets_per_transfer; p++) {
+		IN_packet *pkt = &((IN_packet*)t->buffer)[p];
+
+		if ((pkt->flags & FLAG_PACKET_DROPPED) && m_in_sampleno != 0){
+			std::cerr << "Warning: dropped packet" << std::endl;
+		}
+
+		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++){
+			(m_cal.offset_a_v + pkt->data[i].av())*v_factor;
+
+			if ((pkt->mode_a & 0x3) != DISABLED) {
+				(m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a;
+			} else {
+				0;
+			}
+			(m_cal.offset_b_v + pkt->data[i].bv())*v_factor;
+			if ((pkt->mode_b & 0x3) != DISABLED) {
+				(m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b;
+			} else {
+				0;
+			}
+			m_in_sampleno++;
+		}
+	}
+
+
+	if (m_in_sampleno >= m_sample_count) {
+		m_session->completion();
+	}
 }
 
 sl_device_info* CEE_Device::info()
@@ -256,17 +404,30 @@ void CEE_Device::set_mode(unsigned mode)
 
 }
 
-void CEE_Device::start(uint64_t samples)
+void CEE_Device::on()
 {
-
+	libusb_control_transfer(m_usb, 0x40, CMD_CONFIG_CAPTURE, m_xmega_per, DEVMODE_2SMU, 0, 0, 100);
 }
 
-void CEE_Device::update()
-{
+void CEE_Device::start_run(uint64_t samples) {
+	std::lock_guard<std::mutex> lock(m_state);
+	m_sample_count = samples;
+	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
+	for (auto i: m_in_transfers) {
+		if (!submit_in_transfer(i)) break;
+	}
+
+	for (auto i: m_out_transfers) {
+		if (!submit_out_transfer(i)) break;
+	}
 }
 
 void CEE_Device::cancel()
 {
+}
 
+void CEE_Device::off()
+{
+		libusb_control_transfer(m_usb, 0x40, CMD_CONFIG_CAPTURE, 0, DEVMODE_OFF, 0, 0, 100);
 }

@@ -2,6 +2,12 @@
 #include <libusb-1.0/libusb.h>
 #include <vector>
 
+inline static float constrain(float val, float lo, float hi){
+	if (val > hi) val = hi;
+	if (val < lo) val = lo;
+	return val;
+}
+
 // Wrapper for a collection of libusb transfers
 struct Transfers {
 	std::vector<libusb_transfer*> m_transfers;

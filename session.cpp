@@ -116,6 +116,40 @@ void Session::configure(uint64_t sampleRate) {
 	}
 }
 
+void Session::run(sample_t nsamples) {
+	for (auto i: m_devices) {
+		i->on();
+	}
+	run_nonblocking(nsamples);
+	std::unique_lock<std::mutex> lk(m_lock);
+	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	for (auto i: m_devices) {
+		i->off();
+	}
+}
+
+void Session::run_nonblocking(sample_t nsamples) {
+	for (auto i: m_devices) {
+		i->start_run(nsamples);
+		m_active_devices += 1;
+	}
+}
+
+void Session::cancel() {
+	for (auto i: m_devices) {
+		i->cancel();
+	}
+}
+
+void Session::completion() {
+	// On USB thread
+	std::lock_guard<std::mutex> lock(m_lock);
+	m_active_devices -= 1;
+	if (m_active_devices == 0) {
+		m_completion.notify_all();
+	}
+}
+
 Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 {
 	libusb_ref_device(m_device);

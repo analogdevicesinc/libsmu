@@ -4,6 +4,8 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <mutex>
+#include <condition_variable>
 #include <thread>
 
 class Device;
@@ -29,23 +31,20 @@ public:
 
 	// Run the currently configured capture and wait for it to complete
 	void run(sample_t nsamples);
+	void run_nonblocking(sample_t nsamples);
+	void cancel();
 
-	// Start capture
-	void start(sample_t nsamples);
-
-	// Stop capture
-	void stop();
-
-	// Send and receive a single sample or packet (blocking)
-	void update();
-
-	// Send and receive a single sample or packet (nonblocking)
-	void update_nonblocking(std::function<void()>);
-
+	void completion();
 protected:
 	void start_usb_thread();
 	std::thread m_usb_thread;
 	bool m_usb_thread_loop;
+
+	std::mutex m_lock;
+	std::condition_variable m_completion;
+
+	unsigned m_active_devices;
+
 	libusb_context* m_usb_cx;
 	std::shared_ptr<Device> probe_device(libusb_device* device);
 	std::shared_ptr<Device> find_existing_device(libusb_device* device);
@@ -64,8 +63,10 @@ protected:
 	virtual int added() {return 0;}
 	virtual int removed() {return 0;}
 	virtual void configure(uint64_t sampleRate) = 0;
-	virtual void start(sample_t nsamples) = 0;
-	virtual void update() = 0;
+
+	virtual void on() = 0;
+	virtual void off() = 0;
+	virtual void start_run(sample_t nsamples) = 0;
 	virtual void cancel() = 0;
 
 	Session* const m_session;

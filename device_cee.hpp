@@ -1,10 +1,11 @@
 #pragma once
 #include <mutex>
-#include <condition_variable>
 #include "libsmu.hpp"
 #include "internal.hpp"
 
 struct libusb_device_handle;
+extern "C" void cee_in_completion(libusb_transfer *t);
+extern "C" void cee_out_completion(libusb_transfer *t);
 
 class CEE_Device: public Device {
 public:
@@ -17,24 +18,34 @@ public:
 
 protected:
 	friend class Session;
+	friend void cee_in_completion(libusb_transfer *t);
+	friend void cee_out_completion(libusb_transfer *t);
+
 	CEE_Device(Session* s, libusb_device* device);
 	virtual int init();
 	virtual int added();
 	virtual int removed();
 	virtual void configure(uint64_t sampleRate);
-	virtual void start(sample_t nsamples);
-	virtual void update();
+	virtual void start_run(sample_t nsamples);
 	virtual void cancel();
+	virtual void on();
+	virtual void off();
+
+	bool submit_out_transfer(libusb_transfer* t);
+	bool submit_in_transfer(libusb_transfer* t);
+	void handle_in_transfer(libusb_transfer* t);
+
+	uint16_t encode_out(int mode, float val, uint32_t igain);
 
 	std::string m_hw_version;
 	std::string m_fw_version;
 	std::string m_git_version;
 
+	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
 
 	std::mutex m_state;
-	std::condition_variable m_completion;
 
 	struct EEPROM_cal{
 		uint32_t magic;

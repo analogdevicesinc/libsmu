@@ -15,4 +15,7 @@ int main() {
 		cout << "Device" << endl;
 		session->add_device(&*i);
 	}
+
+	session->configure(10000);
+	session->run(10000);
 }
