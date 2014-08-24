@@ -53,9 +53,10 @@ protected:
 class Device {
 public:
 	virtual ~Device();
-	virtual const sl_device_info* info() = 0;
-	virtual const sl_channel_info* channel_info(unsigned channel) = 0;
+	virtual const sl_device_info* const info() = 0;
+	virtual const sl_channel_info* const channel_info(unsigned channel) = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
+	virtual const char* const serial() { return ""; }
 
 protected:
 	Device(Session* s, libusb_device* d);
@@ -78,8 +79,9 @@ protected:
 
 class Signal {
 public:
-	const sl_signal_info* info();
-	sl_signal_info m_info;
+	Signal(const sl_signal_info* info): m_info(info), m_dest(DEST_NONE) {}
+	const sl_signal_info* const info() { return m_info; }
+	const sl_signal_info* const m_info;
 
 	void source_constant(value_t val);
 	void source_square(value_t v1, value_t v2, sample_t t1, sample_t t2, int phase);

@@ -33,7 +33,9 @@ const double BUFFER_TIME = 0.050;
 const double BUFFER_TIME = 0.020;
 #endif
 
-const sl_channel_info channel_info[2] = {
+static const sl_device_info cee_info = {DEVICE_CEE_1,"CEE", 2};
+
+static const sl_channel_info cee_channel_info[2] = {
 	{CHANNEL_SMU, "A", 3, 2},
 	{CHANNEL_SMU, "B", 3, 2},
 };
@@ -42,7 +44,7 @@ const sl_channel_info channel_info[2] = {
 // Mode 1: SVMI
 // Mode 2: SIMV
 
-const sl_signal_info signal_info[2] = {
+static const sl_signal_info cee_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/4095 },
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 400.0/4095 },
 };
@@ -104,7 +106,14 @@ typedef struct CEE_version_descriptor{
 	uint8_t min_per;
 } __attribute__((packed)) CEE_version_descriptor;
 
-CEE_Device::CEE_Device(Session* s, libusb_device* device): Device(s, device) {}
+CEE_Device::CEE_Device(Session* s, libusb_device* device):
+	Device(s, device),
+	m_signals{
+		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
+		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
+	}
+{	}
+
 CEE_Device::~CEE_Device() {}
 
 int CEE_Device::init() {
@@ -384,24 +393,34 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 }
 
-sl_device_info* CEE_Device::info()
+const sl_device_info* const CEE_Device::info()
 {
-	return NULL;
+	return &cee_info;
 }
 
-sl_channel_info* CEE_Device::channel_info(unsigned channel)
+const sl_channel_info* const CEE_Device::channel_info(unsigned channel)
 {
-	return NULL;
+	if (channel < 2) {
+		return &cee_channel_info[channel];
+	} else {
+		return NULL;
+	}
 }
 
 Signal* CEE_Device::signal(unsigned channel, unsigned signal)
 {
-	return NULL;
+	if (channel < 2 && signal < 2) {
+		return &m_signals[channel][signal];
+	} else {
+		return NULL;
+	}
 }
 
-void CEE_Device::set_mode(unsigned mode)
+void CEE_Device::set_mode(unsigned chan, unsigned mode)
 {
-
+	if (chan < 2) {
+		m_mode[chan] = mode;
+	}
 }
 
 void CEE_Device::on()

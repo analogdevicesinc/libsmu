@@ -10,11 +10,11 @@ extern "C" void cee_out_completion(libusb_transfer *t);
 class CEE_Device: public Device {
 public:
 	virtual ~CEE_Device();
-	virtual sl_device_info* info();
-	virtual sl_channel_info* channel_info(unsigned channel);
+	virtual const sl_device_info* const info();
+	virtual const sl_channel_info* const channel_info(unsigned channel);
 	//virtual sl_mode_info* mode_info(unsigned mode);
 	virtual Signal* signal(unsigned channel, unsigned signal);
-	virtual void set_mode(unsigned mode);
+	virtual void set_mode(unsigned channel, unsigned mode);
 
 protected:
 	friend class Session;
@@ -63,7 +63,6 @@ protected:
 	int m_min_per;
 	int m_xmega_per;
 
-	unsigned m_mode;
 	uint64_t m_sample_rate;
 	uint64_t m_sample_count;
 
@@ -71,4 +70,7 @@ protected:
 	uint16_t m_requested_sampleno;
 	uint64_t m_in_sampleno;
 	uint64_t m_out_sampleno;
+
+	Signal m_signals[2][2];
+	unsigned m_mode[2];
 };

@@ -31,7 +31,7 @@ const sl_unit unit_A = { 0,  0,  0,  1,  0,  0,  0};
 typedef struct sl_signal_info {
 	sl_type type;
 
-	char label[8];
+	const char* label;
 
 	/// Bitmask of modes for which this signal is enabled as input
 	uint32_t inputModes;
@@ -47,14 +47,14 @@ typedef struct sl_signal_info {
 
 typedef struct sl_channel_info {
 	sl_type type;
-	char label[8];
-	size_t signal_count;
+	const char* label;
 	size_t mode_count;
+	size_t signal_count;
 } sl_channel_info;
 
 typedef struct sl_device_info {
 	sl_type type;
-	char serial[32];
+	const char* label;
 	size_t channel_count;
 } sl_device_info;
 
