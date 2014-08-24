@@ -235,7 +235,7 @@ void CEE_Device::set_current_limit(unsigned mode) {
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t){
-	std::cerr << "cee_in_completion" << endl;
+	//std::cerr << "cee_in_completion" << endl;
 	if (!t->user_data){
 		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
 		return;
@@ -255,7 +255,7 @@ extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t){
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t){
-	std::cerr << "cee_out_completion" << endl;
+	//std::cerr << "cee_out_completion" << endl;
 
 	if (!t->user_data) {
 		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
@@ -305,7 +305,7 @@ inline uint16_t CEE_Device::encode_out(int chan, uint32_t igain) {
 
 bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
-		std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
+		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
 		for (int p=0; p<m_packets_per_transfer; p++) {
 			OUT_packet *pkt = &((OUT_packet *)t->buffer)[p];
@@ -322,9 +322,9 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 		}
 
 		int r = libusb_submit_transfer(t);
-		//if (r != 0) {
+		if (r != 0) {
 			cerr << "libusb_submit_transfer out " << r << endl;
-		//}
+		}
 		return true;
 	}
 	return false;
@@ -332,19 +332,20 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 
 bool CEE_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
-		std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
+		//std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
 		int r = libusb_submit_transfer(t);
-		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
-		//if (r != 0) {
+		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
-		//}
+		}
+		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
 	}
+	//std::cerr << "not resubmitting" << endl;
 	return false;
 }
 
 void CEE_Device::handle_in_transfer(libusb_transfer* t) {
-	std::cerr << "handle_in_transfer " << m_in_sampleno << std::endl;
+	//std::cerr << "handle_in_transfer " << m_in_sampleno << std::endl;
 	bool rawMode = 0;
 	float v_factor = 5.0/2048.0;
 	float i_factor_a = 2.5/2048.0/(m_cal.current_gain_a/CEE_current_gain_scale)*1000.0 / 2;
