@@ -35,7 +35,7 @@ protected:
 	bool submit_in_transfer(libusb_transfer* t);
 	void handle_in_transfer(libusb_transfer* t);
 
-	uint16_t encode_out(int mode, float val, uint32_t igain);
+	uint16_t encode_out(int chan, uint32_t igain);
 
 	std::string m_hw_version;
 	std::string m_fw_version;

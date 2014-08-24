@@ -16,7 +16,7 @@ int main() {
 	unique_ptr<Session> session = unique_ptr<Session>(new Session());
 	session->update_available_devices();
 
-	const unsigned count = 20;
+	const unsigned count = 200;
 	vector<string> names;
 	vector<vector<float> > data;
 
@@ -39,6 +39,12 @@ int main() {
 				auto buf = data.rbegin();
 				buf->resize(count);
 				sig->measure_buffer(buf->data(), count);
+
+				if (ch_i == 0) {
+					sig->source_sine(1, 1, 10, 0);
+				} else {
+					sig->source_triangle(2, 3, 10, 0);
+				}
 			}
 		}
 		dev_i++;

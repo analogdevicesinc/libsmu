@@ -292,24 +292,20 @@ void CEE_Device::configure(uint64_t rate) {
 	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
 }
 
-uint16_t CEE_Device::encode_out(int mode, float val, uint32_t igain){
-	const bool rawMode = 0;
-	if (rawMode){
-		return constrain(val, 0, 4095);
-	}else{
-		int v = 0;
-		if (mode == SVMI){
-			val = constrain(val, 0, 5.0);
-			v = 4095*val/5.0;
-		}else if (mode == SIMV){
-			val = constrain(val, -m_current_limit, m_current_limit);
-			v = 4095*(1.25+(igain/CEE_current_gain_scale)*val/1000.0)/2.5;
-		}
-		if (v > 4095) v=4095;
-		if (v < 0) v = 0;
-		return v;
+inline uint16_t CEE_Device::encode_out(int chan, uint32_t igain) {
+	int v = 0;
+	if (m_mode[chan] == SVMI) {
+		float val = m_signals[chan][0].get_sample();
+		val = constrain(val, 0, 5.0);
+		v = 4095*val/5.0;
+	} else if (m_mode[chan] == SIMV) {
+		float val = m_signals[chan][1].get_sample();
+		val = constrain(val, -m_current_limit, m_current_limit);
+		v = 4095*(1.25+(igain/CEE_current_gain_scale)*val/1000.0)/2.5;
 	}
-	return 0;
+	if (v > 4095) v = 4095;
+	if (v < 0) v = 0;
+	return v;
 }
 
 bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
@@ -321,14 +317,10 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 			pkt->mode_a = m_mode[0];
 			pkt->mode_b = m_mode[1];
 
-
 			for (int i=0; i<OUT_SAMPLES_PER_PACKET; i++){
-				float val_a = 0;
-				float val_b = 0;
-
 				pkt->data[i].pack(
-					encode_out((CEE_chanmode) m_mode[0], val_a, m_cal.current_gain_a),
-					encode_out((CEE_chanmode) m_mode[1], val_b, m_cal.current_gain_b)
+					encode_out(0, m_cal.current_gain_a),
+					encode_out(1, m_cal.current_gain_b)
 				);
 				m_out_sampleno++;
 			}

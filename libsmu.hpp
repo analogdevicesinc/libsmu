@@ -7,6 +7,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <cmath>
 
 class Device;
 class Signal;
@@ -84,20 +85,64 @@ enum Dest {
 	DEST_CALLBACK,
 };
 
+enum Src {
+	SRC_CONSTANT,
+	SRC_SQUARE,
+	SRC_SAWTOOTH,
+	SRC_SINE,
+	SRC_TRIANGLE,
+	SRC_BUFFER,
+	SRC_CALLBACK,
+};
+
 class Signal {
 public:
-	Signal(const sl_signal_info* info): m_info(info), m_dest(DEST_NONE) {}
+	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
 	const sl_signal_info* const info() { return m_info; }
 	const sl_signal_info* const m_info;
 
-	void source_constant(value_t val);
-	void source_square(value_t v1, value_t v2, sample_t t1, sample_t t2, int phase);
-	void source_sawtooth(value_t v1, value_t v2, sample_t period, int phase);
-	void source_sine(value_t center, value_t amplitude, double period, int phase);
-	void source_triangle(value_t center, value_t amplitude, double period, int phase);
+	void source_constant(value_t val) {
+		m_src = SRC_CONSTANT;
+		m_src_v1 = val;
+	}
+	void source_square(value_t v1, value_t v2, sample_t period, sample_t duty, int phase) {
+		m_src = SRC_SQUARE;
+		update_phase(period, phase);
+		m_src_v1 = v1;
+		m_src_v2 = v2;
+		m_src_duty = duty;
+	}
+	void source_sawtooth(value_t v1, value_t v2, sample_t period, int phase) {
+		m_src = SRC_SAWTOOTH;
+		update_phase(period, phase);
+		m_src_v1 = v1;
+		m_src_v2 = v2;
+	}
+	void source_sine(value_t center, value_t amplitude, double period, int phase) {
+		m_src = SRC_SINE;
+		update_phase(period, phase);
+		m_src_v1 = center;
+		m_src_v2 = amplitude;
+	}
+	void source_triangle(value_t v1, value_t v2, double period, int phase) {
+		m_src = SRC_TRIANGLE;
+		update_phase(period, phase);
+		m_src_v1 = v1;
+		m_src_v2 = v2;
+	}
 	//void source_arb(arb_point_t* points, size_t len, bool repeat);
-	void source_buffer(value_t* buf, size_t len, bool repeat);
-	void source_callback(std::function<void(sample_t index, size_t count, value_t* buf)>);
+	void source_buffer(value_t* buf, size_t len, bool repeat) {
+		m_src = SRC_BUFFER;
+		m_src_buf = buf;
+		m_src_buf_len = len;
+		m_src_buf_repeat = repeat;
+		m_src_i = 0;
+	}
+	void source_callback(std::function<value_t (sample_t index)> callback) {
+		m_src = SRC_CALLBACK;
+		m_src_callback = callback;
+		m_src_i = 0;
+	}
 
 	value_t measure_instantaneous();
 	void measure_buffer(value_t* buf, size_t len) {
@@ -119,7 +164,72 @@ public:
 			m_dest_callback(index, buf, count);
 		}
 	}
+
+	inline value_t get_sample() {
+		switch (m_src) {
+		case SRC_CONSTANT:
+			return m_src_v1;
+
+		case SRC_BUFFER:
+			if (m_src_i >= m_src_buf_len) {
+				if (m_src_buf_repeat) {
+					m_src_i = 0;
+				} else {
+					return m_src_buf[m_src_buf_len-1];
+				}
+			}
+			return m_src_buf[m_src_i++];
+
+
+		case SRC_CALLBACK:
+			return m_src_callback(m_src_i++);
+
+		case SRC_SQUARE:
+		case SRC_SAWTOOTH:
+		case SRC_SINE:
+		case SRC_TRIANGLE:
+
+			auto phase = m_src_phase;
+			auto norm_phase = phase / m_src_period;
+			m_src_phase = fmod(m_src_phase + 1, m_src_period);
+
+			switch (m_src) {
+			case SRC_SQUARE:
+				return (phase < m_src_duty) ? m_src_v1 : m_src_v2;
+
+			case SRC_SAWTOOTH:
+				return m_src_v1 + norm_phase * (m_src_v2 - m_src_v1);
+
+			case SRC_SINE:
+				return m_src_v1 + cos(norm_phase * 2 * M_PI) * m_src_v2;
+
+			case SRC_TRIANGLE:
+				return m_src_v1 + fabs(norm_phase*2 - 1) * (m_src_v2 - m_src_v1);
+
+			default:
+				return 0;
+			}
+		}
+	}
 protected:
+	Src m_src;
+	value_t m_src_v1;
+	value_t m_src_v2;
+	double m_src_period;
+	double m_src_duty;
+	double m_src_phase;
+
+	value_t* m_src_buf;
+	size_t m_src_i;
+	size_t m_src_buf_len;
+	bool m_src_buf_repeat;
+
+	void update_phase(double new_period, double new_phase) {
+		m_src_phase = new_phase;
+		m_src_period = new_period;
+	}
+
+	std::function<value_t (sample_t index)> m_src_callback;
 
 	Dest m_dest;
 
