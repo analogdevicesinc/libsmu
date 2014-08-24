@@ -16,8 +16,9 @@ int main() {
 	unique_ptr<Session> session = unique_ptr<Session>(new Session());
 	session->update_available_devices();
 
-	const unsigned count = 10000;
+	const unsigned count = 20;
 	vector<string> names;
+	vector<vector<float> > data;
 
 	unsigned dev_i = 0;
 	for (auto i: session->m_available_devices) {
@@ -31,6 +32,11 @@ int main() {
 				auto sig_info = sig->info();
 
 				names.push_back(std::to_string(dev_i) + "." + string(ch_info->label) + "." + string(sig_info->label));
+
+				data.emplace_back();
+				auto buf = data.rbegin();
+				buf->resize(count);
+				sig->measure_buffer(buf->data(), count);
 			}
 		}
 		dev_i++;
@@ -43,4 +49,12 @@ int main() {
 		cout << name << "\t";
 	}
 	cout << endl;
+
+	for (int i=0; i<count; i++) {
+			for (auto d: data) {
+				cout << d[i] << "\t";
+			}
+			cout << endl;
+	}
+
 }

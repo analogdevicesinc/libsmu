@@ -77,6 +77,12 @@ protected:
 	friend class Session;
 };
 
+enum Dest {
+	DEST_NONE,
+	DEST_BUFFER,
+	DEST_CALLBACK,
+};
+
 class Signal {
 public:
 	Signal(const sl_signal_info* info): m_info(info), m_dest(DEST_NONE) {}
@@ -93,8 +99,35 @@ public:
 	void source_callback(std::function<void(sample_t index, size_t count, value_t* buf)>);
 
 	value_t measure_instantaneous();
-	void measure_buffer(value_t* buf, size_t len, bool repeat);
-	void measure_callback(std::function<void(sample_t index, size_t count, value_t* buf)>);
+	void measure_buffer(value_t* buf, size_t len) {
+		m_dest = DEST_BUFFER;
+		m_dest_buf = buf;
+		m_dest_buf_len = len;
+	}
+	void measure_callback(std::function<void(sample_t index, value_t* buf, size_t count)>);
+
+
+	void put_samples(sample_t index, float* buf, size_t count) {
+		if (m_dest == DEST_BUFFER) {
+			while (count && m_dest_buf_len) {
+				*m_dest_buf++ = *buf++;
+				count -= 1;
+				m_dest_buf_len -= 1;
+			}
+		} else if (m_dest == DEST_CALLBACK) {
+			m_dest_callback(index, buf, count);
+		}
+	}
 protected:
-	value_t latest_measurement;
+
+	Dest m_dest;
+
+	// valid if m_dest == DEST_BUF
+	value_t* m_dest_buf;
+	size_t m_dest_buf_len;
+
+	// valid if m_dest == DEST_CALLBACK
+	std::function<void(sample_t index, value_t* buf, size_t count)> m_dest_callback;
+
+	value_t m_latest_measurement;
 };

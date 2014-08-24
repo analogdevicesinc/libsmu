@@ -284,6 +284,11 @@ void CEE_Device::configure(uint64_t rate) {
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(IN_packet),  1000, cee_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(OUT_packet), 1000, cee_out_completion, this);
 
+	m_buf_a_v.resize(m_packets_per_transfer*IN_SAMPLES_PER_PACKET);
+	m_buf_a_i.resize(m_packets_per_transfer*IN_SAMPLES_PER_PACKET);
+	m_buf_b_v.resize(m_packets_per_transfer*IN_SAMPLES_PER_PACKET);
+	m_buf_b_i.resize(m_packets_per_transfer*IN_SAMPLES_PER_PACKET);
+
 	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
 }
 
@@ -362,6 +367,12 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	float i_factor_b = 2.5/2048.0/(m_cal.current_gain_b/CEE_current_gain_scale)*1000.0 / 2;
 	if (rawMode) v_factor = i_factor_a = i_factor_b = 1;
 
+	sample_t start_sampleno = m_in_sampleno;
+	float* buf_a_v = m_buf_b_i.data();
+	float* buf_a_i = m_buf_b_v.data();
+	float* buf_b_v = m_buf_a_i.data();
+	float* buf_b_i = m_buf_a_v.data();
+
 	for (int p=0; p<m_packets_per_transfer; p++) {
 		IN_packet *pkt = &((IN_packet*)t->buffer)[p];
 
@@ -370,23 +381,28 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		}
 
 		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++){
-			(m_cal.offset_a_v + pkt->data[i].av())*v_factor;
-
+			int idx = i+p*IN_SAMPLES_PER_PACKET;
+			buf_a_v[idx] = (m_cal.offset_a_v + pkt->data[i].av())*v_factor;
 			if ((pkt->mode_a & 0x3) != DISABLED) {
-				(m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a;
+				buf_a_i[idx] = (m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a;
 			} else {
-				0;
+				buf_a_i[idx] = 0;
 			}
-			(m_cal.offset_b_v + pkt->data[i].bv())*v_factor;
+
+			buf_b_v[idx] = (m_cal.offset_b_v + pkt->data[i].bv())*v_factor;
 			if ((pkt->mode_b & 0x3) != DISABLED) {
-				(m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b;
+				buf_b_i[idx] = (m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b;
 			} else {
-				0;
+				buf_b_i[idx] = 0;
 			}
 			m_in_sampleno++;
 		}
 	}
 
+	m_signals[0][0].put_samples(start_sampleno, buf_a_v, m_packets_per_transfer * IN_SAMPLES_PER_PACKET);
+	m_signals[0][1].put_samples(start_sampleno, buf_a_i, m_packets_per_transfer * IN_SAMPLES_PER_PACKET);
+	m_signals[1][0].put_samples(start_sampleno, buf_b_v, m_packets_per_transfer * IN_SAMPLES_PER_PACKET);
+	m_signals[1][1].put_samples(start_sampleno, buf_b_i, m_packets_per_transfer * IN_SAMPLES_PER_PACKET);
 
 	if (m_in_sampleno >= m_sample_count) {
 		m_session->completion();
