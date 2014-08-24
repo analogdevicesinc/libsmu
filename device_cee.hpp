@@ -73,9 +73,4 @@ protected:
 
 	Signal m_signals[2][2];
 	unsigned m_mode[2];
-
-	std::vector<float> m_buf_a_v;
-	std::vector<float> m_buf_a_i;
-	std::vector<float> m_buf_b_v;
-	std::vector<float> m_buf_b_i;
 };

@@ -150,18 +150,17 @@ public:
 		m_dest_buf = buf;
 		m_dest_buf_len = len;
 	}
-	void measure_callback(std::function<void(sample_t index, value_t* buf, size_t count)>);
+	void measure_callback(std::function<void(value_t value)>);
 
-
-	void put_samples(sample_t index, float* buf, size_t count) {
+	inline void put_sample(value_t val) {
+		m_latest_measurement = val;
 		if (m_dest == DEST_BUFFER) {
-			while (count && m_dest_buf_len) {
-				*m_dest_buf++ = *buf++;
-				count -= 1;
+			if (m_dest_buf_len) {
+				*m_dest_buf++ = val;
 				m_dest_buf_len -= 1;
 			}
 		} else if (m_dest == DEST_CALLBACK) {
-			m_dest_callback(index, buf, count);
+			m_dest_callback(val);
 		}
 	}
 
@@ -238,7 +237,7 @@ protected:
 	size_t m_dest_buf_len;
 
 	// valid if m_dest == DEST_CALLBACK
-	std::function<void(sample_t index, value_t* buf, size_t count)> m_dest_callback;
+	std::function<void(value_t val)> m_dest_callback;
 
 	value_t m_latest_measurement;
 };
