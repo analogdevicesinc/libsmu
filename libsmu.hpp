@@ -57,6 +57,7 @@ public:
 	virtual const sl_channel_info* const channel_info(unsigned channel) = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 	virtual const char* const serial() { return ""; }
+	virtual void set_mode(unsigned channel, unsigned mode) {}
 
 protected:
 	Device(Session* s, libusb_device* d);

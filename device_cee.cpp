@@ -316,13 +316,10 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
-		uint8_t mode_a = 0;
-		uint8_t mode_b = 0;
-
 		for (int p=0; p<m_packets_per_transfer; p++) {
 			OUT_packet *pkt = &((OUT_packet *)t->buffer)[p];
-			pkt->mode_a = mode_a;
-			pkt->mode_b = mode_b;
+			pkt->mode_a = m_mode[0];
+			pkt->mode_b = m_mode[1];
 
 
 			for (int i=0; i<OUT_SAMPLES_PER_PACKET; i++){
@@ -330,8 +327,8 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 				float val_b = 0;
 
 				pkt->data[i].pack(
-					encode_out((CEE_chanmode)mode_a, val_a, m_cal.current_gain_a),
-					encode_out((CEE_chanmode)mode_b, val_b, m_cal.current_gain_b)
+					encode_out((CEE_chanmode) m_mode[0], val_a, m_cal.current_gain_a),
+					encode_out((CEE_chanmode) m_mode[1], val_b, m_cal.current_gain_b)
 				);
 				m_out_sampleno++;
 			}
@@ -383,14 +380,14 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++){
 			int idx = i+p*IN_SAMPLES_PER_PACKET;
 			buf_a_v[idx] = (m_cal.offset_a_v + pkt->data[i].av())*v_factor;
-			if ((pkt->mode_a & 0x3) != DISABLED) {
+			if (m_mode[0] != DISABLED) {
 				buf_a_i[idx] = (m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a;
 			} else {
 				buf_a_i[idx] = 0;
 			}
 
 			buf_b_v[idx] = (m_cal.offset_b_v + pkt->data[i].bv())*v_factor;
-			if ((pkt->mode_b & 0x3) != DISABLED) {
+			if (m_mode[1] != DISABLED) {
 				buf_b_i[idx] = (m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b;
 			} else {
 				buf_b_i[idx] = 0;

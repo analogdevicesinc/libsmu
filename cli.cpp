@@ -27,6 +27,8 @@ int main() {
 
 		for (int ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
 			auto ch_info = dev->channel_info(ch_i);
+			dev->set_mode(ch_i, 1);
+
 			for (int sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
 				auto sig = dev->signal(ch_i, sig_i);
 				auto sig_info = sig->info();
