@@ -67,7 +67,7 @@ protected:
 	uint64_t m_sample_count;
 
 	// State owned by USB thread
-	uint16_t m_requested_sampleno;
+	uint64_t m_requested_sampleno;
 	uint64_t m_in_sampleno;
 	uint64_t m_out_sampleno;
 

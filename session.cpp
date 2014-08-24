@@ -10,6 +10,8 @@ using std::shared_ptr;
 
 Session::Session()
 {
+	m_active_devices = 0;
+
 	if (int r = libusb_init(&m_usb_cx) != 0) {
 		cerr << "libusb init failed: " << r << endl;
 	}
