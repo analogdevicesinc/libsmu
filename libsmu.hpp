@@ -204,11 +204,11 @@ public:
 
 			case SRC_TRIANGLE:
 				return m_src_v1 + fabs(norm_phase*2 - 1) * (m_src_v2 - m_src_v1);
-
 			default:
 				return 0;
 			}
 		}
+		return 0;
 	}
 protected:
 	Src m_src;

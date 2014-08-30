@@ -154,8 +154,6 @@ int CEE_Device::init() {
 		m_min_per = 100;
 	}
 
-	double minSampleTime = m_min_per / (double) CEE_timer_clock;
-
 	std::cerr << "    Hardware: " << m_hw_version << std::endl;
 	std::cerr << "    Firmware version: " << m_fw_version << " (" << m_git_version << ")" << std::endl;
 	std::cerr << "    Supported sample rate: " << CEE_timer_clock / m_min_per / 1000.0 << "ksps" << std::endl;
@@ -307,12 +305,12 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
-		for (int p=0; p<m_packets_per_transfer; p++) {
+		for (unsigned p=0; p<m_packets_per_transfer; p++) {
 			OUT_packet *pkt = &((OUT_packet *)t->buffer)[p];
 			pkt->mode_a = m_mode[0];
 			pkt->mode_b = m_mode[1];
 
-			for (int i=0; i<OUT_SAMPLES_PER_PACKET; i++){
+			for (unsigned i=0; i<OUT_SAMPLES_PER_PACKET; i++){
 				pkt->data[i].pack(
 					encode_out(0, m_cal.current_gain_a),
 					encode_out(1, m_cal.current_gain_b)
@@ -352,9 +350,7 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	float i_factor_b = 2.5/2048.0/(m_cal.current_gain_b/CEE_current_gain_scale)*1000.0 / 2;
 	if (rawMode) v_factor = i_factor_a = i_factor_b = 1;
 
-	sample_t start_sampleno = m_in_sampleno;
-
-	for (int p=0; p<m_packets_per_transfer; p++) {
+	for (unsigned p=0; p<m_packets_per_transfer; p++) {
 		IN_packet *pkt = &((IN_packet*)t->buffer)[p];
 
 		if ((pkt->flags & FLAG_PACKET_DROPPED) && m_in_sampleno != 0){
