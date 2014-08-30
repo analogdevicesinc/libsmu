@@ -384,12 +384,12 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 }
 
-const sl_device_info* const CEE_Device::info()
+const sl_device_info* CEE_Device::info() const
 {
 	return &cee_info;
 }
 
-const sl_channel_info* const CEE_Device::channel_info(unsigned channel)
+const sl_channel_info* CEE_Device::channel_info(unsigned channel) const
 {
 	if (channel < 2) {
 		return &cee_channel_info[channel];

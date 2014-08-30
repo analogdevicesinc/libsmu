@@ -54,10 +54,10 @@ protected:
 class Device {
 public:
 	virtual ~Device();
-	virtual const sl_device_info* const info() = 0;
-	virtual const sl_channel_info* const channel_info(unsigned channel) = 0;
+	virtual const sl_device_info* info() const = 0;
+	virtual const sl_channel_info*  channel_info(unsigned channel) const = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
-	virtual const char* const serial() { return ""; }
+	virtual const char* serial() const { return ""; }
 	virtual void set_mode(unsigned channel, unsigned mode) {}
 
 protected:
@@ -98,7 +98,7 @@ enum Src {
 class Signal {
 public:
 	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
-	const sl_signal_info* const info() { return m_info; }
+	const sl_signal_info* info() const { return m_info; }
 	const sl_signal_info* const m_info;
 
 	void source_constant(value_t val) {

@@ -10,8 +10,8 @@ extern "C" void cee_out_completion(libusb_transfer *t);
 class CEE_Device: public Device {
 public:
 	virtual ~CEE_Device();
-	virtual const sl_device_info* const info();
-	virtual const sl_channel_info* const channel_info(unsigned channel);
+	virtual const sl_device_info* info() const;
+	virtual const sl_channel_info* channel_info(unsigned channel) const;
 	//virtual sl_mode_info* mode_info(unsigned mode);
 	virtual Signal* signal(unsigned channel, unsigned signal);
 	virtual void set_mode(unsigned channel, unsigned mode);
