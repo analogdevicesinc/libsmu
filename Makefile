@@ -1,13 +1,17 @@
 CXX=clang++
-CXXFLAGS=-g -std=c++11 -Wall -pedantic -O3
+CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
 LINKFLAGS=-lusb-1.0 -lm
 BIN=smu
+LIB=smu.a
 
-SRC=cli.cpp session.cpp signal.cpp device_cee.cpp
+SRC=session.cpp signal.cpp device_cee.cpp
 OBJ=$(SRC:%.cpp=%.o)
 
-$(BIN): $(OBJ)
+$(BIN): cli.o $(LIB)
 	$(CXX) -o $(BIN) $^ $(LINKFLAGS)
+
+$(LIB): $(OBJ)
+	ar crf $@ $^
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ -c $<
