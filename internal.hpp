@@ -15,6 +15,7 @@ struct Transfers {
 	void alloc(unsigned count, libusb_device_handle* handle,
 	           unsigned char endpoint, unsigned char type, size_t buf_size,
 	           unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
+		clear();
 		m_transfers.resize(count, NULL);
 		for (size_t i=0; i<count; i++) {
 			auto t = m_transfers[i] = libusb_alloc_transfer(0);

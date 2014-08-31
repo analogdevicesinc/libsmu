@@ -111,7 +111,8 @@ CEE_Device::CEE_Device(Session* s, libusb_device* device):
 	m_signals{
 		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
 		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
-	}
+	},
+	m_mode{0,0}
 {	}
 
 CEE_Device::~CEE_Device() {}
