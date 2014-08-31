@@ -272,7 +272,7 @@ extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t){
 }
 
 void CEE_Device::configure(uint64_t rate) {
-	double sampleTime = 1/rate;
+	double sampleTime = 1.0/rate;
 	m_xmega_per = round(sampleTime * (double) CEE_timer_clock);
 	if (m_xmega_per < m_min_per) m_xmega_per = m_min_per;
 	sampleTime = m_xmega_per / (double) CEE_timer_clock; // convert back to get the actual sample time;
