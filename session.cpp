@@ -119,10 +119,11 @@ void Session::configure(uint64_t sampleRate) {
 }
 
 void Session::run(sample_t nsamples) {
-	for (auto i: m_devices) {
-		i->on();
-	}
-	run_nonblocking(nsamples);
+	start(nsamples, NULL);
+	end();
+}
+
+void Session::end() {
 	std::unique_lock<std::mutex> lk(m_lock);
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	for (auto i: m_devices) {
@@ -130,8 +131,10 @@ void Session::run(sample_t nsamples) {
 	}
 }
 
-void Session::run_nonblocking(sample_t nsamples) {
+void Session::start(sample_t nsamples, std::function<void()> callback) {
+	m_callback = callback;
 	for (auto i: m_devices) {
+		i->on();
 		i->start_run(nsamples);
 		m_active_devices += 1;
 	}
@@ -148,6 +151,9 @@ void Session::completion() {
 	std::lock_guard<std::mutex> lock(m_lock);
 	m_active_devices -= 1;
 	if (m_active_devices == 0) {
+		if (m_callback) {
+			m_callback();
+		}
 		m_completion.notify_all();
 	}
 }

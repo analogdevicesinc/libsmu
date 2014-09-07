@@ -32,11 +32,18 @@ public:
 
 	// Run the currently configured capture and wait for it to complete
 	void run(sample_t nsamples);
-	void run_nonblocking(sample_t nsamples);
+	void start(sample_t nsamples, std::function<void()> callback);
 	void cancel();
 
+	/// Called by devices when they are complete
 	void completion();
+
+	/// Block until all devices have completed, then turn off the devices
+	void end();
+
 protected:
+	std::function<void()> m_callback;
+
 	void start_usb_thread();
 	std::thread m_usb_thread;
 	bool m_usb_thread_loop;
