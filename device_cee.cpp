@@ -376,6 +376,7 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		}
 	}
 
+	m_session->progress();
 	if (m_in_sampleno >= m_sample_count) {
 		m_session->completion();
 	}

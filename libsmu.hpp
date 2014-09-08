@@ -32,17 +32,23 @@ public:
 
 	// Run the currently configured capture and wait for it to complete
 	void run(sample_t nsamples);
-	void start(sample_t nsamples, std::function<void()> callback);
+	void start(sample_t nsamples);
 	void cancel();
 
-	/// Called by devices when they are complete
+	/// Called by devices on the USB thread when they are complete
 	void completion();
+
+	/// Called by devices on the USB thread with progress updates
+	void progress();
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
 
+	std::function<void(sample_t)> m_progress_callback;
+	std::function<void()> m_completion_callback;
+
 protected:
-	std::function<void()> m_callback;
+	sample_t m_min_progress;
 
 	void start_usb_thread();
 	std::thread m_usb_thread;
@@ -82,6 +88,11 @@ protected:
 	Session* const m_session;
 	libusb_device* const m_device;
 	libusb_device_handle* m_usb;
+
+	// State owned by USB thread
+	sample_t m_requested_sampleno;
+	sample_t m_in_sampleno;
+	sample_t m_out_sampleno;
 
 	friend class Session;
 };

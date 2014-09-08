@@ -119,7 +119,7 @@ void Session::configure(uint64_t sampleRate) {
 }
 
 void Session::run(sample_t nsamples) {
-	start(nsamples, NULL);
+	start(nsamples);
 	end();
 }
 
@@ -131,8 +131,8 @@ void Session::end() {
 	}
 }
 
-void Session::start(sample_t nsamples, std::function<void()> callback) {
-	m_callback = callback;
+void Session::start(sample_t nsamples) {
+	m_min_progress = 0;
 	for (auto i: m_devices) {
 		i->on();
 		i->start_run(nsamples);
@@ -151,10 +151,26 @@ void Session::completion() {
 	std::lock_guard<std::mutex> lock(m_lock);
 	m_active_devices -= 1;
 	if (m_active_devices == 0) {
-		if (m_callback) {
-			m_callback();
+		if (m_completion_callback) {
+			m_completion_callback();
 		}
 		m_completion.notify_all();
+	}
+}
+
+void Session::progress() {
+	sample_t min_progress = UINT64_MAX;
+	for (auto i: m_devices) {
+		if (i->m_in_sampleno < min_progress) {
+			min_progress = i->m_in_sampleno;
+		}
+	}
+
+	if (min_progress > m_min_progress) {
+		m_min_progress = min_progress;
+		if (m_progress_callback) {
+			m_progress_callback(m_min_progress);
+		}
 	}
 }
 

@@ -66,11 +66,6 @@ protected:
 	uint64_t m_sample_rate;
 	uint64_t m_sample_count;
 
-	// State owned by USB thread
-	uint64_t m_requested_sampleno;
-	uint64_t m_in_sampleno;
-	uint64_t m_out_sampleno;
-
 	Signal m_signals[2][2];
 	unsigned m_mode[2];
 };
