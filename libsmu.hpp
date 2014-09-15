@@ -228,7 +228,6 @@ public:
 		}
 		return 0;
 	}
-protected:
 	Src m_src;
 	value_t m_src_v1;
 	value_t m_src_v2;
@@ -256,6 +255,8 @@ protected:
 
 	// valid if m_dest == DEST_CALLBACK
 	std::function<void(value_t val)> m_dest_callback;
+
+protected:
 
 	value_t m_latest_measurement;
 };
