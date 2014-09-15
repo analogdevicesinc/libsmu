@@ -347,8 +347,8 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	//std::cerr << "handle_in_transfer " << m_in_sampleno << std::endl;
 	bool rawMode = 0;
 	float v_factor = 5.0/2048.0;
-	float i_factor_a = 2.5/2048.0/(m_cal.current_gain_a/CEE_current_gain_scale)*1000.0 / 2;
-	float i_factor_b = 2.5/2048.0/(m_cal.current_gain_b/CEE_current_gain_scale)*1000.0 / 2;
+	float i_factor_a = 2.5/2048.0/(m_cal.current_gain_a/CEE_current_gain_scale) / 2;
+	float i_factor_b = 2.5/2048.0/(m_cal.current_gain_b/CEE_current_gain_scale) / 2;
 	if (rawMode) v_factor = i_factor_a = i_factor_b = 1;
 
 	for (unsigned p=0; p<m_packets_per_transfer; p++) {
