@@ -46,7 +46,7 @@ static const sl_channel_info cee_channel_info[2] = {
 
 static const sl_signal_info cee_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/4095 },
-	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 400.0/4095 },
+	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/4095 },
 };
 
 enum CEE_chanmode{
@@ -294,8 +294,8 @@ inline uint16_t CEE_Device::encode_out(int chan, uint32_t igain) {
 		v = 4095*val/5.0;
 	} else if (m_mode[chan] == SIMV) {
 		float val = m_signals[chan][1].get_sample();
-		val = constrain(val, -m_current_limit, m_current_limit);
-		v = 4095*(1.25+(igain/CEE_current_gain_scale)*val/1000.0)/2.5;
+		val = constrain(val, m_current_limit / -1000.0, m_current_limit / 1000.0);
+		v = 4095*(1.25+(igain/CEE_current_gain_scale)*val)/2.5;
 	}
 	if (v > 4095) v = 4095;
 	if (v < 0) v = 0;
