@@ -206,6 +206,7 @@ public:
 		case SRC_SINE:
 		case SRC_TRIANGLE:
 
+			auto pkpk = m_src_v2 - m_src_v1;
 			auto phase = m_src_phase;
 			auto norm_phase = phase / m_src_period;
 			m_src_phase = fmod(m_src_phase + 1, m_src_period);
@@ -215,13 +216,13 @@ public:
 				return (phase < m_src_duty) ? m_src_v1 : m_src_v2;
 
 			case SRC_SAWTOOTH:
-				return m_src_v1 + norm_phase * (m_src_v2 - m_src_v1);
+				return m_src_v1 + norm_phase * pkpk;
 
 			case SRC_SINE:
-				return m_src_v1 + cos(norm_phase * 2 * M_PI) * m_src_v2;
+				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * pkpk/2;
 
 			case SRC_TRIANGLE:
-				return m_src_v1 + fabs(norm_phase*2 - 1) * (m_src_v2 - m_src_v1);
+				return m_src_v1 + fabs(1 - norm_phase*2) * pkpk;
 			default:
 				return 0;
 			}
