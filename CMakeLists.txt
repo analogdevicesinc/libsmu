@@ -8,6 +8,8 @@ add_library(smu
   signal.cpp
   device_cee.hpp
   device_cee.cpp
+  device_m1000.hpp
+  device_m1000.cpp
 )
 target_link_libraries(smu -lusb-1.0 -lm)
 

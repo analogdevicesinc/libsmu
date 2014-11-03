@@ -1,0 +1,55 @@
+#pragma once
+#include <mutex>
+#include "libsmu.hpp"
+#include "internal.hpp"
+
+struct libusb_device_handle;
+extern "C" void m1000_in_completion(libusb_transfer *t);
+extern "C" void m1000_out_completion(libusb_transfer *t);
+
+class M1000_Device: public Device {
+public:
+	virtual ~M1000_Device();
+	virtual const sl_device_info* info() const;
+	virtual const sl_channel_info* channel_info(unsigned channel) const;
+	//virtual sl_mode_info* mode_info(unsigned mode);
+	virtual Signal* signal(unsigned channel, unsigned signal);
+	virtual void set_mode(unsigned channel, unsigned mode);
+
+protected:
+	friend class Session;
+	friend void m1000_in_completion(libusb_transfer *t);
+	friend void m1000_out_completion(libusb_transfer *t);
+
+	M1000_Device(Session* s, libusb_device* device);
+	virtual int init();
+	virtual int added();
+	virtual int removed();
+	virtual void configure(uint64_t sampleRate);
+	virtual void start_run(sample_t nsamples);
+	virtual void cancel();
+	virtual void on();
+	virtual void off();
+
+	bool submit_out_transfer(libusb_transfer* t);
+	bool submit_in_transfer(libusb_transfer* t);
+	void handle_in_transfer(libusb_transfer* t);
+
+	uint16_t encode_out(int chan);
+
+	std::string m_hw_version;
+	std::string m_fw_version;
+	std::string m_git_version;
+
+	unsigned m_packets_per_transfer;
+	Transfers m_in_transfers;
+	Transfers m_out_transfers;
+
+	std::mutex m_state;
+
+	uint64_t m_sample_rate;
+	uint64_t m_sample_count;
+
+	Signal m_signals[2][2];
+	unsigned m_mode[2];
+};

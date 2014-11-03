@@ -2,6 +2,7 @@
 #include <iostream>
 #include <libusb-1.0/libusb.h>
 #include "device_cee.hpp"
+#include "device_m1000.hpp"
 
 using std::cout;
 using std::cerr;
@@ -75,7 +76,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device)
 	if (desc.idVendor == 0x59e3 && desc.idProduct == 0xCEE1) {
 		dev = shared_ptr<Device>(new CEE_Device(this, device));
 	} else if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
-
+		dev = shared_ptr<Device>(new M1000_Device(this, device));
 	}
 
 	if (dev) {
@@ -181,9 +182,7 @@ Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 
 int Device::init()
 {
-	int r = libusb_open(m_device, &m_usb);
-	if (r!=0) { return r; }
-	return 0;
+	return libusb_open(m_device, &m_usb);
 }
 
 Device::~Device()

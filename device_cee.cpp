@@ -17,9 +17,6 @@ using std::endl;
 #define DEVMODE_OFF  0
 #define DEVMODE_2SMU 1
 
-extern "C" void LIBUSB_CALL in_completion(libusb_transfer *t);
-extern "C" void LIBUSB_CALL out_completion(libusb_transfer *t);
-
 const int CEE_timer_clock = 4e6; // 4 MHz
 const double CEE_default_sample_time = 1/10000.0;
 const double CEE_current_gain_scale = 100000;
