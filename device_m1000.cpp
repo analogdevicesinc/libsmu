@@ -191,7 +191,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 		for (int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
 			m_signals[0][0].put_sample( be16toh(buf[i+chunk_size*0]) / 65535.0 * 5.0);
 			m_signals[0][1].put_sample((be16toh(buf[i+chunk_size*1]) / 65535.0 - 0.61) * 0.4 + 0.048);
-		  m_signals[1][0].put_sample( be16toh(buf[i+chunk_size*2]) / 65535.0 * 5.0);
+			m_signals[1][0].put_sample( be16toh(buf[i+chunk_size*2]) / 65535.0 * 5.0);
 			m_signals[1][1].put_sample((be16toh(buf[i+chunk_size*3]) / 65535.0 - 0.61) * 0.4 + 0.048);
 			m_in_sampleno++;
 		}
@@ -243,11 +243,11 @@ void M1000_Device::on()
 	libusb_control_transfer(m_usb, 0x40|0x80, 0x1B, 0x3040, 'a', buf, 4, 100);
 	libusb_control_transfer(m_usb, 0x40|0x80, 0x1B, 0x3040, 'b', buf, 4, 100);
 	// set adcs for bipolar sequenced mode
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xCA, 0xF1C0, 0xF5C0, buf, 1, 100);
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xCB, 0xF1C0, 0xF5C0, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40|0x80, 0xCA, 0xF120, 0xF520, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40|0x80, 0xCB, 0xF120, 0xF520, buf, 1, 100);
 	libusb_control_transfer(m_usb, 0x40|0x80, 0xCD, 0x0000, 0x0001, buf, 1, 100);
 	// set timer for 1us keepoff, 20us period
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0001, 0x0014, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0001, 0x001F, buf, 1, 100);
 }
 
 void M1000_Device::start_run(uint64_t samples) {
@@ -272,4 +272,5 @@ void M1000_Device::off()
 {
 	uint8_t buf[1];
 	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0000, 0x0000, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 49, 0, 0, 0, 100);
 }
