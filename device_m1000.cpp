@@ -19,6 +19,9 @@ const unsigned chunk_size = 256;
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
 
+const int M1K_timer_clock = 3e6; // 96MHz/32 = 3MHz
+const int m_min_per = 0x1F;
+int m_sam_per = 0;
 extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
 
@@ -109,16 +112,13 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 }
 
 void M1000_Device::configure(uint64_t rate) {
-	double sampleTime = 1.0/rate;
-
-	#if 0
-	m_xmega_per = round(sampleTime * (double) CEE_timer_clock);
-	if (m_xmega_per < m_min_per) m_xmega_per = m_min_per;
-	sampleTime = m_xmega_per / (double) CEE_timer_clock; // convert back to get the actual sample time;
-	#endif
+	double sample_time = 1.0/rate;
+	m_sam_per = round(sample_time * (double) M1K_timer_clock);
+	if (m_sam_per < m_min_per) m_sam_per = m_sam_per;
+	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
 
 	unsigned transfers = 4;
-	m_packets_per_transfer = ceil(BUFFER_TIME / (sampleTime * 10) / transfers);
+	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * 10) / transfers);
 
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*in_packet_size,  1000, m1000_in_completion,  this);
@@ -126,6 +126,7 @@ void M1000_Device::configure(uint64_t rate) {
 		m_packets_per_transfer*out_packet_size, 1000, m1000_out_completion, this);
 
 	std::cerr << "M1000 prepare " << transfers <<  " " << m_packets_per_transfer << std::endl;
+	std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
 inline uint16_t M1000_Device::encode_out(int chan) {
@@ -137,7 +138,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 	} else if (m_mode[chan] == SIMV) {
 		float val = m_signals[chan][1].get_sample();
 		val = constrain(val, -current_limit, current_limit);
-		v = 65536*((val+800)/2000.0);
+		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val);
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
@@ -229,8 +230,41 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 
 void M1000_Device::set_mode(unsigned chan, unsigned mode)
 {
+	uint8_t buf[4];
 	if (chan < 2) {
 		m_mode[chan] = mode;
+	}
+	if (chan == 0) {
+		if ( mode == 0 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 51, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 35, 0, buf, 4, 100);
+		}
+		if ( mode == 1 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 35, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 51, 0, buf, 4, 100);
+		}
+		if ( mode == 2 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 35, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 32, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 51, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 32, 0, buf, 4, 100);
+		}
+	}
+	if (chan == 1) {
+		if ( mode == 0 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 52, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 40, 1, buf, 4, 100);
+		}
+		if ( mode == 1 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 1, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 52, 0, buf, 4, 100);
+		}
+		if ( mode == 2 ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 1, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 37, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 52, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 37, 0, buf, 4, 100);
+		}
 	}
 }
 
@@ -246,14 +280,14 @@ void M1000_Device::on()
 	libusb_control_transfer(m_usb, 0x40|0x80, 0xCA, 0xF120, 0xF520, buf, 1, 100);
 	libusb_control_transfer(m_usb, 0x40|0x80, 0xCB, 0xF120, 0xF520, buf, 1, 100);
 	libusb_control_transfer(m_usb, 0x40|0x80, 0xCD, 0x0000, 0x0001, buf, 1, 100);
-	// set timer for 1us keepoff, 20us period
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0001, 0x001F, buf, 1, 100);
 }
 
 void M1000_Device::start_run(uint64_t samples) {
 	std::lock_guard<std::mutex> lock(m_state);
+	uint8_t buf[4];
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
+	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0001, m_sam_per, buf, 1, 100);
 
 	for (auto i: m_in_transfers) {
 		if (!submit_in_transfer(i)) break;
