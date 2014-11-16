@@ -235,15 +235,18 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 		m_mode[chan] = mode;
 	}
 	if (chan == 0) {
-		if ( mode == 0 ) {
+		if ( mode == DISABLED ) {
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 51, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 34, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 35, 0, buf, 4, 100);
 		}
-		if ( mode == 1 ) {
+		if ( mode == SVMI ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 34, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 35, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 51, 0, buf, 4, 100);
 		}
-		if ( mode == 2 ) {
+		if ( mode == SIMV ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 34, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 35, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 32, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 51, 0, buf, 4, 100);
@@ -251,19 +254,22 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 		}
 	}
 	if (chan == 1) {
-		if ( mode == 0 ) {
+		if ( mode == DISABLED ) {
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 52, 0, buf, 4, 100);
-			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 40, 1, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 39, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 40, 0, buf, 4, 100);
 		}
-		if ( mode == 1 ) {
-			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 1, buf, 4, 100);
+		if ( mode == SVMI ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 39, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 52, 0, buf, 4, 100);
 		}
-		if ( mode == 2 ) {
-			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 1, buf, 4, 100);
-			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 37, 0, buf, 4, 100);
-			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 52, 0, buf, 4, 100);
+		if ( mode == SIMV ) {
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 39, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 40, 0, buf, 4, 100);
 			libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 37, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 52, 0, buf, 4, 100);
+			libusb_control_transfer(m_usb, 0x40|0x80, 0x51, 37, 0, buf, 4, 100);
 		}
 	}
 }
