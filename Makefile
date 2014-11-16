@@ -4,7 +4,7 @@ LINKFLAGS=-lusb-1.0 -lm
 BIN=smu
 LIB=smu.a
 
-SRC=session.cpp signal.cpp device_cee.cpp
+SRC=session.cpp signal.cpp device_cee.cpp device_m1000.cpp
 OBJ=$(SRC:%.cpp=%.o)
 
 $(BIN): cli.o $(LIB)
