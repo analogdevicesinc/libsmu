@@ -119,13 +119,13 @@ void M1000_Device::configure(uint64_t rate) {
 	if (m_sam_per < m_min_per) m_sam_per = m_sam_per;
 	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
 
-	unsigned transfers = 4;
-	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * 10) / transfers);
+	unsigned transfers = 8;
+	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,  1000, m1000_in_completion,  this);
+		m_packets_per_transfer*in_packet_size,  10000, m1000_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*out_packet_size, 1000, m1000_out_completion, this);
+		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 
 	std::cerr << "M1000 prepare " << transfers <<  " " << m_packets_per_transfer << std::endl;
 	std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
