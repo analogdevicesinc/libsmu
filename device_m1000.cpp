@@ -80,6 +80,8 @@ int M1000_Device::added() {
 }
 
 int M1000_Device::removed() {
+	set_mode(0, 0);
+	set_mode(1, 0);
 	libusb_release_interface(m_usb, 0);
 	return 0;
 }
