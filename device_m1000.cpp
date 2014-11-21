@@ -15,6 +15,8 @@ using std::endl;
 const unsigned chunk_size = 256;
 #define OUT_SAMPLES_PER_PACKET chunk_size
 #define IN_SAMPLES_PER_PACKET chunk_size
+#define A 0
+#define B 1
 
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
@@ -116,7 +118,7 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 void M1000_Device::configure(uint64_t rate) {
 	double sample_time = 1.0/rate;
 	m_sam_per = round(sample_time * (double) M1K_timer_clock);
-	if (m_sam_per < m_min_per) m_sam_per = m_sam_per;
+	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
 	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
 
 	unsigned transfers = 8;
@@ -141,6 +143,8 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 		float val = m_signals[chan][1].get_sample();
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
+	} else if (m_mode[chan] == DISABLED) {
+		v = 24000;
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
@@ -186,7 +190,6 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
-	uint16_t* buf = (uint16_t*) t->buffer;
 
 	for (int p=0; p<m_packets_per_transfer; p++){
 		uint16_t* buf = (uint16_t*) (t->buffer + p*in_packet_size);
@@ -232,33 +235,31 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 
 void M1000_Device::set_mode(unsigned chan, unsigned mode)
 {
-	uint8_t buf[4];
 	if (chan < 2) {
 		m_mode[chan] = mode;
 	}
-	libusb_control_transfer(m_usb, 0x40|0x80, 0x53, chan, mode, buf, 4, 100);
+	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);
 }
 
 void M1000_Device::on()
 {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
+	libusb_control_transfer(m_usb, 0x40, 0x51, 49, 0, 0, 0, 100);
 
-	uint8_t buf[4];
 	// set pots for sane simv
-	libusb_control_transfer(m_usb, 0x40|0x80, 0x1B, 0x3040, 'a', buf, 4, 100);
-	libusb_control_transfer(m_usb, 0x40|0x80, 0x1B, 0x3040, 'b', buf, 4, 100);
+	libusb_control_transfer(m_usb, 0x40, 0x1B, 0x3040, A, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0x1B, 0x3040, B, 0, 0, 100);
 	// set adcs for bipolar sequenced mode
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xCA, 0xF120, 0xF520, buf, 1, 100);
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xCB, 0xF120, 0xF520, buf, 1, 100);
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xCD, 0x0000, 0x0001, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xCA, 0xF120, 0xF520, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xCB, 0xF120, 0xF520, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xCD, 0x0000, 0x0001, 0, 0, 100);
 }
 
 void M1000_Device::start_run(uint64_t samples) {
 	std::lock_guard<std::mutex> lock(m_state);
-	uint8_t buf[4];
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0001, m_sam_per, buf, 1, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xC5, 1, m_sam_per, 0, 0, 100);
 
 	for (auto i: m_in_transfers) {
 		if (!submit_in_transfer(i)) break;
@@ -275,7 +276,8 @@ void M1000_Device::cancel()
 
 void M1000_Device::off()
 {
-	uint8_t buf[1];
-	libusb_control_transfer(m_usb, 0x40|0x80, 0xC5, 0x0000, 0x0000, buf, 1, 100);
-	libusb_control_transfer(m_usb, 0x40|0x80, 0x50, 49, 0, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xC5, 0x0000, 0x0000, 0, 0, 100);
+	// disable AFE is slow, requires ~10ms to come to steady state
+	// don't turn it off
+	//libusb_control_transfer(m_usb, 0x40, 0x50, 49, 0, 0, 0, 100);
 }
