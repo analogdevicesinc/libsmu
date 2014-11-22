@@ -129,8 +129,8 @@ void M1000_Device::configure(uint64_t rate) {
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 
-	std::cerr << "M1000 prepare " << transfers <<  " " << m_packets_per_transfer << std::endl;
-	std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
+	//std::cerr << "M1000 prepare " << transfers <<  " " << m_packets_per_transfer << std::endl;
+	//std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
 inline uint16_t M1000_Device::encode_out(int chan) {
@@ -153,7 +153,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 
 bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
-		std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
+		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
 		for (int p=0; p<m_packets_per_transfer; p++){
 			uint16_t* buf = (uint16_t*) (t->buffer + p*out_packet_size);
@@ -166,21 +166,21 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer out " << r << endl;
+			//cerr << "libusb_submit_transfer out " << r << endl;
 		}
 		return true;
-	} else {
+	}/* else {
 		std::cerr << "out done" << std::endl;
-	}
+	}*/
 	return false;
 }
 
 bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
-		std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
+		//std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer in " << r << endl;
+		//	cerr << "libusb_submit_transfer in " << r << endl;
 		}
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
@@ -244,15 +244,8 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 void M1000_Device::on()
 {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
-	libusb_control_transfer(m_usb, 0x40, 0x51, 49, 0, 0, 0, 100);
 
-	// set pots for sane simv
-	libusb_control_transfer(m_usb, 0x40, 0x1B, 0x3040, A, 0, 0, 100);
-	libusb_control_transfer(m_usb, 0x40, 0x1B, 0x3040, B, 0, 0, 100);
-	// set adcs for bipolar sequenced mode
-	libusb_control_transfer(m_usb, 0x40, 0xCA, 0xF120, 0xF520, 0, 0, 100);
-	libusb_control_transfer(m_usb, 0x40, 0xCB, 0xF120, 0xF520, 0, 0, 100);
-	libusb_control_transfer(m_usb, 0x40, 0xCD, 0x0000, 0x0001, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
 void M1000_Device::start_run(uint64_t samples) {
