@@ -129,7 +129,6 @@ void M1000_Device::configure(uint64_t rate) {
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 
-	//std::cerr << "M1000 prepare " << transfers <<  " " << m_packets_per_transfer << std::endl;
 	//std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
@@ -144,7 +143,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
 	} else if (m_mode[chan] == DISABLED) {
-		v = 24000;
+		v = 26700;
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
@@ -239,12 +238,14 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 		m_mode[chan] = mode;
 	}
 	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);
+	// std::cerr << "sm (" << chan << "," << mode << ")" << std::endl;
 }
 
 void M1000_Device::on()
 {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
 
+	libusb_control_transfer(m_usb, 0x40, 0xC5, 0, 0, 0, 0, 100);
 	libusb_control_transfer(m_usb, 0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
@@ -270,7 +271,4 @@ void M1000_Device::cancel()
 void M1000_Device::off()
 {
 	libusb_control_transfer(m_usb, 0x40, 0xC5, 0x0000, 0x0000, 0, 0, 100);
-	// disable AFE is slow, requires ~10ms to come to steady state
-	// don't turn it off
-	//libusb_control_transfer(m_usb, 0x40, 0x50, 49, 0, 0, 0, 100);
 }
