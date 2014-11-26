@@ -22,7 +22,7 @@ const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
 
 const int M1K_timer_clock = 3e6; // 96MHz/32 = 3MHz
-const int m_min_per = 0x1F;
+const int m_min_per = 0x18;
 int m_sam_per = 0;
 extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
@@ -117,7 +117,7 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 
 void M1000_Device::configure(uint64_t rate) {
 	double sample_time = 1.0/rate;
-	m_sam_per = round(sample_time * (double) M1K_timer_clock);
+	m_sam_per = round(sample_time * (double) M1K_timer_clock) / 2;
 	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
 	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
 
@@ -143,7 +143,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
 	} else if (m_mode[chan] == DISABLED) {
-		v = 26700;
+		v = 26600;
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
