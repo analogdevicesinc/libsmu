@@ -217,7 +217,7 @@ public:
 
 			switch (m_src) {
 			case SRC_SQUARE:
-				return (phase < m_src_duty) ? m_src_v1 : m_src_v2;
+				return (norm_phase < m_src_duty) ? m_src_v1 : m_src_v2;
 
 			case SRC_SAWTOOTH:
 				return m_src_v1 + norm_phase * pkpk;
