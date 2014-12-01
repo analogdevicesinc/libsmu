@@ -203,7 +203,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 
 	m_session->progress();
-	if (m_in_sampleno >= m_sample_count) {
+	if (m_sample_count !=0 && m_in_sampleno >= m_sample_count) {
 		assert(m_out_sampleno >= m_sample_count);
 		m_session->completion();
 	}

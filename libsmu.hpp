@@ -168,7 +168,11 @@ public:
 		m_dest_buf = buf;
 		m_dest_buf_len = len;
 	}
-	void measure_callback(std::function<void(value_t value)>);
+	
+	void measure_callback(std::function<void(value_t value)> callback) {
+		m_dest = DEST_CALLBACK;
+		m_dest_callback = callback;
+	}
 
 	inline void put_sample(value_t val) {
 		m_latest_measurement = val;
