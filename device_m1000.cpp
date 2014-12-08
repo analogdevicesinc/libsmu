@@ -143,7 +143,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
 	} else if (m_mode[chan] == DISABLED) {
-		v = 26600;
+		v = 32768;
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
@@ -270,5 +270,7 @@ void M1000_Device::cancel()
 
 void M1000_Device::off()
 {
+	set_mode(A, DISABLED);
+	set_mode(B, DISABLED);
 	libusb_control_transfer(m_usb, 0x40, 0xC5, 0x0000, 0x0000, 0, 0, 100);
 }
