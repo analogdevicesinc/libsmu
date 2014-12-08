@@ -72,6 +72,7 @@ public:
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 	virtual const char* serial() const { return ""; }
 	virtual void set_mode(unsigned channel, unsigned mode) {}
+	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout);
 
 protected:
 	Device(Session* s, libusb_device* d);

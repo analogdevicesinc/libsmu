@@ -190,3 +190,9 @@ Device::~Device()
 	libusb_close(m_usb);
 	libusb_unref_device(m_device);
 }
+
+void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
+{ 
+	libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
+}
+
