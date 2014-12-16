@@ -21,7 +21,7 @@ Session::Session()
 	}
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         cerr << "Using libusb hotplug" << endl;
-        libusb_hotplug_register_callback(NULL,
+        if (int r = libusb_hotplug_register_callback(m_usb_cx,
             (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
             (libusb_hotplug_flag) 0,
             LIBUSB_HOTPLUG_MATCH_ANY,
@@ -29,8 +29,10 @@ Session::Session()
             LIBUSB_HOTPLUG_MATCH_ANY,
             hotplug_callback_usbthread,
             this,
-            &hotplug_handle
-        );
+            NULL
+        ) != 0) {
+		cerr << "libusb hotplug cb reg failed: " << r << endl;
+	};
     } else {
         cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
 	}
@@ -57,9 +59,13 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	Session *s = (Session *) user_data;
     if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		s->m_hotplug_attach_callback();
+		if (s->m_hotplug_attach_callback) {
+			s->m_hotplug_attach_callback();
+		}
     } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		s->m_hotplug_detach_callback();
+		if (s->m_hotplug_detach_callback) {
+			s->m_hotplug_detach_callback();
+		}
     }
     return 0;
 }
