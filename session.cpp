@@ -21,7 +21,7 @@ Session::Session()
 	}
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         cerr << "Using libusb hotplug" << endl;
-        if (int r = libusb_hotplug_register_callback(m_usb_cx,
+        if (int r = libusb_hotplug_register_callback(NULL,
             (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
             (libusb_hotplug_flag) 0,
             LIBUSB_HOTPLUG_MATCH_ANY,
@@ -36,6 +36,7 @@ Session::Session()
     } else {
         cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
 	}
+	start_usb_thread();
 
 	if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_cx, 4);
@@ -54,17 +55,25 @@ Session::~Session()
 	libusb_exit(m_usb_cx);
 }
 
-void Session::attached()
+void Session::attached(libusb_device *device)
 {
+	shared_ptr<Device> dev = probe_device(device);
+	if (dev) {
+		this->add_device(&(*dev));
+	}
+	else {
+		cerr << "device not added\n";
+	}
 	if (this->m_hotplug_attach_callback) {
 		this->m_hotplug_attach_callback();
 	}
 }
 
-void Session::detached()
+void Session::detached(libusb_device *device)
 {
+	this->remove_device(&(*this->find_existing_device(device)));
 	if (this->m_hotplug_detach_callback) {
-		this->m_hotplug_attach_callback();
+		this->m_hotplug_detach_callback();
 	}
 }
 
@@ -72,9 +81,9 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	Session *sess = (Session *) user_data;
     if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		sess->attached();
+		sess->attached(device);
     } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		sess->detached();
+		sess->detached(device);
     }
     return 0;
 }
@@ -145,9 +154,6 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 }
 
 Device* Session::add_device(Device* device) {
-	if (m_devices.size() == 0) {
-		start_usb_thread();
-	}
 	m_devices.insert(device);
 	device->added();
 	return device;

@@ -41,8 +41,8 @@ public:
 	/// Called by devices on the USB thread with progress updates
 	void progress();
 	// called by hotplug events on the USB thread
-	void attached();
-	void detached();
+	void attached(libusb_device* device);
+	void detached(libusb_device* device);
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
