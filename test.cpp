@@ -2,15 +2,15 @@
 #include <vector>
 #include <Python.h>
 
-Session* session;
+Session* session = (Session*) malloc(10000000);
 
 void cpp_initSession();
 int cpp_checkAvailable();
 
 extern "C" {
     static PyObject* initSession(PyObject * self, PyObject * args){
-        Session* x = new Session();
-        //cpp_initSession();
+        //Session* x = new Session();
+        cpp_initSession();
         //int good = cpp_checkAvailable();
         PyObject* ret;
        // if (good == 0){
@@ -35,7 +35,8 @@ extern "C" {
 };
 
 void cpp_initSession(){
-	session = new Session();
+	Session *n_session = new Session();
+    session = (Session*)memcpy(session, n_session, sizeof(n_session));
 }
 int cpp_checkAvailable(){
     return session->update_available_devices();
