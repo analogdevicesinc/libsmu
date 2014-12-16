@@ -58,14 +58,12 @@ Session::~Session()
 void Session::attached(libusb_device *device)
 {
 	shared_ptr<Device> dev = probe_device(device);
+	m_available_devices.push_back(dev);
+	cerr << "ser: " << dev->serial() << endl;
 	if (dev) {
-		this->add_device(&(*dev));
-	}
-	else {
-		cerr << "device not added\n";
-	}
-	if (this->m_hotplug_attach_callback) {
-		this->m_hotplug_attach_callback();
+		if (this->m_hotplug_attach_callback) {
+			this->m_hotplug_attach_callback();
+		}
 	}
 }
 
@@ -155,13 +153,16 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 
 Device* Session::add_device(Device* device) {
 	m_devices.insert(device);
+	cerr << "device insert " << device << endl; 
 	device->added();
 	return device;
 }
 
 void Session::remove_device(Device* device) {
-	m_devices.erase(device);
-	device->removed();
+	if ( device ) { 
+		m_devices.erase(device);
+		device->removed();
+	}
 }
 
 void Session::configure(uint64_t sampleRate) {
