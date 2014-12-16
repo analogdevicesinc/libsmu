@@ -8,12 +8,15 @@
 #include <condition_variable>
 #include <thread>
 #include <cmath>
+#include <libusb-1.0/libusb.h>
 
 class Device;
 class Signal;
 struct libusb_device;
 struct libusb_device_handle;
 struct libusb_context;
+extern "C" int LIBUSB_CALL hotplug_callback_usbthread(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+
 
 class Session {
 public:
@@ -26,7 +29,6 @@ public:
 	Device* add_device(Device*);
 	std::set<Device*> m_devices;
 	void remove_device(Device*);
-
 	void configure(uint64_t sampleRate);
 	std::function<void(sample_t)> m_progress_cb;
 
@@ -45,7 +47,9 @@ public:
 	void end();
 
 	std::function<void(sample_t)> m_progress_callback;
+	std::function<void()> m_hotplug_detach_callback;
 	std::function<void()> m_completion_callback;
+	std::function<void()> m_hotplug_attach_callback;
 
 protected:
 	sample_t m_min_progress;
@@ -60,6 +64,8 @@ protected:
 	unsigned m_active_devices;
 
 	libusb_context* m_usb_cx;
+	libusb_hotplug_callback_handle hotplug_handle;
+
 	std::shared_ptr<Device> probe_device(libusb_device* device);
 	std::shared_ptr<Device> find_existing_device(libusb_device* device);
 };

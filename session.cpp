@@ -9,12 +9,30 @@ using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
+extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
+    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+
 Session::Session()
 {
 	m_active_devices = 0;
 
 	if (int r = libusb_init(&m_usb_cx) != 0) {
 		cerr << "libusb init failed: " << r << endl;
+	}
+	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        cerr << "Using libusb hotplug" << endl;
+        libusb_hotplug_register_callback(NULL,
+            (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+            (libusb_hotplug_flag) 0,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            hotplug_callback_usbthread,
+            this,
+            &hotplug_handle
+        );
+    } else {
+        cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
 	}
 
 	if (getenv("LIBUSB_DEBUG")) {
@@ -32,6 +50,18 @@ Session::~Session()
 		m_usb_thread.join();
 	}
 	libusb_exit(m_usb_cx);
+}
+
+
+extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
+    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+	Session *s = (Session *) user_data;
+    if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+		s->m_hotplug_attach_callback();
+    } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+		s->m_hotplug_detach_callback();
+    }
+    return 0;
 }
 
 void Session::start_usb_thread() {
@@ -126,7 +156,7 @@ void Session::run(sample_t nsamples) {
 
 void Session::end() {
 	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	m_completion.wait_for(lk, std::chrono::milliseconds(10), [&]{ return m_active_devices == 0; });
 	for (auto i: m_devices) {
 		i->off();
 	}
