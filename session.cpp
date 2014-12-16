@@ -156,7 +156,7 @@ void Session::run(sample_t nsamples) {
 
 void Session::end() {
 	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait_for(lk, std::chrono::milliseconds(10), [&]{ return m_active_devices == 0; });
+	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	for (auto i: m_devices) {
 		i->off();
 	}
