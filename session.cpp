@@ -59,13 +59,9 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	Session *s = (Session *) user_data;
     if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		if (s->m_hotplug_attach_callback) {
-			s->m_hotplug_attach_callback();
-		}
+		s->m_hotplug_attach_callback();
     } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		if (s->m_hotplug_detach_callback) {
-			s->m_hotplug_detach_callback();
-		}
+		s->m_hotplug_detach_callback();
     }
     return 0;
 }
