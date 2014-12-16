@@ -40,14 +40,17 @@ public:
 
 	/// Called by devices on the USB thread with progress updates
 	void progress();
+	// called by hotplug events on the USB thread
+	void attached();
+	void detached();
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
 
 	std::function<void(sample_t)> m_progress_callback;
 	std::function<void()> m_completion_callback;
-	volatile void m_hotplug_detach_callback(void) {};
-	volatile void m_hotplug_attach_callback(void) {};
+	std::function<void()> m_hotplug_detach_callback;
+	std::function<void()> m_hotplug_attach_callback;
 
 protected:
 	sample_t m_min_progress;

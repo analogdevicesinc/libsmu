@@ -13,7 +13,7 @@ using std::vector;
 using std::string;
 
 int main() {
-	unique_ptr<Session> session = unique_ptr<Session>(new Session());
+	Session* session = new Session();
 	session->update_available_devices();
 
 	const unsigned count = 200;

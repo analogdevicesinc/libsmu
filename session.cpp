@@ -54,14 +54,27 @@ Session::~Session()
 	libusb_exit(m_usb_cx);
 }
 
+void Session::attached()
+{
+	if (this->m_hotplug_attach_callback) {
+		this->m_hotplug_attach_callback();
+	}
+}
+
+void Session::detached()
+{
+	if (this->m_hotplug_detach_callback) {
+		this->m_hotplug_attach_callback();
+	}
+}
 
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
-	Session *s = (Session *) user_data;
+	Session *sess = (Session *) user_data;
     if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		s->m_hotplug_attach_callback();
+		sess->attached();
     } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		s->m_hotplug_detach_callback();
+		sess->detached();
     }
     return 0;
 }
