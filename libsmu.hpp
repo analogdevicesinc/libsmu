@@ -45,9 +45,9 @@ public:
 	void end();
 
 	std::function<void(sample_t)> m_progress_callback;
-	std::function<void()> m_hotplug_detach_callback {};
+	std::function<void()> m_hotplug_detach_callback;
 	std::function<void()> m_completion_callback;
-	std::function<void()> m_hotplug_attach_callback {};
+	std::function<void()> m_hotplug_attach_callback;
 
 protected:
 	sample_t m_min_progress;
