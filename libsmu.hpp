@@ -22,6 +22,7 @@ public:
 	~Session();
 
 	int update_available_devices();
+	unsigned m_active_devices;
 	std::vector<std::shared_ptr<Device>> m_available_devices;
 
 	Device* add_device(Device*);
@@ -62,7 +63,6 @@ protected:
 	std::mutex m_lock;
 	std::condition_variable m_completion;
 
-	unsigned m_active_devices;
 
 	libusb_context* m_usb_cx;
 

@@ -89,6 +89,15 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t){
 		dev->submit_in_transfer(t);
 	}else{
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
+		switch (t->status) {
+			case LIBUSB_TRANSFER_NO_DEVICE: {
+				//dev->m_session->detached(dev->m_device);
+				dev->m_session->m_active_devices -= 1;
+				break;
+			}
+			default:
+				{}
+		}
 		//TODO: notify main thread of error
 	}
 }
