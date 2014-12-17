@@ -58,6 +58,9 @@ Session::~Session()
 void Session::attached(libusb_device *device)
 {
 	shared_ptr<Device> dev = probe_device(device);
+	if (m_available_devices.size()) {
+		m_available_devices.pop_back();
+	}
 	m_available_devices.push_back(dev);
 	cerr << "ser: " << dev->serial() << endl;
 	if (dev) {
