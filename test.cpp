@@ -98,13 +98,14 @@ extern "C" {
             if (idx == dev_num){
                 auto sgnl = i->signal(chan_num, sig_num);
                 vector<float> buf;
-                sgnl->measure_buffer(buf, nsamples);
+                buf.resize(nsamples);
+                sgnl->measure_buffer(buf.data(), nsamples);
                 sgnl->source_constant(val);
                 session->configure(nsamples);
                 session->run(nsamples);
                 PyObject* samples = PyList_New(0);
-                for (unsigned i=0; i<nsamples; i++){
-                    PyList_Append(samples, PyInt_FromLong(buf[i]));
+                for(auto i: buf) {
+                    PyList_Append(samples, Py_BuildValue("f", i));
                 }
                 return samples;
             }
