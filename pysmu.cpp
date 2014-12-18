@@ -102,11 +102,11 @@ extern "C" {
                 buf_i.resize(nsamples);
                 sgnl_v->measure_buffer(buf_v.data(), nsamples);
                 sgnl_i->measure_buffer(buf_i.data(), nsamples);
-				// sample rate fixed at 100k 
+                // sample rate fixed at 100k 
                 session->configure(100000);
                 session->run(nsamples);
                 PyObject* samples = PyList_New(0);
-                for(unsigned i=0; i<nsamples; i++)
+                for(int i=0; i<nsamples; i++)
                     PyList_Append(samples, Py_BuildValue("(f,f)", buf_v[i], buf_i[i]));
                 return samples;
             }
@@ -114,7 +114,41 @@ extern "C" {
         }
         return PyString_FromString("Success");
     }
-    static PyObject* setOutput(PyObject* self, PyObject* args){
+
+    static PyObject* setOutputWave(PyObject* self, PyObject* args){
+        int dev_num;
+        int chan_num;
+        int mode;
+        int wave;
+        double duty;
+        double period;
+        double phase;
+        double val1;
+        double val2;
+
+        if (!PyArg_ParseTuple(args, "iiiifffff", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
+            {return PyString_FromString("Error");}
+        int idx = 0;
+        for (auto i: session->m_available_devices){
+            if (idx == dev_num){
+                auto sgnl =  i->signal(chan_num, 0);
+                if (mode == SIMV)
+                    sgnl = i->signal(chan_num, 1);
+                if (wave == SRC_SQUARE)
+                    sgnl->source_square(val1, val2, period, duty, phase);
+                if (wave == SRC_SAWTOOTH)
+                    sgnl->source_sawtooth(val1, val2, period, phase);
+                if (wave == SRC_TRIANGLE)
+                    sgnl->source_triangle(val1, val2, period, phase);
+                if (wave == SRC_SINE)
+                    sgnl->source_sine(val1, val2, period, phase);
+            }
+            idx++;
+        }
+        return PyString_FromString("Success");
+    }
+
+    static PyObject* setOutputConstant(PyObject* self, PyObject* args){
         int dev_num;
         int chan_num;
         int mode;
@@ -124,14 +158,14 @@ extern "C" {
         int idx = 0;
         for (auto i: session->m_available_devices){
             if (idx == dev_num){
-				if (mode == SVMI) {
-                	auto sgnl_v = i->signal(chan_num, 0);
-                	sgnl_v->source_constant(val);
-				}
-				if (mode == SIMV) {
-                	auto sgnl_i = i->signal(chan_num, 1);
-					sgnl_i->source_constant(val);
-				}
+                if (mode == SVMI) {
+                    auto sgnl_v = i->signal(chan_num, 0);
+                    sgnl_v->source_constant(val);
+                }
+                if (mode == SIMV) {
+                    auto sgnl_i = i->signal(chan_num, 1);
+                    sgnl_i->source_constant(val);
+                }
             }
             idx++;
         }
@@ -143,8 +177,9 @@ extern "C" {
         { "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
         { "cleanup", cleanupSession, METH_VARARGS, "end session"  },
         { "set_mode", setMode, METH_VARARGS, "set channel mode"  },
-        { "get_inputs", getInputs, METH_VARARGS, "set and sample channel output"  },
-        { "set_output", setOutput, METH_VARARGS, "set and sample channel output"  },
+        { "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
+        { "set_output_constant", setOutputConstant, METH_VARARGS, "set channel output - constant"  },
+        { "set_output_wave", setOutputWave, METH_VARARGS, "set channel output - wave"  },
         { NULL, NULL, 0, NULL  }
     };
 
