@@ -88,25 +88,35 @@ extern "C" {
     static PyObject* setOutput(PyObject* self, PyObject* args){
         int dev_num;
         int chan_num;
-        int sig_num;
+        int mode;
         float val;
         int nsamples;
-        if (!PyArg_ParseTuple(args, "iiifi", &dev_num, &chan_num, &sig_num, &val, &nsamples)) 
+        if (!PyArg_ParseTuple(args, "iiifi", &dev_num, &chan_num, &mode, &val, &nsamples)) 
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_available_devices){
             if (idx == dev_num){
-                auto sgnl = i->signal(chan_num, sig_num);
-                vector<float> buf;
-                buf.resize(nsamples);
-                sgnl->measure_buffer(buf.data(), nsamples);
-                sgnl->source_constant(val);
-                session->configure(nsamples);
+                auto sgnl_v = i->signal(chan_num, 0);
+                auto sgnl_i = i->signal(chan_num, 1);
+                vector<float> buf_v;
+                vector<float> buf_i;
+                buf_v.resize(nsamples);
+                buf_i.resize(nsamples);
+                sgnl_v->measure_buffer(buf_v.data(), nsamples);
+                sgnl_i->measure_buffer(buf_i.data(), nsamples);
+				if (mode == SVMI)
+                	sgnl_v->source_constant(val);
+				if (mode == SIMV)
+					sgnl_i->source_constant(val);
+				// sample rate fixed at 100k 
+                session->configure(100000);
                 session->run(nsamples);
                 PyObject* samples = PyList_New(0);
-                for(auto i: buf) {
+                for(auto i: buf_v)
                     PyList_Append(samples, Py_BuildValue("f", i));
-                }
+                for(auto i: buf_i)
+                    PyList_Append(samples, Py_BuildValue("f", i));
+                
                 return samples;
             }
             idx++;
@@ -114,7 +124,7 @@ extern "C" {
         return PyString_FromString("Success");
     }
 
-    static PyMethodDef HelloMethods[] = {
+    static PyMethodDef pysmu_methods [] = {
         { "setup", initSession, METH_VARARGS, "start session"  },
         { "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
         { "cleanup", cleanupSession, METH_VARARGS, "end session"  },
@@ -123,8 +133,8 @@ extern "C" {
         { NULL, NULL, 0, NULL  }
     };
 
-    DL_EXPORT(void) initlibsmu(void)
+    DL_EXPORT(void) initpysmu(void)
     {
-        Py_InitModule("libsmu", HelloMethods);
+        Py_InitModule("pysmu", pysmu_methods);
     }
-};
+}

@@ -23,4 +23,4 @@ clean:
 
 python: $(LIB)
 	$(CXX) $(CXXFLAGS) -I/usr/include/python2.7 -o pysmu.o $(LINKFLAGS) -c pysmu.cpp
-	$(CXX) $(CXXFLAGS) -shared pysmu.o $(LIB) $(LINKFLAGS) -lpython2.7 -o libsmu.so
+	$(CXX) $(CXXFLAGS) -shared pysmu.o $(LIB) $(LINKFLAGS) -lpython2.7 -o pysmu.so
