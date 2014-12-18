@@ -144,9 +144,9 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
-		for (int p=0; p<m_packets_per_transfer; p++){
+		for (unsigned int p=0; p<m_packets_per_transfer; p++){
 			uint16_t* buf = (uint16_t*) (t->buffer + p*out_packet_size);
-			for (int i=0; i < chunk_size; i++){
+			for (unsigned int i=0; i < chunk_size; i++){
 				buf[i+chunk_size*0] = htobe16(encode_out(0));
 				buf[i+chunk_size*1] = htobe16(encode_out(1));
 				m_out_sampleno++;
@@ -180,10 +180,10 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
-	for (int p=0; p<m_packets_per_transfer; p++){
+	for (unsigned int p=0; p<m_packets_per_transfer; p++){
 		uint16_t* buf = (uint16_t*) (t->buffer + p*in_packet_size);
 
-		for (int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
+		for (unsigned int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
 			m_signals[0][0].put_sample( be16toh(buf[i+chunk_size*0]) / 65535.0 * 5.0);
 			m_signals[0][1].put_sample((be16toh(buf[i+chunk_size*1]) / 65535.0 - 0.61) * 0.4 + 0.048);
 			m_signals[1][0].put_sample( be16toh(buf[i+chunk_size*2]) / 65535.0 * 5.0);
