@@ -130,26 +130,26 @@ public:
 		m_src = SRC_CONSTANT;
 		m_src_v1 = val;
 	}
-	void source_square(value_t v1, value_t v2, sample_t period, sample_t duty, int phase) {
+	void source_square(value_t v1, value_t v2, double period, double duty, double phase) {
 		m_src = SRC_SQUARE;
 		update_phase(period, phase);
 		m_src_v1 = v1;
 		m_src_v2 = v2;
 		m_src_duty = duty;
 	}
-	void source_sawtooth(value_t v1, value_t v2, sample_t period, int phase) {
+	void source_sawtooth(value_t v1, value_t v2, double period, double phase) {
 		m_src = SRC_SAWTOOTH;
 		update_phase(period, phase);
 		m_src_v1 = v1;
 		m_src_v2 = v2;
 	}
-	void source_sine(value_t center, value_t amplitude, double period, int phase) {
+	void source_sine(value_t center, value_t amplitude, double period, double phase) {
 		m_src = SRC_SINE;
 		update_phase(period, phase);
 		m_src_v1 = center;
 		m_src_v2 = amplitude;
 	}
-	void source_triangle(value_t v1, value_t v2, double period, int phase) {
+	void source_triangle(value_t v1, value_t v2, double period, double phase) {
 		m_src = SRC_TRIANGLE;
 		update_phase(period, phase);
 		m_src_v1 = v1;
