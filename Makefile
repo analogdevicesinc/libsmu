@@ -1,4 +1,4 @@
-CXX=clang++
+bXX=clang++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
 LINKFLAGS=-lusb-1.0 -lm
 BIN=smu
@@ -20,3 +20,7 @@ $(LIB): $(OBJ)
 
 clean:
 	rm -f $(OBJ) $(BIN) $(OBJ:%.o=%.d)
+
+python: $(LIB)
+	$(CXX) $(CXXFLAGS) -I/usr/include/python2.7 -o pysmu.o $(LINKFLAGS) -c pysmu.cpp
+	$(CXX) $(CXXFLAGS) -shared pysmu.o $(LIB) $(LINKFLAGS) -lpython2.7 -o pysmu.so

@@ -42,16 +42,6 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{CHANNEL_SMU, "B", 3, 2},
 };
 
-// Mode 0: high-z
-// Mode 1: SVMI
-// Mode 2: SIMV
-
-enum M1000_chanmode{
-	DISABLED = 0,
-	SVMI = 1,
-	SIMV = 2,
-};
-
 static const sl_signal_info m1000_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/65536 },
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
@@ -154,9 +144,9 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
-		for (int p=0; p<m_packets_per_transfer; p++){
+		for (unsigned int p=0; p<m_packets_per_transfer; p++){
 			uint16_t* buf = (uint16_t*) (t->buffer + p*out_packet_size);
-			for (int i=0; i < chunk_size; i++){
+			for (unsigned int i=0; i < chunk_size; i++){
 				buf[i+chunk_size*0] = htobe16(encode_out(0));
 				buf[i+chunk_size*1] = htobe16(encode_out(1));
 				m_out_sampleno++;
@@ -190,10 +180,10 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
-	for (int p=0; p<m_packets_per_transfer; p++){
+	for (unsigned int p=0; p<m_packets_per_transfer; p++){
 		uint16_t* buf = (uint16_t*) (t->buffer + p*in_packet_size);
 
-		for (int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
+		for (unsigned int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
 			m_signals[0][0].put_sample( be16toh(buf[i+chunk_size*0]) / 65535.0 * 5.0);
 			m_signals[0][1].put_sample((be16toh(buf[i+chunk_size*1]) / 65535.0 - 0.61) * 0.4 + 0.048);
 			m_signals[1][0].put_sample( be16toh(buf[i+chunk_size*2]) / 65535.0 * 5.0);
