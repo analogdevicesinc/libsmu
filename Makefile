@@ -1,4 +1,4 @@
-bXX=clang++
+CXX=clang++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
 LINKFLAGS=-lusb-1.0 -lm
 BIN=smu
