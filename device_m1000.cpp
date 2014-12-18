@@ -42,6 +42,16 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{CHANNEL_SMU, "B", 3, 2},
 };
 
+// Mode 0: high-z
+// Mode 1: SVMI
+// Mode 2: SIMV
+
+enum M1000_chanmode{
+	DISABLED = 0,
+	SVMI = 1,
+	SIMV = 2,
+};
+
 static const sl_signal_info m1000_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/65536 },
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },

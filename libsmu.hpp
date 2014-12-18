@@ -120,12 +120,6 @@ enum Src {
 	SRC_CALLBACK,
 };
 
-enum Chanmode {
-	DISABLED,
-	SVMI,
-	SIMV,
-};
-
 class Signal {
 public:
 	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}

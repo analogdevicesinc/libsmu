@@ -6,6 +6,7 @@ LIB=smu.a
 
 SRC=session.cpp signal.cpp device_cee.cpp device_m1000.cpp
 OBJ=$(SRC:%.cpp=%.o)
+
 $(BIN): cli.o $(LIB)
 	$(CXX) -o $(BIN) $^ $(LINKFLAGS)
 
@@ -19,6 +20,3 @@ $(LIB): $(OBJ)
 
 clean:
 	rm -f $(OBJ) $(BIN) $(OBJ:%.o=%.d)
-
-libsmuso: 
-	$(bXX) -shared -Wl,-soname,liblibsmu.so -o libsmu.so $(LIB) $(LINKFLAGS)

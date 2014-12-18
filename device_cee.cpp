@@ -46,6 +46,12 @@ static const sl_signal_info cee_signal_info[2] = {
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/4095 },
 };
 
+enum CEE_chanmode{
+	DISABLED = 0,
+	SVMI = 1,
+	SIMV = 2,
+};
+
 inline int16_t signextend12(uint16_t v){
 	return (v>((1<<11)-1))?(v - (1<<12)):v;
 }
