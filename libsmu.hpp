@@ -15,18 +15,19 @@ struct libusb_device;
 struct libusb_device_handle;
 struct libusb_context;
 
+
 class Session {
 public:
 	Session();
 	~Session();
 
 	int update_available_devices();
+	unsigned m_active_devices;
 	std::vector<std::shared_ptr<Device>> m_available_devices;
 
 	Device* add_device(Device*);
 	std::set<Device*> m_devices;
 	void remove_device(Device*);
-
 	void configure(uint64_t sampleRate);
 	std::function<void(sample_t)> m_progress_cb;
 
@@ -40,12 +41,17 @@ public:
 
 	/// Called by devices on the USB thread with progress updates
 	void progress();
+	// called by hotplug events on the USB thread
+	void attached(libusb_device* device);
+	void detached(libusb_device* device);
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
 
 	std::function<void(sample_t)> m_progress_callback;
 	std::function<void()> m_completion_callback;
+	std::function<void()> m_hotplug_detach_callback;
+	std::function<void()> m_hotplug_attach_callback;
 
 protected:
 	sample_t m_min_progress;
@@ -57,9 +63,9 @@ protected:
 	std::mutex m_lock;
 	std::condition_variable m_completion;
 
-	unsigned m_active_devices;
 
 	libusb_context* m_usb_cx;
+
 	std::shared_ptr<Device> probe_device(libusb_device* device);
 	std::shared_ptr<Device> find_existing_device(libusb_device* device);
 };

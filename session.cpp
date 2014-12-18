@@ -9,6 +9,9 @@ using std::cerr;
 using std::endl;
 using std::shared_ptr;
 
+extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
+    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+
 Session::Session()
 {
 	m_active_devices = 0;
@@ -16,6 +19,24 @@ Session::Session()
 	if (int r = libusb_init(&m_usb_cx) != 0) {
 		cerr << "libusb init failed: " << r << endl;
 	}
+	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
+        cerr << "Using libusb hotplug" << endl;
+        if (int r = libusb_hotplug_register_callback(NULL,
+            (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+            (libusb_hotplug_flag) 0,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            LIBUSB_HOTPLUG_MATCH_ANY,
+            hotplug_callback_usbthread,
+            this,
+            NULL
+        ) != 0) {
+		cerr << "libusb hotplug cb reg failed: " << r << endl;
+	};
+    } else {
+        cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
+	}
+	start_usb_thread();
 
 	if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_cx, 4);
@@ -32,6 +53,40 @@ Session::~Session()
 		m_usb_thread.join();
 	}
 	libusb_exit(m_usb_cx);
+}
+
+void Session::attached(libusb_device *device)
+{
+	shared_ptr<Device> dev = probe_device(device);
+	if (m_available_devices.size()) {
+		m_available_devices.pop_back();
+	}
+	m_available_devices.push_back(dev);
+	cerr << "ser: " << dev->serial() << endl;
+	if (dev) {
+		if (this->m_hotplug_attach_callback) {
+			this->m_hotplug_attach_callback();
+		}
+	}
+}
+
+void Session::detached(libusb_device *device)
+{
+	this->remove_device(&(*this->find_existing_device(device)));
+	if (this->m_hotplug_detach_callback) {
+		this->m_hotplug_detach_callback();
+	}
+}
+
+extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
+    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+	Session *sess = (Session *) user_data;
+    if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+		sess->attached(device);
+    } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+		sess->detached(device);
+    }
+    return 0;
 }
 
 void Session::start_usb_thread() {
@@ -100,17 +155,17 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 }
 
 Device* Session::add_device(Device* device) {
-	if (m_devices.size() == 0) {
-		start_usb_thread();
-	}
 	m_devices.insert(device);
+	cerr << "device insert " << device << endl; 
 	device->added();
 	return device;
 }
 
 void Session::remove_device(Device* device) {
-	m_devices.erase(device);
-	device->removed();
+	if ( device ) { 
+		m_devices.erase(device);
+		device->removed();
+	}
 }
 
 void Session::configure(uint64_t sampleRate) {
