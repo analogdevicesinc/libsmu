@@ -19,16 +19,9 @@ Session* session;
 
 extern "C" {
 
-    struct point{
-        int x;
-        int y;
-    };
-
     static PyObject* initSession(PyObject* self, PyObject* args){
-        //Session* x = new Session();
-        //cpp_initSession();
         session = new Session();
-        int good = session->update_available_devices();//cpp_checkAvailable();
+        int good = session->update_available_devices();
         PyObject* ret;
         if (good == 0){
             ret = PyString_FromString("Success");
