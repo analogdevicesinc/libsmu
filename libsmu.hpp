@@ -76,7 +76,7 @@ public:
 	virtual const sl_device_info* info() const = 0;
 	virtual const sl_channel_info*  channel_info(unsigned channel) const = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
-	virtual const char* serial() const { return ""; }
+	virtual const char* serial() const { return this->serial_num; }
 	virtual void set_mode(unsigned channel, unsigned mode) {}
 	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout);
 
@@ -101,6 +101,7 @@ protected:
 	sample_t m_in_sampleno;
 	sample_t m_out_sampleno;
 
+	char serial_num[32];
 	friend class Session;
 };
 

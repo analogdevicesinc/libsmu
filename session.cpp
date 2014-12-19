@@ -136,6 +136,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device)
 
 	if (dev) {
 		if (dev->init() == 0) {
+			libusb_get_string_descriptor_ascii(this->m_usb, desc.iSerialNumber, (unsigned char*)&this->serial_num, 32);
 	 		return dev;
 		} else {
 			cerr << "Error initializing device" << endl;
@@ -237,7 +238,8 @@ Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 
 int Device::init()
 {
-	return libusb_open(m_device, &m_usb);
+	int r = libusb_open(m_device, &m_usb);
+	return r;
 }
 
 Device::~Device()
