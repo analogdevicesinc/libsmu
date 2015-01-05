@@ -9,6 +9,10 @@
 #include <thread>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI (4.0*atan(1.0))
+#endif
+
 class Device;
 class Signal;
 struct libusb_device;
