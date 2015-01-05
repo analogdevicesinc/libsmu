@@ -4,8 +4,8 @@
 #include "internal.hpp"
 
 struct libusb_device_handle;
-extern "C" void cee_in_completion(libusb_transfer *t);
-extern "C" void cee_out_completion(libusb_transfer *t);
+extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t);
+extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t);
 
 class CEE_Device: public Device {
 public:
@@ -18,8 +18,8 @@ public:
 
 protected:
 	friend class Session;
-	friend void cee_in_completion(libusb_transfer *t);
-	friend void cee_out_completion(libusb_transfer *t);
+	friend void LIBUSB_CALL cee_in_completion(libusb_transfer *t);
+	friend void LIBUSB_CALL cee_out_completion(libusb_transfer *t);
 
 	CEE_Device(Session* s, libusb_device* device);
 	virtual int init();

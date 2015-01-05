@@ -4,8 +4,8 @@
 #include "internal.hpp"
 
 struct libusb_device_handle;
-extern "C" void m1000_in_completion(libusb_transfer *t);
-extern "C" void m1000_out_completion(libusb_transfer *t);
+extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
+extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
 class M1000_Device: public Device {
 public:
@@ -18,8 +18,8 @@ public:
 
 protected:
 	friend class Session;
-	friend void m1000_in_completion(libusb_transfer *t);
-	friend void m1000_out_completion(libusb_transfer *t);
+	friend void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
+	friend void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
 	M1000_Device(Session* s, libusb_device* device);
 	virtual int init();
