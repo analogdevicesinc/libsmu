@@ -4,7 +4,7 @@ LINKFLAGS=-lusb-1.0 -lm
 BIN=smu
 LIB=smu.a
 
-SRC=session.cpp signal.cpp device_cee.cpp device_m1000.cpp
+SRC=session.cpp signal.cpp device_cee.cpp device_m1000.cpp cli.cpp
 OBJ=$(SRC:%.cpp=%.o)
 
 $(BIN): cli.o $(LIB)
@@ -19,7 +19,7 @@ $(LIB): $(OBJ)
 -include $(OBJ:%.o=%.d)
 
 clean:
-	rm -f $(OBJ) $(BIN) $(OBJ:%.o=%.d)
+	rm -f $(OBJ) $(BIN) $(OBJ:%.o=%.d) pysmu.so
 
 python: $(LIB)
 	$(CXX) $(CXXFLAGS) -I/usr/include/python2.7 -o pysmu.o $(LINKFLAGS) -c pysmu.cpp
