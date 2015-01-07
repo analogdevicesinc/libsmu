@@ -1,6 +1,6 @@
 CXX=clang++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
-LINKFLAGS=-lusb-1.0 -lm
+LINKFLAGS=-lusb-1.0 -lm -lpthread
 BIN=smu
 LIB=smu.a
 
