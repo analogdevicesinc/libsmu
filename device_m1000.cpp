@@ -256,7 +256,12 @@ void M1000_Device::start_run(uint64_t samples) {
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
-	libusb_control_transfer(m_usb, 0x40, 0xC5, 1, m_sam_per, 0, 0, 100);
+	uint16_t sof;
+	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&sof, 2, 100);
+	//cerr << "sof now: " << sof << endl;
+	sof = (sof+0xfff)&0x3f00;
+	//cerr << "sof then: " << sof << endl;
+	libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, sof, 0, 0, 100);
 
 	for (auto i: m_in_transfers) {
 		if (!submit_in_transfer(i)) break;
