@@ -49,8 +49,10 @@ int main() {
 		}
 		dev_i++;
 	}
+	for (auto i: session->m_devices) {
+		session->configure(i->get_default_rate());
+	}
 
-	session->configure(count);
 	session->run(count);
 
 	for (auto name: names) {

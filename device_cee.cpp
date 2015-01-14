@@ -18,7 +18,6 @@ using std::endl;
 #define DEVMODE_2SMU 1
 
 const int CEE_timer_clock = 4e6; // 4 MHz
-const double CEE_default_sample_time = 1/10000.0;
 const double CEE_current_gain_scale = 100000;
 const uint32_t CEE_default_current_gain = 45*.07*CEE_current_gain_scale;
 
@@ -108,6 +107,11 @@ CEE_Device::CEE_Device(Session* s, libusb_device* device):
 
 CEE_Device::~CEE_Device() {}
 
+int CEE_Device::get_default_rate() {
+	return 80000;
+}
+
+
 int CEE_Device::init() {
 	int r = Device::init();
 	if (r!=0) { return r; }
@@ -151,6 +155,7 @@ int CEE_Device::init() {
 	std::cerr << "    Supported sample rate: " << CEE_timer_clock / m_min_per / 1000.0 << "ksps" << std::endl;
 	return 0;
 }
+
 
 int CEE_Device::added() {
 	libusb_claim_interface(m_usb, 0);

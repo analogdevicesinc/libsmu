@@ -15,6 +15,7 @@ public:
 	//virtual sl_mode_info* mode_info(unsigned mode);
 	virtual Signal* signal(unsigned channel, unsigned signal);
 	virtual void set_mode(unsigned channel, unsigned mode);
+	virtual int get_default_rate(); 
 
 protected:
 	friend class Session;

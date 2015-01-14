@@ -83,6 +83,9 @@ public:
 	virtual const char* serial() const { return this->serial_num; }
 	virtual void set_mode(unsigned channel, unsigned mode) {}
 	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout);
+	virtual int get_default_rate() {return 10000;};
+	virtual void sync() {};
+
 
 protected:
 	Device(Session* s, libusb_device* d);

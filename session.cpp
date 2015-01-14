@@ -192,6 +192,8 @@ void Session::start(sample_t nsamples) {
 	m_min_progress = 0;
 	for (auto i: m_devices) {
 		i->on();
+		if (m_devices.size() > 1)
+			i->sync();
 		i->start_run(nsamples);
 		m_active_devices += 1;
 	}

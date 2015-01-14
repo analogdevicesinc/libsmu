@@ -23,11 +23,10 @@ const unsigned in_packet_size = chunk_size * 4 * 2;
 
 const int M1K_timer_clock = 3e6; // 96MHz/32 = 3MHz
 const int m_min_per = 0x18;
+volatile uint16_t m_sof_start = 0;
 int m_sam_per = 0;
 extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
-
-const double m1000_default_sample_time = 1/48000.0;
 
 #ifdef _WIN32
 const double BUFFER_TIME = 0.050;
@@ -35,7 +34,7 @@ const double BUFFER_TIME = 0.050;
 const double BUFFER_TIME = 0.020;
 #endif
 
-static const sl_device_info m1000_info = {DEVICE_M1000,"M1000", 2};
+static const sl_device_info m1000_info = {DEVICE_M1000, "ADALM1000", 2};
 
 static const sl_channel_info m1000_channel_info[2] = {
 	{CHANNEL_SMU, "A", 3, 2},
@@ -59,6 +58,10 @@ M1000_Device::M1000_Device(Session* s, libusb_device* device):
 {	}
 
 M1000_Device::~M1000_Device() {}
+
+int M1000_Device::get_default_rate() {
+	return 100000;
+}
 
 int M1000_Device::init() {
 	int r = Device::init();
@@ -252,16 +255,18 @@ void M1000_Device::on()
 	libusb_control_transfer(m_usb, 0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
+void M1000_Device::sync() {
+	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
+	cerr << m_usb << ": sof now: " << m_sof_start << endl;
+	m_sof_start = (m_sof_start+0xff)&0x3f00;
+	cerr << m_usb << ": sof then: " << m_sof_start << endl;
+}
+
 void M1000_Device::start_run(uint64_t samples) {
+	libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
-	uint16_t sof;
-	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&sof, 2, 100);
-	//cerr << m_usb << ": sof now: " << sof << endl;
-	sof = (sof+0xff)&0x3f00;
-	//cerr << m_usb << ": sof then: " << sof << endl;
-	libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, sof, 0, 0, 100);
 
 	for (auto i: m_in_transfers) {
 		if (!submit_in_transfer(i)) break;
