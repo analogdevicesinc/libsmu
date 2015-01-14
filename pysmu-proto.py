@@ -55,13 +55,13 @@ class channel(object):
     def constant(self, val):
         return pysmu.set_output_constant(self.dev, self.chan, self.mode, val)
     def square(self, midpoint, peak, period, phase, duty_cycle):
-        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 1, midpoint, peak, phase, duty_cycle)
+        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
     def sawtooth(self, midpoint, peak, period, phase):
-        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 2, midpoint, peak, phase, 42)
+        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
     def sine(self, midpoint, peak, period, phase):
-        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 3, midpoint, peak, phase, 42)
+        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
     def triangle(self, midpoint, peak, period, phase):
-        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 4, midpoint, peak, phase, 42)
+        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
 
     def __repr__(self):
         return 'Dev: '+str(self.dev)+'\nChan: '+str(self.chan)+'\nSignals: '+str(self.signals)
@@ -73,5 +73,7 @@ if __name__ == '__main__':
     print A
     A.set_mode('v')
     #A.constant(3)
-    print A.arbitrary((5, 400), (2.5, 400))
+    #print A.arbitrary((5, 400), (2.5, 400))
+    #print A.sine(1.5, 3, .5,0)
+    print A.square(0, 3, 1, 0, 5)
     print A.get_samples(100000)
