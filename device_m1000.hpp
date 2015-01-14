@@ -50,6 +50,6 @@ protected:
 	uint64_t m_sample_rate;
 	uint64_t m_sample_count;
 
-	Signal m_signals[2][2];
+	Signal* m_signals[2][2];
 	unsigned m_mode[2];
 };

@@ -1,5 +1,5 @@
 #include "device_cee.hpp"
-#include <libusb-1.0/libusb.h>
+#include "../libusb-1.0/libusb.h"
 #include <iostream>
 #include <cstring>
 #include <cmath>
@@ -57,7 +57,7 @@ struct IN_sample{
 	int16_t bv(){return signextend12((bih_bvh&0x0f)<<8) | bvl;}
 	int16_t ai(){return signextend12((aih_avh&0xf0)<<4) | ail;}
 	int16_t bi(){return signextend12((bih_bvh&0xf0)<<4) | bil;}
-} __attribute__((packed));
+};// __attribute__((packed));
 
 #define IN_SAMPLES_PER_PACKET 10
 #define FLAG_PACKET_DROPPED (1<<0)
@@ -68,7 +68,7 @@ typedef struct IN_packet{
 	uint8_t flags;
 	uint8_t mode_seq;
 	IN_sample data[10];
-} __attribute__((packed)) IN_packet;
+};// __attribute__((packed)) IN_packet;
 
 #define OUT_SAMPLES_PER_PACKET 10
 struct OUT_sample{
@@ -78,13 +78,13 @@ struct OUT_sample{
 		bl = b & 0xff;
 		bh_ah = ((b>>4)&0xf0) |	(a>>8);
 	}
-} __attribute__((packed));
+};// __attribute__((packed));
 
 typedef struct OUT_packet{
 	uint8_t mode_a;
 	uint8_t mode_b;
 	OUT_sample data[10];
-} __attribute__((packed)) OUT_packet;
+} /*__attribute__((packed))*/ OUT_packet;
 
 #define EEPROM_VALID_MAGIC 0x90e26cee
 #define EEPROM_FLAG_USB_POWER (1<<0)
@@ -95,16 +95,18 @@ typedef struct CEE_version_descriptor{
 	uint8_t flags;
 	uint8_t per_ns;
 	uint8_t min_per;
-} __attribute__((packed)) CEE_version_descriptor;
+} /*__attribute__((packed))*/ CEE_version_descriptor;
 
-CEE_Device::CEE_Device(Session* s, libusb_device* device):
-	Device(s, device),
-	m_signals{
-		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
-		{Signal(&cee_signal_info[0]), Signal(&cee_signal_info[1])},
-	},
-	m_mode{0,0}
-{	}
+CEE_Device::CEE_Device(Session* s, libusb_device* device) :
+Device(s, device)
+{
+	m_signals[0][0] = new Signal(&cee_signal_info[0]);
+	m_signals[0][1] = new Signal(&cee_signal_info[1]);
+	m_signals[1][0] = new Signal(&cee_signal_info[0]);
+	m_signals[1][1] = new Signal(&cee_signal_info[1]);
+	m_mode[0] = 0;
+	m_mode[1] = 0;
+}
 
 CEE_Device::~CEE_Device() {}
 
@@ -264,7 +266,8 @@ extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t){
 
 void CEE_Device::configure(uint64_t rate) {
 	double sampleTime = 1.0/rate;
-	m_xmega_per = round(sampleTime * (double) CEE_timer_clock);
+	//m_xmega_per = round(sampleTime * (double) CEE_timer_clock);
+	m_xmega_per = (int)(sampleTime * (double)CEE_timer_clock + 0.5);
 	if (m_xmega_per < m_min_per) m_xmega_per = m_min_per;
 	sampleTime = m_xmega_per / (double) CEE_timer_clock; // convert back to get the actual sample time;
 
@@ -280,11 +283,11 @@ void CEE_Device::configure(uint64_t rate) {
 inline uint16_t CEE_Device::encode_out(int chan, uint32_t igain) {
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
-		float val = m_signals[chan][0].get_sample();
+		float val = m_signals[chan][0]->get_sample();
 		val = constrain(val, 0, 5.0);
 		v = 4095*val/5.0;
 	} else if (m_mode[chan] == SIMV) {
-		float val = m_signals[chan][1].get_sample();
+		float val = m_signals[chan][1]->get_sample();
 		val = constrain(val, m_current_limit / -1000.0, m_current_limit / 1000.0);
 		v = 4095*(1.25+(igain/CEE_current_gain_scale)*val)/2.5;
 	}
@@ -350,18 +353,18 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		}
 
 		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++){
-			m_signals[0][0].put_sample((m_cal.offset_a_v + pkt->data[i].av())*v_factor);
+			m_signals[0][0]->put_sample((m_cal.offset_a_v + pkt->data[i].av())*v_factor);
 			if (m_mode[0] != DISABLED) {
-				m_signals[0][1].put_sample((m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a);
+				m_signals[0][1]->put_sample((m_cal.offset_a_i + pkt->data[i].ai())*i_factor_a);
 			} else {
-				m_signals[0][1].put_sample(0);
+				m_signals[0][1]->put_sample(0);
 			}
 
-			m_signals[1][0].put_sample((m_cal.offset_b_v + pkt->data[i].bv())*v_factor);
+			m_signals[1][0]->put_sample((m_cal.offset_b_v + pkt->data[i].bv())*v_factor);
 			if (m_mode[1] != DISABLED) {
-				m_signals[1][1].put_sample((m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b);
+				m_signals[1][1]->put_sample((m_cal.offset_b_i + pkt->data[i].bi())*i_factor_b);
 			} else {
-				m_signals[1][1].put_sample(0);
+				m_signals[1][1]->put_sample(0);
 			}
 			m_in_sampleno++;
 		}
@@ -390,7 +393,7 @@ const sl_channel_info* CEE_Device::channel_info(unsigned channel) const
 Signal* CEE_Device::signal(unsigned channel, unsigned signal)
 {
 	if (channel < 2 && signal < 2) {
-		return &m_signals[channel][signal];
+		return m_signals[channel][signal];
 	} else {
 		return NULL;
 	}

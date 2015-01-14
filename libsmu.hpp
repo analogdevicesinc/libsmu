@@ -133,6 +133,7 @@ enum Modes {
 
 class Signal {
 public:
+	Signal() : m_info(0), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
 	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
 	const sl_signal_info* info() const { return m_info; }
 	const sl_signal_info* const m_info;
