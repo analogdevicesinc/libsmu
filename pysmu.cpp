@@ -69,7 +69,7 @@ extern "C" {
         if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &mode_num)) 
             {return PyString_FromString("Error");}
         int idx = 0;
-        for (auto i: session->m_available_devices){
+        for (auto i: session->m_devices){
             if (idx == dev_num){
                 i->set_mode((unsigned) chan_num, (unsigned) mode_num);
                 break;
@@ -85,7 +85,7 @@ extern "C" {
         if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &nsamples)) 
             {return PyString_FromString("Error");}
         int idx = 0;
-        for (auto i: session->m_available_devices){
+        for (auto i: session->m_devices){
             if (idx == dev_num){
                 auto sgnl_v = i->signal(chan_num, 0);
                 auto sgnl_i = i->signal(chan_num, 1);
@@ -116,13 +116,13 @@ extern "C" {
         double duty;
         double period;
         double phase;
-        double val1;
-        double val2;
+        float val1;
+        float val2;
 
-        if (!PyArg_ParseTuple(args, "iiiifffff", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
+        if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
             {return PyString_FromString("Error");}
         int idx = 0;
-        for (auto i: session->m_available_devices){
+        for (auto i: session->m_devices){
             if (idx == dev_num){
                 auto sgnl =  i->signal(chan_num, 0);
                 if (mode == SIMV)
@@ -149,7 +149,7 @@ extern "C" {
         if (!PyArg_ParseTuple(args, "iiif", &dev_num, &chan_num, &mode, &val)) 
             {return PyString_FromString("Error");}
         int idx = 0;
-        for (auto i: session->m_available_devices){
+        for (auto i: session->m_devices){
             if (idx == dev_num){
                 if (mode == SVMI) {
                     auto sgnl_v = i->signal(chan_num, 0);
@@ -165,6 +165,44 @@ extern "C" {
         return PyString_FromString("Success");
     }
 
+    static PyObject* setOutputArbitrary(PyObject* self, PyObject* args){
+        PyObject* buf;
+        int dev_num;
+        int chan_num;
+        int mode;
+        int repeat;
+        if (!PyArg_ParseTuple(args, "Oiiii", &buf, &dev_num, &chan_num, &mode, &repeat))
+            {return PyString_FromString("Error");}
+        size_t buf_len = PyObject_Length(buf);
+        float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
+        for (int i = 0; i<buf_len; i++){
+            PyObject* val = PySequence_GetItem(buf, i);
+            if (!PyFloat_Check(val)){
+                free(dev_buf);
+                return PyString_FromString("Error");
+            }
+            char* tmp = (char*)malloc(100);
+            double intermediary = PyFloat_AsDouble(val);
+            sprintf(tmp, "%f", intermediary);
+            dev_buf[i] = atof(tmp);
+            free(tmp);
+            //dev_buf[i] = atof(PyFloat_AsString(val));
+        }
+        int idx = 0;
+        for (auto i: session->m_devices){
+            if (idx == dev_num){
+                auto sgnl = i->signal(chan_num, mode);
+                bool flag = false;
+                if (repeat>0)
+                    {flag = true;}
+                sgnl->source_buffer(dev_buf, buf_len, flag);
+                return PyString_FromString("Success");
+            }
+            idx++;
+        }
+        return PyString_FromString("Error");
+    }
+
     static PyMethodDef pysmu_methods [] = {
         { "setup", initSession, METH_VARARGS, "start session"  },
         { "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
@@ -173,6 +211,7 @@ extern "C" {
         { "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
         { "set_output_constant", setOutputConstant, METH_VARARGS, "set channel output - constant"  },
         { "set_output_wave", setOutputWave, METH_VARARGS, "set channel output - wave"  },
+        { "set_output_buffer", setOutputArbitrary, METH_VARARGS, "set channel output - arbitrary wave"  },
         { NULL, NULL, 0, NULL  }
     };
 
