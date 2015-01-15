@@ -116,10 +116,10 @@ extern "C" {
         double duty;
         double period;
         double phase;
-        double val1;
-        double val2;
+        float val1;
+        float val2;
 
-        if (!PyArg_ParseTuple(args, "iiiifffff", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
+        if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_devices){
@@ -173,7 +173,7 @@ extern "C" {
         int repeat;
         if (!PyArg_ParseTuple(args, "Oiiii", &buf, &dev_num, &chan_num, &mode, &repeat))
             {return PyString_FromString("Error");}
-        int buf_len = PyObject_Length(buf);
+        size_t buf_len = PyObject_Length(buf);
         float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
         for (int i = 0; i<buf_len; i++){
             PyObject* val = PySequence_GetItem(buf, i);
@@ -192,7 +192,10 @@ extern "C" {
         for (auto i: session->m_devices){
             if (idx == dev_num){
                 auto sgnl = i->signal(chan_num, mode);
-                sgnl->source_buffer(dev_buf, buf_len, repeat);
+                bool flag = false;
+                if (repeat>0)
+                    {flag = true;}
+                sgnl->source_buffer(dev_buf, buf_len, flag);
                 return PyString_FromString("Success");
             }
             idx++;

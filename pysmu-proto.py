@@ -73,7 +73,8 @@ if __name__ == '__main__':
     print A
     A.set_mode('v')
     #A.constant(3)
-    #print A.arbitrary((5, 400), (2.5, 400))
-    #print A.sine(1.5, 3, .5,0)
-    print A.square(0, 3, 1, 0, 5)
+    print A.arbitrary((5, 400), (2.5, 400))
+    #print A.sine(1, 3, 5, 0)
+    #print A.square(0, 3, 10, 0, .5)
+    #print A.triangle(2,3,10,0)
     print A.get_samples(100000)
