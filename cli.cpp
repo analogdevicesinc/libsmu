@@ -1,3 +1,7 @@
+// Released under the terms of the BSD License
+// (C) 2014-2015
+//   Kevin Mehall <km@kevinmehall.net>
+
 #include <memory>
 #include "libsmu.hpp"
 #include <iostream>
