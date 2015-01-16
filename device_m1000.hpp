@@ -1,3 +1,8 @@
+// Released under the terms of the BSD License
+// (C) 2014-2015
+//   Kevin Mehall <km@kevinmehall.net>
+//   Ian Daniher <itdaniher@gmail.com>
+
 #pragma once
 #include <mutex>
 #include "libsmu.hpp"

@@ -1,3 +1,8 @@
+// Released under the terms of the BSD License
+// (C) 2014-2015
+//   Kevin Mehall <km@kevinmehall.net>
+//   Ian Daniher <itdaniher@gmail.com>
+
 #include "device_m1000.hpp"
 #include <libusb-1.0/libusb.h>
 #include <iostream>

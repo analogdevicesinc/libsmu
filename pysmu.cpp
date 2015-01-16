@@ -1,3 +1,8 @@
+// Released under the terms of the BSD License
+// (C) 2014-2015
+//   Ezra Varady <ez@sloth.life>
+//   Ian Daniher <itdaniher@gmail.com>
+
 #include"libsmu.hpp"
 #include <Python.h>
 #include <iostream>
