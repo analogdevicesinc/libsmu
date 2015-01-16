@@ -13,9 +13,16 @@ class smu(object):
 
     def load_chans(self):
         self.devices = pysmu.get_dev_info()
+        self.serials = {i:v[0] for i, v in enumerate(self.devices)}
+        self.devices = [x[1] for x in self.devices]
+
         names = (chr(x) for x in xrange(65,91))
         self.chans = {names.next(): (i, v) for i, d in enumerate(self.devices) for k, v in d.items()}
         self.chans = {k: channel(k, *v) for k, v in self.chans.items()}
+        self.devices = {i:(self.serials[i], v) for i, v in enumerate(self.devices)}
+
+    def ctrl_transfer(self, *args):
+        pysmu.ctrl_transfer(*args)
 
     def __repr__(self):
         return 'Devices: '+str(self.devices)
@@ -69,12 +76,12 @@ class channel(object):
 if __name__ == '__main__':
     x = smu()
     print x
+    print x.devices
     A = x.chans['A']
-    print A
     A.set_mode('v')
-    #A.constant(3)
-    print A.arbitrary((5, 400), (2.5, 400))
+    A.constant(3)
+    #A.arbitrary((5, 400), (2.5, 400))
     #print A.sine(1, 3, 5, 0)
     #print A.square(0, 3, 10, 0, .5)
     #print A.triangle(2,3,10,0)
-    print A.get_samples(100000)
+    A.get_samples(100000)

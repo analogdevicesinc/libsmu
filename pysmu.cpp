@@ -42,8 +42,7 @@ extern "C" {
         for (auto i: session->m_available_devices){
             session->add_device(&*i);
         }
-        for(auto i: session->m_devices){
-            auto dev = i;
+        for(auto dev: session->m_devices){
             auto dev_info = dev->info();
             PyObject* dev_data = PyDict_New();
             for (unsigned chan=0; chan < dev_info->channel_count; chan++) {
@@ -57,7 +56,8 @@ extern "C" {
                 }
                 PyDict_SetItem(dev_data, PyString_FromString(string(chan_info->label).c_str()), sigs);
             }
-            PyList_Append(data, dev_data);
+            PyObject* ret = PyTuple_Pack(2, PyString_FromString(dev->serial()), dev_data);
+            PyList_Append(data, ret);
         }
         return data;
     }
@@ -203,6 +203,32 @@ extern "C" {
         return PyString_FromString("Error");
     }
 
+    static PyObject* ctrlTransfer(PyObject* self, PyObject* args){
+        int device;
+        unsigned bmRequestType;
+        unsigned bRequest;
+        unsigned wValue;
+        unsigned wIndex;
+        unsigned char* data_use;
+        PyObject* data;
+        unsigned wLength;
+        unsigned timeout;
+
+        if (!PyArg_ParseTuple(args, "iIIIISII", &device, &bmRequestType, &bRequest, &wValue, &wIndex, &data, &wLength, &timeout))
+            {return PyString_FromString("Error");}
+        data_use = (unsigned char*)PyString_AsString(data);
+        if (*data_use == '0')
+            {data_use = nullptr;}
+        int idx = 0;
+        for (auto dev: session->m_devices){
+            if (idx == device){
+                dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
+                return PyString_FromString("Success");
+            }
+        }
+        return PyString_FromString("Error");
+    }
+
     static PyMethodDef pysmu_methods [] = {
         { "setup", initSession, METH_VARARGS, "start session"  },
         { "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
@@ -212,6 +238,7 @@ extern "C" {
         { "set_output_constant", setOutputConstant, METH_VARARGS, "set channel output - constant"  },
         { "set_output_wave", setOutputWave, METH_VARARGS, "set channel output - wave"  },
         { "set_output_buffer", setOutputArbitrary, METH_VARARGS, "set channel output - arbitrary wave"  },
+        { "ctrl_transfer", ctrlTransfer, METH_VARARGS, "initiate a control transfer"  },
         { NULL, NULL, 0, NULL  }
     };
 
