@@ -80,8 +80,6 @@ int M1000_Device::added() {
 }
 
 int M1000_Device::removed() {
-	set_mode(0, 0);
-	set_mode(1, 0);
 	libusb_release_interface(m_usb, 0);
 	return 0;
 }
@@ -99,7 +97,7 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t){
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		switch (t->status) {
 			case LIBUSB_TRANSFER_NO_DEVICE: {
-				//dev->m_session->detached(dev->m_device);
+				dev->removed();
 				dev->m_session->m_active_devices -= 1;
 				break;
 			}
@@ -263,7 +261,7 @@ void M1000_Device::on()
 void M1000_Device::sync() {
 	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	cerr << m_usb << ": sof now: " << m_sof_start << endl;
-	m_sof_start = (m_sof_start+0xff)&0x3f00;
+	m_sof_start = (m_sof_start+0xff)&0x3c00;
 	cerr << m_usb << ": sof then: " << m_sof_start << endl;
 }
 
@@ -284,6 +282,14 @@ void M1000_Device::start_run(uint64_t samples) {
 
 void M1000_Device::cancel()
 {
+	std::lock_guard<std::mutex> lock(m_state);
+	for (auto i: m_in_transfers) {
+		if (!libusb_cancel_transfer(i)) break;
+	}
+
+	for (auto i: m_out_transfers) {
+		if (!libusb_cancel_transfer(i)) break;
+	}
 }
 
 void M1000_Device::off()
