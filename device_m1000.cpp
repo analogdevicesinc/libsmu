@@ -120,6 +120,7 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 	}
 }
 
+// calculate values for sampling period for SAM3U timer
 void M1000_Device::configure(uint64_t rate) {
 	double sample_time = 1.0/rate;
 	m_sam_per = round(sample_time * (double) M1K_timer_clock) / 2;
@@ -134,9 +135,10 @@ void M1000_Device::configure(uint64_t rate) {
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 
-	//std::cerr << "M1000 rate " << sample_time <<  " " << m_sam_per << std::endl;
+	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
+// encode output samples
 inline uint16_t M1000_Device::encode_out(int chan) {
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
@@ -155,6 +157,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 	return v;
 }
 
+// submit data transfers to usb thread - from host to device
 bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
@@ -183,12 +186,13 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	return false;
 }
 
+
+// submit data transfers to usb thread - from device to host
 bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
-		//std::cerr << "submit_in_transfer " << m_requested_sampleno << std::endl;
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-		//	cerr << "libusb_submit_transfer in " << r << endl;
+			cerr << "libusb_submit_transfer in " << r << endl;
 		}
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
@@ -197,6 +201,7 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 	return false;
 }
 
+// reformat received data - integer to float conversion
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
 	for (int p=0; p<m_packets_per_transfer; p++){
@@ -218,6 +223,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 }
 
+// get device info struct
 const sl_device_info* M1000_Device::info() const
 {
 	return &m1000_info;
@@ -241,6 +247,7 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 	}
 }
 
+// set output mode
 void M1000_Device::set_mode(unsigned chan, unsigned mode)
 {
 	if (chan < 2) {
@@ -250,6 +257,7 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 	// std::cerr << "sm (" << chan << "," << mode << ")" << std::endl;
 }
 
+// turn on power supplies, clear sampling state
 void M1000_Device::on()
 {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
@@ -258,6 +266,7 @@ void M1000_Device::on()
 	libusb_control_transfer(m_usb, 0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
+// get current microframe index, set m_sof_start to be time in the future
 void M1000_Device::sync() {
 	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	cerr << m_usb << ": sof now: " << m_sof_start << endl;
@@ -265,6 +274,7 @@ void M1000_Device::sync() {
 	cerr << m_usb << ": sof then: " << m_sof_start << endl;
 }
 
+// command device to start sampling
 void M1000_Device::start_run(uint64_t samples) {
 	libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	std::lock_guard<std::mutex> lock(m_state);
@@ -280,6 +290,7 @@ void M1000_Device::start_run(uint64_t samples) {
 	}
 }
 
+// cancel pending libusb transactions
 void M1000_Device::cancel()
 {
 	std::lock_guard<std::mutex> lock(m_state);
@@ -292,6 +303,7 @@ void M1000_Device::cancel()
 	}
 }
 
+// put outputs into high-impedance mode, stop sampling
 void M1000_Device::off()
 {
 	set_mode(A, DISABLED);

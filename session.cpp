@@ -17,6 +17,7 @@ using std::shared_ptr;
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
+// session constructor
 Session::Session()
 {
 	m_active_devices = 0;
@@ -48,6 +49,7 @@ Session::Session()
 	}
 }
 
+// session destructor
 Session::~Session()
 {
 	// Run device destructors before libusb_exit
@@ -60,6 +62,7 @@ Session::~Session()
 	libusb_exit(m_usb_cx);
 }
 
+// callback for device attach events
 void Session::attached(libusb_device *device)
 {
 	shared_ptr<Device> dev = probe_device(device);
@@ -75,6 +78,7 @@ void Session::attached(libusb_device *device)
 	}
 }
 
+// callback for device detach events
 void Session::detached(libusb_device *device)
 {
 	this->remove_device(&(*this->find_existing_device(device)));
@@ -83,6 +87,7 @@ void Session::detached(libusb_device *device)
 	}
 }
 
+// low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	Session *sess = (Session *) user_data;
@@ -94,6 +99,7 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     return 0;
 }
 
+// spawn thread for USB transaction handling
 void Session::start_usb_thread() {
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
@@ -101,6 +107,7 @@ void Session::start_usb_thread() {
 	});
 }
 
+// update list of attached USB devices
 int Session::update_available_devices()
 {
 	m_available_devices.clear();
@@ -119,6 +126,7 @@ int Session::update_available_devices()
 	return 0;
 }
 
+// identify devices supported by libsmu
 shared_ptr<Device> Session::probe_device(libusb_device* device)
 {
 	shared_ptr<Device> dev = find_existing_device(device);
@@ -162,6 +170,8 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 	return NULL;
 }
 
+
+// adds a new device to the session
 Device* Session::add_device(Device* device) {
 	m_devices.insert(device);
 	cerr << "device insert " << device << endl; 
@@ -169,6 +179,7 @@ Device* Session::add_device(Device* device) {
 	return device;
 }
 
+// removes an existing device from the session
 void Session::remove_device(Device* device) {
 	if ( device ) { 
 		m_devices.erase(device);
@@ -176,17 +187,20 @@ void Session::remove_device(Device* device) {
 	}
 }
 
+// configures sampling for all devices
 void Session::configure(uint64_t sampleRate) {
 	for (auto i: m_devices) {
 		i->configure(sampleRate);
 	}
 }
 
+// stream nsamples, then stop
 void Session::run(sample_t nsamples) {
 	start(nsamples);
 	end();
 }
 
+// stop streaming data on all devices
 void Session::end() {
 	std::unique_lock<std::mutex> lk(m_lock);
 	for (auto i: m_devices) {
@@ -195,6 +209,7 @@ void Session::end() {
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 }
 
+// start streaming data
 void Session::start(sample_t nsamples) {
 	m_min_progress = 0;
 	for (auto i: m_devices) {
@@ -206,6 +221,7 @@ void Session::start(sample_t nsamples) {
 	}
 }
 
+// cancel all pending USB transactions
 void Session::cancel() {
 	for (auto i: m_devices) {
 		i->cancel();
@@ -245,18 +261,21 @@ Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 	libusb_ref_device(m_device);
 }
 
+// generic device init - libusb_open
 int Device::init()
 {
 	int r = libusb_open(m_device, &m_usb);
 	return r;
 }
 
+// generic device teardown - libusb_close
 Device::~Device()
 {
 	libusb_close(m_usb);
 	libusb_unref_device(m_device);
 }
 
+// generic implementation of ctrl_transfers
 void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
 { 
 	libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
