@@ -21,8 +21,9 @@ class smu(object):
         self.chans = {k: channel(k, *v) for k, v in self.chans.items()}
         self.devices = {i:(self.serials[i], v) for i, v in enumerate(self.devices)}
 
-    def ctrl_transfer(self, *args):
-        pysmu.ctrl_transfer(*args)
+    def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout):
+	data = str(data)
+        return pysmu.ctrl_transfer(device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout)
 
     def __repr__(self):
         return 'Devices: '+str(self.devices)
@@ -84,4 +85,4 @@ if __name__ == '__main__':
     #print A.sine(1, 3, 5, 0)
     #print A.square(0, 3, 10, 0, .5)
     #print A.triangle(2,3,10,0)
-    A.get_samples(100000)
+    print A.get_samples(1000)

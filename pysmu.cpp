@@ -230,6 +230,7 @@ extern "C" {
                 dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
                 return PyString_FromString("Success");
             }
+	    idx++;
         }
         return PyString_FromString("Error");
     }
