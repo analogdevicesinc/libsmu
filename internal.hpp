@@ -5,6 +5,7 @@
 
 #pragma once
 #include <libusb-1.0/libusb.h>
+#include <stdint.h>
 #include <vector>
 
 inline static float constrain(float val, float lo, float hi){
@@ -43,6 +44,12 @@ struct Transfers {
 		m_transfers.clear();
 	}
 
+	void cancel() {
+		for (auto i: m_transfers) {
+			libusb_cancel_transfer(i);
+		}
+	}
+
 	size_t size() {
 		return m_transfers.size();
 	}
@@ -57,4 +64,6 @@ struct Transfers {
 	const_iterator begin() const { return m_transfers.begin(); }
 	iterator end() { return m_transfers.end(); }
 	const_iterator end() const { return m_transfers.end(); }
+
+	uint32_t num_active;
 };

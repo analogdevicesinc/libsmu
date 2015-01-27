@@ -242,33 +242,55 @@ extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t){
 	}
 
 	CEE_Device *dev = (CEE_Device *) t->user_data;
-	std::lock_guard<std::mutex> lock(dev->m_state);
+	dev->in_completion(t);
+}
+
+void CEE_Device::in_completion(libusb_transfer* t) {
+	std::lock_guard<std::mutex> lock(m_state);
+
+	m_in_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED){
-		dev->handle_in_transfer(t);
-		dev->submit_in_transfer(t);
-	}else{
+		handle_in_transfer(t);
+		if (m_session->m_cancellation == 0) {
+			submit_in_transfer(t);
+		}
+	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		std::cerr << "ITransfer error "<< t->status << " " << t << std::endl;
-		//TODO: notify main thread of error
+		m_session->handle_error(t->status);
+	}
+
+	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
+		m_session->completion();
 	}
 }
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL cee_out_completion(libusb_transfer *t){
-	//std::cerr << "cee_out_completion" << endl;
-
 	if (!t->user_data) {
 		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
 		return;
 	}
 
 	CEE_Device *dev = (CEE_Device *) t->user_data;
-	std::lock_guard<std::mutex> lock(dev->m_state);
+	dev->out_completion(t);
+}
 
-	if (t->status == LIBUSB_TRANSFER_COMPLETED){
-		dev->submit_out_transfer(t);
-	}else{
+void CEE_Device::out_completion(libusb_transfer* t) {
+	std::lock_guard<std::mutex> lock(m_state);
+	m_out_transfers.num_active--;
+
+	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
+		if (m_session->m_cancellation == 0) {
+			submit_out_transfer(t);
+		}
+	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		std::cerr << "OTransfer error "<< t->status << " " << t << std::endl;
+		m_session->handle_error(t->status);
+	}
+
+	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
+		m_session->completion();
 	}
 }
 
@@ -283,6 +305,8 @@ void CEE_Device::configure(uint64_t rate) {
 
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(IN_packet),  1000, cee_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK, m_packets_per_transfer*sizeof(OUT_packet), 1000, cee_out_completion, this);
+
+	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 
 	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
 }
@@ -325,6 +349,7 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 		if (r != 0) {
 			cerr << "libusb_submit_transfer out " << r << endl;
 		}
+		m_out_transfers.num_active++;
 		return true;
 	}
 	return false;
@@ -337,6 +362,7 @@ bool CEE_Device::submit_in_transfer(libusb_transfer* t) {
 		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
 		}
+		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
 	}
@@ -378,9 +404,6 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 
 	m_session->progress();
-	if (m_sample_count !=0 && m_in_sampleno >= m_sample_count) {
-		m_session->completion();
-	}
 }
 
 const sl_device_info* CEE_Device::info() const
@@ -434,6 +457,8 @@ void CEE_Device::start_run(uint64_t samples) {
 
 void CEE_Device::cancel()
 {
+	m_in_transfers.cancel();
+	m_out_transfers.cancel();
 }
 
 void CEE_Device::off()

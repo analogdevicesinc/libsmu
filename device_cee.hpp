@@ -37,6 +37,9 @@ protected:
 	virtual void on();
 	virtual void off();
 
+	void in_completion(libusb_transfer *t);
+	void out_completion(libusb_transfer *t);
+
 	bool submit_out_transfer(libusb_transfer* t);
 	bool submit_in_transfer(libusb_transfer* t);
 	void handle_in_transfer(libusb_transfer* t);
@@ -50,8 +53,6 @@ protected:
 	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
-
-	std::mutex m_state;
 
 	struct EEPROM_cal{
 		uint32_t magic;

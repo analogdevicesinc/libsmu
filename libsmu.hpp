@@ -48,6 +48,9 @@ public:
 	/// Called by devices on the USB thread when they are complete
 	void completion();
 
+	/// Called on the USB thread when a device encounters an error
+	void handle_error(unsigned status);
+
 	/// Called by devices on the USB thread with progress updates
 	void progress();
 	// called by hotplug events on the USB thread
@@ -58,9 +61,11 @@ public:
 	void end();
 
 	std::function<void(sample_t)> m_progress_callback;
-	std::function<void()> m_completion_callback;
+	std::function<void(unsigned)> m_completion_callback;
 	std::function<void()> m_hotplug_detach_callback;
 	std::function<void()> m_hotplug_attach_callback;
+
+	unsigned m_cancellation;
 
 protected:
 	sample_t m_min_progress;
@@ -91,6 +96,9 @@ public:
 	virtual int get_default_rate() {return 10000;};
 	virtual void sync() {};
 
+	virtual void lock() { m_state.lock(); }
+	virtual void unlock() { m_state.unlock(); }
+
 
 protected:
 	Device(Session* s, libusb_device* d);
@@ -112,6 +120,8 @@ protected:
 	sample_t m_requested_sampleno;
 	sample_t m_in_sampleno;
 	sample_t m_out_sampleno;
+
+	std::mutex m_state;
 
 	char serial_num[32];
 	friend class Session;
