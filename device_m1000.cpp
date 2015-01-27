@@ -87,36 +87,58 @@ int M1000_Device::removed() {
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t){
+	if (!t->user_data){
+		libusb_free_transfer(t);
+		return;
+	}
 	M1000_Device *dev = (M1000_Device *) t->user_data;
-	std::lock_guard<std::mutex> lock(dev->m_state);
+	dev->in_completion(t);
+}
 
+void M1000_Device::in_completion(libusb_transfer *t) {
+	std::lock_guard<std::mutex> lock(m_state);
+	m_in_transfers.num_active--;
 	if (t->status == LIBUSB_TRANSFER_COMPLETED){
-		dev->handle_in_transfer(t);
-		dev->submit_in_transfer(t);
-	}else{
-		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
-		switch (t->status) {
-			case LIBUSB_TRANSFER_NO_DEVICE: {
-				dev->removed();
-				dev->m_session->m_active_devices -= 1;
-				break;
-			}
-			default:
-				{}
+		handle_in_transfer(t);
+		// m_cancellation == 0, everything OK	
+		if (m_session->m_cancellation == 0) {
+			submit_in_transfer(t);
 		}
-		//TODO: notify main thread of error
+	}
+	else if (t->status == LIBUSB_TRANSFER_CANCELLED){
+		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
+		m_session->handle_error(t->status);
+	}
+	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
+		m_session->completion();
 	}
 }
 
-/// Runs in USB thread
+// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
+	if (!t->user_data) {
+		libusb_free_transfer(t);
+		return;
+	}
 	M1000_Device *dev = (M1000_Device *) t->user_data;
-	std::lock_guard<std::mutex> lock(dev->m_state);
+	dev->out_completion(t);
+}
 
-	if (t->status == LIBUSB_TRANSFER_COMPLETED){
-		dev->submit_out_transfer(t);
-	}else{
-		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
+void M1000_Device::out_completion(libusb_transfer *t) {
+	std::lock_guard<std::mutex> lock(m_state);
+	m_out_transfers.num_active--;
+
+	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
+		if (m_session->m_cancellation == 0) {
+			submit_out_transfer(t);
+		}
+	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
+		std::cerr << "OTransfer error "<< t->status << " " << t << std::endl;
+		m_session->handle_error(t->status);
+	}
+
+	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
+		m_session->completion();
 	}
 }
 
@@ -134,7 +156,7 @@ void M1000_Device::configure(uint64_t rate) {
 		m_packets_per_transfer*in_packet_size,  10000, m1000_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
-
+	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
@@ -177,12 +199,11 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			//cerr << "libusb_submit_transfer out " << r << endl;
+			cerr << "libusb_submit_transfer out " << r << endl;
 		}
+		m_out_transfers.num_active++;
 		return true;
-	}/* else {
-		std::cerr << "out done" << std::endl;
-	}*/
+	}
 	return false;
 }
 
@@ -194,6 +215,7 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
 		}
+		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
 	}
@@ -217,10 +239,6 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 
 	m_session->progress();
-	if (m_sample_count !=0 && m_in_sampleno >= m_sample_count) {
-		assert(m_out_sampleno >= m_sample_count);
-		m_session->completion();
-	}
 }
 
 // get device info struct
@@ -293,14 +311,8 @@ void M1000_Device::start_run(uint64_t samples) {
 // cancel pending libusb transactions
 void M1000_Device::cancel()
 {
-	std::lock_guard<std::mutex> lock(m_state);
-	for (auto i: m_in_transfers) {
-		if (!libusb_cancel_transfer(i)) break;
-	}
-
-	for (auto i: m_out_transfers) {
-		if (!libusb_cancel_transfer(i)) break;
-	}
+	m_in_transfers.cancel();
+	m_out_transfers.cancel();
 }
 
 // put outputs into high-impedance mode, stop sampling
