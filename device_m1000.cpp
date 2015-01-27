@@ -114,6 +114,7 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 	}
 }
 
+// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 	if (!t->user_data) {
 		libusb_free_transfer(t);
@@ -123,7 +124,6 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t){
 	dev->out_completion(t);
 }
 
-/// Runs in USB thread
 void M1000_Device::out_completion(libusb_transfer *t) {
 	std::lock_guard<std::mutex> lock(m_state);
 	m_out_transfers.num_active--;
@@ -239,10 +239,6 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	}
 
 	m_session->progress();
-	if (m_sample_count !=0 && m_in_sampleno >= m_sample_count) {
-		assert(m_out_sampleno >= m_sample_count);
-		m_session->completion();
-	}
 }
 
 // get device info struct
