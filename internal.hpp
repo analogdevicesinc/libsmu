@@ -43,6 +43,12 @@ struct Transfers {
 		m_transfers.clear();
 	}
 
+	void cancel() {
+		for (auto i: m_transfers) {
+			libusb_cancel_transfer(i);
+		}
+	}
+
 	size_t size() {
 		return m_transfers.size();
 	}
@@ -57,4 +63,6 @@ struct Transfers {
 	const_iterator begin() const { return m_transfers.begin(); }
 	iterator end() { return m_transfers.end(); }
 	const_iterator end() const { return m_transfers.end(); }
+
+	uint num_active;
 };

@@ -52,8 +52,6 @@ protected:
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
 
-	std::mutex m_state;
-
 	uint64_t m_sample_rate;
 	uint64_t m_sample_count;
 

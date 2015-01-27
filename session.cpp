@@ -214,6 +214,7 @@ void Session::end() {
 // start streaming data
 void Session::start(sample_t nsamples) {
 	m_min_progress = 0;
+    m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
 		if (m_devices.size() > 1)
@@ -225,8 +226,18 @@ void Session::start(sample_t nsamples) {
 
 // cancel all pending USB transactions
 void Session::cancel() {
+	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (auto i: m_devices) {
 		i->cancel();
+	}
+}
+
+// Called on the USB thread when a device encounters an error
+void Session::handle_error(unsigned status) {
+	std::lock_guard<std::mutex> lock(m_lock);
+	if (m_cancellation == 0) {
+		m_cancellation = status;
+		cancel();
 	}
 }
 
@@ -237,7 +248,7 @@ void Session::completion() {
 	m_active_devices -= 1;
 	if (m_active_devices == 0) {
 		if (m_completion_callback) {
-			m_completion_callback();
+			m_completion_callback(m_cancellation != 0);
 		}
 		m_completion.notify_all();
 	}
