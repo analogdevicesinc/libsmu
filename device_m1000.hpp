@@ -38,6 +38,9 @@ protected:
 	virtual void on();
 	virtual void off();
 
+	void in_completion(libusb_transfer *t);
+	void out_completion(libusb_transfer *t);
+
 	bool submit_out_transfer(libusb_transfer* t);
 	bool submit_in_transfer(libusb_transfer* t);
 	void handle_in_transfer(libusb_transfer* t);
