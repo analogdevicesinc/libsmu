@@ -100,15 +100,15 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 	m_in_transfers.num_active--;
 	if (t->status == LIBUSB_TRANSFER_COMPLETED){
 		handle_in_transfer(t);
-		// m_cancellation == 0, everything OK	
+		// m_cancellation == 0, everything OK
 		if (m_session->m_cancellation == 0) {
 			submit_in_transfer(t);
 		}
-	}
-	else if (t->status == LIBUSB_TRANSFER_CANCELLED){
+	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
+
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
