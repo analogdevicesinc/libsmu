@@ -71,7 +71,7 @@ extern "C" {
         int dev_num;
         int chan_num;
         int mode_num;
-        if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &mode_num)) 
+        if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &mode_num))
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_devices){
@@ -87,7 +87,7 @@ extern "C" {
         int dev_num;
         int chan_num;
         int nsamples;
-        if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &nsamples)) 
+        if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &nsamples))
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_devices){
@@ -100,7 +100,7 @@ extern "C" {
                 buf_i.resize(nsamples);
                 sgnl_v->measure_buffer(buf_v.data(), nsamples);
                 sgnl_i->measure_buffer(buf_i.data(), nsamples);
-                // sample rate fixed at 100k 
+                // sample rate fixed at 100k
                 session->configure(100000);
                 session->run(nsamples);
                 PyObject* samples = PyList_New(0);
@@ -124,7 +124,7 @@ extern "C" {
         float val1;
         float val2;
 
-        if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty)) 
+        if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty))
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_devices){
@@ -151,7 +151,7 @@ extern "C" {
         int chan_num;
         int mode;
         float val;
-        if (!PyArg_ParseTuple(args, "iiif", &dev_num, &chan_num, &mode, &val)) 
+        if (!PyArg_ParseTuple(args, "iiif", &dev_num, &chan_num, &mode, &val))
             {return PyString_FromString("Error");}
         int idx = 0;
         for (auto i: session->m_devices){
