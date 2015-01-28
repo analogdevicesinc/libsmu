@@ -5,7 +5,6 @@ add_library(smu
   libsmu.h
   libsmu.hpp
   session.cpp
-  signal.cpp
   device_cee.hpp
   device_cee.cpp
   device_m1000.hpp
