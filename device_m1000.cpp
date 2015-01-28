@@ -184,9 +184,9 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
 
-		for (int p=0; p<m_packets_per_transfer; p++){
+		for (unsigned p=0; p<m_packets_per_transfer; p++){
 			uint8_t* buf = (uint8_t*) (t->buffer + p*out_packet_size);
-			for (int i=0; i < chunk_size; i++){
+			for (unsigned i=0; i < chunk_size; i++){
                 uint16_t a = encode_out(0);
                 buf[(i+chunk_size*0)*2  ] = a >> 8;
                 buf[(i+chunk_size*0)*2+1] = a & 0xff;
@@ -226,10 +226,10 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 // reformat received data - integer to float conversion
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
-	for (int p=0; p<m_packets_per_transfer; p++){
+	for (unsigned p=0; p<m_packets_per_transfer; p++){
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
-		for (int i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
+		for (unsigned i=(m_in_sampleno==0)?2:0; i<chunk_size; i++){
 			m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
 			m_signals[0][1].put_sample(((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048);
 			m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
