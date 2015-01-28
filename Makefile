@@ -4,7 +4,7 @@ LINKFLAGS=-lusb-1.0 -lm -lpthread
 BIN=smu
 LIB=smu.a
 
-SRC=session.cpp signal.cpp device_cee.cpp device_m1000.cpp cli.cpp
+SRC=session.cpp device_cee.cpp device_m1000.cpp cli.cpp
 OBJ=$(SRC:%.cpp=%.o)
 
 $(BIN): cli.o $(LIB)
@@ -14,7 +14,7 @@ $(LIB): $(OBJ)
 	ar crf $@ $^
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ -c $< 
+	$(CXX) $(CXXFLAGS) -MMD -MP -o $@ -c $<
 
 -include $(OBJ:%.o=%.d)
 

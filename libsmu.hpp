@@ -91,7 +91,7 @@ public:
 	virtual const sl_channel_info*  channel_info(unsigned channel) const = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 	virtual const char* serial() const { return this->serial_num; }
-	virtual void set_mode(unsigned channel, unsigned mode) {}
+	virtual void set_mode(unsigned channel, unsigned mode) = 0;
 	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout);
 	virtual int get_default_rate() {return 10000;};
 	virtual void sync() {};
@@ -204,7 +204,7 @@ public:
 		m_dest_buf = buf;
 		m_dest_buf_len = len;
 	}
-	
+
 	void measure_callback(std::function<void(value_t value)> callback) {
 		m_dest = DEST_CALLBACK;
 		m_dest_callback = callback;

@@ -18,13 +18,14 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
 // session constructor
-Session::Session()
-{
+Session::Session() {
 	m_active_devices = 0;
 
 	if (int r = libusb_init(&m_usb_cx) != 0) {
 		cerr << "libusb init failed: " << r << endl;
+		abort();
 	}
+
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         cerr << "Using libusb hotplug" << endl;
         if (int r = libusb_hotplug_register_callback(NULL,
@@ -37,8 +38,8 @@ Session::Session()
             this,
             NULL
         ) != 0) {
-		cerr << "libusb hotplug cb reg failed: " << r << endl;
-	};
+			cerr << "libusb hotplug cb reg failed: " << r << endl;
+		}
     } else {
         cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
 	}
@@ -50,8 +51,7 @@ Session::Session()
 }
 
 // session destructor
-Session::~Session()
-{
+Session::~Session() {
 	// Run device destructors before libusb_exit
 	m_usb_thread_loop = 0;
 	m_devices.clear();
@@ -63,8 +63,7 @@ Session::~Session()
 }
 
 // callback for device attach events
-void Session::attached(libusb_device *device)
-{
+void Session::attached(libusb_device *device) {
 	shared_ptr<Device> dev = probe_device(device);
 	if (m_available_devices.size()) {
 		m_available_devices.pop_back();
@@ -79,8 +78,7 @@ void Session::attached(libusb_device *device)
 }
 
 // callback for device detach events
-void Session::detached(libusb_device *device)
-{
+void Session::detached(libusb_device *device) {
 	this->remove_device(&(*this->find_existing_device(device)));
 	if (this->m_hotplug_detach_callback) {
 		this->m_hotplug_detach_callback();
@@ -90,6 +88,7 @@ void Session::detached(libusb_device *device)
 // low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+    (void) ctx;
 	Session *sess = (Session *) user_data;
     if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
 		sess->attached(device);
@@ -108,8 +107,7 @@ void Session::start_usb_thread() {
 }
 
 // update list of attached USB devices
-int Session::update_available_devices()
-{
+int Session::update_available_devices() {
 	m_available_devices.clear();
 	libusb_device** list;
 	int num = libusb_get_device_list(m_usb_cx, &list);
@@ -127,8 +125,7 @@ int Session::update_available_devices()
 }
 
 // identify devices supported by libsmu
-shared_ptr<Device> Session::probe_device(libusb_device* device)
-{
+shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	shared_ptr<Device> dev = find_existing_device(device);
 	if (dev) {
 		return dev;
@@ -160,8 +157,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device)
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* device)
-{
+shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
 	for (auto d: m_available_devices) {
 		if (d->m_device == device) {
 			return d;
@@ -174,14 +170,14 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 // adds a new device to the session
 Device* Session::add_device(Device* device) {
 	m_devices.insert(device);
-	cerr << "device insert " << device << endl; 
+	cerr << "device insert " << device << endl;
 	device->added();
 	return device;
 }
 
 // removes an existing device from the session
 void Session::remove_device(Device* device) {
-	if ( device ) { 
+	if ( device ) {
 		m_devices.erase(device);
 		device->removed();
 	}
@@ -270,28 +266,24 @@ void Session::progress() {
 	}
 }
 
-Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
-{
+Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d) {
 	libusb_ref_device(m_device);
 }
 
 // generic device init - libusb_open
-int Device::init()
-{
+int Device::init() {
 	int r = libusb_open(m_device, &m_usb);
 	return r;
 }
 
 // generic device teardown - libusb_close
-Device::~Device()
-{
+Device::~Device() {
 	libusb_close(m_usb);
 	libusb_unref_device(m_device);
 }
 
 // generic implementation of ctrl_transfers
-void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
-{ 
+void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue,
+                           unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout) {
 	libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
 }
-
