@@ -62,8 +62,8 @@ public:
 
 	std::function<void(sample_t)> m_progress_callback;
 	std::function<void(unsigned)> m_completion_callback;
-	std::function<void()> m_hotplug_detach_callback;
-	std::function<void()> m_hotplug_attach_callback;
+	std::function<void(Device* device)> m_hotplug_detach_callback;
+	std::function<void(Device* device)> m_hotplug_attach_callback;
 
 	unsigned m_cancellation;
 

@@ -15,7 +15,7 @@ using std::endl;
 using std::shared_ptr;
 
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
 // session constructor
 Session::Session()
@@ -26,21 +26,21 @@ Session::Session()
 		cerr << "libusb init failed: " << r << endl;
 	}
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-        cerr << "Using libusb hotplug" << endl;
-        if (int r = libusb_hotplug_register_callback(NULL,
-            (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-            (libusb_hotplug_flag) 0,
-            LIBUSB_HOTPLUG_MATCH_ANY,
-            LIBUSB_HOTPLUG_MATCH_ANY,
-            LIBUSB_HOTPLUG_MATCH_ANY,
-            hotplug_callback_usbthread,
-            this,
-            NULL
-        ) != 0) {
+		cerr << "Using libusb hotplug" << endl;
+		if (int r = libusb_hotplug_register_callback(NULL,
+			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+			(libusb_hotplug_flag) 0,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			hotplug_callback_usbthread,
+			this,
+			NULL
+		) != 0) {
 		cerr << "libusb hotplug cb reg failed: " << r << endl;
 	};
-    } else {
-        cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
+	} else {
+		cerr << "Libusb hotplug not supported. Only devices already attached will be used." << endl;
 	}
 	start_usb_thread();
 
@@ -66,14 +66,13 @@ Session::~Session()
 void Session::attached(libusb_device *device)
 {
 	shared_ptr<Device> dev = probe_device(device);
-	if (m_available_devices.size()) {
-		m_available_devices.pop_back();
-	}
 	m_available_devices.push_back(dev);
-	cerr << "ser: " << dev->serial() << endl;
+	cerr << "Session::attached ser: " << dev->serial() << endl;
 	if (dev) {
 		if (this->m_hotplug_attach_callback) {
-			this->m_hotplug_attach_callback();
+			cerr << dev << endl;
+			this->m_hotplug_attach_callback(&*dev);
+			cerr << dev << endl;
 		}
 	}
 }
@@ -81,22 +80,25 @@ void Session::attached(libusb_device *device)
 // callback for device detach events
 void Session::detached(libusb_device *device)
 {
-	this->remove_device(&(*this->find_existing_device(device)));
 	if (this->m_hotplug_detach_callback) {
-		this->m_hotplug_detach_callback();
+		Device *dev = &*this->find_existing_device(device);
+		if (dev) {
+			cerr << "Session::detached ser: " << dev->serial() << endl;
+			this->m_hotplug_detach_callback(dev);
+		}
 	}
 }
 
 // low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
 	Session *sess = (Session *) user_data;
-    if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
 		sess->attached(device);
-    } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+	} else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
 		sess->detached(device);
-    }
-    return 0;
+	}
+	return 0;
 }
 
 // spawn thread for USB transaction handling
@@ -130,9 +132,6 @@ int Session::update_available_devices()
 shared_ptr<Device> Session::probe_device(libusb_device* device)
 {
 	shared_ptr<Device> dev = find_existing_device(device);
-	if (dev) {
-		return dev;
-	}
 
 	libusb_device_descriptor desc;
 	int r = libusb_get_device_descriptor(device, &desc);
@@ -152,7 +151,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device)
 	if (dev) {
 		if (dev->init() == 0) {
 			libusb_get_string_descriptor_ascii(dev->m_usb, desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
-	 		return dev;
+			return dev;
 		} else {
 			cerr << "Error initializing device" << endl;
 		}
@@ -173,17 +172,25 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device)
 
 // adds a new device to the session
 Device* Session::add_device(Device* device) {
-	m_devices.insert(device);
-	cerr << "device insert " << device << endl; 
-	device->added();
-	return device;
+	if ( device ) {
+		m_devices.insert(device);
+		cerr << "device insert " << device << endl;
+		device->added();
+		return device;
+	}
+	return NULL;
 }
 
 // removes an existing device from the session
 void Session::remove_device(Device* device) {
-	if ( device ) { 
+	if ( device ) {
+		cerr << "removing device " << device << endl;
 		m_devices.erase(device);
 		device->removed();
+		cerr << "m_devices.size() " << m_devices.size() << endl;
+	}
+	else {
+		cerr << "no device removed" << endl;
 	}
 }
 
@@ -214,11 +221,12 @@ void Session::end() {
 // start streaming data
 void Session::start(sample_t nsamples) {
 	m_min_progress = 0;
-    m_cancellation = 0;
+	m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
-		if (m_devices.size() > 1)
+		if (m_devices.size() > 1) {
 			i->sync();
+		}
 		i->start_run(nsamples);
 		m_active_devices += 1;
 	}
@@ -291,7 +299,7 @@ Device::~Device()
 
 // generic implementation of ctrl_transfers
 void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
-{ 
+{
 	libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
 }
 
