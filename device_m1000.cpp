@@ -98,6 +98,7 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t) {
 void M1000_Device::in_completion(libusb_transfer *t) {
 	std::lock_guard<std::mutex> lock(m_state);
 	m_in_transfers.num_active--;
+
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
 		handle_in_transfer(t);
 		// m_cancellation == 0, everything OK
