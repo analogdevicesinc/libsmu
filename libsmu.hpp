@@ -133,8 +133,9 @@ enum Modes {
 
 class Signal {
 public:
-	Signal() : m_info(0), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
-	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
+	Signal() : m_info(0), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE), m_src_buf(0) {}
+	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE), m_src_buf(0) {}
+	~Signal() { if(m_src_buf) delete[] m_src_buf; }
 	const sl_signal_info* info() const { return m_info; }
 	const sl_signal_info* const m_info;
 
@@ -169,11 +170,20 @@ public:
 	}
 	//void source_arb(arb_point_t* points, size_t len, bool repeat);
 	void source_buffer(value_t* buf, size_t len, bool repeat) {
+		value_t* new_buf;
+		value_t* old_buf = m_src_buf;		
+		new_buf = new value_t[len];
+		memcpy(new_buf, buf, len * sizeof(value_t));		
+		
 		m_src = SRC_BUFFER;
-		m_src_buf = buf;
+		m_src_buf =	new_buf;		
 		m_src_buf_len = len;
 		m_src_buf_repeat = repeat;
-		m_src_i = 0;
+		m_src_i = 0;		
+		
+		if(old_buf) {
+			delete[] old_buf;
+		}
 	}
 	void source_callback(std::function<value_t (sample_t index)> callback) {
 		m_src = SRC_CALLBACK;
