@@ -6,27 +6,13 @@ mex libsmu_mex.cpp device_m1000.cpp device_cee.cpp session.cpp signal.cpp libusb
 
 % Initialize the the libsmu session 
 libsmu_mex('initSession');
+libsmu_mex('getDevInfo');
 
-% Get the available channels
-channel_names = libsmu_mex('getDevInfo');
-if(isempty(channel_names))
-	disp('Could not find any valid channels!');
-	return;
-else
-	disp('M1K channels: '); disp(channel_names);
-end
-
-% Set the output waveform
-libsmu_mex('setOutputWave',  ...
-			0, ... 		% dev_num
-			0, ... 		% chan_num
-			262154, ... % mode
-			1, ...		% wave
-			50, ...		% duty
-			1, ...		% period
-			0, ...		% phase
-			0, ...		% val1	
-			100);		% val2 
+libsmu_mex('setOutputConstant',  ...
+ 			0, ... 		% dev_num
+ 			0, ... 		% chan_num
+ 			1, ...      % mode
+ 			5.0);		% buf
 
 % Read and plot the input data
 [v, i] = libsmu_mex('getInputs', ...
