@@ -134,7 +134,7 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 			submit_out_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
-		std::cerr << "OTransfer error "<< t->status << " " << t << std::endl;
+		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
 
