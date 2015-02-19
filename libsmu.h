@@ -39,27 +39,16 @@ typedef struct sl_signal_info {
 	const char* label;
 
 	/// Bitmask of modes for which this signal is enabled as input
-	/// If bit n is set, this signal is an input when the channel is set to mode n
 	uint32_t inputModes;
 
 	/// Bitmask of modes for which this signal is enabled as output
-	/// If bit n is set, this signal is an output when the channel is set to mode n. Note that
-	/// signals can be both input and output simultaneously.
 	uint32_t outputModes;
-
-	/// Mode to switch to if this signal is selected as output, or -1 if there is no such mode.
-	int32_t primaryOutputMode;
 
 	sl_unit unit;
 	double min;
 	double max;
 	double resolution;
 } sl_signal_info;
-
-typedef struct sl_mode_info {
-	sl_type type;
-	const char* label;
-} sl_mode_info;
 
 typedef struct sl_channel_info {
 	sl_type type;

@@ -89,7 +89,6 @@ public:
 	virtual ~Device();
 	virtual const sl_device_info* info() const = 0;
 	virtual const sl_channel_info*  channel_info(unsigned channel) const = 0;
-	virtual const sl_mode_info*  mode_info(unsigned channel, unsigned mode) const = 0;
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 	virtual const char* serial() const { return this->serial_num; }
 	virtual void set_mode(unsigned channel, unsigned mode) = 0;
