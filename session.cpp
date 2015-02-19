@@ -286,8 +286,10 @@ int Device::init() {
 
 // generic device teardown - libusb_close
 Device::~Device() {
-	libusb_close(m_usb);
-	libusb_unref_device(m_device);
+	if (m_usb)
+		libusb_close(m_usb);
+	if (m_device)
+		libusb_unref_device(m_device);
 }
 
 // generic implementation of ctrl_transfers

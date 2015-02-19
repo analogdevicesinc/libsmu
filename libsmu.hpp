@@ -113,8 +113,8 @@ protected:
 	virtual void cancel() = 0;
 
 	Session* const m_session;
-	libusb_device* const m_device;
-	libusb_device_handle* m_usb;
+	libusb_device* const m_device = NULL;
+	libusb_device_handle* m_usb = NULL;
 
 	// State owned by USB thread
 	sample_t m_requested_sampleno;
