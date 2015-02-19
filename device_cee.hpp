@@ -17,7 +17,7 @@ public:
 	virtual ~CEE_Device();
 	virtual const sl_device_info* info() const;
 	virtual const sl_channel_info* channel_info(unsigned channel) const;
-	virtual const sl_mode_info* mode_info(unsigned channel, unsigned mode) const;
+	//virtual sl_mode_info* mode_info(unsigned mode);
 	virtual Signal* signal(unsigned channel, unsigned signal);
 	virtual void set_mode(unsigned channel, unsigned mode);
 	virtual int get_default_rate();
