@@ -53,8 +53,8 @@ static const sl_mode_info m1000_mode_info[3] = {
 };
 
 static const sl_signal_info m1000_signal_info[2] = {
-	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/65536 },
-	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
+	{ SIGNAL, "Voltage", 0x7, 0x2, 1, unit_V,  0.0, 5.0, 5.0/65536 },
+	{ SIGNAL, "Current", 0x6, 0x4, 2, unit_A, -0.2, 0.2, 0.4/65536 },
 };
 
 const float current_limit = 0.2;

@@ -47,6 +47,9 @@ typedef struct sl_signal_info {
 	/// signals can be both input and output simultaneously.
 	uint32_t outputModes;
 
+	/// Mode to switch to if this signal is selected as output, or -1 if there is no such mode.
+	int32_t primaryOutputMode;
+
 	sl_unit unit;
 	double min;
 	double max;
