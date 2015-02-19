@@ -41,9 +41,11 @@ static const sl_channel_info cee_channel_info[2] = {
 	{CHANNEL_SMU, "B", 3, 2},
 };
 
-// Mode 0: high-z
-// Mode 1: SVMI
-// Mode 2: SIMV
+static const sl_mode_info cee_mode_info[3] = {
+	{MODE_HIGH_Z, "Measure Voltage"},
+	{MODE_SVMI,   "Source Voltage, Measure Current"},
+	{MODE_SIMV,   "Source Current, Measure Voltage"},
+};
 
 static const sl_signal_info cee_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/4095 },
@@ -410,6 +412,14 @@ const sl_device_info* CEE_Device::info() const {
 const sl_channel_info* CEE_Device::channel_info(unsigned channel) const {
 	if (channel < 2) {
 		return &cee_channel_info[channel];
+	} else {
+		return NULL;
+	}
+}
+
+const sl_mode_info* CEE_Device::mode_info(unsigned channel, unsigned mode) const {
+	if (channel < 2 && mode < 3) {
+		return &cee_mode_info[mode];
 	} else {
 		return NULL;
 	}

@@ -46,6 +46,12 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{CHANNEL_SMU, "B", 3, 2},
 };
 
+static const sl_mode_info m1000_mode_info[3] = {
+	{MODE_HIGH_Z, "Measure Voltage"},
+	{MODE_SVMI,   "Source Voltage, Measure Current"},
+	{MODE_SIMV,   "Source Current, Measure Voltage"},
+};
+
 static const sl_signal_info m1000_signal_info[2] = {
 	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/65536 },
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
@@ -247,6 +253,14 @@ const sl_device_info* M1000_Device::info() const {
 const sl_channel_info* M1000_Device::channel_info(unsigned channel) const {
 	if (channel < 2) {
 		return &m1000_channel_info[channel];
+	} else {
+		return NULL;
+	}
+}
+
+const sl_mode_info* M1000_Device::mode_info(unsigned channel, unsigned mode) const {
+	if (channel < 2 && mode < 3) {
+		return &m1000_mode_info[mode];
 	} else {
 		return NULL;
 	}

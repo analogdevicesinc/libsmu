@@ -53,6 +53,11 @@ typedef struct sl_signal_info {
 	double resolution;
 } sl_signal_info;
 
+typedef struct sl_mode_info {
+	sl_type type;
+	const char* label;
+} sl_mode_info;
+
 typedef struct sl_channel_info {
 	sl_type type;
 	const char* label;
