@@ -151,7 +151,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 			libusb_get_string_descriptor_ascii(dev->m_usb, desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
 			return dev;
 		} else {
-			cerr << "Error initializing device" << endl;
+			perror("Error initializing device");
 		}
 	}
 	return NULL;
@@ -286,8 +286,10 @@ int Device::init() {
 
 // generic device teardown - libusb_close
 Device::~Device() {
-	libusb_close(m_usb);
-	libusb_unref_device(m_device);
+	if (m_usb)
+		libusb_close(m_usb);
+	if (m_device)
+		libusb_unref_device(m_device);
 }
 
 // generic implementation of ctrl_transfers

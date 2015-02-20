@@ -53,6 +53,9 @@ int main() {
 		}
 		dev_i++;
 	}
+	if (dev_i == 0) {
+		return 1;
+	}
 	for (auto i: session->m_devices) {
 		session->configure(i->get_default_rate());
 	}
