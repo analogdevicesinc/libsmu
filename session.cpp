@@ -65,9 +65,9 @@ Session::~Session() {
 // callback for device attach events
 void Session::attached(libusb_device *device) {
 	shared_ptr<Device> dev = probe_device(device);
-	m_available_devices.push_back(dev);
-	cerr << "Session::attached ser: " << dev->serial() << endl;
 	if (dev) {
+		m_available_devices.push_back(dev);
+		cerr << "Session::attached ser: " << dev->serial() << endl;
 		if (this->m_hotplug_attach_callback) {
 			cerr << dev << endl;
 			this->m_hotplug_attach_callback(&*dev);
