@@ -1,8 +1,12 @@
 CXX=g++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
-LINKFLAGS=-lusb-1.0 -lm -lpthread
+LINKFLAGS=-lm -lpthread
 BIN=smu
 LIB=smu.a
+
+# add libusb-1.0 dep
+LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
+CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
 
 SRC=session.cpp device_cee.cpp device_m1000.cpp cli.cpp
 OBJ=$(SRC:%.cpp=%.o)

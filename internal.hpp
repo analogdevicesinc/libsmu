@@ -4,8 +4,9 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #pragma once
-#include <libusb-1.0/libusb.h>
+#include <libusb.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <vector>
 
 inline static float constrain(float val, float lo, float hi){
