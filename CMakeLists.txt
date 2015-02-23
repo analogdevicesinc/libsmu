@@ -10,7 +10,11 @@ add_library(smu
   device_m1000.hpp
   device_m1000.cpp
 )
-target_link_libraries(smu -lusb-1.0 -lm)
+
+find_package(PkgConfig)
+pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+include_directories(${LIBUSB_INCLUDE_DIRS})
+target_link_libraries(smu -lm ${LIBUSB_LIBRARIES})
 
 add_executable(cli cli.cpp)
 target_link_libraries(cli smu)

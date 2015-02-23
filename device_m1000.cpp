@@ -4,7 +4,7 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #include "device_m1000.hpp"
-#include <libusb-1.0/libusb.h>
+#include <libusb.h>
 #include <iostream>
 #include <cstring>
 #include <cmath>
