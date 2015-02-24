@@ -137,6 +137,7 @@ enum Src {
 	SRC_CONSTANT,
 	SRC_SQUARE,
 	SRC_SAWTOOTH,
+	SRC_STAIRSTEP,
 	SRC_SINE,
 	SRC_TRIANGLE,
 	SRC_BUFFER,
@@ -168,6 +169,12 @@ public:
 	}
 	void source_sawtooth(value_t v1, value_t v2, double period, double phase) {
 		m_src = SRC_SAWTOOTH;
+		update_phase(period, phase);
+		m_src_v1 = v1;
+		m_src_v2 = v2;
+	}
+	void source_stairstep(value_t v1, value_t v2, double period, double phase) {
+		m_src = SRC_STAIRSTEP;
 		update_phase(period, phase);
 		m_src_v1 = v1;
 		m_src_v2 = v2;
@@ -244,6 +251,7 @@ public:
 		case SRC_SQUARE:
 		case SRC_SAWTOOTH:
 		case SRC_SINE:
+		case SRC_STAIRSTEP:
 		case SRC_TRIANGLE:
 
 			auto pkpk = m_src_v2 - m_src_v1;
@@ -257,6 +265,9 @@ public:
 
 			case SRC_SAWTOOTH:
 				return m_src_v1 + norm_phase * pkpk;
+
+			case SRC_STAIRSTEP:
+				return m_src_v1 + floorf(norm_phase*10)/10 * pkpk;
 
 			case SRC_SINE:
 				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * pkpk/2;
