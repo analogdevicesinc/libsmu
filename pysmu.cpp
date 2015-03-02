@@ -104,8 +104,11 @@ extern "C" {
                 session->configure(100000);
                 session->run(nsamples);
                 PyObject* samples = PyList_New(0);
-                for(int i=0; i<nsamples; i++)
-                    PyList_Append(samples, Py_BuildValue("(f,f)", buf_v[i], buf_i[i]));
+                for(int i=0; i<nsamples; i++) {
+                    PyObject* sample_tuple = Py_BuildValue("(f,f)", buf_v[i], buf_i[i]);
+                    PyList_Append(samples, sample_tuple);
+                    Py_DECREF(sample_tuple);
+                }
                 return samples;
             }
             idx++;
