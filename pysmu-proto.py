@@ -66,10 +66,12 @@ class channel(object):
         return pysmu.set_output_wave(self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
     def sawtooth(self, midpoint, peak, period, phase):
         return pysmu.set_output_wave(self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
-    def sine(self, midpoint, peak, period, phase):
+    def stairstep(self, midpoint, peak, period, phase):
         return pysmu.set_output_wave(self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
-    def triangle(self, midpoint, peak, period, phase):
+    def sine(self, midpoint, peak, period, phase):
         return pysmu.set_output_wave(self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
+    def triangle(self, midpoint, peak, period, phase):
+        return pysmu.set_output_wave(self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
 
     def __repr__(self):
         return 'Dev: '+str(self.dev)+'\nChan: '+str(self.chan)+'\nSignals: '+str(self.signals)

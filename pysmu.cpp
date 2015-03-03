@@ -139,6 +139,8 @@ extern "C" {
                     sgnl->source_square(val1, val2, period, duty, phase);
                 if (wave == SRC_SAWTOOTH)
                     sgnl->source_sawtooth(val1, val2, period, phase);
+                if (wave == SRC_STAIRSTEP)
+                    sgnl->source_stairstep(val1, val2, period, phase);
                 if (wave == SRC_TRIANGLE)
                     sgnl->source_triangle(val1, val2, period, phase);
                 if (wave == SRC_SINE)
