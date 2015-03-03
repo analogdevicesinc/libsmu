@@ -259,7 +259,7 @@ void Session::completion() {
 }
 
 void Session::progress() {
-	sample_t min_progress = UINT64_MAX;
+	sample_t min_progress = std::numeric_limits<uint64_t>::max();
 	for (auto i: m_devices) {
 		if (i->m_in_sampleno < min_progress) {
 			min_progress = i->m_in_sampleno;
