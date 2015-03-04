@@ -12,6 +12,8 @@
 
 using std::vector;
 using std::string;
+using std::queue;
+using std::mutex;
 
 static Session* session = NULL; /* Global session variable */
 static const uint32_t SAMPLE_RATE = 100000; /* M1K sampling rate */
@@ -41,7 +43,7 @@ extern "C" {
 		for (auto i: session->m_available_devices){
 			session->add_device(&*i);
 		}
-		for(auto dev: session->m_devices){
+		for (auto dev: session->m_devices) {
 			auto dev_info = dev->info();
 			PyObject* dev_data = PyDict_New();
 			for (unsigned chan=0; chan < dev_info->channel_count; chan++) {
@@ -70,56 +72,63 @@ extern "C" {
 		return data;
 	}
 
+	static Device* get_device(const char *dev_serial) {
+		if (strlen(dev_serial) != 31) {
+			PyErr_SetString(PyExc_ValueError, "invalid device serial number");
+			return NULL;
+		}
+		auto dev = session->get_device(dev_serial);
+		if (dev == NULL) {
+			PyErr_SetString(PyExc_ValueError, "device not found");
+			return NULL;
+		}
+		return dev;
+	}
+
 	static PyObject* setMode(PyObject* self, PyObject* args){
-		int dev_num;
+		const char *dev_serial;
 		int chan_num;
 		int mode_num;
-		if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &mode_num))
+		if (!PyArg_ParseTuple(args, "sii", &dev_serial, &chan_num, &mode_num))
 			return NULL;
-		int idx = 0;
-		for (auto i: session->m_devices){
-			if (idx == dev_num){
-				i->set_mode((unsigned) chan_num, (unsigned) mode_num);
-				break;
-			}
-			idx++;
-		}
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		dev->set_mode((unsigned) chan_num, (unsigned) mode_num);
 		return PyString_FromString("Success");
 	}
 	static PyObject* getInputs(PyObject* self, PyObject* args){
-		int dev_num;
+		const char *dev_serial;
 		int chan_num;
 		int nsamples;
-		if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &nsamples))
+		if (!PyArg_ParseTuple(args, "sii", &dev_serial, &chan_num, &nsamples))
 			return NULL;
-		int idx = 0;
-		for (auto i: session->m_devices){
-			if (idx == dev_num){
-				auto sgnl_v = i->signal(chan_num, 0);
-				auto sgnl_i = i->signal(chan_num, 1);
-				vector<float> buf_v;
-				vector<float> buf_i;
-				buf_v.resize(nsamples);
-				buf_i.resize(nsamples);
-				sgnl_v->measure_buffer(buf_v.data(), nsamples);
-				sgnl_i->measure_buffer(buf_i.data(), nsamples);
-				session->configure(SAMPLE_RATE);
-				session->run(nsamples);
-				PyObject* samples = PyList_New(0);
-				for(int i=0; i<nsamples; i++) {
-					PyObject* sample_tuple = Py_BuildValue("(f,f)", buf_v[i], buf_i[i]);
-					PyList_Append(samples, sample_tuple);
-					Py_DECREF(sample_tuple);
-				}
-				return samples;
-			}
-			idx++;
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		auto sgnl_v = dev->signal(chan_num, 0);
+		auto sgnl_i = dev->signal(chan_num, 1);
+		vector<float> buf_v;
+		vector<float> buf_i;
+		buf_v.resize(nsamples);
+		buf_i.resize(nsamples);
+		sgnl_v->measure_buffer(buf_v.data(), nsamples);
+		sgnl_i->measure_buffer(buf_i.data(), nsamples);
+		session->configure(SAMPLE_RATE);
+		session->run(nsamples);
+		PyObject* samples = PyList_New(0);
+		for (int i = 0; i < nsamples; i++) {
+			PyObject* sample_tuple = Py_BuildValue("(f,f)", buf_v[i], buf_i[i]);
+			PyList_Append(samples, sample_tuple);
+			Py_DECREF(sample_tuple);
 		}
-		return PyString_FromString("Success");
+		return samples;
 	}
 
 	static PyObject* setOutputWave(PyObject* self, PyObject* args){
-		int dev_num;
+		const char *dev_serial;
 		int chan_num;
 		int mode;
 		int wave;
@@ -129,61 +138,58 @@ extern "C" {
 		float val1;
 		float val2;
 
-		if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty))
+		if (!PyArg_ParseTuple(args, "siiiffddd", &dev_serial, &chan_num, &mode,
+							  &wave, &val1, &val2, &period, &phase, &duty))
 			return NULL;
-		int idx = 0;
-		for (auto i: session->m_devices){
-			if (idx == dev_num){
-				auto sgnl =  i->signal(chan_num, 0);
-				if (mode == SIMV)
-					sgnl = i->signal(chan_num, 1);
-				if (wave == SRC_SQUARE)
-					sgnl->source_square(val1, val2, period, duty, phase);
-				if (wave == SRC_SAWTOOTH)
-					sgnl->source_sawtooth(val1, val2, period, phase);
-				if (wave == SRC_STAIRSTEP)
-					sgnl->source_stairstep(val1, val2, period, phase);
-				if (wave == SRC_TRIANGLE)
-					sgnl->source_triangle(val1, val2, period, phase);
-				if (wave == SRC_SINE)
-					sgnl->source_sine(val1, val2, period, phase);
-			}
-			idx++;
-		}
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		auto sgnl =  dev->signal(chan_num, 0);
+		if (mode == SIMV)
+			sgnl = dev->signal(chan_num, 1);
+		if (wave == SRC_SQUARE)
+			sgnl->source_square(val1, val2, period, duty, phase);
+		if (wave == SRC_SAWTOOTH)
+			sgnl->source_sawtooth(val1, val2, period, phase);
+		if (wave == SRC_STAIRSTEP)
+			sgnl->source_stairstep(val1, val2, period, phase);
+		if (wave == SRC_TRIANGLE)
+			sgnl->source_triangle(val1, val2, period, phase);
+		if (wave == SRC_SINE)
+			sgnl->source_sine(val1, val2, period, phase);
 		return PyString_FromString("Success");
 	}
 
 	static PyObject* setOutputConstant(PyObject* self, PyObject* args){
-		int dev_num;
+		const char *dev_serial;
 		int chan_num;
 		int mode;
 		float val;
-		if (!PyArg_ParseTuple(args, "iiif", &dev_num, &chan_num, &mode, &val))
+		if (!PyArg_ParseTuple(args, "siif", &dev_serial, &chan_num, &mode, &val))
 			return NULL;
-		int idx = 0;
-		for (auto i: session->m_devices){
-			if (idx == dev_num){
-				if (mode == SVMI) {
-					auto sgnl_v = i->signal(chan_num, 0);
-					sgnl_v->source_constant(val);
-				}
-				if (mode == SIMV) {
-					auto sgnl_i = i->signal(chan_num, 1);
-					sgnl_i->source_constant(val);
-				}
-			}
-			idx++;
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		if (mode == SVMI) {
+			auto sgnl_v = dev->signal(chan_num, 0);
+			sgnl_v->source_constant(val);
+		}
+		if (mode == SIMV) {
+			auto sgnl_i = dev->signal(chan_num, 1);
+			sgnl_i->source_constant(val);
 		}
 		return PyString_FromString("Success");
 	}
 
 	static PyObject* setOutputArbitrary(PyObject* self, PyObject* args){
 		PyObject* buf;
-		int dev_num;
+		const char *dev_serial;
 		int chan_num;
 		int mode;
 		int repeat;
-		if (!PyArg_ParseTuple(args, "Oiiii", &buf, &dev_num, &chan_num, &mode, &repeat))
+		if (!PyArg_ParseTuple(args, "Osiii", &buf, &dev_serial, &chan_num, &mode, &repeat))
 			return NULL;
 		size_t buf_len = PyObject_Length(buf);
 		float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
@@ -199,23 +205,20 @@ extern "C" {
 			dev_buf[i] = atof(tmp);
 			free(tmp);
 		}
-		int idx = 0;
-		for (auto i: session->m_devices){
-			if (idx == dev_num){
-				auto sgnl = i->signal(chan_num, mode);
-				bool flag = false;
-				if (repeat>0)
-					{flag = true;}
-				sgnl->source_buffer(dev_buf, buf_len, flag);
-				return PyString_FromString("Success");
-			}
-			idx++;
-		}
-		return PyString_FromString("Error");
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		auto sgnl = dev->signal(chan_num, mode);
+		bool flag = false;
+		if (repeat>0)
+			{flag = true;}
+		sgnl->source_buffer(dev_buf, buf_len, flag);
+		return PyString_FromString("Success");
 	}
 
 	static PyObject* ctrlTransfer(PyObject* self, PyObject* args){
-		int device;
+		const char *dev_serial;
 		unsigned bmRequestType;
 		unsigned bRequest;
 		unsigned wValue;
@@ -225,20 +228,17 @@ extern "C" {
 		unsigned wLength;
 		unsigned timeout;
 
-		if (!PyArg_ParseTuple(args, "iIIIISII", &device, &bmRequestType, &bRequest, &wValue, &wIndex, &data, &wLength, &timeout))
+		if (!PyArg_ParseTuple(args, "sIIIISII", &dev_serial, &bmRequestType, &bRequest, &wValue, &wIndex, &data, &wLength, &timeout))
 			return NULL;
 		data_use = (unsigned char*)PyString_AsString(data);
 		if (*data_use == '0')
 			{data_use = nullptr;}
-		int idx = 0;
-		for (auto dev: session->m_devices){
-			if (idx == device){
-				dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
-				return PyString_FromString("Success");
-			}
-			idx++;
-		}
-		return PyString_FromString("Error");
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+		dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
+		return PyString_FromString("Success");
 	}
 
 	static PyMethodDef pysmu_methods [] = {
