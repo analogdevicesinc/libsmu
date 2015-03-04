@@ -3,19 +3,13 @@
 //   Ezra Varady <ez@sloth.life>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include"libsmu.hpp"
 #include <Python.h>
-#include <iostream>
-
-#include <memory>
 #include <vector>
 #include <cstdint>
 #include <string>
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::unique_ptr;
+#include "libsmu.hpp"
+
 using std::vector;
 using std::string;
 
