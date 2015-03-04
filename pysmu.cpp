@@ -53,16 +53,25 @@ extern "C" {
             for (unsigned chan=0; chan < dev_info->channel_count; chan++) {
                 auto chan_info = dev->channel_info(chan);
                 dev->set_mode(chan, 1);
-                PyObject* sigs= PyList_New(0);
+                PyObject* sigs = PyList_New(0);
 
                 for (unsigned sig=0; sig < chan_info->signal_count; sig++) {
                     auto info = dev->signal(chan, sig)->info()->label;
-                    PyList_Append(sigs, PyString_FromString(string(info).c_str()));
+                    PyObject* info_str = PyString_FromString(string(info).c_str());
+                    PyList_Append(sigs, info_str);
+                    Py_DECREF(info_str);
                 }
-                PyDict_SetItem(dev_data, PyString_FromString(string(chan_info->label).c_str()), sigs);
+                PyObject* chan_label = PyString_FromString(string(chan_info->label).c_str());
+                PyDict_SetItem(dev_data, chan_label, sigs);
+                Py_DECREF(chan_label);
+                Py_DECREF(sigs);
             }
-            PyObject* ret = PyTuple_Pack(2, PyString_FromString(dev->serial()), dev_data);
+            PyObject* serial_str = PyString_FromString(dev->serial());
+            PyObject* ret = PyTuple_Pack(2, serial_str, dev_data);
+            Py_DECREF(serial_str);
+            Py_DECREF(dev_data);
             PyList_Append(data, ret);
+            Py_DECREF(ret);
         }
         return data;
     }
