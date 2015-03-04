@@ -13,8 +13,8 @@
 using std::vector;
 using std::string;
 
-Session* session;
-
+static Session* session = NULL; /* Global session variable */
+static const uint32_t SAMPLE_RATE = 100000; /* M1K sampling rate */
 
 extern "C" {
 
@@ -103,8 +103,7 @@ extern "C" {
 				buf_i.resize(nsamples);
 				sgnl_v->measure_buffer(buf_v.data(), nsamples);
 				sgnl_i->measure_buffer(buf_i.data(), nsamples);
-				// sample rate fixed at 100k
-				session->configure(100000);
+				session->configure(SAMPLE_RATE);
 				session->run(nsamples);
 				PyObject* samples = PyList_New(0);
 				for(int i=0; i<nsamples; i++) {
@@ -199,7 +198,6 @@ extern "C" {
 			sprintf(tmp, "%f", intermediary);
 			dev_buf[i] = atof(tmp);
 			free(tmp);
-			//dev_buf[i] = atof(PyFloat_AsString(val));
 		}
 		int idx = 0;
 		for (auto i: session->m_devices){
