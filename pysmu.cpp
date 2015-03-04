@@ -188,7 +188,7 @@ extern "C" {
 			{return PyString_FromString("Error");}
 		size_t buf_len = PyObject_Length(buf);
 		float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
-		for (int i = 0; i<buf_len; i++){
+		for (size_t i = 0; i < buf_len; i++){
 			PyObject* val = PySequence_GetItem(buf, i);
 			if (!PyFloat_Check(val)){
 				free(dev_buf);
