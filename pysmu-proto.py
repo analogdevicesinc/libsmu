@@ -22,7 +22,7 @@ class smu(object):
         self.devices = {i:(self.serials[i], v) for i, v in enumerate(self.devices)}
 
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout):
-	data = str(data)
+        data = str(data)
         return pysmu.ctrl_transfer(device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout)
 
     def __repr__(self):
