@@ -75,7 +75,7 @@ extern "C" {
 		int chan_num;
 		int mode_num;
 		if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &mode_num))
-			{return PyString_FromString("Error");}
+			return NULL;
 		int idx = 0;
 		for (auto i: session->m_devices){
 			if (idx == dev_num){
@@ -91,7 +91,7 @@ extern "C" {
 		int chan_num;
 		int nsamples;
 		if (!PyArg_ParseTuple(args, "iii", &dev_num, &chan_num, &nsamples))
-			{return PyString_FromString("Error");}
+			return NULL;
 		int idx = 0;
 		for (auto i: session->m_devices){
 			if (idx == dev_num){
@@ -130,7 +130,7 @@ extern "C" {
 		float val2;
 
 		if (!PyArg_ParseTuple(args, "iiiiffddd", &dev_num, &chan_num, &mode, &wave, &val1, &val2, &period, &phase, &duty))
-			{return PyString_FromString("Error");}
+			return NULL;
 		int idx = 0;
 		for (auto i: session->m_devices){
 			if (idx == dev_num){
@@ -159,7 +159,7 @@ extern "C" {
 		int mode;
 		float val;
 		if (!PyArg_ParseTuple(args, "iiif", &dev_num, &chan_num, &mode, &val))
-			{return PyString_FromString("Error");}
+			return NULL;
 		int idx = 0;
 		for (auto i: session->m_devices){
 			if (idx == dev_num){
@@ -184,7 +184,7 @@ extern "C" {
 		int mode;
 		int repeat;
 		if (!PyArg_ParseTuple(args, "Oiiii", &buf, &dev_num, &chan_num, &mode, &repeat))
-			{return PyString_FromString("Error");}
+			return NULL;
 		size_t buf_len = PyObject_Length(buf);
 		float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
 		for (size_t i = 0; i < buf_len; i++){
@@ -226,7 +226,7 @@ extern "C" {
 		unsigned timeout;
 
 		if (!PyArg_ParseTuple(args, "iIIIISII", &device, &bmRequestType, &bRequest, &wValue, &wIndex, &data, &wLength, &timeout))
-			{return PyString_FromString("Error");}
+			return NULL;
 		data_use = (unsigned char*)PyString_AsString(data);
 		if (*data_use == '0')
 			{data_use = nullptr;}
