@@ -196,7 +196,8 @@ extern "C" {
 			PyObject* val = PySequence_GetItem(buf, i);
 			if (!PyFloat_Check(val)){
 				free(dev_buf);
-				return PyString_FromString("Error");
+				PyErr_SetString(PyExc_TypeError, "set_output_buffer() first arg must be a list of floats");
+				return NULL;
 			}
 			char* tmp = (char*)malloc(100);
 			double intermediary = PyFloat_AsDouble(val);
