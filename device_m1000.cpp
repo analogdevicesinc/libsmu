@@ -265,6 +265,13 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 	if (chan < 2) {
 		m_mode[chan] = mode;
 	}
+	// set feedback potentiometers with mode heuristics
+	unsigned pset;
+	if ( mode == SIMV ) pset = 0x7f7f;
+	if ( mode == DISABLED ) pset = 0x3000;
+	if ( mode == SVMI ) pset = 0x0000;
+	libusb_control_transfer(m_usb, 0x40, 0x59, chan, pset, 0, 0, 100);
+	// set mode
 	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);
 	// std::cerr << "sm (" << chan << "," << mode << ")" << std::endl;
 }
@@ -311,5 +318,5 @@ void M1000_Device::cancel() {
 void M1000_Device::off() {
 	set_mode(A, DISABLED);
 	set_mode(B, DISABLED);
-	libusb_control_transfer(m_usb, 0x40, 0xC5, 0x0000, 0x0000, 0, 0, 100);
+	libusb_control_transfer(m_usb, 0x40, 0xC5, 0, 0, 0, 0, 100);
 }
