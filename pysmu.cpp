@@ -96,6 +96,7 @@ extern "C" {
 		dev->set_mode((unsigned) chan_num, (unsigned) mode_num);
 		Py_RETURN_NONE;
 	}
+
 	static PyObject* getInputs(PyObject* self, PyObject* args){
 		const char *dev_serial;
 		int chan_num;
@@ -210,7 +211,7 @@ extern "C" {
 		auto sgnl = dev->signal(chan_num, mode);
 		bool flag = false;
 		if (repeat>0)
-			{flag = true;}
+			flag = true;
 		sgnl->source_buffer(dev_buf, buf_len, flag);
 		Py_RETURN_NONE;
 	}
@@ -230,7 +231,7 @@ extern "C" {
 			return NULL;
 		data_use = (unsigned char*)PyString_AsString(data);
 		if (*data_use == '0')
-			{data_use = nullptr;}
+			data_use = nullptr;
 
 		auto dev = get_device(dev_serial);
 		if (dev == NULL)

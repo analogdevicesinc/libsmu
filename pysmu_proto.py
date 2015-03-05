@@ -44,7 +44,7 @@ class channel(object):
         elif mode == 'i' or mode == 'I':
             pysmu.set_mode(self.dev, self.chan, 2)
             self.mode = 2
-        elif mode == 'd' or mode =='D':
+        elif mode == 'd' or mode == 'D':
             pysmu.set_mode(sel.dev, self.chan, 0)
             self.mode = 0
         else:
