@@ -21,16 +21,13 @@ static const uint32_t SAMPLE_RATE = 100000; /* M1K sampling rate */
 extern "C" {
 
 	static PyObject* initSession(PyObject* self, PyObject* args){
+		int ret;
+
 		session = new Session();
-		int good = session->update_available_devices();
-		PyObject* ret;
-		if (good == 0){
-			ret = PyString_FromString("Success");
-		}
-		else{
-			ret = PyString_FromString("Error");
-		}
-		return ret;
+		ret = session->update_available_devices();
+		if (ret != 0)
+			Py_RETURN_FALSE;
+		Py_RETURN_TRUE;
 	}
 
 	static PyObject* cleanupSession(PyObject* self, PyObject* args){
@@ -96,7 +93,7 @@ extern "C" {
 		if (dev == NULL)
 			return NULL;
 		dev->set_mode((unsigned) chan_num, (unsigned) mode_num);
-		return PyString_FromString("Success");
+		Py_RETURN_NONE;
 	}
 	static PyObject* getInputs(PyObject* self, PyObject* args){
 		const char *dev_serial;
@@ -158,7 +155,7 @@ extern "C" {
 			sgnl->source_triangle(val1, val2, period, phase);
 		if (wave == SRC_SINE)
 			sgnl->source_sine(val1, val2, period, phase);
-		return PyString_FromString("Success");
+		Py_RETURN_NONE;
 	}
 
 	static PyObject* setOutputConstant(PyObject* self, PyObject* args){
@@ -180,7 +177,7 @@ extern "C" {
 			auto sgnl_i = dev->signal(chan_num, 1);
 			sgnl_i->source_constant(val);
 		}
-		return PyString_FromString("Success");
+		Py_RETURN_NONE;
 	}
 
 	static PyObject* setOutputArbitrary(PyObject* self, PyObject* args){
@@ -214,7 +211,7 @@ extern "C" {
 		if (repeat>0)
 			{flag = true;}
 		sgnl->source_buffer(dev_buf, buf_len, flag);
-		return PyString_FromString("Success");
+		Py_RETURN_NONE;
 	}
 
 	static PyObject* ctrlTransfer(PyObject* self, PyObject* args){
@@ -238,7 +235,7 @@ extern "C" {
 		if (dev == NULL)
 			return NULL;
 		dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
-		return PyString_FromString("Success");
+		Py_RETURN_NONE;
 	}
 
 	static PyMethodDef pysmu_methods [] = {
