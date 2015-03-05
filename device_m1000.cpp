@@ -173,7 +173,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
 	} else if (m_mode[chan] == DISABLED) {
-		v = 32768;
+		v = 32768*4/5;
 	}
 	if (v > 65535) v = 65535;
 	if (v < 0) v = 0;
