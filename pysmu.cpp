@@ -23,7 +23,8 @@ extern "C" {
 	static PyObject* initSession(PyObject* self, PyObject* args){
 		int ret;
 
-		session = new Session();
+		if (session == NULL)
+			session = new Session();
 		ret = session->update_available_devices();
 		if (ret != 0)
 			Py_RETURN_FALSE;
