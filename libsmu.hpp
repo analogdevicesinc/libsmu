@@ -32,37 +32,63 @@ public:
 
 	int update_available_devices();
 	unsigned m_active_devices;
+
+	/// Devices that are present on the system, but aren't necessarily in bound to this session.
+	/// Only `Device::serial` and `Device::info` may be called on a Device that is not added to
+	/// the session.
 	std::vector<std::shared_ptr<Device>> m_available_devices;
 
+	/// Add a device (from m_available_devices) to the session.
+	/// This method may not be called while the session is active.
 	Device* add_device(Device*);
-	std::set<Device*> m_devices;
-	void remove_device(Device*);
-	void configure(uint64_t sampleRate);
-	std::function<void(sample_t)> m_progress_cb;
 
-	// Run the currently configured capture and wait for it to complete
+	/// Devices that are part of this session. These devices will be started when start() is called.
+	/// Use `add_device` and `remove_device` to manipulate this list.
+	std::set<Device*> m_devices;
+
+	/// Remove a device from the session.
+	/// This method may not be called while the session is active
+	void remove_device(Device*);
+
+	/// Configure the session's sample rate.
+	/// This method may not be called while the session is active.
+	void configure(uint64_t sampleRate);
+
+	/// Run the currently configured capture and wait for it to complete
 	void run(sample_t nsamples);
+
+	/// Start the currently configured capture, but do not wait for it to complete. Once started,
+	/// the only allowed Session methods are cancel() and end() until the session has stopped.
 	void start(sample_t nsamples);
+
+	/// Cancel capture and block waiting for it to complete
 	void cancel();
 
-	/// Called by devices on the USB thread when they are complete
+	/// internal: Called by devices on the USB thread when they are complete
 	void completion();
 
-	/// Called on the USB thread when a device encounters an error
+	/// internal: Called by devices on the USB thread when a device encounters an error
 	void handle_error(unsigned status);
 
-	/// Called by devices on the USB thread with progress updates
+	/// internal: Called by devices on the USB thread with progress updates
 	void progress();
-	// called by hotplug events on the USB thread
+	/// internal: called by hotplug events on the USB thread
 	void attached(libusb_device* device);
 	void detached(libusb_device* device);
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
 
+	/// Callback called on the USB thread with the sample number as samples are received
 	std::function<void(sample_t)> m_progress_callback;
+
+	/// Callback called on the USB thread on completion
 	std::function<void(unsigned)> m_completion_callback;
+
+	/// Callback called on the USB thread when a device is plugged into the system
 	std::function<void(Device* device)> m_hotplug_detach_callback;
+
+	/// Callback called on the USB thread when a device is removed from the system
 	std::function<void(Device* device)> m_hotplug_attach_callback;
 
 	unsigned m_cancellation;
@@ -77,7 +103,6 @@ protected:
 	std::mutex m_lock;
 	std::condition_variable m_completion;
 
-
 	libusb_context* m_usb_cx;
 
 	std::shared_ptr<Device> probe_device(libusb_device* device);
@@ -87,16 +112,43 @@ protected:
 class Device {
 public:
 	virtual ~Device();
+
+	/// Get the descriptor for the device.
+	/// Pointed-to memory is valid for the lifetime of the Device.
+	/// This method may be called on a device that is not added to the session.
 	virtual const sl_device_info* info() const = 0;
+
+	/// Get the descriptor for the specified channel.
+	/// Pointed-to memory is valid for the lifetime of the Device.
 	virtual const sl_channel_info*  channel_info(unsigned channel) const = 0;
+
+	/// Get the specified Signal.
 	virtual Signal* signal(unsigned channel, unsigned signal) = 0;
+
+	/// Get the serial number of the device.
+	/// Pointed-to memory is valid for the lifetime of the Device.
+	/// This method may be called on a device that is not added to the session.
 	virtual const char* serial() const { return this->serial_num; }
+
+	/// Set the mode of the specified channel.
+	/// This method may not be called while the session is active.
 	virtual void set_mode(unsigned channel, unsigned mode) = 0;
-	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout);
-	virtual int get_default_rate() {return 10000;};
+
+	/// Perform a raw USB control transfer on the underlying USB device
+	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
+		               unsigned char *data, unsigned wLength, unsigned timeout);
+
+	/// Get the default sample rate.
+	virtual int get_default_rate() const { return 10000; }
+
+	/// Prepare multi-device synchronization.
 	virtual void sync() {};
 
+	/// Lock the Device's mutex, preventing this device's transfers from being processed. Hold
+	/// this lock only briefly, while modifying Signal state.
 	virtual void lock() { m_state.lock(); }
+
+	/// Unlock the Device's mutex, allowing this device's transfers to be processed.
 	virtual void unlock() { m_state.unlock(); }
 
 
@@ -152,7 +204,11 @@ enum Modes {
 
 class Signal {
 public:
+	/// internal: Do not call the constructor directly; obtain a Signal from a Device
 	Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
+
+	/// Get the descriptor struct of the Signal.
+	/// Pointed-to memory is valid for the lifetime of the Device.
 	const sl_signal_info* info() const { return m_info; }
 	const sl_signal_info* const m_info;
 
@@ -205,18 +261,24 @@ public:
 		m_src_i = 0;
 	}
 
+	/// Get the last measured sample from this signal.
 	value_t measure_instantaneous();
+
+	/// Configure received samples to be stored into `buf`, up to `len` points.
+	/// After `len` points, samples will be dropped.
 	void measure_buffer(value_t* buf, size_t len) {
 		m_dest = DEST_BUFFER;
 		m_dest_buf = buf;
 		m_dest_buf_len = len;
 	}
 
+	/// Configure received samples to be passed to the provided callback.
 	void measure_callback(std::function<void(value_t value)> callback) {
 		m_dest = DEST_CALLBACK;
 		m_dest_callback = callback;
 	}
 
+	/// internal: Called by Device
 	inline void put_sample(value_t val) {
 		m_latest_measurement = val;
 		if (m_dest == DEST_BUFFER) {
@@ -229,6 +291,7 @@ public:
 		}
 	}
 
+	/// internal: Called by Device
 	inline value_t get_sample() {
 		switch (m_src) {
 		case SRC_CONSTANT:
