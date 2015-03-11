@@ -13,4 +13,4 @@ install:
 build_script:
   - cmake .
   - mingw32-make -j8
-  - appveyor PushArtifact libsmu.a libsmu.hpp
+  - appveyor PushArtifact libsmu.dll
