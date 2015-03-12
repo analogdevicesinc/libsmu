@@ -11,5 +11,5 @@ add_library(smu SHARED
   device_m1000.cpp
 )
 
-include_directories("C:/libusb/include/libusb-1.0")
+set(CMAKE_INCLUDE_PATH "C:/libusb/include/libusb-1.0")
 target_link_libraries(smu -lm -L"C:/libusb/MinGW32/static/libusb-1.0.a")
