@@ -11,7 +11,5 @@ add_library(smu SHARED
   device_m1000.cpp
 )
 
-find_package(PkgConfig)
-pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
-include_directories(${LIBUSB_INCLUDE_DIRS})
-target_link_libraries(smu -lm ${LIBUSB_LIBRARIES})
+include_directories("C:\libusb\include\libusb-1.0")
+target_link_libraries(smu -lm -L"C:\libusb\MinGW32\static\libusb-1.0.a")
