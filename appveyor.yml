@@ -11,6 +11,5 @@ install:
   - 7z x -y "c:\libusb.7z" -o"C:\libusb" > nul
 
 build_script:
-  - cmake .
-  - mingw32-make -j8
+  - mingw32-make 
   - appveyor PushArtifact libsmu.dll

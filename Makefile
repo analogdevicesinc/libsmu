@@ -4,9 +4,14 @@ LINKFLAGS=-lm -lpthread
 BIN=smu
 LIB=smu.a
 
-# add libusb-1.0 dep
-LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
-CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
+SYS := $(shell gcc -dumpmachine)
+ifneq (, $(findstring linux, $(SYS)))
+    LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
+    CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
+else ifneq(, $(findstring mingw, $(SYS)))
+    LINKFLAGS+=-L"C:\libusb\MinGW32\static\libusb-1.0.a"
+	CXXFLAGS+=-I"C:\libusb\include\libusb-1.0"
+endif
 
 SRC=session.cpp device_cee.cpp device_m1000.cpp cli.cpp
 OBJ=$(SRC:%.cpp=%.o)
