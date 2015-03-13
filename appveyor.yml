@@ -12,4 +12,5 @@ install:
 
 build_script:
   - mingw32-make 
+  - dir
   - appveyor PushArtifact libsmu.dll
