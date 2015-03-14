@@ -9,10 +9,3 @@ This project also includes 'pysmu,' an initial binding of LibSMU for Python2.7.
 With libusb-1.0, and clang++, building LibSMU and the demo 'smu' executable is as simple as typing `make`.
 
 With python2.7 and associated development headers installed, building pysmu.so, importable as `import pysmu` is as simple as typing `make python`.
- 
-There's also cmake support, if you're in to that.
-
-    mkdir build
-    cd build
-    cmake ..
-    make
