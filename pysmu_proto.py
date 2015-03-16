@@ -4,12 +4,11 @@ from operator import add
 import pysmu
 
 
-class smu(object):
+class Smu(object):
     def __init__(self):
         atexit.register(pysmu.cleanup)
         pysmu.setup()
         self.load_chans()
-
 
     def load_chans(self):
         self.devices = pysmu.get_dev_info()
@@ -18,7 +17,7 @@ class smu(object):
 
         names = (chr(x) for x in xrange(65,91))
         self.chans = {names.next(): (i, v) for i, d in enumerate(self.devices) for k, v in d.items()}
-        self.chans = {k: channel(k, *v) for k, v in self.chans.items()}
+        self.chans = {k: Channel(k, *v) for k, v in self.chans.items()}
         self.devices = {i:(self.serials[i], v) for i, v in enumerate(self.devices)}
 
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout):
@@ -30,12 +29,11 @@ class smu(object):
 
 
 
-class channel(object):
+class Channel(object):
     def __init__(self, chan, dev, signals):
         self.chan = ord(chan) - 65
         self.dev = dev
         self.signals = {v: i for i, v in enumerate(signals)}
-
 
     def set_mode(self, mode):
         if mode == 'v' or mode == 'V':
@@ -48,7 +46,7 @@ class channel(object):
             pysmu.set_mode(sel.dev, self.chan, 0)
             self.mode = 0
         else:
-            raise Exception('invalid mode')
+            raise ValueError('invalid mode')
 
     def arbitrary(self, *args, **kwargs):
         repeat = 0
