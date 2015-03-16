@@ -5,18 +5,30 @@
 
 #include <Python.h>
 #include <vector>
+#include <queue>
 #include <cstdint>
+#include <functional>
 #include <string>
+#include <condition_variable>
 
 #include "libsmu.hpp"
 
+using namespace std::placeholders;
 using std::vector;
 using std::string;
 using std::queue;
 using std::mutex;
 
-static Session* session = NULL; /* Global session variable */
-static const uint32_t SAMPLE_RATE = 100000; /* M1K sampling rate */
+static Session* session = NULL; // Global session variable
+static const uint32_t SAMPLE_RATE = 100000; // M1K sampling rate
+std::condition_variable samples_available;
+static mutex signal_mtx; // control continuous signal queue access
+static queue <float> signal0_0, signal0_1, signal1_0, signal1_1;
+
+// dummy struct for continuous mode iteration emulation
+typedef struct {
+	PyObject_HEAD
+} inputs;
 
 extern "C" {
 
@@ -281,6 +293,111 @@ extern "C" {
 		Py_RETURN_NONE;
 	}
 
+	static PyObject* inputs_iternext(inputs *self) {
+		// don't read/pop values from the queues while adding to them
+		std::unique_lock<mutex> lock(signal_mtx);
+
+		// wait for complete samples to exist in the queue
+		while (signal0_0.empty() || signal0_1.empty() || signal1_0.empty() || signal1_1.empty()) {
+			samples_available.wait(lock);
+		}
+
+		PyObject* samples_tuple = Py_BuildValue("((f,f),(f,f))",
+			signal0_0.front(), signal0_1.front(), signal1_0.front(), signal1_1.front());
+
+		signal0_0.pop();
+		signal0_1.pop();
+		signal1_0.pop();
+		signal1_1.pop();
+		lock.unlock();
+
+		return samples_tuple;
+	}
+
+	static void inputs_dealloc(inputs *self) {
+		session->cancel();
+		session->end();
+
+		// flush buffer queues on iterator deallocation
+		signal0_0 = queue<float>();
+		signal0_1 = queue<float>();
+		signal1_0 = queue<float>();
+		signal1_1 = queue<float>();
+	}
+
+	static PyTypeObject inputs_type = {
+		PyObject_HEAD_INIT(NULL)
+		0,                         /* ob_size */
+		"inputs._MyIter",  /* tp_name */
+		sizeof(inputs),    /* tp_basicsize */
+		0,                         /* tp_itemsize */
+		(destructor)inputs_dealloc, /* tp_dealloc */
+		0,                         /* tp_print */
+		0,                         /* tp_getattr */
+		0,                         /* tp_setattr */
+		0,                         /* tp_compare */
+		0,                         /* tp_repr */
+		0,                         /* tp_as_number */
+		0,                         /* tp_as_sequence */
+		0,                         /* tp_as_mapping */
+		0,                         /* tp_hash  */
+		0,                         /* tp_call */
+		0,                         /* tp_str */
+		0,                         /* tp_getattro */
+		0,                         /* tp_setattro */
+		0,                         /* tp_as_buffer */
+		Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,
+			/* tp_flags: Py_TPFLAGS_HAVE_ITER tells python to
+			   use tp_iter and tp_iternext fields. */
+		"Signal inputs iterator",  /* tp_doc */
+		0,  /* tp_traverse */
+		0,  /* tp_clear */
+		0,  /* tp_richcompare */
+		0,  /* tp_weaklistoffset */
+		(getiterfunc)PyObject_SelfIter,  /* tp_iter */
+		(iternextfunc)inputs_iternext,  /* tp_iternext: */
+	};
+
+	static PyObject * inputs_iter(PyObject *self, PyObject *args) {
+		const char *dev_serial;
+		//unsigned i;
+		inputs *p = NULL;
+
+		if (!PyArg_ParseTuple(args, "s", &dev_serial))
+			return NULL;
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+
+		p = PyObject_New(inputs, &inputs_type);
+		if (!p)
+			return NULL;
+
+		// setup signal callbacks
+		auto signal_callback = [](queue <float> *signal_q, float sample) {
+			//fprintf(stderr, "%lu\n", (*signal_q).size());
+			std::unique_lock<mutex> lock(signal_mtx);
+			if ((*signal_q).size() < 1024)
+				(*signal_q).push(sample);
+			lock.unlock();
+			if ((signal0_0.size() == 1) && (signal0_1.size() == 1) &&
+					(signal1_0.size() == 1) && (signal1_1.size() == 1))
+				samples_available.notify_one();
+		};
+
+		dev->signal(0, 0)->measure_callback(std::bind(signal_callback, &signal0_0, _1));
+		dev->signal(0, 1)->measure_callback(std::bind(signal_callback, &signal0_1, _1));
+		dev->signal(1, 0)->measure_callback(std::bind(signal_callback, &signal1_0, _1));
+		dev->signal(1, 1)->measure_callback(std::bind(signal_callback, &signal1_1, _1));
+
+		session->configure(SAMPLE_RATE);
+		// run in continuous mode
+		session->start(0);
+
+		return (PyObject *)p;
+	}
+
 	static PyMethodDef pysmu_methods [] = {
 		{ "setup", initSession, METH_VARARGS, "start session"  },
 		{ "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
@@ -288,6 +405,7 @@ extern "C" {
 		{ "set_mode", setMode, METH_VARARGS, "set channel mode"  },
 		{ "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
 		{ "get_all_inputs", getAllInputs, METH_VARARGS, "get measured voltage and current from all channels"  },
+		{ "iterate_inputs", inputs_iter, METH_VARARGS, "iterate over measured voltage and current from selected channels"  },
 		{ "set_output_constant", setOutputConstant, METH_VARARGS, "set channel output - constant"  },
 		{ "set_output_wave", setOutputWave, METH_VARARGS, "set channel output - wave"  },
 		{ "set_output_buffer", setOutputArbitrary, METH_VARARGS, "set channel output - arbitrary wave"  },
