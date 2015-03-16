@@ -28,6 +28,24 @@ class Smu(object):
         return 'Devices: '+str(self.devices)
 
 
+class Device(object):
+    def __init__(self, dev):
+        self.dev = dev
+
+    def get_samples(self, n_samples):
+        """query device for a list of samples from all channels
+
+        :param n_samples: number of samples
+        :type n_samples: int
+        :return: list of n samples from all the device's channels
+        """
+        return pysmu.get_all_inputs(self.dev, n_samples)
+
+    @property
+    def samples(self):
+        """iterator for samples from the device run in continuous mode"""
+        return pysmu.iterate_inputs(self.dev)
+
 
 class Channel(object):
     def __init__(self, chan, dev, signals):
