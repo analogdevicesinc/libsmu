@@ -126,6 +126,46 @@ extern "C" {
 		return samples;
 	}
 
+	static PyObject* getAllInputs(PyObject* self, PyObject* args) {
+		const char *dev_serial;
+		int nsamples; /* number of samples to acquire */
+		unsigned num_channels; /* number of channels passed */
+		vector< vector<float> > buf_v, buf_i; /* 2d vector of voltage/current samples per channel */
+
+		if (!PyArg_ParseTuple(args, "si", &dev_serial, &nsamples))
+			return NULL;
+
+		auto dev = get_device(dev_serial);
+		if (dev == NULL)
+			return NULL;
+
+		num_channels = dev->info()->channel_count;
+		buf_v.resize(num_channels);
+		buf_i.resize(num_channels);
+		for (unsigned i = 0; i < num_channels; i++) {
+			buf_v[i].resize(nsamples);
+			buf_i[i].resize(nsamples);
+			dev->signal(i, 0)->measure_buffer(buf_v[i].data(), nsamples);
+			dev->signal(i, 1)->measure_buffer(buf_i[i].data(), nsamples);
+		}
+
+		session->configure(SAMPLE_RATE);
+		session->run(nsamples);
+
+		PyObject* all_samples = PyList_New(0);
+		for (unsigned i = 0; i < num_channels; i++) {
+			PyObject* samples = PyList_New(0);
+			for (int j = 0; j < nsamples; j++) {
+				PyObject* sample_tuple = Py_BuildValue("(f,f)", buf_v[i][j], buf_i[i][j]);
+				PyList_Append(samples, sample_tuple);
+				Py_DECREF(sample_tuple);
+			}
+			PyList_Append(all_samples, samples);
+			Py_DECREF(samples);
+		}
+		return all_samples;
+	}
+
 	static PyObject* setOutputWave(PyObject* self, PyObject* args){
 		const char *dev_serial;
 		int chan_num;
@@ -247,6 +287,7 @@ extern "C" {
 		{ "cleanup", cleanupSession, METH_VARARGS, "end session"  },
 		{ "set_mode", setMode, METH_VARARGS, "set channel mode"  },
 		{ "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
+		{ "get_all_inputs", getAllInputs, METH_VARARGS, "get measured voltage and current from all channels"  },
 		{ "set_output_constant", setOutputConstant, METH_VARARGS, "set channel output - constant"  },
 		{ "set_output_wave", setOutputWave, METH_VARARGS, "set channel output - wave"  },
 		{ "set_output_buffer", setOutputArbitrary, METH_VARARGS, "set channel output - arbitrary wave"  },
