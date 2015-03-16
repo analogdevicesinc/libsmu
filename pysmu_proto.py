@@ -110,14 +110,20 @@ class Channel(object):
         return 'Dev: '+str(self.dev)+'\nChan: '+str(self.chan)+'\nSignals: '+str(self.signals)
 
 if __name__ == '__main__':
-    x = smu()
-    print x
-    print x.devices
-    A = x.chans['A']
-    A.set_mode('v')
-    A.constant(3)
-    #A.arbitrary((5, 400), (2.5, 400))
-    #print A.sine(1, 3, 5, 0)
-    #print A.square(0, 3, 10, 0, .5)
-    #print A.triangle(2,3,10,0)
-    print A.get_samples(1000)
+    x = Smu()
+    if len(x.devices) > 0:
+        print x
+        print x.devices
+        A = x.chans['A']
+        A.set_mode('v')
+        A.constant(3)
+        #A.arbitrary((5, 400), (2.5, 400))
+        #print A.sine(1, 3, 5, 0)
+        #print A.square(0, 3, 10, 0, .5)
+        #print A.triangle(2,3,10,0)
+        print A.get_samples(1000)
+
+        d = Device(0)
+        d.get_samples(10)
+        import itertools
+        print(list(itertools.islice(d.samples, 10)))
