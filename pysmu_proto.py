@@ -1,4 +1,5 @@
 import atexit
+from collections import defaultdict
 from operator import add
 
 import pysmu
@@ -8,29 +9,38 @@ class Smu(object):
     def __init__(self):
         atexit.register(pysmu.cleanup)
         pysmu.setup()
-        self.load_chans()
+        self.load_channels()
 
-    def load_chans(self):
+    def load_channels(self):
         self.devices = pysmu.get_dev_info()
-        self.serials = {i:v[0] for i, v in enumerate(self.devices)}
+        self.serials = {i: v[0] for i, v in enumerate(self.devices)}
         self.devices = [x[1] for x in self.devices]
 
         names = (chr(x) for x in xrange(65,91))
-        self.chans = {names.next(): (i, v) for i, d in enumerate(self.devices) for k, v in d.items()}
-        self.chans = {k: Channel(k, *v) for k, v in self.chans.items()}
-        self.devices = {i:(self.serials[i], v) for i, v in enumerate(self.devices)}
+        channels = {names.next(): (i, v) for i, d in enumerate(self.devices)
+                    for k, v in d.items()}
+        self.channels = {k: Channel(k, self.serials[v[0]], v[1]) for k, v in channels.items()}
 
-    def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout):
+        device_channels = defaultdict(list)
+        for k, v in channels.items():
+            device_channels[v[0]].append(Channel(k, *v))
+        self.devices = {i: Device(self.serials[i], device_channels[i]) for i, v
+                        in enumerate(self.devices)}
+
+    def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
+                      data, wLength, timeout):
         data = str(data)
-        return pysmu.ctrl_transfer(device, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout)
+        return pysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
+                                   wIndex, data, wLength, timeout)
 
     def __repr__(self):
-        return 'Devices: '+str(self.devices)
+        return 'Devices: ' + str(self.devices)
 
 
 class Device(object):
-    def __init__(self, dev):
-        self.dev = dev
+    def __init__(self, serial, channels):
+        self.serial = serial
+        self.channels = channels
 
     def get_samples(self, n_samples):
         """query device for a list of samples from all channels
@@ -39,18 +49,18 @@ class Device(object):
         :type n_samples: int
         :return: list of n samples from all the device's channels
         """
-        return pysmu.get_all_inputs(self.dev, n_samples)
+        return pysmu.get_all_inputs(self.serial, n_samples)
 
     @property
     def samples(self):
         """iterator for samples from the device run in continuous mode"""
-        return pysmu.iterate_inputs(self.dev)
+        return pysmu.iterate_inputs(self.serial)
 
 
 class Channel(object):
-    def __init__(self, chan, dev, signals):
+    def __init__(self, chan, dev_serial, signals):
+        self.dev = dev_serial
         self.chan = ord(chan) - 65
-        self.dev = dev
         self.signals = {v: i for i, v in enumerate(signals)}
 
     def set_mode(self, mode):
@@ -107,14 +117,13 @@ class Channel(object):
         return pysmu.set_output_wave(self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
 
     def __repr__(self):
-        return 'Dev: '+str(self.dev)+'\nChan: '+str(self.chan)+'\nSignals: '+str(self.signals)
+        return 'Device: ' + str(self.dev) + '\nChannel: ' + str(self.chan) + '\nSignals: ' + str(self.signals)
+
 
 if __name__ == '__main__':
     x = Smu()
     if len(x.devices) > 0:
-        print x
-        print x.devices
-        A = x.chans['A']
+        A = x.channels['A']
         A.set_mode('v')
         A.constant(3)
         #A.arbitrary((5, 400), (2.5, 400))
@@ -123,7 +132,7 @@ if __name__ == '__main__':
         #print A.triangle(2,3,10,0)
         print A.get_samples(1000)
 
-        d = Device(0)
-        d.get_samples(10)
+        d = x.devices[0]
+        print(d.get_samples(10))
         import itertools
         print(list(itertools.islice(d.samples, 10)))
