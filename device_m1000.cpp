@@ -171,7 +171,7 @@ inline uint16_t M1000_Device::encode_out(int chan) {
 	} else if (m_mode[chan] == SIMV) {
 		float val = m_signals[chan][1].get_sample();
 		val = constrain(val, -current_limit, current_limit);
-		v = 65536*(2.5 * 4./5. + 5.*.2*20.*0.5*val)/5.0;
+		v = 65536*(2./5. + 0.8*0.2*20.*0.5*val);
 	} else if (m_mode[chan] == DISABLED) {
 		v = 32768*4/5;
 	}
@@ -229,9 +229,9 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
 		for (unsigned i=(m_in_sampleno==0)?2:0; i<chunk_size; i++) {
 			m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
-			m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048) * 0.8);
+			m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25);
 			m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
-			m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048) * 0.8);
+			m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25);
 			m_in_sampleno++;
 		}
 	}
