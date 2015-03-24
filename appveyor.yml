@@ -14,7 +14,7 @@ build_script:
   - mingw32-make 
   - appveyor PushArtifact libsmu.dll
   - echo EXPORTS > libsmu.def
-  - for /f "usebackq tokens=4,* delims=_ " %i in (`dumpbin /exports "libsmu.dll"`) do if %i==libsmu echo %i_%j >> libsmu.def
+  - for /f "usebackq tokens=4,* delims=_ " %%i in (`dumpbin /exports "libsmu.dll"`) do if %%i==libsmu echo %%i_%%j >> libsmu.def
   - appveyor PushArtifact libsmu.def
   - lib /def:"libsmu.def" /out:"libsmu.lib" /machine:x86
   - appveyor PushArtifact libsmu.lib
