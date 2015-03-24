@@ -229,9 +229,9 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 
 		for (unsigned i=(m_in_sampleno==0)?2:0; i<chunk_size; i++) {
 			m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
-			m_signals[0][1].put_sample(((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048);
+			m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048) * 0.8);
 			m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
-			m_signals[1][1].put_sample(((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048);
+			m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 - 0.61) * 0.4 + 0.048) * 0.8);
 			m_in_sampleno++;
 		}
 	}
