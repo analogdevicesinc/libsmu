@@ -213,6 +213,12 @@ void Session::end() {
 		i->off();
 	}
 }
+// wait for completion of sample stream
+void Session::wait_until_end() {
+	// completion lock
+	std::unique_lock<std::mutex> lk(m_lock);
+	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+}
 
 // start streaming data
 void Session::start(sample_t nsamples) {
