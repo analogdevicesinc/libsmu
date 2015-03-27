@@ -26,18 +26,14 @@ const unsigned chunk_size = 256;
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
 
-const int M1K_timer_clock = 3e6; // 96MHz/32 = 3MHz
+const int M1K_timer_clock = 48e6; // 96MHz/2 = 48MHz
 const int m_min_per = 0x18;
 volatile uint16_t m_sof_start = 0;
 int m_sam_per = 0;
 extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
 
-#ifdef _WIN32
-const double BUFFER_TIME = 0.050;
-#else
-const double BUFFER_TIME = 0.020;
-#endif
+const double BUFFER_TIME = 0.025;
 
 static const sl_device_info m1000_info = {DEVICE_M1000, "ADALM1000", 2};
 
@@ -96,6 +92,7 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t) {
 }
 
 void M1000_Device::in_completion(libusb_transfer *t) {
+
 	std::lock_guard<std::mutex> lock(m_state);
 	m_in_transfers.num_active--;
 
@@ -109,7 +106,7 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-
+    std::cerr << "in_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -137,7 +134,7 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-
+    std::cerr << "out_completion: " << m_out_transfers.num_active << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -149,16 +146,16 @@ void M1000_Device::configure(uint64_t rate) {
 	m_sam_per = round(sample_time * (double) M1K_timer_clock) / 2;
 	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
 	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
-
+    
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,  10000, m1000_in_completion,  this);
+		m_packets_per_transfer*in_packet_size,  100, m1000_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
+		m_packets_per_transfer*out_packet_size, 100, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
-	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
+	std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
 /// encode output samples
@@ -199,6 +196,7 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer out " << r << endl;
+            m_session->handle_error(r);
 		}
 		m_out_transfers.num_active++;
 		return true;
@@ -213,12 +211,12 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
+            m_session->handle_error(r);
 		}
 		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
 		return true;
 	}
-	//std::cerr << "not resubmitting" << endl;
 	return false;
 }
 
@@ -294,7 +292,10 @@ void M1000_Device::sync() {
 
 /// command device to start sampling
 void M1000_Device::start_run(uint64_t samples) {
-	libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
+	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
+    if (ret < 0) {
+        cerr << "control transfer failed with code " << ret << endl;
+    }
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
@@ -310,8 +311,11 @@ void M1000_Device::start_run(uint64_t samples) {
 
 /// cancel pending libusb transactions
 void M1000_Device::cancel() {
-	m_in_transfers.cancel();
-	m_out_transfers.cancel();
+	int ret_in = m_in_transfers.cancel();
+	int ret_out = m_out_transfers.cancel();
+    cerr << "cancel error in: " << libusb_error_name(ret_in) << " out: " << libusb_error_name(ret_out) << endl;
+    //if ( ret_in ) in_completion();
+    //if ( ret_out ) out_completion();
 }
 
 /// put outputs into high-impedance mode, stop sampling

@@ -183,7 +183,6 @@ void Session::remove_device(Device* device) {
 	if ( device ) {
 		m_devices.erase(device);
 		device->removed();
-		cerr << "m_devices.size() " << m_devices.size() << endl;
 	}
 	else {
 		cerr << "no device removed" << endl;
@@ -207,8 +206,13 @@ void Session::run(sample_t nsamples) {
 void Session::end() {
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
+	auto now = std::chrono::system_clock::now();
+	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
+    //  m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+    if (!res) {
+        cout << "timed out" << endl;
+    }
 	for (auto i: m_devices) {
 		i->off();
 	}
@@ -243,7 +247,7 @@ void Session::cancel() {
 }
 
 /// Called on the USB thread when a device encounters an error
-void Session::handle_error(unsigned status) {
+void Session::handle_error(int status) {
 	std::lock_guard<std::mutex> lock(m_lock);
 	if (m_cancellation == 0) {
 		m_cancellation = status;
@@ -254,8 +258,8 @@ void Session::handle_error(unsigned status) {
 /// called upon completion of a sample stream
 void Session::completion() {
 	// On USB thread
-	std::lock_guard<std::mutex> lock(m_lock);
 	m_active_devices -= 1;
+	std::lock_guard<std::mutex> lock(m_lock);
 	if (m_active_devices == 0) {
 		if (m_completion_callback) {
 			m_completion_callback(m_cancellation != 0);
