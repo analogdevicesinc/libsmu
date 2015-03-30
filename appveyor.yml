@@ -12,9 +12,7 @@ install:
 
 build_script:
   - mingw32-make 
-  - echo EXPORTS > libsmu.def
-  - for /f "usebackq tokens=4,* delims=_ " %%i in (`dumpbin /exports "libsmu.dll"`) do if %%i==libsmu echo %%i_%%j >> libsmu.def
-  - dlltool -l libsmu.lib libsmu.dll
+  - dlltool --export-all-symbols -l libsmu.lib -z libsmu.def libsmu.dll
   - appveyor PushArtifact libsmu.lib
   - appveyor PushArtifact libsmu.def
   - appveyor PushArtifact libsmu.hpp
