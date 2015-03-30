@@ -68,13 +68,16 @@ public:
 	void completion();
 
 	/// internal: Called by devices on the USB thread when a device encounters an error
-	void handle_error(unsigned status);
+	void handle_error(int status);
 
 	/// internal: Called by devices on the USB thread with progress updates
 	void progress();
 	/// internal: called by hotplug events on the USB thread
 	void attached(libusb_device* device);
 	void detached(libusb_device* device);
+
+	/// Block until all devices have completed
+	void wait_for_completion();
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
@@ -330,7 +333,7 @@ public:
 				return m_src_v1 + norm_phase * pkpk;
 
 			case SRC_STAIRSTEP:
-				return m_src_v1 + floorf(norm_phase*10)/10 * pkpk;
+				return m_src_v2 - floorf(norm_phase*10)/10 * pkpk;
 
 			case SRC_SINE:
 				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * pkpk/2;
