@@ -196,7 +196,9 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer out " << r << endl;
+            libusb_free_transfer(t);
             m_session->handle_error(r);
+            return false;
 		}
 		m_out_transfers.num_active++;
 		return true;
@@ -211,7 +213,9 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
+            libusb_free_transfer(t);
             m_session->handle_error(r);
+            return false;
 		}
 		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
