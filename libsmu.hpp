@@ -77,7 +77,7 @@ public:
 	void detached(libusb_device* device);
 
 	/// Block until all devices have completed
-	void wait_until_end();
+	void wait_for_completion();
 
 	/// Block until all devices have completed, then turn off the devices
 	void end();
