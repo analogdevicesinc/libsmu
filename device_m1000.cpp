@@ -33,7 +33,11 @@ int m_sam_per = 0;
 extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
 
-const double BUFFER_TIME = 0.025;
+#ifdef _WIN32
+const double BUFFER_TIME = 0.050;
+#else
+const double BUFFER_TIME = 0.020;
+#endif
 
 static const sl_device_info m1000_info = {DEVICE_M1000, "ADALM1000", 2};
 
