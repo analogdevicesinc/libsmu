@@ -26,7 +26,7 @@ const unsigned chunk_size = 256;
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
 
-const int M1K_timer_clock = 48e6; // 96MHz/2 = 48MHz
+const int M1K_timer_clock = 3e6; 
 const int m_min_per = 0x18;
 volatile uint16_t m_sof_start = 0;
 int m_sam_per = 0;
