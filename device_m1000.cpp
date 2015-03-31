@@ -110,7 +110,7 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-    std::cerr << "in_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
+    //std::cerr << "in_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -138,7 +138,7 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-    std::cerr << "out_completion: " << m_out_transfers.num_active << m_in_transfers.num_active << std::endl;
+    //std::cerr << "out_completion: " << m_out_transfers.num_active << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -159,7 +159,7 @@ void M1000_Device::configure(uint64_t rate) {
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 100, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
-	std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
+	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
 /// encode output samples
@@ -303,6 +303,7 @@ void M1000_Device::start_run(uint64_t samples) {
 	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
     if (ret < 0) {
         cerr << "control transfer failed with code " << ret << endl;
+        return;
     }
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
