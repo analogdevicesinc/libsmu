@@ -51,7 +51,7 @@ struct Transfers {
 		for (auto i: m_transfers) {
             std::cout << libusb_error_name(i->status) << " " << i->timeout << std::endl;
 			ret = libusb_cancel_transfer(i);
-            if (ret != 0) break;
+            if (ret != 0) libusb_free_transfer(i);
 		}
         return ret;
 	}
