@@ -21,8 +21,8 @@ struct Transfers {
 	std::vector<libusb_transfer*> m_transfers;
 
 	void alloc(unsigned count, libusb_device_handle* handle,
-	           unsigned char endpoint, unsigned char type, size_t buf_size,
-	           unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
+			   unsigned char endpoint, unsigned char type, size_t buf_size,
+			   unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
 		clear();
 		m_transfers.resize(count, NULL);
 		for (size_t i=0; i<count; i++) {
@@ -47,13 +47,18 @@ struct Transfers {
 	}
 
 	int cancel() {
-        int ret;
+		int ret;
 		for (auto i: m_transfers) {
-            std::cout << libusb_error_name(i->status) << " " << i->timeout << std::endl;
+			if (i->status != 0) {
+				std::cout << "transfer status: " << libusb_error_name(i->status) << std::endl;
+			}
 			ret = libusb_cancel_transfer(i);
-            if (ret != 0) libusb_free_transfer(i);
+			if (ret != 0) {
+				std::cout << "cancel status: " << libusb_error_name(ret) << std::endl;
+			}
 		}
-        return ret;
+		std::cout << "num_active: " << num_active << std::endl;
+		return ret;
 	}
 
 	size_t size() {
