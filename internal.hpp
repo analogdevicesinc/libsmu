@@ -43,6 +43,7 @@ struct Transfers {
 		for (auto i: m_transfers) {
 			libusb_free_transfer(i);
 		}
+		std::cout << "num_active after free:: " << num_active << std::endl;
 		m_transfers.clear();
 	}
 
@@ -57,7 +58,7 @@ struct Transfers {
 				std::cout << "cancel status: " << libusb_error_name(ret) << std::endl;
 			}
 		}
-		std::cout << "num_active: " << num_active << std::endl;
+		std::cout << "num_active after cancel:: " << num_active << std::endl;
 		return ret;
 	}
 
@@ -76,5 +77,5 @@ struct Transfers {
 	iterator end() { return m_transfers.end(); }
 	const_iterator end() const { return m_transfers.end(); }
 
-	uint32_t num_active;
+	int32_t num_active;
 };
