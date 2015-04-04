@@ -155,9 +155,9 @@ void M1000_Device::configure(uint64_t rate) {
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
 	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,  100, m1000_in_completion,  this);
+		m_packets_per_transfer*in_packet_size,  10000, m1000_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*out_packet_size, 100, m1000_out_completion, this);
+		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
