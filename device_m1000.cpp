@@ -138,7 +138,6 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-    std::cerr << "out_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
