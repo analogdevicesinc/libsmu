@@ -53,13 +53,16 @@ struct Transfers {
 			if (i->status != 0) {
 				std::cout << "transfer status: " << libusb_error_name(i->status) << std::endl;
 			}
-			ret = libusb_cancel_transfer(i);
-			if (ret != 0) {
-				std::cout << "cancel status: " << libusb_error_name(ret) << std::endl;
+			else {
+				ret = libusb_cancel_transfer(i);
+				if (ret != 0) {
+					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+				}
+				return ret;
 			}
 		}
 		std::cout << "num_active after cancel:: " << num_active << std::endl;
-		return ret;
+		return 0;
 	}
 
 	size_t size() {

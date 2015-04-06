@@ -138,7 +138,7 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status);
 	}
-    //std::cerr << "out_completion: " << m_out_transfers.num_active << m_in_transfers.num_active << std::endl;
+    std::cerr << "out_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -200,7 +200,6 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer out " << r << endl;
-            libusb_free_transfer(t);
 			m_session->handle_error(r);
 			return false;
 		}
@@ -322,9 +321,8 @@ void M1000_Device::start_run(uint64_t samples) {
 void M1000_Device::cancel() {
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
-    cerr << "cancel error in: " << libusb_error_name(ret_in) << " out: " << libusb_error_name(ret_out) << endl;
-    //if ( ret_in ) in_completion();
-    //if ( ret_out ) out_completion();
+	if ( (ret_in != ret_out) || (ret_in != 0) || (ret_out != 0) )
+		cerr << "cancel error in: " << libusb_error_name(ret_in) << " out: " << libusb_error_name(ret_out) << endl;
 }
 
 /// put outputs into high-impedance mode, stop sampling
