@@ -13,7 +13,7 @@ install:
 build_script:
   - mingw32-make 
   - dlltool --export-all-symbols -l libsmu.lib -z libsmu.def libsmu.dll
-  - appveyor PushArtifact smu
+  - appveyor PushArtifact smu.exe
   - appveyor PushArtifact libsmu.lib
   - appveyor PushArtifact libsmu.def
   - appveyor PushArtifact libsmu.hpp
