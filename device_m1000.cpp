@@ -216,7 +216,7 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			cerr << "libusb_submit_transfer in " << r << endl;
-			libusb_free_transfer(t);
+			t->status = (libusb_transfer_status) r;
 			m_session->handle_error(r);
 			return false;
 		}

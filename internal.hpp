@@ -50,12 +50,10 @@ struct Transfers {
 	int cancel() {
 		int ret;
 		for (auto i: m_transfers) {
-			if (i->status != 0) {
-				std::cout << "transfer status: " << libusb_error_name(i->status) << std::endl;
-			}
-			else {
+			if (i->status == 0) {
 				ret = libusb_cancel_transfer(i);
 				if (ret != 0) {
+					i->status = (libusb_transfer_status)ret;
 					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
 				}
 				return ret;
