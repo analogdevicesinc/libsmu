@@ -136,13 +136,15 @@ public:
 	/// Pointed-to memory is valid for the lifetime of the Device.
 	/// This method may be called on a device that is not added to the session.
 	virtual const char* serial() const { return this->serial_num; }
+	virtual const char* fwver() const { return this->m_fw_version; }
+	virtual const char* hwver() const { return this->m_hw_version; }
 
 	/// Set the mode of the specified channel.
 	/// This method may not be called while the session is active.
 	virtual void set_mode(unsigned channel, unsigned mode) = 0;
 
 	/// Perform a raw USB control transfer on the underlying USB device
-	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
+	int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 		               unsigned char *data, unsigned wLength, unsigned timeout);
 
 	/// Get the default sample rate.
@@ -182,6 +184,8 @@ protected:
 
 	std::mutex m_state;
 
+	char m_fw_version[32];
+	char m_hw_version[32];
 	char serial_num[32];
 	friend class Session;
 };

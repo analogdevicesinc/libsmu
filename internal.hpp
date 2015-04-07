@@ -43,22 +43,25 @@ struct Transfers {
 		for (auto i: m_transfers) {
 			libusb_free_transfer(i);
 		}
+		if (num_active != 0)
+			std::cout << "num_active after free:: " << num_active << std::endl;
 		m_transfers.clear();
 	}
 
 	int cancel() {
 		int ret;
 		for (auto i: m_transfers) {
-			if (i->status != 0) {
-				std::cout << "transfer status: " << libusb_error_name(i->status) << std::endl;
-			}
-			ret = libusb_cancel_transfer(i);
-			if (ret != 0) {
-				std::cout << "cancel status: " << libusb_error_name(ret) << std::endl;
+			if (i->status == 0) {
+				ret = libusb_cancel_transfer(i);
+				if (ret != 0) {
+					i->status = (libusb_transfer_status)ret;
+					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+				}
+				return ret;
 			}
 		}
-		std::cout << "num_active: " << num_active << std::endl;
-		return ret;
+		std::cout << "num_active after cancel:: " << num_active << std::endl;
+		return 0;
 	}
 
 	size_t size() {
@@ -76,5 +79,5 @@ struct Transfers {
 	iterator end() { return m_transfers.end(); }
 	const_iterator end() const { return m_transfers.end(); }
 
-	uint32_t num_active;
+	int32_t num_active;
 };

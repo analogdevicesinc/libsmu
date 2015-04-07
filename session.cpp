@@ -149,6 +149,9 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	if (dev) {
 		if (dev->init() == 0) {
 			libusb_get_string_descriptor_ascii(dev->m_usb, desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
+			libusb_control_transfer(dev->m_usb, 0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
+			libusb_control_transfer(dev->m_usb, 0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
+
 			return dev;
 		} else {
 			perror("Error initializing device");
@@ -303,7 +306,7 @@ Device::~Device() {
 }
 
 // generic implementation of ctrl_transfers
-void Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
+int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
 {
-	libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
+	return libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
 }
