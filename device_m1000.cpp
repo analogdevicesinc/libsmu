@@ -26,7 +26,6 @@ const unsigned chunk_size = 256;
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
 
-const int M1K_timer_clock = 3e6; 
 const int m_min_per = 0x18;
 volatile uint16_t m_sof_start = 0;
 int m_sam_per = 0;
@@ -148,10 +147,19 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 /// calculate values for sampling period for SAM3U timer
 void M1000_Device::configure(uint64_t rate) {
 	double sample_time = 1.0/rate;
-	m_sam_per = round(sample_time * (double) M1K_timer_clock) / 2;
+	double M1K_timer_clock;
+	// if FW version is 023314a - initial production, use 3e6 for timer clock
+	if (strcmp(this->m_fw_version, "023314a*") == 0) {
+		M1K_timer_clock = 3e6;
+	}
+	// otherwise, assume a more recent firmware, and use the audacious clock
+	else {
+		M1K_timer_clock = 48e6;
+	}
+	m_sam_per = round(sample_time * M1K_timer_clock) / 2;
 	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
-	sample_time = m_sam_per / (double) M1K_timer_clock; // convert back to get the actual sample time;
-    
+	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
+
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
