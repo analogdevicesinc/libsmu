@@ -71,6 +71,17 @@ int M1000_Device::get_default_rate() {
 int M1000_Device::init() {
 	int r = Device::init();
 	if (r!=0) { return r; }
+	char buf[64];
+	r = libusb_control_transfer(m_usb, 0xC0, 0x00, 0, 0, (uint8_t*)buf, 64, 100);
+	if (r >= 0) {
+		this->m_hw_version = std::string(buf, strnlen(buf, r));
+	}
+
+	r = libusb_control_transfer(m_usb, 0xC0, 0x00, 0, 1, (uint8_t*)buf, 64, 100);
+	if (r >= 0) {
+		this->m_fw_version = std::string(buf, strnlen(buf, r));
+	}
+
 	return 0;
 }
 
