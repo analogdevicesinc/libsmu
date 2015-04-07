@@ -47,10 +47,6 @@ protected:
 
 	uint16_t encode_out(int chan);
 
-	std::string m_hw_version;
-	std::string m_fw_version;
-	std::string m_git_version;
-
 	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
