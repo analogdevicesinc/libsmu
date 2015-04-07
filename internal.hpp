@@ -43,7 +43,8 @@ struct Transfers {
 		for (auto i: m_transfers) {
 			libusb_free_transfer(i);
 		}
-		std::cout << "num_active after free:: " << num_active << std::endl;
+		if (num_active != 0)
+			std::cout << "num_active after free:: " << num_active << std::endl;
 		m_transfers.clear();
 	}
 
