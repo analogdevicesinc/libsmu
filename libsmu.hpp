@@ -144,7 +144,7 @@ public:
 	virtual void set_mode(unsigned channel, unsigned mode) = 0;
 
 	/// Perform a raw USB control transfer on the underlying USB device
-	void ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
+	int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 		               unsigned char *data, unsigned wLength, unsigned timeout);
 
 	/// Get the default sample rate.
