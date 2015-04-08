@@ -148,7 +148,7 @@ public:
 		               unsigned char *data, unsigned wLength, unsigned timeout);
 
 	/// Get the default sample rate.
-	virtual int get_default_rate() const { return 10000; }
+	virtual int get_default_rate() { return 10000; }
 
 	/// Prepare multi-device synchronization.
 	virtual void sync() {};
