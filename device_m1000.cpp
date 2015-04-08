@@ -64,7 +64,14 @@ M1000_Device::M1000_Device(Session* s, libusb_device* device):
 M1000_Device::~M1000_Device() {}
 
 int M1000_Device::get_default_rate() {
-	return 100000;
+	// rev0 firmware
+	if (strcmp(this->m_fw_version, "023314a*") == 0) {
+		return 62500;
+	}
+	// modern fw
+	else {
+		return 100000;
+	}
 }
 
 int M1000_Device::init() {
