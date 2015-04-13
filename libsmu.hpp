@@ -40,7 +40,7 @@ public:
 	/// Devices that are present on the system, but aren't necessarily in bound to this session.
 	/// Only `Device::serial` and `Device::info` may be called on a Device that is not added to
 	/// the session.
-	std::vector<std::shared_ptr<Device>> m_available_devices;
+	std::vector<Device*> m_available_devices;
 
 	/// Add a device (from m_available_devices) to the session.
 	/// This method may not be called while the session is active.
@@ -113,8 +113,8 @@ protected:
 
 	libusb_context* m_usb_cx;
 
-	std::shared_ptr<Device> probe_device(libusb_device* device);
-	std::shared_ptr<Device> find_existing_device(libusb_device* device);
+	Device* probe_device(libusb_device* device);
+	Device* find_existing_device(libusb_device* device);
 };
 
 class Device {
