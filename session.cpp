@@ -52,6 +52,7 @@ Session::Session() {
 
 /// session destructor
 Session::~Session() {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	// Run device destructors before libusb_exit
 	m_usb_thread_loop = 0;
 	m_devices.clear();
@@ -66,6 +67,7 @@ Session::~Session() {
 void Session::attached(libusb_device *device) {
 	shared_ptr<Device> dev = probe_device(device);
 	if (dev) {
+		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
 		cerr << "Session::attached ser: " << dev->serial() << endl;
 		if (this->m_hotplug_attach_callback) {
@@ -119,7 +121,9 @@ int Session::update_available_devices() {
 	for (int i=0; i<num; i++) {
 		shared_ptr<Device> dev = probe_device(list[i]);
 		if (dev) {
+			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
+			m_lock_devlist.unlock();
 		}
 	}
 
@@ -161,6 +165,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 }
 
 shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (auto d: m_available_devices) {
 		if (d->m_device == device) {
 			return d;
