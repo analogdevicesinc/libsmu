@@ -51,8 +51,7 @@ protected:
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
 
-	uint64_t m_sample_rate;
-	uint64_t m_sample_count;
+	uint64_t m_sample_count = 0;
 
 	Signal m_signals[2][2];
 	unsigned m_mode[2];

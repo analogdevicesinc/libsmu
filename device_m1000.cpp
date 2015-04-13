@@ -288,9 +288,12 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 	}
 	// set feedback potentiometers with mode heuristics
 	unsigned pset;
-	if ( mode == SIMV ) pset = 0x7f7f;
-	if ( mode == DISABLED ) pset = 0x3000;
-	if ( mode == SVMI ) pset = 0x0000;
+	switch (mode ) {
+		case SIMV: pset = 0x7f7f; break;
+		case SVMI: pset = 0x0000; break;
+		case DISABLED:
+		default: pset = 0x3000;
+	};
 	libusb_control_transfer(m_usb, 0x40, 0x59, chan, pset, 0, 0, 100);
 	// set mode
 	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);

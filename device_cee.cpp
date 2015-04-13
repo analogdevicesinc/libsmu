@@ -157,7 +157,7 @@ int CEE_Device::init() {
 
 	std::cerr << "    Hardware: " << m_hw_version << std::endl;
 	std::cerr << "    Firmware version: " << m_fw_version << " (" << m_git_version << ")" << std::endl;
-	std::cerr << "    Supported sample rate: " << CEE_timer_clock / m_min_per / 1000.0 << "ksps" << std::endl;
+	std::cerr << "    Supported sample rate: " << (double) CEE_timer_clock / (double) m_min_per / 1000.0 << "ksps" << std::endl;
 	return 0;
 }
 
