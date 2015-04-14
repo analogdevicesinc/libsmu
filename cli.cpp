@@ -29,7 +29,7 @@ int main() {
 
     session->m_hotplug_detach_callback = [=](Device* device){
 		session->cancel(); 
-		session->end();
+		session->wait_for_completion();
 		session->remove_device(device);
 	};
 

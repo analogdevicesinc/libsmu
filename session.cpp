@@ -14,7 +14,6 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::shared_ptr;
 
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
@@ -54,6 +53,7 @@ Session::Session() {
 
 /// session destructor
 Session::~Session() {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	// Run device destructors before libusb_exit
 	m_usb_thread_loop = 0;
 	m_devices.clear();
@@ -66,8 +66,9 @@ Session::~Session() {
 
 /// callback for device attach events
 void Session::attached(libusb_device *device) {
-	shared_ptr<Device> dev = probe_device(device);
+	Device* dev = probe_device(device);
 	if (dev) {
+		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
 		cerr << "Session::attached ser: " << dev->serial() << endl;
 		if (this->m_hotplug_attach_callback) {
@@ -83,6 +84,10 @@ void Session::detached(libusb_device *device)
 {
 	if (this->m_hotplug_detach_callback) {
 		Device *dev = &*this->find_existing_device(device);
+		if (m_active_devices > 0) {
+			this->cancel();
+			this->wait_for_completion();
+		}
 		if (dev) {
 			cerr << "Session::detached ser: " << dev->serial() << endl;
 			this->m_hotplug_detach_callback(dev);
@@ -113,15 +118,19 @@ void Session::start_usb_thread() {
 
 /// update list of attached USB devices
 int Session::update_available_devices() {
+	m_lock_devlist.lock();
 	m_available_devices.clear();
+	m_lock_devlist.unlock();
 	libusb_device** list;
 	int num = libusb_get_device_list(m_usb_cx, &list);
 	if (num < 0) return num;
 
 	for (int i=0; i<num; i++) {
-		shared_ptr<Device> dev = probe_device(list[i]);
+		Device* dev = probe_device(list[i]);
 		if (dev) {
+			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
+			m_lock_devlist.unlock();
 		}
 	}
 
@@ -130,8 +139,8 @@ int Session::update_available_devices() {
 }
 
 /// identify devices supported by libsmu
-shared_ptr<Device> Session::probe_device(libusb_device* device) {
-	shared_ptr<Device> dev = find_existing_device(device);
+Device* Session::probe_device(libusb_device* device) {
+	Device* dev = find_existing_device(device);
 
 	libusb_device_descriptor desc;
 	int r = libusb_get_device_descriptor(device, &desc);
@@ -141,11 +150,11 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	}
 
 	if (desc.idVendor == 0x59e3 && desc.idProduct == 0xCEE1) {
-		dev = shared_ptr<Device>(new CEE_Device(this, device));
+		dev = (Device*)(new CEE_Device(this, device));
 	} else if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
+		dev = (Device*)(new M1000_Device(this, device));
 	} else if (desc.idVendor == 0x064B && desc.idProduct == 0x784C) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
+		dev = (Device*)(new M1000_Device(this, device));
 	}
 
 	if (dev) {
@@ -162,7 +171,8 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
+Device* Session::find_existing_device(libusb_device* device) {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (auto d: m_available_devices) {
 		if (d->m_device == device) {
 			return d;
@@ -220,8 +230,7 @@ void Session::run(sample_t nsamples) {
 void Session::end() {
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
-	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_for(lk, std::chrono::milliseconds(100), [&]{ return m_active_devices == 0; });
     //  m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
     if (!res) {
@@ -235,7 +244,7 @@ void Session::end() {
 void Session::wait_for_completion() {
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_for(lk, std::chrono::milliseconds(100), [&]{ return m_active_devices == 0; });
 }
 
 /// start streaming data
