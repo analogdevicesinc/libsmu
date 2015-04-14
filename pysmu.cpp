@@ -261,8 +261,10 @@ extern "C" {
 		}
 
 		auto dev = get_device(dev_serial);
-		if (dev == NULL)
+		if (dev == NULL) {
+			free(dev_buf);
 			return NULL;
+		}
 		auto sgnl = dev->signal(chan_num, mode);
 		bool flag = false;
 		if (repeat>0)
