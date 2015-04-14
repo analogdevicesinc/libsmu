@@ -82,6 +82,9 @@ void Session::detached(libusb_device *device)
 {
 	if (this->m_hotplug_detach_callback) {
 		Device *dev = &*this->find_existing_device(device);
+		if (m_active_devices > 0) {
+			this->wait_for_completion();
+		}
 		if (dev) {
 			cerr << "Session::detached ser: " << dev->serial() << endl;
 			this->m_hotplug_detach_callback(dev);
