@@ -45,7 +45,7 @@ protected:
 	bool submit_in_transfer(libusb_transfer* t);
 	void handle_in_transfer(libusb_transfer* t);
 
-	uint16_t encode_out(int chan);
+	uint16_t encode_out(unsigned chan);
 
 	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;

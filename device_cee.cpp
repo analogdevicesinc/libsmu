@@ -311,7 +311,7 @@ void CEE_Device::configure(uint64_t rate) {
 	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
 }
 
-inline uint16_t CEE_Device::encode_out(int chan, uint32_t igain) {
+inline uint16_t CEE_Device::encode_out(unsigned chan, uint32_t igain) {
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
 		float val = m_signals[chan][0].get_sample();

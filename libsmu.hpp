@@ -50,6 +50,9 @@ public:
 	/// Use `add_device` and `remove_device` to manipulate this list.
 	std::set<Device*> m_devices;
 
+	/// get the device matching a given serial from the session
+	Device* get_device(const char* serial);
+
 	/// Remove a device from the session.
 	/// This method may not be called while the session is active
 	void remove_device(Device*);

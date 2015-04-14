@@ -6,6 +6,7 @@
 #include "libsmu.hpp"
 #include <iostream>
 #include <libusb.h>
+#include <string.h>
 #include "device_cee.hpp"
 #include "device_m1000.hpp"
 
@@ -169,6 +170,15 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
 	return NULL;
 }
 
+/// get the device matching a given serial from the session
+Device* Session::get_device(const char* serial) {
+	for (auto d: m_devices) {
+		if (strncmp(d->serial(), serial, 31) == 0) {
+			return d;
+		}
+	}
+	return NULL;
+}
 
 /// adds a new device to the session
 Device* Session::add_device(Device* device) {
