@@ -364,7 +364,6 @@ extern "C" {
 
 	static PyObject * inputs_iter(PyObject *self, PyObject *args) {
 		const char *dev_serial;
-		//unsigned i;
 		inputs *p = NULL;
 
 		if (!PyArg_ParseTuple(args, "s", &dev_serial))
@@ -378,9 +377,7 @@ extern "C" {
 		if (!p)
 			return NULL;
 
-		// setup signal callbacks
 		auto signal_callback = [](queue <float> *signal_q, float sample) {
-			//fprintf(stderr, "%lu\n", (*signal_q).size());
 			std::unique_lock<mutex> lock(signal_mtx);
 			if ((*signal_q).size() < 1024)
 				(*signal_q).push(sample);
@@ -390,6 +387,7 @@ extern "C" {
 				samples_available.notify_one();
 		};
 
+		// setup signal callbacks
 		dev->signal(0, 0)->measure_callback(std::bind(signal_callback, &signal0_0, _1));
 		dev->signal(0, 1)->measure_callback(std::bind(signal_callback, &signal0_1, _1));
 		dev->signal(1, 0)->measure_callback(std::bind(signal_callback, &signal1_0, _1));
