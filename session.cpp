@@ -83,6 +83,7 @@ void Session::detached(libusb_device *device)
 	if (this->m_hotplug_detach_callback) {
 		Device *dev = &*this->find_existing_device(device);
 		if (m_active_devices > 0) {
+			this->cancel();
 			this->wait_for_completion();
 		}
 		if (dev) {
@@ -115,7 +116,9 @@ void Session::start_usb_thread() {
 
 /// update list of attached USB devices
 int Session::update_available_devices() {
+	m_lock_devlist.lock();
 	m_available_devices.clear();
+	m_lock_devlist.unlock();
 	libusb_device** list;
 	int num = libusb_get_device_list(m_usb_cx, &list);
 	if (num < 0) return num;
