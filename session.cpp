@@ -219,8 +219,7 @@ void Session::run(sample_t nsamples) {
 void Session::end() {
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
-	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_for(lk, std::chrono::milliseconds(100), [&]{ return m_active_devices == 0; });
     //  m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
     if (!res) {
@@ -234,7 +233,7 @@ void Session::end() {
 void Session::wait_for_completion() {
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_for(lk, std::chrono::milliseconds(100), [&]{ return m_active_devices == 0; });
 }
 
 /// start streaming data
