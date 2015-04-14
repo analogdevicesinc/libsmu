@@ -1,7 +1,9 @@
 // Released under the terms of the BSD License
 // (C) 2014-2015
-//   Ezra Varady <ez@sloth.life>
+//   Analog Devices, Inc.
+//   Tim Harder <radhermit@gmail.com>
 //   Ian Daniher <itdaniher@gmail.com>
+//   Ezra Varady <ez@sloth.life>
 
 #include <Python.h>
 #include <vector>

@@ -1,5 +1,6 @@
 // Released under the terms of the BSD License
 // (C) 2014-2015
+//   Analog Devices, Inc.
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
