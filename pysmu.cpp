@@ -398,7 +398,7 @@ extern "C" {
 		return (PyObject *)p;
 	}
 
-	static PyMethodDef pysmu_methods [] = {
+	static PyMethodDef libpysmu_methods [] = {
 		{ "setup", initSession, METH_VARARGS, "start session"  },
 		{ "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
 		{ "cleanup", cleanupSession, METH_VARARGS, "end session"  },
@@ -413,8 +413,8 @@ extern "C" {
 		{ NULL, NULL, 0, NULL  }
 	};
 
-	DL_EXPORT(void) initpysmu(void)
+	DL_EXPORT(void) initlibpysmu(void)
 	{
-		Py_InitModule("pysmu", pysmu_methods);
+		Py_InitModule("libpysmu", libpysmu_methods);
 	}
 }

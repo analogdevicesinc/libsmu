@@ -38,5 +38,5 @@ clean:
 	rm -f $(OBJ) $(BIN) $(OBJ:%.o=%.d) $(LIB) $(SHARE)
 
 python: $(LIB)
-	$(CXX) $(CXXFLAGS) -I/usr/include/python2.7 -o pysmu.o -c pysmu.cpp
-	$(CXX) $(CXXFLAGS) -shared pysmu.o $(LIB) $(LINKFLAGS) -lpython2.7 -o pysmu.so
+	$(CXX) $(CXXFLAGS) -I/usr/include/python2.7 -o libpysmu.o -c pysmu.cpp
+	$(CXX) $(CXXFLAGS) -shared libpysmu.o $(LIB) $(LINKFLAGS) -lpython2.7 -o libpysmu.so
