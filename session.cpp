@@ -113,7 +113,9 @@ void Session::start_usb_thread() {
 
 /// update list of attached USB devices
 int Session::update_available_devices() {
+	m_lock_devlist.lock();
 	m_available_devices.clear();
+	m_lock_devlist.unlock();
 	libusb_device** list;
 	int num = libusb_get_device_list(m_usb_cx, &list);
 	if (num < 0) return num;
