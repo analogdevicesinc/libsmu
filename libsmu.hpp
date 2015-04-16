@@ -112,6 +112,7 @@ protected:
 	bool m_usb_thread_loop;
 
 	std::mutex m_lock;
+	std::mutex m_lock_devlist;
 	std::condition_variable m_completion;
 
 	libusb_context* m_usb_cx;
