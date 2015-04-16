@@ -21,6 +21,7 @@ inline static float constrain(float val, float lo, float hi){
 struct Transfers {
 	std::vector<libusb_transfer*> m_transfers;
 
+	/// allocates a new collection of libusb transfers
 	void alloc(unsigned count, libusb_device_handle* handle,
 			   unsigned char endpoint, unsigned char type, size_t buf_size,
 			   unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
@@ -40,6 +41,7 @@ struct Transfers {
 		}
 	}
 
+	/// free and clear collection of libusb transfers
 	void clear() {
 		for (auto i: m_transfers) {
 			libusb_free_transfer(i);
@@ -49,18 +51,26 @@ struct Transfers {
 		m_transfers.clear();
 	}
 
+	/// signal cleanup - stop streaming and cleanup libusb state
+	/// loop over pending transfers, canceling each remaining transfer that hasn't already been canceled.
+	/// returns an error code if one of the transfers doesn't complete, or zero for success
 	int cancel() {
-		int ret;
+		// for i in pending transfers
 		for (auto i: m_transfers) {
+			// checking libusb transfer status outside of the callback is prohibited by the libusb docs
 			if (i->status == 0) {
-				ret = libusb_cancel_transfer(i);
+				std::cerr << "num_active before cancel: " << num_active << std::endl;
+				// libusb's cancel returns 0 if success, else an error code
+				int ret = libusb_cancel_transfer(i);
 				if (ret != 0) {
+					// this property is read-only, writing to it is prohibited by the libusb docs
 					i->status = (libusb_transfer_status)ret;
-					std::cerr << "cancel status: " << libusb_error_name(ret) << " " << "transfer status: " << i->status << " " << libusb_error_name(i->status) << std::endl;
+					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+					// abort if a transfer is not successfully canceled
+					return ret;
 				}
 			}
 		}
-		std::cerr << "num_active after cancel:: " << num_active << std::endl;
 		return 0;
 	}
 
@@ -79,5 +89,6 @@ struct Transfers {
 	iterator end() { return m_transfers.end(); }
 	const_iterator end() const { return m_transfers.end(); }
 
+	// count of pending transfers
 	int32_t num_active;
 };
