@@ -92,7 +92,10 @@ void Session::detached(libusb_device *device)
 	}
 }
 
+
+/// remove a specified Device from the list of available devices
 void Session::destroy_available(Device *dev) {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	if (dev)
 		for (unsigned i = 0; i < m_available_devices.size(); i++)
 			if (m_available_devices[i]->serial() == dev->serial())
