@@ -88,6 +88,13 @@ void Session::detached(libusb_device *device)
 	}
 }
 
+void Session::destroy_available(Device *dev) {
+	if (dev)
+		for (unsigned i = 0; i < m_available_devices.size(); i++)
+			if (m_available_devices[i]->serial() == dev->serial())
+				m_available_devices.erase(m_available_devices.begin()+i);
+}
+
 /// low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
     libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {

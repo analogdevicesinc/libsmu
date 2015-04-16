@@ -54,6 +54,12 @@ public:
 	/// This method may not be called while the session is active
 	void remove_device(Device*);
 
+	/// Remove a device from the list of available devices.
+	/// Devices are automatically added to this list on attach.
+	/// Devies must be removed from this list on detach.
+	/// This method may not be called while the session is active
+	void destroy_available(Device*);
+
 	/// Configure the session's sample rate.
 	/// This method may not be called while the session is active.
 	void configure(uint64_t sampleRate);
