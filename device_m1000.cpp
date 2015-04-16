@@ -117,7 +117,7 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
-		m_session->handle_error(t->status);
+		m_session->handle_error(t->status, "M1000_Device::in_completion");
 	}
     //std::cerr << "in_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
@@ -144,8 +144,7 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 			submit_out_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
-		std::cerr << "OTransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
-		m_session->handle_error(t->status);
+		m_session->handle_error(t->status, "M1000_Device::out_completion");
 	}
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
@@ -216,8 +215,8 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer out " << r << endl;
-			m_session->handle_error(r);
+			t->status = (libusb_transfer_status) r;
+			m_session->handle_error(r, "M1000_Device::submit_out_transfer");
 			return false;
 		}
 		m_out_transfers.num_active++;
@@ -232,9 +231,8 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer in " << r << endl;
 			t->status = (libusb_transfer_status) r;
-			m_session->handle_error(r);
+			m_session->handle_error(r, "M1000_Device::submit_in_transfer");
 			return false;
 		}
 		m_in_transfers.num_active++;

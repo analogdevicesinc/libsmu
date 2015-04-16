@@ -73,9 +73,7 @@ void Session::attached(libusb_device *device) {
 		m_available_devices.push_back(dev);
 		cerr << "Session::attached ser: " << dev->serial() << endl;
 		if (this->m_hotplug_attach_callback) {
-			cerr << dev << endl;
 			this->m_hotplug_attach_callback(&*dev);
-			cerr << dev << endl;
 		}
 	}
 }
@@ -278,8 +276,9 @@ void Session::cancel() {
 }
 
 /// Called on the USB thread when a device encounters an error
-void Session::handle_error(int status) {
+void Session::handle_error(int status, const char * tag) {
 	std::lock_guard<std::mutex> lock(m_lock);
+	cerr << "error condition at " << tag << " " << libusb_error_name(status) << endl;
 	if (m_cancellation == 0) {
 		m_cancellation = status;
 		cancel();

@@ -82,7 +82,7 @@ public:
 	void completion();
 
 	/// internal: Called by devices on the USB thread when a device encounters an error
-	void handle_error(int status);
+	void handle_error(int status, const char * tag);
 
 	/// internal: Called by devices on the USB thread with progress updates
 	void progress();

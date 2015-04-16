@@ -256,8 +256,7 @@ void CEE_Device::in_completion(libusb_transfer* t) {
 			submit_in_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
-		std::cerr << "ITransfer error "<< t->status << " " << t << std::endl;
-		m_session->handle_error(t->status);
+		m_session->handle_error(t->status, "CEE_Device::in_completion");
 	}
 
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
@@ -285,8 +284,7 @@ void CEE_Device::out_completion(libusb_transfer* t) {
 			submit_out_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
-		std::cerr << "OTransfer error "<< t->status << " " << t << std::endl;
-		m_session->handle_error(t->status);
+		m_session->handle_error(t->status, "CEE_Device::out_completion");
 	}
 
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
