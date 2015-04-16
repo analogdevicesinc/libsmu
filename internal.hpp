@@ -45,7 +45,7 @@ struct Transfers {
 			libusb_free_transfer(i);
 		}
 		if (num_active != 0)
-			std::cout << "num_active after free:: " << num_active << std::endl;
+			std::cerr << "num_active after free:: " << num_active << std::endl;
 		m_transfers.clear();
 	}
 
@@ -56,12 +56,11 @@ struct Transfers {
 				ret = libusb_cancel_transfer(i);
 				if (ret != 0) {
 					i->status = (libusb_transfer_status)ret;
-					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+					std::cerr << "cancel status: " << libusb_error_name(ret) << " " << "transfer status: " << i->status << " " << libusb_error_name(i->status) << std::endl;
 				}
-				return ret;
 			}
 		}
-		std::cout << "num_active after cancel:: " << num_active << std::endl;
+		std::cerr << "num_active after cancel:: " << num_active << std::endl;
 		return 0;
 	}
 
