@@ -78,7 +78,7 @@ class Channel(object):
             libpysmu.set_mode(self.dev, self.chan, 2)
             self.mode = 2
         elif mode == 'd' or mode == 'D':
-            libpysmu.set_mode(sel.dev, self.chan, 0)
+            libpysmu.set_mode(self.dev, self.chan, 0)
             self.mode = 0
         else:
             raise ValueError('invalid mode')
