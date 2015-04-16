@@ -11,7 +11,6 @@
 #include <cmath>
 #include <cassert>
 
-using std::cout;
 using std::cerr;
 using std::endl;
 

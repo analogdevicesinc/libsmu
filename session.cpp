@@ -11,7 +11,6 @@
 #include "device_cee.hpp"
 #include "device_m1000.hpp"
 
-using std::cout;
 using std::cerr;
 using std::endl;
 using std::shared_ptr;
@@ -240,7 +239,7 @@ void Session::end() {
     //  m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
     if (!res) {
-        cout << "timed out" << endl;
+        cerr << "timed out" << endl;
     }
 	for (auto i: m_devices) {
 		i->off();
