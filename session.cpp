@@ -277,8 +277,9 @@ void Session::cancel() {
 /// Called on the USB thread when a device encounters an error
 void Session::handle_error(int status, const char * tag) {
 	std::lock_guard<std::mutex> lock(m_lock);
-	cerr << "error condition at " << tag << " " << libusb_error_name(status) << endl;
-	if (m_cancellation == 0) {
+	// a canceled transfer completing is not an error...
+	if ((m_cancellation == 0) && (status != LIBUSB_TRANSFER_CANCELLED) ) {
+		cerr << "error condition at " << tag << " " << libusb_error_name(status) << endl;
 		m_cancellation = status;
 		cancel();
 	}

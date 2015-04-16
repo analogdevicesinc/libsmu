@@ -57,18 +57,13 @@ struct Transfers {
 	int cancel() {
 		// for i in pending transfers
 		for (auto i: m_transfers) {
-			// checking libusb transfer status outside of the callback is prohibited by the libusb docs
-			if (i->status == 0) {
-				std::cerr << "num_active before cancel: " << num_active << std::endl;
-				// libusb's cancel returns 0 if success, else an error code
-				int ret = libusb_cancel_transfer(i);
-				if (ret != 0) {
-					// this property is read-only, writing to it is prohibited by the libusb docs
-					i->status = (libusb_transfer_status)ret;
-					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
-					// abort if a transfer is not successfully canceled
-					return ret;
-				}
+			std::cerr << "num_active before cancel: " << num_active << std::endl;
+			// libusb's cancel returns 0 if success, else an error code
+			int ret = libusb_cancel_transfer(i);
+			if (ret != 0) {
+				std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+				// abort if a transfer is not successfully canceled
+				return ret;
 			}
 		}
 		return 0;
