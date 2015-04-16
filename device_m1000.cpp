@@ -116,10 +116,8 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 			submit_in_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
-		std::cerr << "ITransfer error "<< libusb_error_name(t->status) << " " << t << std::endl;
 		m_session->handle_error(t->status, "M1000_Device::in_completion");
 	}
-    //std::cerr << "in_completion: " << m_out_transfers.num_active << " " << m_in_transfers.num_active << std::endl;
 	if (m_out_transfers.num_active == 0 && m_in_transfers.num_active == 0) {
 		m_session->completion();
 	}
@@ -327,11 +325,11 @@ void M1000_Device::start_run(uint64_t samples) {
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
 	for (auto i: m_in_transfers) {
-		if (!submit_in_transfer(i)) break;
+		if (submit_in_transfer(i) != 0) break;
 	}
 
 	for (auto i: m_out_transfers) {
-		if (!submit_out_transfer(i)) break;
+		if (submit_out_transfer(i) != 0) break;
 	}
 }
 
