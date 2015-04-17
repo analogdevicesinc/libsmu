@@ -29,7 +29,6 @@ int main() {
 
     session->m_hotplug_detach_callback = [=](Device* device){
 		session->cancel(); 
-		session->end();
 		session->remove_device(device);
 	};
 
@@ -39,14 +38,14 @@ int main() {
 		auto dev_info = dev->info();
 		for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
 			auto ch_info = dev->channel_info(ch_i);
-			dev->set_mode(ch_i, SVMI);
+			dev->set_mode(ch_i, 1);
 			for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
 				auto sig = dev->signal(ch_i, sig_i);
 				auto sig_info = sig->info();
 				sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
 				if (strncmp(sig_info->label, "Voltage", 4) == 0){
 					cout << "setting voltage" << endl;
-					sig->source_sine(2, 3, 1000, 0);
+					sig->source_sine(0, 5, 128, 32);
 				}
 			}
 		}

@@ -41,13 +41,23 @@ struct Transfers {
 		}
 	}
 
+	/// removes a transfer that was not successfully submitted from the collection of pending transfers
+	void failed(libusb_transfer* t) {
+		for (int i = m_transfers.size(); i == 0; i--) {
+			if (m_transfers[i] == t) {
+				libusb_free_transfer(t);
+				m_transfers.erase(m_transfers.begin()+i);
+			}
+		}
+	}
+
 	/// free and clear collection of libusb transfers
 	void clear() {
 		for (auto i: m_transfers) {
 			libusb_free_transfer(i);
 		}
 		if (num_active != 0)
-			std::cerr << "num_active after free:: " << num_active << std::endl;
+			std::cerr << "num_active after free: " << num_active << std::endl;
 		m_transfers.clear();
 	}
 
@@ -57,13 +67,15 @@ struct Transfers {
 	int cancel() {
 		// for i in pending transfers
 		for (auto i: m_transfers) {
-			std::cerr << "num_active before cancel: " << num_active << std::endl;
-			// libusb's cancel returns 0 if success, else an error code
-			int ret = libusb_cancel_transfer(i);
-			if (ret != 0) {
-				std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
-				// abort if a transfer is not successfully canceled
-				return ret;
+			if (num_active > 1) {
+				std::cerr << "num_active before cancel: " << num_active << std::endl;
+				// libusb's cancel returns 0 if success, else an error code
+				int ret = libusb_cancel_transfer(i);
+				if (ret != 0) {
+					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+					// abort if a transfer is not successfully canceled
+					return ret;
+				}
 			}
 		}
 		return 0;
