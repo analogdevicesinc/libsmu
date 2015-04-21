@@ -5,6 +5,7 @@
 //   Ian Daniher <itdaniher@gmail.com>
 //   Ezra Varady <ez@sloth.life>
 
+#include <cmath>
 #include <Python.h>
 #include <vector>
 #include <queue>
