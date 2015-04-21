@@ -5,13 +5,13 @@
 //   Ian Daniher <itdaniher@gmail.com>
 //   Ezra Varady <ez@sloth.life>
 
+#include <cmath>
 #include <Python.h>
 #include <vector>
 #include <queue>
 #include <cstdint>
 #include <functional>
 #include <string>
-#include <cmath>
 #include <condition_variable>
 
 #include "libsmu.hpp"
