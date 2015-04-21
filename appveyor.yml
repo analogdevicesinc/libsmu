@@ -23,5 +23,6 @@ build_script:
   - dlltool --export-all-symbols -l libsmu.lib -z libsmu.def libsmu.dll
   - appveyor PushArtifact smu.exe
   - appveyor PushArtifact libsmu.dll
+  - appveyor PushArtifact libpysmu.dll
   - appveyor PushArtifact libsmu.lib
   - appveyor PushArtifact libsmu.def
