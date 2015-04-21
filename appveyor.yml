@@ -15,7 +15,6 @@ install:
   - set PYTHON_ARCH="32"
   - powershell c:\install.ps1
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - dir C:\Python27
 
 build_script:
   - mingw32-make 
@@ -26,3 +25,6 @@ build_script:
   - appveyor PushArtifact libpysmu.dll
   - appveyor PushArtifact libsmu.lib
   - appveyor PushArtifact libsmu.def
+
+cache:
+  - C:\Python27 -> appveyor.yml
