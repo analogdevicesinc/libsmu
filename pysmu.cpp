@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <cmath>
 #include <condition_variable>
 
 #include "libsmu.hpp"
