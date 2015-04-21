@@ -16,7 +16,7 @@ else
 	LINKFLAGS+="C:\libusb\MinGW32\static\libusb-1.0.a"
 	CXXFLAGS+=-I"C:\libusb\include\libusb-1.0"
 	PYCXXFLAGS=-I"C:\Python27\include"
-	PYLINKFLAGS="C:\Python\libs\libpython27.a"
+	PYLINKFLAGS="C:\Python27\libs\libpython27.a"
 	SHARE=libsmu.dll
 	PYSHARE=libpysmu.dll
 endif
