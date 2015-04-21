@@ -18,7 +18,7 @@ else
 	PYCXXFLAGS=-I"C:\Python27\include"
 	PYLINKFLAGS="C:\Python27\libs\libpython27.a"
 	SHARE=libsmu.dll
-	PYSHARE=libpysmu.dll
+	PYSHARE=libpysmu.pyd
 endif
 
 SRC=session.cpp device_cee.cpp device_m1000.cpp cli.cpp
