@@ -10,8 +10,8 @@ using std::cerr;
 using std::endl;
 
 const sl_signal_info portaudio_signal_info[2] =  {
-	{ SIGNAL, "Count", MODE_HIGH_Z, MODE_HIGH_Z, unit_none, 0, 1, 1.0/65536 }, // Input
-	{ SIGNAL, "Count", MODE_HIGH_Z, MODE_HIGH_Z, unit_none, 0, 1, 1.0/65536 }, // Output
+	{ SIGNAL, "Count", MODE_HIGH_Z, MODE_HIGH_Z, {}, 0.0, 1.0, 1.0/65536 }, // Input
+	{ SIGNAL, "Count", MODE_HIGH_Z, MODE_HIGH_Z, {}, 0.0, 1.0, 1.0/65536 }, // Output
 };
 
 static const sl_device_info pa_info = {DEVICE_PORTAUDIO, "PortAudio", 1};
@@ -29,10 +29,12 @@ PortAudio_Device::PortAudio_Device(Session* s, libusb_device* d):
 		Signal(&portaudio_signal_info[0]),
 		Signal(&portaudio_signal_info[0]),
 		Signal(&portaudio_signal_info[1]),
-	},
+	}
 {}
 
-PortAudio_Device::~PortAudio_Device() {}
+PortAudio_Device::~PortAudio_Device() {
+	Pa_Terminate();
+}
 
 int PortAudio_Device::get_default_rate() {
 	return 48000;
@@ -61,6 +63,7 @@ void PortAudio_Device::configure(uint64_t sample_rate) {
 }
 
 void PortAudio_Device::start_run(uint64_t samples) {
+	m_sample_count = (int) samples;
 	Pa_StartStream( m_stream );
 }
 
@@ -69,9 +72,10 @@ void PortAudio_Device::cancel() {
 }
 
 void PortAudio_Device::off() {
-	Pa_Terminate();
 }
 
+
+/// callback function, invoked by pulseaudio when an input and/or an output chunk is available
 extern "C" int PaStreamCallback_fn( const void *input,
                                       void *output,
                                       unsigned long frameCount,
@@ -85,15 +89,19 @@ extern "C" int PaStreamCallback_fn( const void *input,
     float *out = (float*)output;
 	float *in = (float*)input;
     
-    for( int i=0; i<frameCount; i++ )
+    for( unsigned i=0; i<frameCount; i++ )
     {
         *out++ = dev->m_signals[0].get_sample();
         *out++ = dev->m_signals[0].get_sample();
-		dev->m_out_sampleno++;
 		dev->m_signals[2].put_sample(in[i]);
-		dev->m_in_sampleno++;
+		dev->m_inout_sampleno++;
     }
-	
-	dev->m_session->progress();
-    return 0;
+	if ((dev->m_sample_count != 0) && (dev->m_inout_sampleno == dev->m_sample_count)) {
+		dev->m_session->completion();
+		return 1;
+	}
+	else {
+		dev->m_session->progress();
+		return 0;
+	}
 }

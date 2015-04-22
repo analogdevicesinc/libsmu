@@ -18,8 +18,11 @@ typedef enum sl_type {
 	MODE_SVMI,
 	MODE_SIMV,
 	SIGNAL = 0x80000,
+	DEVICE_PORTAUDIO,
 } sl_type;
 
+// SI units
+// a field for each SI base unit containing the exponent the unit is raised to
 typedef struct sl_unit {
 	int8_t m;
 	int8_t kg;
@@ -28,7 +31,6 @@ typedef struct sl_unit {
 	int8_t K;
 	int8_t mol;
 	int8_t cd;
-	int8_t none;
 } sl_unit;
 
 const sl_unit unit_none = {0};

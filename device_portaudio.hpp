@@ -35,8 +35,8 @@ protected:
 	virtual void on();
 	virtual void off();
 	virtual const char* serial() const { return "0"; };
-	uint64_t m_sample_count = 0;
-	sample_t m_in_sampleno = 0;
-	sample_t m_out_sampleno = 0;
+	int m_sample_count = 0;
+	sample_t m_inout_sampleno = 0;
 	Signal m_signals[3];
+	PaStream *m_stream;
 };
