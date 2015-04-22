@@ -40,6 +40,8 @@ class Smu(object):
         if bm_request_type&0x80 == 0x80:
             if data == '0':
                 data = '\x00'*wLength
+        else:
+            wLength = 0
         ret = libpysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
                                    wIndex, data, wLength, timeout)
         if bm_request_type&0x80 == 0x80:
