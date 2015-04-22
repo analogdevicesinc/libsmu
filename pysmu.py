@@ -37,8 +37,15 @@ class Smu(object):
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
         data = str(data)
-        return libpysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
+        if bm_request_type&0x80 == 0x80:
+            if data == '0':
+                data = '\x00'*wLength
+        ret = libpysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
                                    wIndex, data, wLength, timeout)
+        if bm_request_type&0x80 == 0x80:
+            return map(ord, data)
+        else:
+            return ret
 
     def __repr__(self):
         return 'Devices: ' + str(self.devices)
