@@ -28,8 +28,10 @@ typedef struct sl_unit {
 	int8_t K;
 	int8_t mol;
 	int8_t cd;
+	int8_t none;
 } sl_unit;
 
+const sl_unit unit_none = {0};
 const sl_unit unit_V = { 2,  1, -3, -1,  0,  0,  0};
 const sl_unit unit_A = { 0,  0,  0,  1,  0,  0,  0};
 

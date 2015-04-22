@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
-LINKFLAGS=-lm -lpthread
+LINKFLAGS=-lm -lpthread -lportaudio
 BIN=smu
 LIB=smu.a
 
@@ -22,7 +22,7 @@ else
 	PYSHARE=libpysmu.pyd
 endif
 
-SRC=session.cpp device_cee.cpp device_m1000.cpp cli.cpp
+SRC=session.cpp device_cee.cpp device_m1000.cpp device_portaudio.cpp cli.cpp
 OBJ=$(SRC:%.cpp=%.o)
 
 all: $(LIB) $(BIN) $(SHARE)

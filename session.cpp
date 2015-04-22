@@ -10,6 +10,7 @@
 #include <string.h>
 #include "device_cee.hpp"
 #include "device_m1000.hpp"
+#include "device_portaudio.hpp"
 
 using std::cerr;
 using std::endl;
