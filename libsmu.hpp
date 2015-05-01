@@ -284,7 +284,7 @@ public:
 	}
 
 	/// Get the last measured sample from this signal.
-	value_t measure_instantaneous();
+	value_t measure_instantaneous() { return m_latest_measurement; }
 
 	/// Configure received samples to be stored into `buf`, up to `len` points.
 	/// After `len` points, samples will be dropped.
