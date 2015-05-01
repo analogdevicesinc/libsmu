@@ -342,6 +342,7 @@ public:
 			auto pkpk = m_src_v2 - m_src_v1;
 			auto phase = m_src_phase;
 			auto norm_phase = phase / m_src_period;
+			if (norm_phase < 0) norm_phase += 1;
 			m_src_phase = fmod(m_src_phase + 1, m_src_period);
 
 			switch (m_src) {
