@@ -284,7 +284,7 @@ public:
 	}
 
 	/// Get the last measured sample from this signal.
-	value_t measure_instantaneous();
+	value_t measure_instantaneous() { return m_latest_measurement; }
 
 	/// Configure received samples to be stored into `buf`, up to `len` points.
 	/// After `len` points, samples will be dropped.
@@ -342,6 +342,7 @@ public:
 			auto pkpk = m_src_v2 - m_src_v1;
 			auto phase = m_src_phase;
 			auto norm_phase = phase / m_src_period;
+			if (norm_phase < 0) norm_phase += 1;
 			m_src_phase = fmod(m_src_phase + 1, m_src_period);
 
 			switch (m_src) {
@@ -349,7 +350,7 @@ public:
 				return (norm_phase < m_src_duty) ? m_src_v1 : m_src_v2;
 
 			case SRC_SAWTOOTH:
-				return m_src_v1 + norm_phase * pkpk;
+				return m_src_v2 - norm_phase * pkpk;
 
 			case SRC_STAIRSTEP:
 				return m_src_v2 - floorf(norm_phase*10)/10 * pkpk;
