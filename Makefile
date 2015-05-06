@@ -8,8 +8,8 @@ SYS := $(shell gcc -dumpmachine)
 ifneq (, $(findstring linux, $(SYS)))
 	LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
 	CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
-	PYCXXFLAGS=$(shell pkg-config --cflags python)
-	PYLINKFLAGS=$(shell pkg-config --libs python)
+	PYCXXFLAGS=$(shell pkg-config --cflags python-2.7)
+	PYLINKFLAGS=$(shell pkg-config --libs python-2.7)
 	SHARE=libsmu.so
 	PYSHARE=libpysmu.so
 else
