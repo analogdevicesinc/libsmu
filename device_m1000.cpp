@@ -247,7 +247,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	for (unsigned p=0; p<m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
-		for (unsigned i=(m_in_sampleno==0)?2:0; i<chunk_size; i++) {
+		for (unsigned i=0; i<chunk_size; i++) {
 			m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
 			m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25);
 			m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
