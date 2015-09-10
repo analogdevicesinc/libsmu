@@ -201,13 +201,22 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 		for (unsigned p=0; p<m_packets_per_transfer; p++) {
 			uint8_t* buf = (uint8_t*) (t->buffer + p*out_packet_size);
 			for (unsigned i=0; i < chunk_size; i++) {
-                uint16_t a = encode_out(0);
-                buf[(i+chunk_size*0)*2  ] = a >> 8;
-                buf[(i+chunk_size*0)*2+1] = a & 0xff;
-                uint16_t b = encode_out(1);
-                buf[(i+chunk_size*1)*2  ] = b >> 8;
-                buf[(i+chunk_size*1)*2+1] = b & 0xff;
-                m_out_sampleno++;
+				if (strncmp(this->m_fw_version, "2.", 2) == 0) {
+					uint16_t a = encode_out(0);
+					buf[i*4+0] = a >> 8;
+					buf[i*4+1] = a & 0xff;
+					uint16_t b = encode_out(1);
+					buf[i*4+2] = b >> 8;
+					buf[i*4+3] = b & 0xff;
+				} else {
+					uint16_t a = encode_out(0);
+					buf[(i+chunk_size*0)*2  ] = a >> 8;
+					buf[(i+chunk_size*0)*2+1] = a & 0xff;
+					uint16_t b = encode_out(1);
+					buf[(i+chunk_size*1)*2  ] = b >> 8;
+					buf[(i+chunk_size*1)*2+1] = b & 0xff;
+				}
+				m_out_sampleno++;
 			}
 		}
 		int r = libusb_submit_transfer(t);
@@ -247,11 +256,18 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	for (unsigned p=0; p<m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
-		for (unsigned i=0; i<chunk_size; i++) {
-			m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
-			m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25);
-			m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
-			m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25);
+		for (unsigned i=(m_in_sampleno==0)?2:0; i<chunk_size; i++) {
+			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
+				m_signals[0][0].put_sample(  (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0);
+				m_signals[0][1].put_sample((((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25);
+				m_signals[1][0].put_sample(  (buf[i*8+4] << 8 | buf[i*8+5]) / 65535.0 * 5.0);
+				m_signals[1][1].put_sample((((buf[i*8+6] << 8 | buf[i*8+7]) / 65535.0 * 0.4 ) - 0.195)*1.25);
+			} else {
+				m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
+				m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25);
+				m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
+				m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25);
+			}
 			m_in_sampleno++;
 		}
 	}
