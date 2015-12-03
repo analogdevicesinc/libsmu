@@ -81,10 +81,10 @@ void Session::attached(libusb_device *device) {
 void Session::detached(libusb_device *device)
 {
 	if (this->m_hotplug_detach_callback) {
-		Device *dev = &*this->find_existing_device(device);
+		shared_ptr<Device> dev = this->find_existing_device(device);
 		if (dev) {
 			cerr << "Session::detached ser: " << dev->serial() << endl;
-			this->m_hotplug_detach_callback(dev);
+			this->m_hotplug_detach_callback(&*dev);
 		}
 	}
 }
