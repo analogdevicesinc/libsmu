@@ -15,6 +15,8 @@
 #include <thread>
 #include <cmath>
 
+#define LIBSMU_VERSION "v0.87"
+
 #ifndef M_PI
 #define M_PI (4.0*atan(1.0))
 #endif
@@ -29,11 +31,12 @@ struct libusb_device;
 struct libusb_device_handle;
 struct libusb_context;
 
-
 class Session {
 public:
 	Session();
 	~Session();
+	
+	static const char* get_libsmu_version() { return LIBSMU_VERSION; };
 
 	int update_available_devices();
 	unsigned m_active_devices;
