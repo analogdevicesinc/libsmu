@@ -14,4 +14,4 @@ With python2.7 and associated development headers installed, building pysmu.so, 
 
 Is recommended to install [homebrew](http://brew.sh)
 
-Once installed, install lib-usb `brew install lib-usb`, pkg-info `brew install pkg-info` and python `brew install python`, restart OS and then build LibSMU. 
+Once installed, install lib-usb `brew install lib-usb`, pkg-config `brew install pkg-config` and python `brew install python`, restart OS and then build LibSMU. 
