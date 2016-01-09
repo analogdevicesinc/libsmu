@@ -1,11 +1,12 @@
 CXX=g++
+AR=ar
 CXXFLAGS=-g -std=c++11 -Wall -pedantic -O0 -fPIC
 LINKFLAGS=-lm -lpthread
 BIN=smu
 LIB=smu.a
 
 SYS := $(shell gcc -dumpmachine)
-ifneq (, $(findstring linux, $(SYS)))
+ifneq (, $(findstring linux, $(SYS)) $(findstring darwin, $(SYS))) 
 	LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
 	CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
 	PYCXXFLAGS=$(shell pkg-config --cflags python-2.7)
@@ -34,7 +35,7 @@ OBJ=$(SRC:%.cpp=%.o)
 all: $(LIB) $(BIN) $(SHARE)
 
 $(LIB): $(OBJ)
-	ar crf $@ $^
+	$(AR) cr $@ $^
 
 $(BIN): cli.o $(LIB)
 	$(CXX) -o $(BIN) $^ $(LINKFLAGS)
