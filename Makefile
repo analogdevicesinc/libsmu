@@ -5,7 +5,7 @@ BIN=smu
 LIB=smu.a
 
 SYS := $(shell gcc -dumpmachine)
-ifneq (, $(findstring linux, $(SYS)))
+ifneq (, $(findstring linux, $(SYS)) $(findstring darwin, $(SYS))) 
 	LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
 	CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
 	PYCXXFLAGS=$(shell pkg-config --cflags python-2.7)
@@ -13,14 +13,6 @@ ifneq (, $(findstring linux, $(SYS)))
 	SHARE=libsmu.so
 	PYSHARE=libpysmu.so
 else
-	ifneq (, $(findstring darwin, $(SYS)))
-		LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
-		CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
-		PYCXXFLAGS=$(shell pkg-config --cflags python-2.7)
-		PYLINKFLAGS=$(shell pkg-config --libs python-2.7)
-		SHARE=libsmu.so
-		PYSHARE=libpysmu.so
-	else
 		CXXFLAGS += -v -static -static-libgcc -static-libstdc++ -g
 		LINKFLAGS+="/usr/local/lib/libusb-1.0.a"
 		CXXFLAGS+=-I"C:\libusb\include\libusb-1.0"
@@ -28,7 +20,6 @@ else
 		PYLINKFLAGS="C:\Python27\libs\libpython27.a"
 		SHARE=libsmu.dll
 		PYSHARE=libpysmu.pyd
-endif
 endif
 
 
@@ -57,5 +48,3 @@ clean:
 python: $(LIB)
 	$(CXX) $(CXXFLAGS) $(PYCXXFLAGS) -o libpysmu.o -c pysmu.cpp
 	$(CXX) $(CXXFLAGS) -shared libpysmu.o $(LIB) $(LINKFLAGS) $(PYLINKFLAGS) -o $(PYSHARE)
-
-install:
