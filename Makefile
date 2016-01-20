@@ -16,8 +16,13 @@ else
 	CXXFLAGS += -v -static -static-libgcc -static-libstdc++ -g
 	LINKFLAGS+="C:\libusb\libusb-1.0.a"
 	CXXFLAGS+=-I"C:\libusb\include"
+ifneq (, $(findstring i686, $(SYS)))
 	PYCXXFLAGS=-I"C:\Python27\include"
 	PYLINKFLAGS="C:\Python27\libs\libpython27.a"
+else
+	PYCXXFLAGS=-I"C:\Python27-x64\include"
+	PYLINKFLAGS="C:\Python27-x64\libs\libpython27.a"
+endif
 	SHARE=libsmu.dll
 	PYSHARE=libpysmu.pyd
 endif
