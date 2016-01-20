@@ -20,6 +20,7 @@ ifneq (, $(findstring i686, $(SYS)))
 	PYCXXFLAGS=-I"C:\Python27\include"
 	PYLINKFLAGS="C:\Python27\libs\libpython27.a"
 else
+	CXXFLAGS += -DMS_WIN64
 	PYCXXFLAGS=-I"C:\Python27-x64\include"
 	PYLINKFLAGS="C:\Python27-x64\libs\libpython27.a"
 endif
