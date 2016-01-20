@@ -14,8 +14,8 @@ ifneq (, $(findstring linux, $(SYS)))
 	PYSHARE=libpysmu.so
 else
 	CXXFLAGS += -v -static -static-libgcc -static-libstdc++ -g
-	LINKFLAGS+="C:\libusb\MinGW32\static\libusb-1.0.a"
-	CXXFLAGS+=-I"C:\libusb\include\libusb-1.0"
+	LINKFLAGS+="C:\libusb\libusb-1.0.a"
+	CXXFLAGS+=-I"C:\libusb\include"
 	PYCXXFLAGS=-I"C:\Python27\include"
 	PYLINKFLAGS="C:\Python27\libs\libpython27.a"
 	SHARE=libsmu.dll

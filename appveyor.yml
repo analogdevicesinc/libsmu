@@ -5,16 +5,18 @@ environment:
     - build_platform: x86
       MINGW_ARCHIVE: i686-4.9.3-release-posix-dwarf-rt_v4-rev1.7z
       MINGW_DIR: mingw32
+      LIBUSB_ARCHIVE: libusb-1.0-win-hp-i686.7z
 
     - build_platform: x64
       MINGW_ARCHIVE: x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z
       MINGW_DIR: mingw64
+      LIBUSB_ARCHIVE: libusb-1.0-win-hp-x86_64.7z
 
 install:
   - ps: (new-object System.Net.WebClient).Downloadfile("http://downloads.sourceforge.net/mingw-w64/$env:MINGW_ARCHIVE", "c:\mingw.7z")
   - 7z x -y "c:\mingw.7z" -o"C:\" > nul
   - set PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;C:\%MINGW_DIR%\bin;%QTDIR%\bin;%PATH%
-  - ps: (new-object System.Net.WebClient).Downloadfile("http://itdaniher.com/static/libusb-1.0-hp.7z", "c:\libusb.7z")
+  - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/m1k/$env:LIBUSB_ARCHIVE", "c:\libusb.7z")
   - 7z x -y "c:\libusb.7z" -o"C:\libusb" > nul
 
 build_script:
