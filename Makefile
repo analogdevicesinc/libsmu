@@ -6,7 +6,7 @@ BIN=smu
 LIB=smu.a
 
 SYS := $(shell gcc -dumpmachine)
-ifneq (, $(findstring linux, $(SYS)) $(findstring darwin, $(SYS))) 
+ifneq (, $(or $(findstring linux, $(SYS)),$(findstring darwin, $(SYS))))
 	LINKFLAGS+=$(shell pkg-config --libs libusb-1.0)
 	CXXFLAGS+=$(shell pkg-config --cflags libusb-1.0)
 	PYCXXFLAGS=$(shell pkg-config --cflags python-2.7)
