@@ -28,3 +28,6 @@ build_script:
   - appveyor PushArtifact libpysmu.pyd
   - appveyor PushArtifact libsmu.lib
   - appveyor PushArtifact libsmu.def
+
+cache:
+  - C:\mingw.7z -> appveyor.yml
