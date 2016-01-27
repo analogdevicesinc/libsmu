@@ -3,12 +3,12 @@ os: unstable
 environment:
   matrix:
     - build_platform: x86
-      MINGW_ARCHIVE: i686-4.9.3-release-posix-dwarf-rt_v4-rev1.7z
+      MINGW_ARCHIVE: i686-5.3.0-release-posix-dwarf-rt_v4-rev0.7z
       MINGW_DIR: mingw32
       LIBUSB_ARCHIVE: libusb-1.0-win-hp-i686.7z
 
     - build_platform: x64
-      MINGW_ARCHIVE: x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z
+      MINGW_ARCHIVE: x86_64-5.3.0-release-posix-seh-rt_v4-rev0.7z
       MINGW_DIR: mingw64
       LIBUSB_ARCHIVE: libusb-1.0-win-hp-x86_64.7z
 
