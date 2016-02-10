@@ -42,12 +42,12 @@ available:
 
 64 bit:
 
-[smu.exe][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/smu.exe?branch=master&job=Platform%3A%20x64]
-[libsmu.dll][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.dll?branch=master&job=Platform%3A%20x64]
-[libsmu.pyd][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.pyd?branch=master&job=Platform%3A%20x64]
+[smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/smu.exe?branch=master&job=Platform%3A%20x64)
+[libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.dll?branch=master&job=Platform%3A%20x64)
+[libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.pyd?branch=master&job=Platform%3A%20x64)
 
 32 bit:
 
-[smu.exe][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86]
-[libsmu.dll][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86]
-[libsmu.pyd][https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86]
+[smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
+[libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
+[libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
