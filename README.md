@@ -36,18 +36,16 @@ make
 
 ##### Notes on Windows
 
-On Windows, it's easier to use the builds provided by Appveyor instead of
-building your own. Both 32 bit and 64 bit builds built using mingw are
+On Windows, it's easier to use the build artifacts provided by Appveyor instead
+of rolling your own. Both 32 bit and 64 bit libraries built using mingw are
 available:
 
 64 bit:
-
-[smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/smu.exe?branch=master&job=Platform%3A%20x64)
-[libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.dll?branch=master&job=Platform%3A%20x64)
-[libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/libsmu.pyd?branch=master&job=Platform%3A%20x64)
+  - [smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/smu.exe?branch=master&job=Platform%3A%20x64)
+  - [libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu.dll?branch=master&job=Platform%3A%20x64)
+  - [libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu.pyd?branch=master&job=Platform%3A%20x64)
 
 32 bit:
-
-[smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
-[libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
-[libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/bin/debug.zip?branch=master&job=Platform%3A%20x86)
+  - [smu.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/smu.exe?branch=master&job=Platform%3A%20x86)
+  - [libsmu.dll](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu.dll?branch=master&job=Platform%3A%20x86)
+  - [libsmu.pyd](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu.pyd?branch=master&job=Platform%3A%20x86)
