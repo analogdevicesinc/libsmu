@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/p30uj8rqulrxsqvs/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libsmu/branch/master)
+
 ### LibSMU
 
 LibSMU contains abstractions for streaming data to and from USB-connected
