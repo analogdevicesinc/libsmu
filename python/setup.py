@@ -1,22 +1,36 @@
 #!/usr/bin/env python
 
 import os
+import commands
 
 from setuptools import setup, find_packages, Extension
 
+# top level repo directory
+BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level bindings directory
-TOPDIR = os.path.dirname(os.path.abspath(__file__))
+TOPDIR = os.path.dirname(BINDINGS_DIR)
+
+def pkgconfig(*packages, **kw):
+    """Translate pkg-config data to compatible Extension parameters."""
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+    for token in commands.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
+        if token[:2] in flag_map:
+            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+        else:
+            kw.setdefault('extra_compile_args', []).append(token)
+    return kw
 
 ext_kwargs = dict(
-    include_dirs=[os.path.dirname(TOPDIR)],
-    extra_compile_args = ['-std=c++11'],
+    include_dirs=[TOPDIR],
+    extra_compile_args=['-std=c++11'],
+    extra_objects=[os.path.join(TOPDIR, 'smu.a')],
 )
 
 extensions = []
 extensions.extend([
     Extension(
         'pysmu._pysmu',
-        [os.path.join(TOPDIR, 'src', 'pysmu.cpp')], **ext_kwargs),
+        [os.path.join(BINDINGS_DIR, 'src', 'pysmu.cpp')], **pkgconfig('libusb-1.0', **ext_kwargs)),
     ])
 
 setup(
