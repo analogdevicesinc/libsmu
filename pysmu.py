@@ -7,7 +7,7 @@
 
 import atexit
 from collections import defaultdict
-from operator import add
+import operator
 
 import libpysmu
 
@@ -95,11 +95,8 @@ class Channel(object):
         else:
             raise ValueError('invalid mode: {}'.format(mode))
 
-    def arbitrary(self, *args, **kwargs):
-        repeat = 0
-        if 'repeat' in map(str.lower, kwargs.keys()):
-            repeat = 1
-        wave = map(float, reduce(add, [[s]*100*n for s, n in args]))
+    def arbitrary(self, waveform, repeat=0):
+        wave = map(float, reduce(operator.add, [[s]*100*n for s, n in waveform]))
         return libpysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
 
     def get_samples(self, n_samples):
