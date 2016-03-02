@@ -446,9 +446,9 @@ static PyMethodDef libpysmu_methods [] = {
 	{ NULL, NULL, 0, NULL  }
 };
 
-DL_EXPORT(void) initlibpysmu(void)
+DL_EXPORT(void) init_pysmu(void)
 {
-	Py_InitModule("libpysmu", libpysmu_methods);
+	Py_InitModule("_pysmu", pysmu_methods);
 }
 
 #ifdef __cplusplus
