@@ -72,6 +72,9 @@ class Device(object):
         """iterator for samples from the device run in continuous mode"""
         return libpysmu.iterate_inputs(self.serial)
 
+    def __repr__(self):
+        return str(self.serial)
+
 
 class Channel(object):
     def __init__(self, chan, dev_serial, signals):
