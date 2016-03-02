@@ -5,6 +5,8 @@
 //   Ian Daniher <itdaniher@gmail.com>
 //   Ezra Varady <ez@sloth.life>
 
+// Normally the Python.h header should be first, but MingW hits
+// http://bugs.python.org/issue11566.
 #include <cmath>
 #include <Python.h>
 #include <vector>
