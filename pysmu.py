@@ -13,26 +13,26 @@ import libpysmu
 
 
 class Smu(object):
+
     def __init__(self):
         atexit.register(libpysmu.cleanup)
         libpysmu.setup()
-        self.load_channels()
 
-    def load_channels(self):
-        self.devices = libpysmu.get_dev_info()
-        self.serials = {i: v[0] for i, v in enumerate(self.devices)}
-        self.devices = [x[1] for x in self.devices]
+        dev_info = libpysmu.get_dev_info()
+        self.serials = {i: v[0] for i, v in enumerate(dev_info)}
+        self.devices = [x[1] for x in dev_info]
 
         names = (chr(x) for x in xrange(65,91))
         channels = {names.next(): (i, v) for i, d in enumerate(self.devices)
-                    for k, v in d.items()}
-        self.channels = {k: Channel(k, self.serials[v[0]], v[1]) for k, v in channels.items()}
+                    for k, v in d.iteritems()}
+        self.channels = {k: Channel(k, self.serials[v[0]], v[1])
+                         for k, v in channels.iteritems()}
 
         device_channels = defaultdict(list)
-        for k, v in channels.items():
+        for k, v in channels.iteritems():
             device_channels[v[0]].append(Channel(k, *v))
-        self.devices = {i: Device(self.serials[i], device_channels[i]) for i, v
-                        in enumerate(self.devices)}
+        self.devices = {i: Device(self.serials[i], device_channels[i])
+                        for i, v in enumerate(self.devices)}
 
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
