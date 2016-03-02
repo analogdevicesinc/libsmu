@@ -148,7 +148,7 @@ class Channel(object):
 
 if __name__ == '__main__':
     x = Smu()
-    if len(x.devices) > 0:
+    if x.devices:
         A = x.channels['A']
         A.set_mode('v')
         A.constant(3)
