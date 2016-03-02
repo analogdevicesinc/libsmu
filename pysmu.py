@@ -1,5 +1,5 @@
 # Released under the terms of the BSD License
-# (C) 2014-2015
+# (C) 2014-2016
 #   Analog Devices, Inc.
 #   Tim Harder <radhermit@gmail.com>
 #   Ian Daniher <itdaniher@gmail.com>
@@ -37,14 +37,14 @@ class Smu(object):
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
         data = str(data)
-        if bm_request_type&0x80 == 0x80:
+        if bm_request_type & 0x80 == 0x80:
             if data == '0':
                 data = '\x00'*wLength
         else:
             wLength = 0
         ret = libpysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
                                    wIndex, data, wLength, timeout)
-        if bm_request_type&0x80 == 0x80:
+        if bm_request_type & 0x80 == 0x80:
             return map(ord, data)
         else:
             return ret
@@ -114,26 +114,33 @@ class Channel(object):
 
     def square(self, midpoint, peak, period, phase, duty_cycle):
         """set output to a square waveform"""
-        return libpysmu.set_output_wave(self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
+        return libpysmu.set_output_wave(
+            self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
 
     def sawtooth(self, midpoint, peak, period, phase):
         """set output to a sawtooth waveform"""
-        return libpysmu.set_output_wave(self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
+        return libpysmu.set_output_wave(
+            self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
 
     def stairstep(self, midpoint, peak, period, phase):
         """set output to a stairstep waveform"""
-        return libpysmu.set_output_wave(self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
+        return libpysmu.set_output_wave(
+            self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
 
     def sine(self, midpoint, peak, period, phase):
         """set output to a sinusoidal waveform"""
-        return libpysmu.set_output_wave(self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
+        return libpysmu.set_output_wave(
+            self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
 
     def triangle(self, midpoint, peak, period, phase):
         """set output to a triangle waveform"""
-        return libpysmu.set_output_wave(self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
+        return libpysmu.set_output_wave(
+            self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
 
     def __repr__(self):
-        return 'Device: ' + str(self.dev) + '\nChannel: ' + str(self.chan) + '\nSignals: ' + str(self.signals)
+        return (
+            'Device: ' + str(self.dev) + '\nChannel: ' +
+            str(self.chan) + '\nSignals: ' + str(self.signals))
 
 
 if __name__ == '__main__':
