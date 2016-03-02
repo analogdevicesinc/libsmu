@@ -42,8 +42,7 @@ class Smu(object):
                 data = '\x00'*wLength
         else:
             wLength = 0
-        ret = libpysmu.ctrl_transfer(device, bm_request_type, b_request, wValue,
-                                   wIndex, data, wLength, timeout)
+        ret = libpysmu.ctrl_transfer(*args, **kwargs)
         if bm_request_type & 0x80 == 0x80:
             return map(ord, data)
         else:
