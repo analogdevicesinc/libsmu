@@ -9,17 +9,17 @@ import atexit
 from collections import defaultdict
 import operator
 
-import libpysmu
+import _pysmu
 
 
 class Smu(object):
     """TODO"""
 
     def __init__(self):
-        atexit.register(libpysmu.cleanup)
-        libpysmu.setup()
+        atexit.register(_pysmu.cleanup)
+        _pysmu.setup()
 
-        dev_info = libpysmu.get_dev_info()
+        dev_info = _pysmu.get_dev_info()
         self.serials = {i: v[0] for i, v in enumerate(dev_info)}
         self.devices = [x[1] for x in dev_info]
 
@@ -57,7 +57,7 @@ class Smu(object):
                 data = '\x00'*wLength
         else:
             wLength = 0
-        ret = libpysmu.ctrl_transfer(*args, **kwargs)
+        ret = _pysmu.ctrl_transfer(*args, **kwargs)
         if bm_request_type & 0x80 == 0x80:
             return map(ord, data)
         else:
@@ -83,12 +83,12 @@ class Device(object):
         Returns:
             List of n samples from all the device's channels.
         """
-        return libpysmu.get_all_inputs(self.serial, n_samples)
+        return _pysmu.get_all_inputs(self.serial, n_samples)
 
     @property
     def samples(self):
         """Iterable of samples from the device."""
-        return libpysmu.iterate_inputs(self.serial)
+        return _pysmu.iterate_inputs(self.serial)
 
     def __repr__(self):
         return str(self.serial)
@@ -111,7 +111,7 @@ class Channel(object):
         }
         mode = mode.lower()
         if mode in modes.iterkeys():
-            libpysmu.set_mode(self.dev, self.chan, modes[mode])
+            _pysmu.set_mode(self.dev, self.chan, modes[mode])
             self.mode = mode
         else:
             raise ValueError('invalid mode: {}'.format(mode))
@@ -119,7 +119,7 @@ class Channel(object):
     def arbitrary(self, waveform, repeat=0):
         """TODO"""
         wave = map(float, reduce(operator.add, [[s]*100*n for s, n in waveform]))
-        return libpysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
+        return _pysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
 
     def get_samples(self, n_samples):
         """Query the channel for a given number of samples.
@@ -130,35 +130,35 @@ class Channel(object):
         Returns:
             List of n samples from all the channel.
         """
-        return libpysmu.get_inputs(self.dev, self.chan, n_samples)
+        return _pysmu.get_inputs(self.dev, self.chan, n_samples)
 
     def constant(self, val):
         """Set output to a constant waveform."""
-        return libpysmu.set_output_constant(self.dev, self.chan, self.mode, val)
+        return _pysmu.set_output_constant(self.dev, self.chan, self.mode, val)
 
     def square(self, midpoint, peak, period, phase, duty_cycle):
         """Set output to a square waveform."""
-        return libpysmu.set_output_wave(
+        return _pysmu.set_output_wave(
             self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
 
     def sawtooth(self, midpoint, peak, period, phase):
         """Set output to a sawtooth waveform."""
-        return libpysmu.set_output_wave(
+        return _pysmu.set_output_wave(
             self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
 
     def stairstep(self, midpoint, peak, period, phase):
         """Set output to a stairstep waveform."""
-        return libpysmu.set_output_wave(
+        return _pysmu.set_output_wave(
             self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
 
     def sine(self, midpoint, peak, period, phase):
         """Set output to a sinusoidal waveform."""
-        return libpysmu.set_output_wave(
+        return _pysmu.set_output_wave(
             self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
 
     def triangle(self, midpoint, peak, period, phase):
         """Set output to a triangle waveform."""
-        return libpysmu.set_output_wave(
+        return _pysmu.set_output_wave(
             self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
 
     def __repr__(self):
