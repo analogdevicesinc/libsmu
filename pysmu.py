@@ -13,6 +13,7 @@ import libpysmu
 
 
 class Smu(object):
+    """TODO"""
 
     def __init__(self):
         atexit.register(libpysmu.cleanup)
@@ -36,6 +37,20 @@ class Smu(object):
 
     def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
+        """TODO
+
+        Args:
+            device:
+            bm_request_type:
+            b_request:
+            wValue:
+            wIndex:
+            data:
+            wLength:
+            timeout:
+
+        Returns:
+        """
         data = str(data)
         if bm_request_type & 0x80 == 0x80:
             if data == '0':
@@ -53,22 +68,26 @@ class Smu(object):
 
 
 class Device(object):
+    """TODO"""
+
     def __init__(self, serial, channels):
         self.serial = serial
         self.channels = channels
 
     def get_samples(self, n_samples):
-        """query device for a list of samples from all channels
+        """Query the device for a given number of samples from all channels.
 
-        :param n_samples: number of samples
-        :type n_samples: int
-        :return: list of n samples from all the device's channels
+        Args:
+            n_samples (int): number of samples
+
+        Returns:
+            List of n samples from all the device's channels.
         """
         return libpysmu.get_all_inputs(self.serial, n_samples)
 
     @property
     def samples(self):
-        """iterator for samples from the device run in continuous mode"""
+        """Iterable of samples from the device."""
         return libpysmu.iterate_inputs(self.serial)
 
     def __repr__(self):
@@ -76,12 +95,15 @@ class Device(object):
 
 
 class Channel(object):
+    """TODO"""
+
     def __init__(self, chan, dev_serial, signals):
         self.dev = dev_serial
         self.chan = ord(chan) - 65
         self.signals = {v: i for i, v in enumerate(signals)}
 
     def set_mode(self, mode):
+        """TODO"""
         modes = {
             'd': 0,
             'v': 1,
@@ -95,44 +117,47 @@ class Channel(object):
             raise ValueError('invalid mode: {}'.format(mode))
 
     def arbitrary(self, waveform, repeat=0):
+        """TODO"""
         wave = map(float, reduce(operator.add, [[s]*100*n for s, n in waveform]))
         return libpysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
 
     def get_samples(self, n_samples):
-        """query channel for samples
+        """Query the channel for a given number of samples.
 
-        :param n_samples: number of samples
-        :type n_samples: int
-        :return: list of n samples from the channel
+        Args:
+            n_samples (int): number of samples
+
+        Returns:
+            List of n samples from all the channel.
         """
         return libpysmu.get_inputs(self.dev, self.chan, n_samples)
 
     def constant(self, val):
-        """set output to a constant waveform"""
+        """Set output to a constant waveform."""
         return libpysmu.set_output_constant(self.dev, self.chan, self.mode, val)
 
     def square(self, midpoint, peak, period, phase, duty_cycle):
-        """set output to a square waveform"""
+        """Set output to a square waveform."""
         return libpysmu.set_output_wave(
             self.dev, self.chan, self.mode, 1, midpoint, peak, period, phase, duty_cycle)
 
     def sawtooth(self, midpoint, peak, period, phase):
-        """set output to a sawtooth waveform"""
+        """Set output to a sawtooth waveform."""
         return libpysmu.set_output_wave(
             self.dev, self.chan, self.mode, 2, midpoint, peak, period, phase, 42)
 
     def stairstep(self, midpoint, peak, period, phase):
-        """set output to a stairstep waveform"""
+        """Set output to a stairstep waveform."""
         return libpysmu.set_output_wave(
             self.dev, self.chan, self.mode, 3, midpoint, peak, period, phase, 42)
 
     def sine(self, midpoint, peak, period, phase):
-        """set output to a sinusoidal waveform"""
+        """Set output to a sinusoidal waveform."""
         return libpysmu.set_output_wave(
             self.dev, self.chan, self.mode, 4, midpoint, peak, period, phase, 42)
 
     def triangle(self, midpoint, peak, period, phase):
-        """set output to a triangle waveform"""
+        """Set output to a triangle waveform."""
         return libpysmu.set_output_wave(
             self.dev, self.chan, self.mode, 5, midpoint, peak, period, phase, 42)
 
