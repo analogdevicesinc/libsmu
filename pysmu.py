@@ -83,17 +83,17 @@ class Channel(object):
         self.signals = {v: i for i, v in enumerate(signals)}
 
     def set_mode(self, mode):
-        if mode == 'v' or mode == 'V':
-            libpysmu.set_mode(self.dev, self.chan, 1)
-            self.mode = 1
-        elif mode == 'i' or mode == 'I':
-            libpysmu.set_mode(self.dev, self.chan, 2)
-            self.mode = 2
-        elif mode == 'd' or mode == 'D':
-            libpysmu.set_mode(self.dev, self.chan, 0)
-            self.mode = 0
+        modes = {
+            'd': 0,
+            'v': 1,
+            'i': 2,
+        }
+        mode = mode.lower()
+        if mode in modes.iterkeys():
+            libpysmu.set_mode(self.dev, self.chan, modes[mode])
+            self.mode = mode
         else:
-            raise ValueError('invalid mode')
+            raise ValueError('invalid mode: {}'.format(mode))
 
     def arbitrary(self, *args, **kwargs):
         repeat = 0
