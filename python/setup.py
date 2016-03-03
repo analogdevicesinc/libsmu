@@ -6,9 +6,9 @@ import sys
 
 from setuptools import setup, find_packages, Extension
 
-# top level repo directory
-BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level bindings directory
+BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+# top level repo directory
 TOPDIR = os.path.dirname(BINDINGS_DIR)
 
 def pkgconfig(*packages, **kw):
