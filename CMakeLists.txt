@@ -20,7 +20,9 @@ mark_as_advanced(PTHREAD_LIBRARIES)
 include(FindPkgConfig REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
-include_directories(${LIBUSB_INCLUDE_DIRS})
+# Classify libusb headers as system headers to suppress various warnings,
+# e.g. http://www.libusb.org/ticket/2.
+include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
 set(LIBS_TO_LINK m ${PTHREAD_LIBRARIES} ${LIBUSB_LIBRARIES})
 set(LIBSMU_CPPFILES session.cpp device_cee.cpp device_m1000.cpp)
