@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(libsmu CXX)
 
-# We want C++11
+# C++11 is required
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pedantic")
 
-# Build a shared library by default
+# build a shared library by default
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
+# don't build python support by default
+set(BUILD_PYTHON OFF CACHE BOOL "Build python support")
 
 set(LIBSMU_VERSION_MAJOR 0)
 set(LIBSMU_VERSION_MINOR 0)
@@ -30,14 +32,17 @@ target_link_libraries(smu ${LIBS_TO_LINK})
 add_executable(smu_bin cli.cpp)
 target_link_libraries(smu_bin smu)
 
-#set(Python_ADDITIONAL_VERSIONS 2.7)
-#include(FindPythonLibs OPTIONAL)
+if (BUILD_PYTHON)
+	set(Python_ADDITIONAL_VERSIONS 2.7)
+	include(FindPythonLibs REQUIRED)
 
-#if (PYTHONLIBS_FOUND)
-#	add_library(pysmu pysmu.cpp)
-#	target_link_libraries(pysmu ${PYTHON_LIBRARIES})
-#	include_directories(${PYTHON_INCLUDE_DIRS})
-#endif()
+	set(SETUP_PY "${CMAKE_SOURCE_DIR}/python/setup.py")
+	set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/python/timestamp")
+
+	add_custom_command(OUTPUT ${OUTPUT} COMMAND ${PYTHON} ${SETUP_PY} build)
+	add_custom_target(python ALL DEPENDS smu ${OUTPUT})
+	install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+endif() # BUILD_PYTHON
 
 install(TARGETS smu smu_bin
 	ARCHIVE DESTINATION lib
