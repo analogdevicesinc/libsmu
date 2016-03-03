@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import os
-import commands
+import subprocess
+import sys
 
 from setuptools import setup, find_packages, Extension
 
@@ -13,7 +14,15 @@ TOPDIR = os.path.dirname(BINDINGS_DIR)
 def pkgconfig(*packages, **kw):
     """Translate pkg-config data to compatible Extension parameters."""
     flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-    for token in commands.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
+
+    try:
+        tokens = subprocess.check_output(
+            ['pkg-config', '--libs', '--cflags'] + list(packages)).split()
+    except OSError as e:
+        sys.stderr.write('running pkg-config failed: {}\n'.format(e.strerror))
+        sys.exit(1)
+
+    for token in tokens:
         if token[:2] in flag_map:
             kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
         else:
