@@ -23,7 +23,8 @@ def pkgconfig(*packages, **kw):
 ext_kwargs = dict(
     include_dirs=[TOPDIR],
     extra_compile_args=['-std=c++11'],
-    extra_objects=[os.path.join(TOPDIR, 'smu.a')],
+    library_dirs=[TOPDIR],
+    libraries=['smu'],
 )
 
 extensions = []
