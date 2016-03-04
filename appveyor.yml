@@ -22,8 +22,8 @@ install:
   - 7z x -y "c:\libusb.7z" -o"C:\libusb" > nul
 
 build_script:
-  - mingw32-make
-  - mingw32-make python
+  - cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_SYSTEM_PREFIX_PATH="C:" .
+  - cmake --build . --config Release
   - dlltool --export-all-symbols -l libsmu.lib -z libsmu.def libsmu.dll
   - appveyor PushArtifact smu.exe
   - appveyor PushArtifact libsmu.dll
