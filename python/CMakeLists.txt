@@ -4,15 +4,13 @@ set(Python_ADDITIONAL_VERSIONS 2.7)
 include(FindPythonLibs REQUIRED)
 
 find_program(PYTHON "python2.7")
-set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
 set(SETUP_PY "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
 set(DEPS "${CMAKE_CURRENT_SOURCE_DIR}/pysmu/__init__.py")
 set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
 
-configure_file(${SETUP_PY_IN} ${SETUP_PY})
-
 add_custom_command(OUTPUT ${OUTPUT}
 	COMMAND ${PYTHON} ${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	DEPENDS ${DEPS})
 add_custom_target(python ALL DEPENDS smu ${OUTPUT})
 
