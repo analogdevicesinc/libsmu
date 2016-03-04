@@ -35,15 +35,7 @@ add_executable(smu_bin cli.cpp)
 target_link_libraries(smu_bin smu)
 
 if (BUILD_PYTHON)
-	set(Python_ADDITIONAL_VERSIONS 2.7)
-	include(FindPythonLibs REQUIRED)
-
-	set(SETUP_PY "${CMAKE_SOURCE_DIR}/python/setup.py")
-	set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/python/timestamp")
-
-	add_custom_command(OUTPUT ${OUTPUT} COMMAND ${PYTHON} ${SETUP_PY} build)
-	add_custom_target(python ALL DEPENDS smu ${OUTPUT})
-	install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+	add_subdirectory(python)
 endif() # BUILD_PYTHON
 
 install(TARGETS smu smu_bin
