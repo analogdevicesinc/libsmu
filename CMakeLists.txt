@@ -14,8 +14,11 @@ set(LIBSMU_VERSION_MINOR 0)
 set(LIBSMU_VERSION_PATCH 0)
 set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERSION_PATCH})
 
-find_library(PTHREAD_LIBRARIES pthread REQUIRED)
-mark_as_advanced(PTHREAD_LIBRARIES)
+if(UNIX OR MINGW)
+	find_library(PTHREAD_LIBRARIES pthread REQUIRED)
+	mark_as_advanced(PTHREAD_LIBRARIES)
+	set(LIBS_TO_LINK ${PTHREAD_LIBRARIES})
+endif()
 
 # use pkg-config for everything that's not Windows
 if(NOT WIN32)
@@ -30,7 +33,7 @@ endif()
 # e.g. http://www.libusb.org/ticket/2.
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
-set(LIBS_TO_LINK m ${PTHREAD_LIBRARIES} ${LIBUSB_LIBRARIES})
+set(LIBS_TO_LINK m ${LIBUSB_LIBRARIES})
 set(LIBSMU_CPPFILES session.cpp device_cee.cpp device_m1000.cpp)
 
 add_library(smu ${LIBSMU_CPPFILES})
@@ -40,7 +43,7 @@ target_link_libraries(smu ${LIBS_TO_LINK})
 add_executable(smu_bin cli.cpp)
 target_link_libraries(smu_bin smu)
 
-if (BUILD_PYTHON)
+if(BUILD_PYTHON)
 	add_subdirectory(python)
 endif() # BUILD_PYTHON
 
