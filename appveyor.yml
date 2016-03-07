@@ -21,9 +21,17 @@ install:
   - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/m1k/$env:LIBUSB_ARCHIVE", "c:\libusb.7z")
   - 7z x -y "c:\libusb.7z" -o"C:\libusb" > nul
 
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - C:\\Python27\python.exe -m pip install wheel"
+
 build_script:
   - cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_SYSTEM_PREFIX_PATH="C:" .
   - cmake --build . --config Release
+
+  # build python wheel
+  - C:\\Python27\python.exe python/setup.py bdist_wheel
+  - appveyor PushArtifact dist/*
+
   - dlltool --export-all-symbols -l libsmu.lib -z libsmu.def libsmu.dll
   - appveyor PushArtifact smu.exe
   - appveyor PushArtifact libsmu.dll
