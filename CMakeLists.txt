@@ -17,8 +17,14 @@ set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERS
 find_library(PTHREAD_LIBRARIES pthread REQUIRED)
 mark_as_advanced(PTHREAD_LIBRARIES)
 
-include(FindPkgConfig REQUIRED)
-pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+# use pkg-config for everything that's not Windows
+if(NOT WIN32)
+	include(FindPkgConfig REQUIRED)
+	pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+else()
+	find_library(LIBUSB_LIBRARIES usb-1.0)
+	find_path(LIBUSB_INCLUDE_DIRS libusb-1.0/libusb.h)
+endif()
 
 # Classify libusb headers as system headers to suppress various warnings,
 # e.g. http://www.libusb.org/ticket/2.
