@@ -7,8 +7,13 @@
 
 // Normally the Python.h header should be first, but MingW hits
 // http://bugs.python.org/issue11566.
+#ifdef __MINGW32__
 #include <cmath>
 #include <Python.h>
+#else
+#include <Python.h>
+#include <cmath>
+#endif
 #include <vector>
 #include <queue>
 #include <cstdint>
