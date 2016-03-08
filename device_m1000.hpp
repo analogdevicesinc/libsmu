@@ -64,6 +64,8 @@ protected:
 
 	void read_calibration();
 	EEPROM_cal m_cal;
+	
+	uint64_t m_sample_count = 0;
 
 	Signal m_signals[2][2];
 	unsigned m_mode[2];
