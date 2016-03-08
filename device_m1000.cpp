@@ -121,13 +121,10 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 		return -1;
 	}
 	
-	while(!feof(fp)) {
-		fgets(str, 128, fp);
-		
+	while(fgets(str, 128, fp) != NULL) {
 		if(strstr(str, "</>")) {
 			rec_idx = 0;
-			while(!feof(fp)) {
-				fgets(str, 128, fp);
+			while(fgets(str, 128, fp) != NULL) {
 				if(strstr(str, "<\\>") && rec_idx) {
 					gain_p = 0;
 					gain_n = 0;
