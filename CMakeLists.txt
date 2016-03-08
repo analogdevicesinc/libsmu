@@ -41,6 +41,7 @@ set_target_properties(smu PROPERTIES VERSION ${LIBSMU_VERSION} SOVERSION ${LIBSM
 target_link_libraries(smu ${LIBS_TO_LINK})
 
 add_executable(smu_bin cli.cpp)
+set_target_properties(smu_bin PROPERTIES OUTPUT_NAME smu)
 target_link_libraries(smu_bin smu)
 
 if(BUILD_PYTHON)
