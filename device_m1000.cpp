@@ -84,6 +84,7 @@ int M1000_Device::init() {
 
 int M1000_Device::added() {
 	libusb_claim_interface(m_usb, 0);
+	read_calibration();
 	return 0;
 }
 
@@ -92,6 +93,88 @@ int M1000_Device::removed() {
 	return 0;
 }
 
+void M1000_Device::read_calibration() {
+	int ret;
+	
+	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+	if(!ret || m_cal.eeprom_valid != EEPROM_VALID) {
+		for(int i = 0; i < 8; i++) {
+			m_cal.offset[i] = 0.0f;
+			m_cal.gain_p[i] = 1.0f;
+			m_cal.gain_n[i] = 1.0f;
+		}
+	}
+}
+
+int M1000_Device::write_calibration(const char* cal_file_name) { 
+	int cal_records_no = 0;
+	int ret;
+	FILE* fp;
+	char str[128];
+	float ref[16], val[16];
+	int rec_idx;
+	int cnt_n, cnt_p;
+	float gain_p, gain_n;
+		
+	fp = fopen(cal_file_name, "r");
+	if(!fp) {
+		return -1;
+	}
+	
+	while(!feof(fp)) {
+		fgets(str, 128, fp);
+		
+		if(strstr(str, "</>")) {
+			rec_idx = 0;
+			while(!feof(fp)) {
+				fgets(str, 128, fp);
+				if(strstr(str, "<\\>") && rec_idx) {
+					gain_p = 0;
+					gain_n = 0;
+					cnt_n = 0;
+					cnt_p = 0;
+					m_cal.offset[cal_records_no] = val[0] - ref[0];
+					for(int i = 1; i < rec_idx; i++) {
+						if(ref[i] > 0) {
+							gain_p += ref[i] / (val[i] - m_cal.offset[cal_records_no]);
+							cnt_p++;
+						}
+						else {
+							gain_n += ref[i] / (val[i] - m_cal.offset[cal_records_no]);
+							cnt_n++;
+						}
+
+					}
+					m_cal.gain_p[cal_records_no] = cnt_p ? gain_p / (cnt_p) : 1.0f;					
+					m_cal.gain_n[cal_records_no] = cnt_n ? gain_n / (cnt_n) : 1.0f;
+					cal_records_no++;
+					break;
+				}
+				else {
+					sscanf(str, "<%f, %f>", &ref[rec_idx], &val[rec_idx]);
+					rec_idx++;
+				}
+			}
+		}
+	}
+	
+	if(cal_records_no != 8) {
+		for(int i = 0; i < 8; i++) {
+			m_cal.offset[i] = 0.0f;
+			m_cal.gain_p[i] = 1.0f;
+			m_cal.gain_n[i] = 1.0f;
+		}
+		ret = -1;
+	}
+	else {
+		m_cal.eeprom_valid = EEPROM_VALID;
+		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);		
+	}
+
+	fclose(fp);
+
+	return ret; 
+}
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t) {
@@ -180,11 +263,18 @@ void M1000_Device::configure(uint64_t rate) {
 inline uint16_t M1000_Device::encode_out(unsigned chan) {
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
-		float val = m_signals[chan][0].get_sample();
+		float val = m_signals[chan][0]->get_sample();
+		val = (val - m_cal.offset[chan*4+2]) * m_cal.gain_p[chan*4+2];
 		val = constrain(val, 0, 5.0);
 		v = 65535*val/5.0;
 	} else if (m_mode[chan] == SIMV) {
-		float val = m_signals[chan][1].get_sample();
+		float val = m_signals[chan][1]->get_sample();
+		if(val > 0) {
+			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_p[chan*4+3];
+		}
+		else {
+			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_n[chan*4+3];
+		}
 		val = constrain(val, -current_limit, current_limit);
 		v = 65536*(2./5. + 0.8*0.2*20.*0.5*val);
 	} else if (m_mode[chan] == DISABLED) {
@@ -253,20 +343,29 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 
 /// reformat received data - integer to float conversion
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
+	value_t val;
 	for (unsigned p=0; p<m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
 		for (unsigned i=0; i<chunk_size; i++) {
-			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
-				m_signals[0][0].put_sample(  (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0);
-				m_signals[0][1].put_sample((((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25);
-				m_signals[1][0].put_sample(  (buf[i*8+4] << 8 | buf[i*8+5]) / 65535.0 * 5.0);
-				m_signals[1][1].put_sample((((buf[i*8+6] << 8 | buf[i*8+7]) / 65535.0 * 0.4 ) - 0.195)*1.25);
+			if (strncmp(this->m_fw_version, "2.", 2) == 0) {				
+				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
+				m_signals[0][0]->put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
+				val = (((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				m_signals[0][1]->put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
+				val = (buf[i*8+4] << 8 | buf[i*8+5]) / 65535.0 * 5.0;
+				m_signals[1][0]->put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
+				val = (((buf[i*8+6] << 8 | buf[i*8+7]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				m_signals[1][1]->put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			} else {
-				m_signals[0][0].put_sample( (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0);
-				m_signals[0][1].put_sample((((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25);
-				m_signals[1][0].put_sample( (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0);
-				m_signals[1][1].put_sample((((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25);
+				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0;
+				m_signals[0][0]->put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
+				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				m_signals[0][1]->put_sample((val - m_cal.offset[0]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
+				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0;
+				m_signals[1][0]->put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
+				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25;
+				m_signals[1][1]->put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			}
 			m_in_sampleno++;
 		}

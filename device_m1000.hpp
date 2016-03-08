@@ -13,6 +13,8 @@ struct libusb_device_handle;
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
+#define EEPROM_VALID 0x01ee02dd
+
 class M1000_Device: public Device {
 public:
 	virtual ~M1000_Device();
@@ -22,6 +24,7 @@ public:
 	virtual Signal* signal(unsigned channel, unsigned signal);
 	virtual void set_mode(unsigned channel, unsigned mode);
 	virtual void sync();
+	virtual int write_calibration(const char* cal_file_name);
 
 protected:
 	friend class Session;
@@ -51,8 +54,16 @@ protected:
 	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
+	
+	struct EEPROM_cal{
+		uint32_t eeprom_valid;
+		float offset[8];
+		float gain_p[8];
+		float gain_n[8];
+	};
 
-	uint64_t m_sample_count = 0;
+	void read_calibration();
+	EEPROM_cal m_cal;
 
 	Signal m_signals[2][2];
 	unsigned m_mode[2];
