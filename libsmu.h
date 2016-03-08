@@ -3,8 +3,22 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
+#ifndef __libsmu_h__
+#define __libsmu_h__
+
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
+
+#ifdef DEBUG
+#define DEBUG_TEST 1
+#else
+#define DEBUG_TEST 0
+#endif
+
+#define _debug(format, ...) \
+	do { if (DEBUG_TEST) fprintf(stderr, "DEBUG: %s:%d: " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__); } while(0);
+#define debug(...) _debug(__VA_ARGS__, "")
 
 struct sl_session;
 struct sl_device;
@@ -65,3 +79,5 @@ typedef struct sl_device_info {
 
 typedef float value_t;
 typedef uint64_t sample_t;
+
+#endif
