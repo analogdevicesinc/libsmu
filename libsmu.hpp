@@ -15,7 +15,7 @@
 #include <thread>
 #include <cmath>
 
-#define LIBSMU_VERSION "v0.87"
+#define LIBSMU_VERSION "v0.88"
 
 #ifndef M_PI
 #define M_PI (4.0*atan(1.0))
