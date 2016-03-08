@@ -20,19 +20,18 @@ using std::string;
 
 int main() {
 	Session* session = new Session();
+	session->m_completion_callback = [=](unsigned status){
+	};
 
-    session->m_completion_callback = [=](unsigned status){
-    };
+	session->m_progress_callback = [=](sample_t n) {
+	};
 
-    session->m_progress_callback = [=](sample_t n) {
-    };
-
-    session->m_hotplug_detach_callback = [=](Device* device){
-		session->cancel(); 
+	session->m_hotplug_detach_callback = [=](Device* device){
+		session->cancel();
 		session->remove_device(device);
 	};
 
-    session->m_hotplug_attach_callback = [=](Device* device){
+	session->m_hotplug_attach_callback = [=](Device* device){
 		auto dev = session->add_device(device);
 		cout << "added_device" << endl;
 		auto dev_info = dev->info();
@@ -54,6 +53,6 @@ int main() {
 		}
 		session->start(0);
 	};
-	
+
 	while ( 1 == 1 ) {session->wait_for_completion();};
 }

@@ -30,7 +30,7 @@ const double BUFFER_TIME = 0.050;
 const double BUFFER_TIME = 0.020;
 #endif
 
-static const sl_device_info cee_info = {DEVICE_CEE_1,"CEE", 2};
+static const sl_device_info cee_info = {DEVICE_CEE_1, "CEE", 2};
 
 static const sl_channel_info cee_channel_info[2] = {
 	{CHANNEL_SMU, "A", 3, 2},

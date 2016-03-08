@@ -43,7 +43,7 @@ static const sl_channel_info m1000_channel_info[2] = {
 };
 
 static const sl_signal_info m1000_signal_info[2] = {
-	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,  0.0, 5.0, 5.0/65536 },
+	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,	0.0, 5.0, 5.0/65536 },
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
 };
 
@@ -92,7 +92,7 @@ int M1000_Device::removed() {
 
 void M1000_Device::read_calibration() {
 	int ret;
-	
+
 	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	if(!ret || m_cal.eeprom_valid != EEPROM_VALID) {
 		for(int i = 0; i < 8; i++) {
@@ -103,7 +103,7 @@ void M1000_Device::read_calibration() {
 	}
 }
 
-int M1000_Device::write_calibration(const char* cal_file_name) { 
+int M1000_Device::write_calibration(const char* cal_file_name) {
 	int cal_records_no = 0;
 	int ret;
 	FILE* fp;
@@ -112,12 +112,12 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 	int rec_idx;
 	int cnt_n, cnt_p;
 	float gain_p, gain_n;
-		
+
 	fp = fopen(cal_file_name, "r");
 	if(!fp) {
 		return -1;
 	}
-	
+
 	while(fgets(str, 128, fp) != NULL) {
 		if(strstr(str, "</>")) {
 			rec_idx = 0;
@@ -139,7 +139,7 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 						}
 
 					}
-					m_cal.gain_p[cal_records_no] = cnt_p ? gain_p / (cnt_p) : 1.0f;					
+					m_cal.gain_p[cal_records_no] = cnt_p ? gain_p / (cnt_p) : 1.0f;
 					m_cal.gain_n[cal_records_no] = cnt_n ? gain_n / (cnt_n) : 1.0f;
 					cal_records_no++;
 					break;
@@ -151,7 +151,7 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 			}
 		}
 	}
-	
+
 	if(cal_records_no != 8) {
 		for(int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
@@ -162,12 +162,12 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 	}
 	else {
 		m_cal.eeprom_valid = EEPROM_VALID;
-		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);		
+		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	}
 
 	fclose(fp);
 
-	return ret; 
+	return ret;
 }
 
 /// Runs in USB thread
@@ -245,8 +245,8 @@ void M1000_Device::configure(uint64_t rate) {
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
-	m_in_transfers.alloc( transfers, m_usb, EP_IN,  LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,  10000, m1000_in_completion,  this);
+	m_in_transfers.alloc( transfers, m_usb, EP_IN,	LIBUSB_TRANSFER_TYPE_BULK,
+		m_packets_per_transfer*in_packet_size,	10000, m1000_in_completion,  this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
@@ -293,10 +293,10 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 					buf[i*4+3] = b & 0xff;
 				} else {
 					uint16_t a = encode_out(0);
-					buf[(i+chunk_size*0)*2  ] = a >> 8;
+					buf[(i+chunk_size*0)*2	] = a >> 8;
 					buf[(i+chunk_size*0)*2+1] = a & 0xff;
 					uint16_t b = encode_out(1);
-					buf[(i+chunk_size*1)*2  ] = b >> 8;
+					buf[(i+chunk_size*1)*2	] = b >> 8;
 					buf[(i+chunk_size*1)*2+1] = b & 0xff;
 				}
 				m_out_sampleno++;
@@ -341,7 +341,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
 		for (unsigned i=0; i<chunk_size; i++) {
-			if (strncmp(this->m_fw_version, "2.", 2) == 0) {				
+			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
 				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
 				val = (((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25;
@@ -423,10 +423,10 @@ void M1000_Device::sync() {
 /// command device to start sampling
 void M1000_Device::start_run(uint64_t samples) {
 	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
-    if (ret < 0) {
+	if (ret < 0) {
 		debug("control transfer failed with code %i", ret);
-        return;
-    }
+		return;
+	}
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;

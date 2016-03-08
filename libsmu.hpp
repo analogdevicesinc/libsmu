@@ -35,7 +35,7 @@ class Session {
 public:
 	Session();
 	~Session();
-	
+
 	static const char* get_libsmu_version() { return LIBSMU_VERSION; };
 
 	int update_available_devices();
@@ -176,7 +176,7 @@ public:
 
 	/// Write the device calibration data into the EEPROM
 	virtual int write_calibration(const char* cal_file_name) { return 0; }
-	
+
 protected:
 	Device(Session* s, libusb_device* d);
 	virtual int init();

@@ -99,8 +99,8 @@ void Session::destroy_available(Device *dev) {
 
 /// low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-    libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
-    (void) ctx;
+	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+	(void) ctx;
 	Session *sess = (Session *) user_data;
 	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
 		sess->attached(device);
@@ -234,11 +234,11 @@ void Session::end() {
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
 	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
-    //  m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	//	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
-    if (!res) {
+	if (!res) {
 		debug("timed out");
-    }
+	}
 	for (auto i: m_devices) {
 		i->off();
 	}
@@ -253,7 +253,7 @@ void Session::wait_for_completion() {
 /// start streaming data
 void Session::start(sample_t nsamples) {
 	m_min_progress = 0;
-    m_cancellation = 0;
+	m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
 		if (m_devices.size() > 1) {

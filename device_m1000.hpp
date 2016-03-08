@@ -54,7 +54,7 @@ protected:
 	unsigned m_packets_per_transfer;
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
-	
+
 	struct EEPROM_cal{
 		uint32_t eeprom_valid;
 		float offset[8];
@@ -64,7 +64,7 @@ protected:
 
 	void read_calibration();
 	EEPROM_cal m_cal;
-	
+
 	uint64_t m_sample_count = 0;
 
 	Signal m_signals[2][2];
