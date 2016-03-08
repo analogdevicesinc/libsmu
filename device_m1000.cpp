@@ -263,12 +263,12 @@ void M1000_Device::configure(uint64_t rate) {
 inline uint16_t M1000_Device::encode_out(unsigned chan) {
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
-		float val = m_signals[chan][0]->get_sample();
+		float val = m_signals[chan][0].get_sample();
 		val = (val - m_cal.offset[chan*4+2]) * m_cal.gain_p[chan*4+2];
 		val = constrain(val, 0, 5.0);
 		v = 65535*val/5.0;
 	} else if (m_mode[chan] == SIMV) {
-		float val = m_signals[chan][1]->get_sample();
+		float val = m_signals[chan][1].get_sample();
 		if(val > 0) {
 			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_p[chan*4+3];
 		}
@@ -350,22 +350,22 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 		for (unsigned i=0; i<chunk_size; i++) {
 			if (strncmp(this->m_fw_version, "2.", 2) == 0) {				
 				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
-				m_signals[0][0]->put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
+				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
 				val = (((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25;
-				m_signals[0][1]->put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
+				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
 				val = (buf[i*8+4] << 8 | buf[i*8+5]) / 65535.0 * 5.0;
-				m_signals[1][0]->put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
+				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
 				val = (((buf[i*8+6] << 8 | buf[i*8+7]) / 65535.0 * 0.4 ) - 0.195)*1.25;
-				m_signals[1][1]->put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
+				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			} else {
 				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0;
-				m_signals[0][0]->put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
+				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
 				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25;
-				m_signals[0][1]->put_sample((val - m_cal.offset[0]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
+				m_signals[0][1].put_sample((val - m_cal.offset[0]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
 				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0;
-				m_signals[1][0]->put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
+				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
 				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25;
-				m_signals[1][1]->put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
+				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			}
 			m_in_sampleno++;
 		}
