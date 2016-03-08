@@ -11,9 +11,6 @@
 #include <cmath>
 #include <cassert>
 
-using std::cerr;
-using std::endl;
-
 #define EP_OUT 0x02
 #define EP_IN 0x81
 
@@ -253,7 +250,6 @@ void M1000_Device::configure(uint64_t rate) {
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
-	//std::cerr << "M1000 rate: " << sample_time <<  " " << m_sam_per << std::endl;
 }
 
 /// encode output samples
@@ -408,7 +404,6 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 	libusb_control_transfer(m_usb, 0x40, 0x59, chan, pset, 0, 0, 100);
 	// set mode
 	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);
-	// std::cerr << "sm (" << chan << "," << mode << ")" << std::endl;
 }
 
 /// turn on power supplies, clear sampling state
@@ -422,16 +417,14 @@ void M1000_Device::on() {
 /// get current microframe index, set m_sof_start to be time in the future
 void M1000_Device::sync() {
 	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
-	cerr << m_usb << ": sof now: " << m_sof_start << endl;
 	m_sof_start = (m_sof_start+0xff)&0x3c00;
-	cerr << m_usb << ": sof then: " << m_sof_start << endl;
 }
 
 /// command device to start sampling
 void M1000_Device::start_run(uint64_t samples) {
 	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
     if (ret < 0) {
-        cerr << "control transfer failed with code " << ret << endl;
+		debug("control transfer failed with code %i", ret);
         return;
     }
 	std::lock_guard<std::mutex> lock(m_state);
@@ -452,7 +445,7 @@ void M1000_Device::cancel() {
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
 	if ( (ret_in != ret_out) || (ret_in != 0) || (ret_out != 0) )
-		cerr << "cancel error in: " << libusb_error_name(ret_in) << " out: " << libusb_error_name(ret_out) << endl;
+		debug("cancel error in: %s out: %s", libusb_error_name(ret_in), libusb_error_name(ret_out));
 }
 
 /// put outputs into high-impedance mode, stop sampling

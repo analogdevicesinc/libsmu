@@ -5,11 +5,11 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #pragma once
+#include "libsmu.h"
 #include <libusb.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <vector>
-#include <iostream>
 
 inline static float constrain(float val, float lo, float hi){
 	if (val > hi) val = hi;
@@ -57,7 +57,7 @@ struct Transfers {
 			libusb_free_transfer(i);
 		}
 		if (num_active != 0)
-			std::cerr << "num_active after free: " << num_active << std::endl;
+			debug("num_active after free: %i", num_active);
 		m_transfers.clear();
 	}
 
@@ -68,11 +68,11 @@ struct Transfers {
 		// for i in pending transfers
 		for (auto i: m_transfers) {
 			if (num_active > 1) {
-				std::cerr << "num_active before cancel: " << num_active << std::endl;
+				debug("num_active before cancel: %i", num_active);
 				// libusb's cancel returns 0 if success, else an error code
 				int ret = libusb_cancel_transfer(i);
 				if (ret != 0) {
-					std::cout << "canceled with status: " << libusb_error_name(ret) << std::endl;
+					debug("canceled with status: %s", libusb_error_name(ret));
 					// abort if a transfer is not successfully canceled
 					return ret;
 				}

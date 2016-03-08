@@ -9,9 +9,6 @@
 #include <cstring>
 #include <cmath>
 
-using std::cerr;
-using std::endl;
-
 #define EP_IN 0x81
 #define EP_OUT 0x02
 
@@ -147,16 +144,16 @@ int CEE_Device::init() {
 	if (have_version_info) {
 		m_min_per = version_info.min_per;
 		if (version_info.per_ns != 250) {
-			std::cerr << "    Error: alternate timer clock " << version_info.per_ns << " is not supported in this release." << std::endl;
+			debug("Error: alternate timer clock %i is not supported in this release.", version_info.per_ns);
 		}
 
 	} else {
 		m_min_per = 100;
 	}
 
-	std::cerr << "    Hardware: " << m_hw_version << std::endl;
-	std::cerr << "    Firmware version: " << m_fw_version << " (" << m_git_version << ")" << std::endl;
-	std::cerr << "    Supported sample rate: " << (double) CEE_timer_clock / (double) m_min_per / 1000.0 << "ksps" << std::endl;
+	debug("Hardware: %s", m_hw_version.c_str());
+	debug("Firmware version: %s ( %s )", m_fw_version.c_str(), m_git_version.c_str());
+	debug("Supported sample rate: %f ksps", (double) CEE_timer_clock / (double) m_min_per / 1000.0);
 	return 0;
 }
 
@@ -190,7 +187,7 @@ void CEE_Device::read_calibration() {
 	};
 	int r = libusb_control_transfer(m_usb, 0xC0, 0xE0, 0, 0, buf, 64, 100);
 	if (!r || magic != EEPROM_VALID_MAGIC) {
-		cerr << "    Reading calibration data failed " << r << endl;
+		debug("Reading calibration data failed: %i", r);
 		memset(&m_cal, 0xff, sizeof(m_cal));
 
 		m_cal.offset_a_v = m_cal.offset_a_i = m_cal.offset_b_v = m_cal.offset_b_i = 0;
@@ -209,7 +206,7 @@ void CEE_Device::read_calibration() {
 		m_cal.current_gain_b = CEE_default_current_gain;
 	}
 
-	cerr << "    Current gain " << m_cal.current_gain_a << " " << m_cal.current_gain_b << endl;
+	debug("Current gain %i %i", m_cal.current_gain_a, m_cal.current_gain_b);
 }
 
 void CEE_Device::set_current_limit(unsigned mode) {
@@ -224,7 +221,7 @@ void CEE_Device::set_current_limit(unsigned mode) {
 	} else if (mode == 2000) {
 		ilimit_cal_a = ilimit_cal_b = 0;
 	} else {
-		std::cerr << "Invalid current limit " << mode << std::endl;
+		debug("Invalid current limit: %u", mode);
 		return;
 	}
 
@@ -234,7 +231,6 @@ void CEE_Device::set_current_limit(unsigned mode) {
 
 /// Runs in USB thread
 extern "C" void LIBUSB_CALL cee_in_completion(libusb_transfer *t) {
-	//std::cerr << "cee_in_completion" << endl;
 	if (!t->user_data) {
 		libusb_free_transfer(t); // user_data was zeroed out when device was deleted
 		return;
@@ -305,7 +301,7 @@ void CEE_Device::configure(uint64_t rate) {
 
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 
-	std::cerr << "CEE prepare "<< m_xmega_per << " " << transfers <<  " " << m_packets_per_transfer << std::endl;
+	debug("CEE prepare %i transfers %u", m_xmega_per, m_packets_per_transfer);
 }
 
 inline uint16_t CEE_Device::encode_out(unsigned chan, uint32_t igain) {
@@ -326,8 +322,6 @@ inline uint16_t CEE_Device::encode_out(unsigned chan, uint32_t igain) {
 
 bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
-		//std::cerr << "submit_out_transfer " << m_out_sampleno << std::endl;
-
 		for (unsigned p=0; p<m_packets_per_transfer; p++) {
 			OUT_packet *pkt = &((OUT_packet *)t->buffer)[p];
 			pkt->mode_a = m_mode[0];
@@ -344,7 +338,7 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer out " << r << endl;
+			debug("libusb_submit_transfer out: %i", r);
 		}
 		m_out_transfers.num_active++;
 		return true;
@@ -356,7 +350,7 @@ bool CEE_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			cerr << "libusb_submit_transfer in " << r << endl;
+			debug("libusb_submit_transfer in: %i", r);
 		}
 		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
@@ -376,7 +370,7 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		IN_packet *pkt = &((IN_packet*)t->buffer)[p];
 
 		if ((pkt->flags & FLAG_PACKET_DROPPED) && m_in_sampleno != 0) {
-			std::cerr << "Warning: dropped packet" << std::endl;
+			debug("Warning: dropped packet");
 		}
 
 		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++) {

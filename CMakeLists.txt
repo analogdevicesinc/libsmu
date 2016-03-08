@@ -3,6 +3,8 @@ project(libsmu CXX)
 
 # C++11 is required
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pedantic")
+# debug flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 # build a shared library by default
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
