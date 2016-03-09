@@ -74,17 +74,29 @@ int main(int argc, char **argv) {
 	while ((c = getopt(argc, argv, "sc:")) != -1) {
 		switch (c) {
 			case 's':
-				while ( 1 == 1 ) {session->wait_for_completion();};
+				{
+					while ( 1 == 1 ) {session->wait_for_completion();};
+				}
 				break;
 			case 'c':
-				file = optarg;
-				// write calibration data to all valid, attached m1k devices
-				for (auto dev: session->m_available_devices) {
+				// write calibration data to a valid, attached m1k device
+				{
+					file = optarg;
+
+					if (session->m_devices.empty()) {
+						cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
+						cerr << "Please detach all devices except the one targeted for calibration." << endl;
+						return 1;
+					}
+
+					auto dev = *(session->m_devices.begin());
 					if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
 						if (dev->write_calibration(file)) {
 							perror("smu: failed to write calibration data");
 							return 1;
 						}
+					} else {
+						cerr << "smu: calibration only works with ADALM1000 devices" << end;
 					}
 				}
 				break;
