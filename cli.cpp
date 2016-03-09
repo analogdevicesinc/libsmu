@@ -41,11 +41,14 @@ int main(int argc, char **argv) {
 	session->m_hotplug_detach_callback = [=](Device* device){
 		session->cancel();
 		session->remove_device(device);
+		printf("removed device: %s: serial %s: fw %s: hw %s\n",
+				device->info()->label, device->serial(), device->fwver(), device->hwver());
 	};
 
 	session->m_hotplug_attach_callback = [=](Device* device){
-		auto dev = session->add_device(device);
-		cout << "added_device" << endl;
+		if (session->add_device(device))
+			printf("added device: %s: serial %s: fw %s: hw %s\n",
+					device->info()->label, device->serial(), device->fwver(), device->hwver());
 	};
 
 	if (session->m_devices.size() == 0) {
@@ -53,8 +56,15 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	while ((c = getopt(argc, argv, "lsc:")) != -1) {
+	while ((c = getopt(argc, argv, "plsc:")) != -1) {
 		switch (c) {
+			case 'p':
+				// wait around doing nothing (hotplug testing)
+				{
+					while (1)
+						sleep(10);
+				}
+				break;
 			case 'l':
 				// list attached device info
 				{
