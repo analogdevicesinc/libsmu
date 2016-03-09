@@ -21,8 +21,17 @@ using std::string;
 
 int main(int argc, char **argv) {
 	int c;
+	const char *file = NULL;
 
 	Session* session = new Session();
+	if (session->update_available_devices()) {
+		cerr << "error initializing session" << endl;
+		return 1;
+	}
+	for (auto i: session->m_available_devices) {
+		session->add_device(&*i);
+	}
+
 	session->m_completion_callback = [=](unsigned status){
 	};
 
@@ -57,10 +66,27 @@ int main(int argc, char **argv) {
 		session->start(0);
 	};
 
-	while ((c = getopt(argc, argv, "s")) != -1) {
+	if (session->m_devices.size() == 0) {
+		cerr << "no devices plugged in" << endl;
+		return 1;
+	}
+
+	while ((c = getopt(argc, argv, "sc:")) != -1) {
 		switch (c) {
 			case 's':
 				while ( 1 == 1 ) {session->wait_for_completion();};
+				break;
+			case 'c':
+				file = optarg;
+				// write calibration data to all valid, attached m1k devices
+				for (auto dev: session->m_available_devices) {
+					if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+						if (dev->write_calibration(file)) {
+							perror("smu: failed to write calibration data");
+							return 1;
+						}
+					}
+				}
 				break;
 			default:
 				return 1;
