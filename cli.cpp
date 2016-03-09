@@ -25,8 +25,9 @@ void display_usage(void) {
 		"  -h   print this help message and exit\n"
 		"  -l   list supported devices currently attached to the system\n"
 		"  -p   simple session device hotplug testing\n"
-		"  -s   stream samples to stdout from a single, attached device\n"
-		"  -c   write calibration data to a single, attached device\n");
+		"  -s   stream samples to stdout from a single attached device\n"
+		"  -c   write calibration data to a single attached device\n"
+		"  -f   flash firmware image to all attached devices\n");
 }
 
 int main(int argc, char **argv) {
@@ -66,7 +67,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	while ((opt = getopt(argc, argv, "hplsc:")) != -1) {
+	while ((opt = getopt(argc, argv, "hplsc:f:")) != -1) {
 		switch (opt) {
 			case 'p':
 				// wait around doing nothing (hotplug testing)
@@ -107,7 +108,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 			case 'c':
-				// write calibration data to a valid, attached m1k device
+				// write calibration data to a single attached m1k device
 				{
 					file = optarg;
 
@@ -125,6 +126,20 @@ int main(int argc, char **argv) {
 						}
 					} else {
 						cerr << "smu: calibration only works with ADALM1000 devices" << endl;
+					}
+				}
+				break;
+			case 'f':
+				// flash firmware image to all attached m1k devices
+				{
+					file = optarg;
+					for (auto dev: session->m_devices) {
+						if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+							if (dev->flash_firmware(file)) {
+								perror("smu: failed to flash firmware image");
+								return 1;
+							}
+						}
 					}
 				}
 				break;

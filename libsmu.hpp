@@ -174,8 +174,11 @@ public:
 	/// Unlock the Device's mutex, allowing this device's transfers to be processed.
 	virtual void unlock() { m_state.unlock(); }
 
-	/// Write the device calibration data into the EEPROM
+	/// Write the device calibration data into the EEPROM.
 	virtual int write_calibration(const char* cal_file_name) { return 0; }
+
+	/// Flash a firmware image to this device.
+	virtual int flash_firmware(const char* file) { return 0; }
 
 protected:
 	Device(Session* s, libusb_device* d);
