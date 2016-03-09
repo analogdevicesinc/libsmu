@@ -10,6 +10,7 @@
 #include <vector>
 #include <cstdint>
 #include <string.h>
+#include <unistd.h>
 
 using std::cout;
 using std::cerr;
@@ -18,7 +19,9 @@ using std::unique_ptr;
 using std::vector;
 using std::string;
 
-int main() {
+int main(int argc, char **argv) {
+	int c;
+
 	Session* session = new Session();
 	session->m_completion_callback = [=](unsigned status){
 	};
@@ -54,5 +57,14 @@ int main() {
 		session->start(0);
 	};
 
-	while ( 1 == 1 ) {session->wait_for_completion();};
+	while ((c = getopt(argc, argv, "s")) != -1) {
+		switch (c) {
+			case 's':
+				while ( 1 == 1 ) {session->wait_for_completion();};
+				break;
+			default:
+				return 1;
+		}
+	}
+	return 0;
 }
