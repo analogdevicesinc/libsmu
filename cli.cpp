@@ -46,35 +46,35 @@ int main(int argc, char **argv) {
 	session->m_hotplug_attach_callback = [=](Device* device){
 		auto dev = session->add_device(device);
 		cout << "added_device" << endl;
-		auto dev_info = dev->info();
-		for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
-			auto ch_info = dev->channel_info(ch_i);
-			dev->set_mode(ch_i, 1);
-			for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
-				auto sig = dev->signal(ch_i, sig_i);
-				auto sig_info = sig->info();
-				sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
-				if (strncmp(sig_info->label, "Voltage", 4) == 0){
-					cout << "setting voltage" << endl;
-					sig->source_sine(0, 5, 128, 32);
-				}
-			}
-		}
-		for (auto i: session->m_devices) {
-			session->configure(i->get_default_rate());
-		}
-		session->start(0);
 	};
 
 	if (session->m_devices.size() == 0) {
-		cerr << "no devices plugged in" << endl;
+		cerr << "smu: no supported devices plugged in" << endl;
 		return 1;
 	}
 
 	while ((c = getopt(argc, argv, "sc:")) != -1) {
 		switch (c) {
 			case 's':
+				// stream samples from an attached device to stdout
 				{
+					auto dev = *(session->m_devices.begin());
+					auto dev_info = dev->info();
+					for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
+						auto ch_info = dev->channel_info(ch_i);
+						dev->set_mode(ch_i, 1);
+						for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
+							auto sig = dev->signal(ch_i, sig_i);
+							auto sig_info = sig->info();
+							sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
+							if (strncmp(sig_info->label, "Voltage", 4) == 0){
+								cout << "setting voltage" << endl;
+								sig->source_sine(0, 5, 128, 32);
+							}
+						}
+					}
+					session->configure(dev->get_default_rate());
+					session->start(0);
 					while ( 1 == 1 ) {session->wait_for_completion();};
 				}
 				break;
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 							return 1;
 						}
 					} else {
-						cerr << "smu: calibration only works with ADALM1000 devices" << end;
+						cerr << "smu: calibration only works with ADALM1000 devices" << endl;
 					}
 				}
 				break;
