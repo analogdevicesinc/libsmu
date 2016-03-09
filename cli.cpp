@@ -53,8 +53,16 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	while ((c = getopt(argc, argv, "sc:")) != -1) {
+	while ((c = getopt(argc, argv, "lsc:")) != -1) {
 		switch (c) {
+			case 'l':
+				// list attached device info
+				{
+					for (auto dev: session->m_devices) {
+						printf("%s: serial %s: fw %s: hw %s\n", dev->info()->label, dev->serial(), dev->fwver(), dev->hwver());
+					}
+				}
+				break;
 			case 's':
 				// stream samples from an attached device to stdout
 				{
