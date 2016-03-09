@@ -19,8 +19,18 @@ using std::unique_ptr;
 using std::vector;
 using std::string;
 
+void display_usage(void) {
+	printf("smu: simple libsmu-based tool\n"
+		"\n"
+		"  -h   print this help message and exit\n"
+		"  -l   list supported devices currently attached to the system\n"
+		"  -p   simple session device hotplug testing\n"
+		"  -s   stream samples to stdout from a single, attached device\n"
+		"  -c   write calibration data to a single, attached device\n");
+}
+
 int main(int argc, char **argv) {
-	int c;
+	int opt;
 	const char *file = NULL;
 
 	Session* session = new Session();
@@ -56,8 +66,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	while ((c = getopt(argc, argv, "plsc:")) != -1) {
-		switch (c) {
+	while ((opt = getopt(argc, argv, "hplsc:")) != -1) {
+		switch (opt) {
 			case 'p':
 				// wait around doing nothing (hotplug testing)
 				{
@@ -118,7 +128,11 @@ int main(int argc, char **argv) {
 					}
 				}
 				break;
+			case 'h':
+				display_usage();
+				break;
 			default:
+				display_usage();
 				return 1;
 		}
 	}
