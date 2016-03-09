@@ -4,10 +4,8 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include <memory>
 #include "libsmu.hpp"
 #include <iostream>
-#include <vector>
 #include <cstdint>
 #include <string.h>
 #include <unistd.h>
@@ -15,8 +13,6 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::unique_ptr;
-using std::vector;
 using std::string;
 
 void display_usage(void) {
@@ -35,19 +31,17 @@ int main(int argc, char **argv) {
 	const char *file = NULL;
 
 	Session* session = new Session();
+	// add all available devices to the session at startup
 	if (session->update_available_devices()) {
 		cerr << "error initializing session" << endl;
 		return 1;
 	}
-	for (auto i: session->m_available_devices) {
-		session->add_device(&*i);
+	for (auto dev: session->m_available_devices) {
+		session->add_device(&*dev);
 	}
 
-	session->m_completion_callback = [=](unsigned status){
-	};
-
-	session->m_progress_callback = [=](sample_t n) {
-	};
+	session->m_completion_callback = [=](unsigned status){};
+	session->m_progress_callback = [=](sample_t n){};
 
 	session->m_hotplug_detach_callback = [=](Device* device){
 		session->cancel();
