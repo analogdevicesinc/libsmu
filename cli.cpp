@@ -15,7 +15,8 @@ using std::cerr;
 using std::endl;
 using std::string;
 
-void display_usage(void) {
+static void display_usage(void)
+{
 	printf("smu: simple libsmu-based tool\n"
 		"\n"
 		"  -h   print this help message and exit\n"
@@ -26,9 +27,70 @@ void display_usage(void) {
 		"  -f   flash firmware image to all attached devices\n");
 }
 
-int main(int argc, char **argv) {
-	int opt, ret;
-	const char *file = NULL;
+static void stream_samples(Session* session)
+{
+	auto dev = *(session->m_devices.begin());
+	auto dev_info = dev->info();
+	for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
+		auto ch_info = dev->channel_info(ch_i);
+		dev->set_mode(ch_i, 1);
+		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
+			auto sig = dev->signal(ch_i, sig_i);
+			auto sig_info = sig->info();
+			sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
+			if (strncmp(sig_info->label, "Voltage", 4) == 0){
+				cout << "setting voltage" << endl;
+				sig->source_sine(0, 5, 128, 32);
+			}
+		}
+	}
+	session->configure(dev->get_default_rate());
+	session->start(0);
+	while ( 1 == 1 ) {session->wait_for_completion();};
+}
+
+int write_calibration(Session* session, const char *file)
+{
+	int ret;
+
+	if (session->m_devices.empty()) {
+		cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
+		cerr << "Please detach all devices except the one targeted for calibration." << endl;
+		return 1;
+	}
+
+	auto dev = *(session->m_devices.begin());
+	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+		ret = dev->write_calibration(file);
+		if (ret <= 0) {
+			if (ret == -EINVAL)
+				cerr << "smu: invalid calibration data, overwritten using defaults" << endl;
+			else
+				perror("smu: failed to write calibration data");
+			return 1;
+		}
+	} else {
+		cerr << "smu: calibration only works with ADALM1000 devices" << endl;
+	}
+	return 0;
+}
+
+int flash_firmware(Session* session, const char *file)
+{
+	for (auto dev: session->m_devices) {
+		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+			if (dev->flash_firmware(file)) {
+				perror("smu: failed to flash firmware image");
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	int opt, ret = 0;
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
@@ -65,81 +127,28 @@ int main(int argc, char **argv) {
 		switch (opt) {
 			case 'p':
 				// wait around doing nothing (hotplug testing)
-				{
-					while (1)
-						sleep(10);
-				}
+				while (1)
+					sleep(10);
 				break;
 			case 'l':
 				// list attached device info
-				{
-					for (auto dev: session->m_devices) {
-						printf("%s: serial %s: fw %s: hw %s\n", dev->info()->label, dev->serial(), dev->fwver(), dev->hwver());
-					}
+				for (auto dev: session->m_devices) {
+					printf("%s: serial %s: fw %s: hw %s\n", dev->info()->label, dev->serial(), dev->fwver(), dev->hwver());
 				}
 				break;
 			case 's':
 				// stream samples from an attached device to stdout
-				{
-					auto dev = *(session->m_devices.begin());
-					auto dev_info = dev->info();
-					for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
-						auto ch_info = dev->channel_info(ch_i);
-						dev->set_mode(ch_i, 1);
-						for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
-							auto sig = dev->signal(ch_i, sig_i);
-							auto sig_info = sig->info();
-							sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
-							if (strncmp(sig_info->label, "Voltage", 4) == 0){
-								cout << "setting voltage" << endl;
-								sig->source_sine(0, 5, 128, 32);
-							}
-						}
-					}
-					session->configure(dev->get_default_rate());
-					session->start(0);
-					while ( 1 == 1 ) {session->wait_for_completion();};
-				}
+				stream_samples(session);
 				break;
 			case 'c':
 				// write calibration data to a single attached m1k device
-				{
-					file = optarg;
-
-					if (session->m_devices.empty()) {
-						cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
-						cerr << "Please detach all devices except the one targeted for calibration." << endl;
-						return 1;
-					}
-
-					auto dev = *(session->m_devices.begin());
-					if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-						ret = dev->write_calibration(file);
-						if (ret <= 0) {
-							if (ret == -EINVAL)
-								cerr << "smu: invalid calibration data, overwritten using defaults" << endl;
-							else
-								perror("smu: failed to write calibration data");
-							return 1;
-						}
-					} else {
-						cerr << "smu: calibration only works with ADALM1000 devices" << endl;
-					}
-				}
+				if (write_calibration(session, optarg))
+					return 1;
 				break;
 			case 'f':
 				// flash firmware image to all attached m1k devices
-				{
-					file = optarg;
-					for (auto dev: session->m_devices) {
-						if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-							if (dev->flash_firmware(file)) {
-								perror("smu: failed to flash firmware image");
-								return 1;
-							}
-						}
-					}
-				}
+				if (flash_firmware(session, optarg))
+					return 1;
 				break;
 			case 'h':
 				display_usage();
