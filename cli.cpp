@@ -49,7 +49,7 @@ static void stream_samples(Session* session)
 	while ( 1 == 1 ) {session->wait_for_completion();};
 }
 
-int write_calibration(Session* session, const char *file)
+int calibrate(Session* session, const char *file)
 {
 	int ret;
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 				break;
 			case 'c':
 				// write calibration data to a single attached m1k device
-				if (write_calibration(session, optarg))
+				if (calibrate(session, optarg))
 					return 1;
 				break;
 			case 'f':
