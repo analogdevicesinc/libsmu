@@ -90,6 +90,19 @@ class Device(object):
         """Iterable of samples from the device."""
         return _pysmu.iterate_inputs(self.serial)
 
+    @property
+    def calibration(self):
+        """Read calibration data from the device's EEPROM."""
+        return _pysmu.calibration(self.serial)
+
+    def write_calibration(self, file):
+        """Write calibration data to the device's EEPROM.
+
+        Args:
+            file (str): path to calibration file
+        """
+        return _pysmu.write_calibration(self.serial, file)
+
     def __repr__(self):
         return str(self.serial)
 

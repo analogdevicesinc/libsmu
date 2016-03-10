@@ -204,6 +204,58 @@ getAllInputs(PyObject* self, PyObject* args)
 	return all_samples;
 }
 
+static PyObject*
+write_calibration(PyObject* self, PyObject* args)
+{
+	const char *dev_serial;
+	const char *file;
+	int ret;
+
+	if (!PyArg_ParseTuple(args, "ss", &dev_serial, &file))
+		return NULL;
+
+	auto dev = get_device(dev_serial);
+	if (dev == NULL)
+		return NULL;
+
+	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+		ret = dev->write_calibration(file);
+		if (ret <= 0)
+			return NULL;
+	} else {
+		return NULL;
+	}
+	Py_RETURN_NONE;
+}
+
+static PyObject*
+calibration(PyObject* self, PyObject* args)
+{
+	const char *dev_serial;
+
+	if (!PyArg_ParseTuple(args, "s", &dev_serial))
+		return NULL;
+
+	auto dev = get_device(dev_serial);
+	if (dev == NULL)
+		return NULL;
+
+	vector<vector<float>> cal;
+	dev->calibration(&cal);
+	PyObject* cal_list = PyList_New(0);
+	for (int i = 0; i < cal.size(); i++) {
+		PyObject* chan_cal_list = PyList_New(0);
+		for (int j = 0; j < cal[i].size(); j++) {
+			PyList_Append(chan_cal_list, PyFloat_FromDouble(cal[i][j]));
+		}
+		PyObject* chan_cal_tuple = PyList_AsTuple(chan_cal_list);
+		PyList_Append(cal_list, chan_cal_tuple);
+		Py_DECREF(chan_cal_list);
+		Py_DECREF(chan_cal_tuple);
+	}
+	return cal_list;
+}
+
 static PyObject *
 setOutputWave(PyObject* self, PyObject* args)
 {
@@ -438,11 +490,13 @@ inputs_iter(PyObject *self, PyObject *args)
 	return (PyObject *)p;
 }
 
-static PyMethodDef libpysmu_methods [] = {
+static PyMethodDef pysmu_methods [] = {
 	{ "setup", initSession, METH_VARARGS, "start session"  },
 	{ "get_dev_info", getDevInfo, METH_VARARGS, "get device information"  },
 	{ "cleanup", cleanupSession, METH_VARARGS, "end session"  },
 	{ "set_mode", setMode, METH_VARARGS, "set channel mode"  },
+	{ "write_calibration", write_calibration, METH_VARARGS, "write calibration data to a device's EEPROM"  },
+	{ "calibration", calibration, METH_VARARGS, "show calibration data"  },
 	{ "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
 	{ "get_all_inputs", getAllInputs, METH_VARARGS, "get measured voltage and current from all channels"  },
 	{ "iterate_inputs", inputs_iter, METH_VARARGS, "iterate over measured voltage and current from selected channels"  },
