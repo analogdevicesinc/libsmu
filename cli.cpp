@@ -27,7 +27,7 @@ void display_usage(void) {
 }
 
 int main(int argc, char **argv) {
-	int opt;
+	int opt, ret;
 	const char *file = NULL;
 
 	Session* session = new Session();
@@ -114,8 +114,12 @@ int main(int argc, char **argv) {
 
 					auto dev = *(session->m_devices.begin());
 					if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-						if (dev->write_calibration(file)) {
-							perror("smu: failed to write calibration data");
+						ret = dev->write_calibration(file);
+						if (ret <= 0) {
+							if (ret == -EINVAL)
+								cerr << "smu: invalid calibration data, overwritten using defaults" << endl;
+							else
+								perror("smu: failed to write calibration data");
 							return 1;
 						}
 					} else {

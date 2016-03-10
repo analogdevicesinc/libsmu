@@ -94,7 +94,7 @@ void M1000_Device::read_calibration() {
 	int ret;
 
 	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
-	if(!ret || m_cal.eeprom_valid != EEPROM_VALID) {
+	if(ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
 		for(int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
 			m_cal.gain_p[i] = 1.0f;
@@ -158,7 +158,7 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 			m_cal.gain_p[i] = 1.0f;
 			m_cal.gain_n[i] = 1.0f;
 		}
-		ret = -1;
+		ret = -EINVAL;
 	}
 	else {
 		m_cal.eeprom_valid = EEPROM_VALID;
