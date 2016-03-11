@@ -10,6 +10,7 @@
 #include <vector>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 
 using std::cout;
 using std::cerr;
@@ -21,13 +22,13 @@ static void display_usage(void)
 {
 	printf("smu: simple libsmu-based tool\n"
 		"\n"
-		"  -h   print this help message and exit\n"
-		"  -l   list supported devices currently attached to the system\n"
-		"  -p   simple session device hotplug testing\n"
-		"  -s   stream samples to stdout from a single attached device\n"
-		"  -c   write calibration data to a single attached device\n"
-		"  -d   display calibration data from all attached devices\n"
-		"  -f   flash firmware image to all attached devices\n");
+		"  -h, --help                   print this help message and exit\n"
+		"  -l, --list                   list supported devices currently attached to the system\n"
+		"  -p, --hotplug                simple session device hotplug testing\n"
+		"  -s, --stream                 stream samples to stdout from a single attached device\n"
+		"  -c, --calibrate <cal file>   write calibration data to a single attached device\n"
+		"  -d, --display-calibration    display calibration data from all attached devices\n"
+		"  -f, --flash <firmware image> flash firmware image to all attached devices\n");
 }
 
 static void stream_samples(Session* session)
@@ -123,6 +124,7 @@ int flash_firmware(Session* session, const char *file)
 int main(int argc, char **argv)
 {
 	int opt, ret = 0;
+	int option_index = 0;
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
@@ -157,7 +159,20 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	while ((opt = getopt(argc, argv, "hplsdc:f:")) != -1) {
+	// map long options to short ones
+	static struct option long_options[] = {
+		{"help",     no_argument, 0, 'a'},
+		{"hotplug",  no_argument, 0, 'p'},
+		{"list",     no_argument, 0, 'l'},
+		{"stream",   no_argument, 0, 's'},
+		{"display-calibration", no_argument, 0, 'd'},
+		{"calibrate", required_argument, 0, 'c'},
+		{"flash", required_argument, 0, 'f'},
+		{0, 0, 0, 0}
+	};
+
+	while ((opt = getopt_long(argc, argv, "hplsdc:f:",
+			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
 				// wait around doing nothing (hotplug testing)
