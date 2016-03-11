@@ -7,6 +7,7 @@
 #include "libsmu.hpp"
 #include <iostream>
 #include <cstdint>
+#include <vector>
 #include <string.h>
 #include <unistd.h>
 
@@ -14,6 +15,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::string;
+using std::vector;
 
 static void display_usage(void)
 {
@@ -24,6 +26,7 @@ static void display_usage(void)
 		"  -p   simple session device hotplug testing\n"
 		"  -s   stream samples to stdout from a single attached device\n"
 		"  -c   write calibration data to a single attached device\n"
+		"  -d   display calibration data from all attached devices\n"
 		"  -f   flash firmware image to all attached devices\n");
 }
 
@@ -75,6 +78,35 @@ int calibrate(Session* session, const char *file)
 	return 0;
 }
 
+void display_calibration(Session* session)
+{
+	vector<vector<float>> cal;
+	for (auto dev: session->m_devices) {
+		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+			printf("%s: serial %s: fw %s: hw %s\n",
+				dev->info()->label, dev->serial(),
+				dev->fwver(), dev->hwver());
+			dev->calibration(&cal);
+			for (int i = 0; i < 8; i++) {
+				switch (i) {
+					case 0: printf("  Channel A, measure V\n"); break;
+					case 1: printf("  Channel A, measure I\n"); break;
+					case 2: printf("  Channel A, source V\n"); break;
+					case 3: printf("  Channel A, source I\n"); break;
+					case 4: printf("  Channel B, measure V\n"); break;
+					case 5: printf("  Channel B, measure I\n"); break;
+					case 6: printf("  Channel B, source V\n"); break;
+					case 7: printf("  Channel B, source I\n"); break;
+				}
+				printf("    offset: %.4f\n", cal[i][0]);
+				printf("    p gain: %.4f\n", cal[i][1]);
+				printf("    n gain: %.4f\n", cal[i][2]);
+			}
+			printf("\n");
+		}
+	}
+}
+
 int flash_firmware(Session* session, const char *file)
 {
 	for (auto dev: session->m_devices) {
@@ -109,13 +141,15 @@ int main(int argc, char **argv)
 		session->cancel();
 		session->remove_device(device);
 		printf("removed device: %s: serial %s: fw %s: hw %s\n",
-				device->info()->label, device->serial(), device->fwver(), device->hwver());
+				device->info()->label, device->serial(),
+				device->fwver(), device->hwver());
 	};
 
 	session->m_hotplug_attach_callback = [=](Device* device){
 		if (session->add_device(device))
 			printf("added device: %s: serial %s: fw %s: hw %s\n",
-					device->info()->label, device->serial(), device->fwver(), device->hwver());
+				device->info()->label, device->serial(),
+				device->fwver(), device->hwver());
 	};
 
 	if (session->m_devices.empty()) {
@@ -123,7 +157,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	while ((opt = getopt(argc, argv, "hplsc:f:")) != -1) {
+	while ((opt = getopt(argc, argv, "hplsdc:f:")) != -1) {
 		switch (opt) {
 			case 'p':
 				// wait around doing nothing (hotplug testing)
@@ -139,6 +173,10 @@ int main(int argc, char **argv)
 			case 's':
 				// stream samples from an attached device to stdout
 				stream_samples(session);
+				break;
+			case 'd':
+				// display calibration data from all attached m1k devices
+				display_calibration(session);
 				break;
 			case 'c':
 				// write calibration data to a single attached m1k device

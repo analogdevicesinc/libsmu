@@ -10,6 +10,9 @@
 #include <cstring>
 #include <cmath>
 #include <cassert>
+#include <vector>
+
+using std::vector;
 
 #define EP_OUT 0x02
 #define EP_IN 0x81
@@ -100,6 +103,17 @@ void M1000_Device::read_calibration() {
 			m_cal.gain_p[i] = 1.0f;
 			m_cal.gain_n[i] = 1.0f;
 		}
+	}
+}
+
+// Provide external read access to EEPROM calibration data.
+void M1000_Device::calibration(vector<vector<float>>* cal) {
+	(*cal).resize(8);
+	for (int i = 0; i < 8; i++) {
+		(*cal)[i].resize(3);
+		(*cal)[i][0] = m_cal.offset[i];
+		(*cal)[i][1] = m_cal.gain_p[i];
+		(*cal)[i][2] = m_cal.gain_n[i];
 	}
 }
 
@@ -395,7 +409,7 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 	}
 	// set feedback potentiometers with mode heuristics
 	unsigned pset;
-	switch (mode ) {
+	switch (mode) {
 		case SIMV: pset = 0x7f7f; break;
 		case SVMI: pset = 0x0000; break;
 		case DISABLED:

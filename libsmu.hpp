@@ -7,13 +7,15 @@
 #pragma once
 #include "libsmu.h"
 #include <string>
-#include <vector>
 #include <set>
 #include <memory>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 #include <cmath>
+#include <vector>
+
+using std::vector;
 
 #define LIBSMU_VERSION "v0.88"
 
@@ -44,7 +46,7 @@ public:
 	/// Devices that are present on the system, but aren't necessarily in bound to this session.
 	/// Only `Device::serial` and `Device::info` may be called on a Device that is not added to
 	/// the session.
-	std::vector<std::shared_ptr<Device>> m_available_devices;
+	vector<std::shared_ptr<Device>> m_available_devices;
 
 	/// Add a device (from m_available_devices) to the session.
 	/// This method may not be called while the session is active.
@@ -176,6 +178,9 @@ public:
 
 	/// Write the device calibration data into the EEPROM.
 	virtual int write_calibration(const char* cal_file_name) { return 0; }
+
+	/// Get the device calibration data from the EEPROM.
+	virtual void calibration(vector<vector<float>>* cal) {};
 
 	/// Flash a firmware image to this device.
 	virtual int flash_firmware(const char* file) { return 0; }
