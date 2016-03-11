@@ -1,0 +1,41 @@
+#!/usr/bin/env python2.7
+
+from __future__ import print_function
+
+import argparse
+import os
+import sys
+
+from pysmu import Smu
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    mux = parser.add_mutually_exclusive_group()
+    mux.add_argument(
+        '-s', '--show', action='store_true', default=True,
+        help='display calibration data from a device')
+    mux.add_argument(
+        '-w', '--write',
+        dest='cal_file', metavar='PATH_TO_CAL_FILE',
+        help='write calibration data to a device')
+    options = parser.parse_args()
+
+    x = Smu()
+    if not x.devices:
+        sys.stderr.write("No supported devices are plugged in.\n")
+        sys.exit(1)
+
+    if len(x.devices) > 1:
+        sys.stderr.write("Multiple devices are attached, calibration only works on a single device.\n")
+        sys.stderr.write("Please detach all devices except the one targeted for calibration.\n")
+        sys.exit(1)
+
+    dev = x.devices[0]
+
+    if options.cal_file is not None:
+        if not os.path.exists(options.cal_file):
+            parser.error("calibration file doesn't exist: %s".format(options.cal_file))
+        dev.write_calibration(options.cal_file)
+    elif options.show:
+        print(dev.calibration)
