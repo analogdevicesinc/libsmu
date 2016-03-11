@@ -53,7 +53,7 @@ int calibrate(Session* session, const char *file)
 {
 	int ret;
 
-	if (session->m_devices.empty()) {
+	if (session->m_devices.size() > 1) {
 		cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
 		cerr << "Please detach all devices except the one targeted for calibration." << endl;
 		return 1;
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 					device->info()->label, device->serial(), device->fwver(), device->hwver());
 	};
 
-	if (session->m_devices.size() == 0) {
+	if (session->m_devices.empty()) {
 		cerr << "smu: no supported devices plugged in" << endl;
 		return 1;
 	}
