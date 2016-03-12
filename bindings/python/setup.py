@@ -9,7 +9,7 @@ from setuptools import setup, find_packages, Extension
 # top level bindings directory
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
-TOPDIR = os.path.dirname(BINDINGS_DIR)
+TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
 
 def pkgconfig(*packages, **kw):
     """Translate pkg-config data to compatible Extension parameters."""

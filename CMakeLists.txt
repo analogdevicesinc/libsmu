@@ -47,7 +47,7 @@ set_target_properties(smu_bin PROPERTIES OUTPUT_NAME smu)
 target_link_libraries(smu_bin smu)
 
 if(BUILD_PYTHON)
-	add_subdirectory(python)
+	add_subdirectory(bindings/python)
 endif() # BUILD_PYTHON
 
 install(TARGETS smu smu_bin
