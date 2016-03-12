@@ -4,6 +4,9 @@ platform:
   - x86
   - x64
 
+matrix:
+  fast_finish: true
+
 install:
   - ps: >-
       If ($env:Platform -Match "x86") {
