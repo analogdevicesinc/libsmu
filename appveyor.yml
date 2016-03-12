@@ -17,12 +17,15 @@ install:
       }
   - ps: (new-object System.Net.WebClient).Downloadfile("http://downloads.sourceforge.net/mingw-w64/$env:MINGW_ARCHIVE", "c:\mingw.7z")
   - 7z x -y "c:\mingw.7z" -o"C:\" > nul
-  - set PATH=C:\Program Files (x86)\MSBuild\12.0\bin\;C:\%MINGW_DIR%\bin;%QTDIR%\bin;%PATH%
   - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/m1k/$env:LIBUSB_ARCHIVE", "c:\libusb.7z")
   - 7z x -y "c:\libusb.7z" -o"C:\libusb" > nul
 
   # wheel needs to be installed in order to build binary wheels for pysmu
   - C:\\Python27\python.exe -m pip install wheel"
+
+  # install innosetup for creating installers
+  - choco install InnoSetup
+  - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
 
 build_script:
   - cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_SYSTEM_PREFIX_PATH="C:" .
