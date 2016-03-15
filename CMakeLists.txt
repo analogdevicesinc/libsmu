@@ -18,6 +18,8 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 set(BUILD_PYTHON OFF CACHE BOOL "Build python support")
 # build command line smu application by default
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
+# create an OS X package
+set(BUILD_OSX_PKG OFF CACHE BOOL "Create an OS X package")
 
 if (NOT WIN32)
 	include("GNUInstallDirs")
@@ -44,8 +46,8 @@ if(BUILD_CLI)
 	add_subdirectory(src/cli)
 endif()
 
-# Create an installer if compiling for OS X
-if(APPLE)
+# Create an installer for OS X
+if(APPLE AND BUILD_OSX_PKG)
 	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}.pkg)
 	set(LIBSMU_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}-temp.pkg)
 	set(LIBSMU_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/distribution.xml)
@@ -62,7 +64,7 @@ if(APPLE)
 	mark_as_advanced(PRODUCTBUILD_EXECUTABLE)
 
 	add_custom_command(OUTPUT ${LIBSMU_TEMP_PKG} COMMAND ${PKGBUILD_EXECUTABLE}
-			--root ${CMAKE_CURRENT_BINARY_DIR}/Debug
+			--root ${CMAKE_CURRENT_BINARY_DIR}
 			--identifier libsmu --version ${LIBSMU_VERSION}
 			--install-location /System/Library/Frameworks ${LIBSMU_TEMP_PKG}
 		DEPENDS smu
