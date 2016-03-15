@@ -56,13 +56,6 @@ static void stream_samples(Session* session)
 int calibrate(Session* session, const char *file)
 {
 	int ret;
-
-	if (session->m_devices.size() > 1) {
-		cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
-		cerr << "Please detach all devices except the one targeted for calibration." << endl;
-		return 1;
-	}
-
 	auto dev = *(session->m_devices.begin());
 	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
 		ret = dev->write_calibration(file);
@@ -154,11 +147,6 @@ int main(int argc, char **argv)
 				device->fwver(), device->hwver());
 	};
 
-	if (session->m_devices.empty()) {
-		cerr << "smu: no supported devices plugged in" << endl;
-		return 1;
-	}
-
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
@@ -187,7 +175,12 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				// stream samples from an attached device to stdout
-				stream_samples(session);
+				if (!session->m_devices.empty()) {
+					stream_samples(session);
+				} else {
+					cerr << "smu: no supported devices plugged in" << endl;
+					return 1;
+				}
 				break;
 			case 'd':
 				// display calibration data from all attached m1k devices
@@ -195,6 +188,14 @@ int main(int argc, char **argv)
 				break;
 			case 'c':
 				// write calibration data to a single attached m1k device
+				if (session->m_devices.empty()) {
+					cerr << "smu: no supported devices plugged in" << endl;
+					return 1;
+				} else if (session->m_devices.size() > 1) {
+					cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
+					cerr << "Please detach all devices except the one targeted for calibration." << endl;
+					return 1;
+				}
 				if (calibrate(session, optarg))
 					return 1;
 				break;
