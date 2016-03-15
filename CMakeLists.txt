@@ -49,7 +49,7 @@ if(APPLE)
 	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}.pkg)
 	set(LIBSMU_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}-temp.pkg)
 	set(LIBSMU_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/distribution.xml)
-	configure_file(distribution.xml.cmakein ${LIBSMU_DISTRIBUTION_XML} @ONLY)
+	configure_file(dist/distribution.xml.cmakein ${LIBSMU_DISTRIBUTION_XML} @ONLY)
 
 	find_program(PKGBUILD_EXECUTABLE
 		NAMES pkgbuild
