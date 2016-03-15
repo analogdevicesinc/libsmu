@@ -46,6 +46,11 @@ if(BUILD_CLI)
 	add_subdirectory(src/cli)
 endif()
 
+# install pkgconfig file
+set(LIBSMU_PC ${CMAKE_CURRENT_BINARY_DIR}/libsmu.pc)
+configure_file(dist/libsmu.pc.cmakein ${LIBSMU_PC} @ONLY)
+install(FILES ${LIBSMU_PC} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
 # Create an installer for OS X
 if(APPLE AND BUILD_OSX_PKG)
 	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}.pkg)

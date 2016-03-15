@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libsmu
+Description: Library for interfacing with M1K devices
+Version: @LIBSMU_VERSION@
+
+Requires.private: libusb-1.0
+Libs: -L${libdir} -lsmu
+Cflags: -I${includedir}
