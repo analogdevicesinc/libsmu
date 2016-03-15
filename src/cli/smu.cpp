@@ -18,6 +18,15 @@ using std::endl;
 using std::string;
 using std::vector;
 
+static void list_devices(Session* session)
+{
+	for (auto dev: session->m_devices) {
+		printf("%s: serial %s: fw %s: hw %s\n",
+				dev->info()->label, dev->serial(),
+				dev->fwver(), dev->hwver());
+	}
+}
+
 static void display_usage(void)
 {
 	printf("smu: simple libsmu-based tool\n"
@@ -169,9 +178,7 @@ int main(int argc, char **argv)
 				break;
 			case 'l':
 				// list attached device info
-				for (auto dev: session->m_devices) {
-					printf("%s: serial %s: fw %s: hw %s\n", dev->info()->label, dev->serial(), dev->fwver(), dev->hwver());
-				}
+				list_devices(session);
 				break;
 			case 's':
 				// stream samples from an attached device to stdout
@@ -212,5 +219,11 @@ int main(int argc, char **argv)
 				exit(EXIT_FAILURE);
 		}
 	}
+
+	// default to listing attached devices if no option is specified
+	if (optind >= argc) {
+		list_devices(session);
+	}
+
 	exit(EXIT_SUCCESS);
 }
