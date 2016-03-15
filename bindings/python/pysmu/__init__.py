@@ -13,7 +13,7 @@ import _pysmu
 
 
 class Smu(object):
-    """TODO"""
+    """Enumerate and set up all supported devices."""
 
     def __init__(self):
         atexit.register(_pysmu.cleanup)
@@ -40,7 +40,7 @@ class Smu(object):
 
 
 class Device(object):
-    """TODO"""
+    """Individual device handle."""
 
     def __init__(self, serial, channels):
         self.serial = serial
@@ -110,7 +110,7 @@ class Device(object):
 
 
 class Channel(object):
-    """TODO"""
+    """Individual device channel."""
 
     def __init__(self, chan, dev_serial, signals):
         self.dev = dev_serial
@@ -118,7 +118,14 @@ class Channel(object):
         self.signals = {v: i for i, v in enumerate(signals)}
 
     def set_mode(self, mode):
-        """TODO"""
+        """Set the current channel mode.
+
+        Args:
+            mode (str): valid modes are 'd', 'v', and 'i' which relate to the
+                states of disabled, SVMI, and SIMV, respectively.
+
+        Raises: ValueError if an invalid mode is passed
+        """
         modes = {
             'd': 0,
             'v': 1,
@@ -132,7 +139,7 @@ class Channel(object):
             raise ValueError('invalid mode: {}'.format(mode))
 
     def arbitrary(self, waveform, repeat=0):
-        """TODO"""
+        """Output an arbitrary waveform."""
         wave = map(float, reduce(operator.add, [[s]*100*n for s, n in waveform]))
         return _pysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
 
