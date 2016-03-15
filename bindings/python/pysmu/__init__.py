@@ -35,34 +35,6 @@ class Smu(object):
         self.devices = {i: Device(self.serials[i], device_channels[i])
                         for i, v in enumerate(self.devices)}
 
-    def ctrl_transfer(self, device, bm_request_type, b_request, wValue, wIndex,
-                      data, wLength, timeout):
-        """TODO
-
-        Args:
-            device:
-            bm_request_type:
-            b_request:
-            wValue:
-            wIndex:
-            data:
-            wLength:
-            timeout:
-
-        Returns:
-        """
-        data = str(data)
-        if bm_request_type & 0x80 == 0x80:
-            if data == '0':
-                data = '\x00'*wLength
-        else:
-            wLength = 0
-        ret = _pysmu.ctrl_transfer(*args, **kwargs)
-        if bm_request_type & 0x80 == 0x80:
-            return map(ord, data)
-        else:
-            return ret
-
     def __repr__(self):
         return 'Devices: ' + str(self.devices)
 
@@ -73,6 +45,36 @@ class Device(object):
     def __init__(self, serial, channels):
         self.serial = serial
         self.channels = channels
+
+    def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
+                      data, wLength, timeout):
+        """Perform raw USB control transfers.
+
+        The arguments map directly to those of the underlying libusb call.
+
+        Args:
+            bm_request_type: the request type field for the setup packet
+            b_request: the request field for the setup packet
+            wValue: the value field for the setup packet
+            wIndex: the index field for the setup packet
+            data: a suitably-sized data buffer for either input or output
+            wLength: the length field for the setup packet
+            timeout: timeout (in millseconds) that this function should wait
+                before giving up due to no response being received
+
+        Returns: the number of bytes actually transferred
+        """
+        data = str(data)
+        if bm_request_type & 0x80 == 0x80:
+            if data == '0':
+                data = '\x00'*wLength
+        else:
+            wLength = 0
+        ret = _pysmu.ctrl_transfer(self.serial, *args, **kwargs)
+        if bm_request_type & 0x80 == 0x80:
+            return map(ord, data)
+        else:
+            return ret
 
     def get_samples(self, n_samples):
         """Query the device for a given number of samples from all channels.
