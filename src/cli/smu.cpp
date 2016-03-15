@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 					stream_samples(session);
 				} else {
 					cerr << "smu: no supported devices plugged in" << endl;
-					return 1;
+					exit(EXIT_FAILURE);
 				}
 				break;
 			case 'd':
@@ -190,27 +190,27 @@ int main(int argc, char **argv)
 				// write calibration data to a single attached m1k device
 				if (session->m_devices.empty()) {
 					cerr << "smu: no supported devices plugged in" << endl;
-					return 1;
+					exit(EXIT_FAILURE);
 				} else if (session->m_devices.size() > 1) {
 					cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
 					cerr << "Please detach all devices except the one targeted for calibration." << endl;
-					return 1;
+					exit(EXIT_FAILURE);
 				}
 				if (calibrate(session, optarg))
-					return 1;
+					exit(EXIT_FAILURE);
 				break;
 			case 'f':
 				// flash firmware image to all attached m1k devices
 				if (flash_firmware(session, optarg))
-					return 1;
+					exit(EXIT_FAILURE);
 				break;
 			case 'h':
 				display_usage();
 				break;
 			default:
 				display_usage();
-				return 1;
+				exit(EXIT_FAILURE);
 		}
 	}
-	return 0;
+	exit(EXIT_SUCCESS);
 }
