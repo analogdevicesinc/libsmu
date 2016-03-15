@@ -30,9 +30,9 @@ def pkgconfig(*packages, **kw):
     return kw
 
 ext_kwargs = dict(
-    include_dirs=[TOPDIR],
+    include_dirs=[os.path.join(TOPDIR, 'src')],
     extra_compile_args=['-std=c++11'],
-    library_dirs=[TOPDIR],
+    library_dirs=[os.path.join(TOPDIR, 'src')],
     libraries=['smu'],
 )
 
