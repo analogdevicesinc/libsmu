@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.7)
 project(libsmu CXX)
 
+# libsmu soname versioning
+set(LIBSMU_VERSION_MAJOR 0)
+set(LIBSMU_VERSION_MINOR 0)
+set(LIBSMU_VERSION_PATCH 0)
+
 # C++11 is required
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -pedantic")
 # debug flags
@@ -13,10 +18,9 @@ set(BUILD_PYTHON OFF CACHE BOOL "Build python support")
 # build command line smu application by default
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 
-# libsmu soname versioning
-set(LIBSMU_VERSION_MAJOR 0)
-set(LIBSMU_VERSION_MINOR 0)
-set(LIBSMU_VERSION_PATCH 0)
+if (NOT WIN32)
+	include("GNUInstallDirs")
+endif()
 
 add_subdirectory(src)
 if(BUILD_PYTHON)
