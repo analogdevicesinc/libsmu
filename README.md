@@ -1,40 +1,49 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/p30uj8rqulrxsqvs/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libsmu/branch/master)
 
-### LibSMU
+### libsmu
 
-LibSMU contains abstractions for streaming data to and from USB-connected
+libsmu contains abstractions for streaming data to and from USB-connected
 analog interface devices, currently supporting the Nonolith CEE and Analog
 Devices' ADALM1000. Building off of LibUSB for cross-platform operation, it
 offers the sourcing of repeated waveforms, configuration of hardware, and
 measuring of signals.
 
-This project also includes 'pysmu,' an initial binding of LibSMU for Python2.7.
+This project also includes 'pysmu,' an initial binding of libsmu for Python2.7.
 
-#### Building LibSMU
+#### Building libsmu
 
-With libusb-1.0, and clang++, building LibSMU and the demo 'smu' executable is
-as simple as typing `make`.
-
-With python2.7 and associated development headers installed, building pysmu.so,
-importable as `import pysmu` is as simple as typing `make python`.
-
-##### Notes on Mac OS X
-
-First install [homebrew](http://brew.sh). Then use brew to install libusb, pkg-config, and python:
-
-```
-brew install libusb pkg-config python
-```
-
-Finally build libSMU:
+Build dependencies are cmake, pkgconfig, and libusb-1.0. To build and install
+the library and command line application use the following commands:
 
 ```
 git clone https://github.com/analogdevicesinc/libsmu.git
-cd libsmu
+mkdir libsmu/build && cd libsmu/build
+cmake ..
 make
+sudo make install
 ```
 
-##### Notes on Windows
+Bindings for python2.7 are also available and are built if enabled via the
+following cmake command before running make:
+
+```
+cmake -DBUILD_PYTHON=ON ..
+```
+
+##### OS X
+
+For systems running OS X, first install [homebrew](http://brew.sh). Then use
+brew to install cmake, libusb, pkg-config, and optionally python (to build the
+python bindings):
+
+```
+brew install cmake libusb pkg-config python
+```
+
+Then the command line instructions in the previous section should work on OS X
+as well.
+
+##### Windows
 
 On Windows, it's easier to use the build artifacts provided by Appveyor instead
 of rolling your own. Both 32 bit and 64 bit libraries built using mingw are
