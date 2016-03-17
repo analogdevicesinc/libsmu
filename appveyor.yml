@@ -25,6 +25,8 @@ build_script:
   - cmake -G "%TOOLCHAIN%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\libusb-1.0.a" \
+    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\include" \
     .
   - cmake --build . --config Release
 
