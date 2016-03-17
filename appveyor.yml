@@ -2,26 +2,16 @@ os: unstable
 
 environment:
   matrix:
-    - TOOLCHAIN: vs
-
-platform:
-  - x86
-  - x64
+    - TOOLCHAIN: "Visual Studio 14 2015"
+      LIBUSB_ARCHIVE: "libusb-1.0-win-hp-i686.7z"
+    - TOOLCHAIN: "Visual Studio 14 2015 Win64"
+      LIBUSB_ARCHIVE: "libusb-1.0-win-hp-x86_64.7z"
 
 matrix:
   fast_finish: true
 
 install:
-  - ps: >-
-      If ($env:Platform -Match "x86") {
-        $env:GENERATOR="Visual Studio 14 2015"
-        $env:LIBUSB_ARCHIVE="libusb-1.0-win-hp-i686.7z"
-      } Else {
-        $env:GENERATOR="Visual Studio 14 2015 Win64"
-        $env:LIBUSB_ARCHIVE="libusb-1.0-win-hp-x86_64.7z"
-      }
-
-  - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/m1k/$env:LIBUSB_ARCHIVE", "c:\libusb.7z")
+  - appveyor DownloadFile "http://swdownloads.analog.com/cse/m1k/%LIBUSB_ARCHIVE%" -FileName "C:\libusb.7z"
   - 7z x -y "C:\libusb.7z" -o"C:\libusb" > nul
 
   # wheel needs to be installed in order to build binary wheels for pysmu
@@ -32,7 +22,7 @@ install:
   - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
 
 build_script:
-  - cmake -G $env:GENERATOR \
+  - cmake -G "%TOOLCHAIN%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     .
