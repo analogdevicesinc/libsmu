@@ -17,7 +17,10 @@ endif()
 # e.g. http://www.libusb.org/ticket/2.
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
-set(LIBS_TO_LINK m ${LIBUSB_LIBRARIES})
+set(LIBS_TO_LINK ${LIBUSB_LIBRARIES})
+if(CMAKE_COMPILER_IS_GNUCXX)
+	SET(LIBS_TO_LINK ${LIBS_TO_LINK} m)
+endif()
 set(LIBSMU_CPPFILES session.cpp device_cee.cpp device_m1000.cpp)
 set(LIBSMU_HEADERS libsmu.hpp)
 
