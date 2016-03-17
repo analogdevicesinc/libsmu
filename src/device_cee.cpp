@@ -57,7 +57,7 @@ struct IN_sample {
 	int16_t bv() { return signextend12((bih_bvh&0x0f)<<8) | bvl; }
 	int16_t ai() { return signextend12((aih_avh&0xf0)<<4) | ail; }
 	int16_t bi() { return signextend12((bih_bvh&0xf0)<<4) | bil; }
-} __attribute__((packed));
+} __packed;
 
 #define IN_SAMPLES_PER_PACKET 10
 #define FLAG_PACKET_DROPPED (1<<0)
@@ -68,7 +68,7 @@ typedef struct IN_packet {
 	uint8_t flags;
 	uint8_t mode_seq;
 	IN_sample data[10];
-} __attribute__((packed)) IN_packet;
+} __packed IN_packet;
 
 #define OUT_SAMPLES_PER_PACKET 10
 struct OUT_sample {
@@ -78,13 +78,13 @@ struct OUT_sample {
 		bl = b & 0xff;
 		bh_ah = ((b>>4)&0xf0) |	(a>>8);
 	}
-} __attribute__((packed));
+} __packed;
 
 typedef struct OUT_packet {
 	uint8_t mode_a;
 	uint8_t mode_b;
 	OUT_sample data[10];
-} __attribute__((packed)) OUT_packet;
+} __packed OUT_packet;
 
 #define EEPROM_VALID_MAGIC 0x90e26cee
 #define EEPROM_FLAG_USB_POWER (1<<0)
@@ -95,7 +95,7 @@ typedef struct CEE_version_descriptor {
 	uint8_t flags;
 	uint8_t per_ns;
 	uint8_t min_per;
-} __attribute__((packed)) CEE_version_descriptor;
+} __packed CEE_version_descriptor;
 
 CEE_Device::CEE_Device(Session* s, libusb_device* device):
 	Device(s, device),

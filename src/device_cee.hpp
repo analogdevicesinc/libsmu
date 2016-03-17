@@ -54,13 +54,13 @@ protected:
 	Transfers m_in_transfers;
 	Transfers m_out_transfers;
 
-	struct EEPROM_cal{
+	struct EEPROM_cal {
 		uint32_t magic;
 		int8_t offset_a_v, offset_a_i, offset_b_v, offset_b_i;
 		int16_t dac200_a, dac200_b, dac400_a, dac400_b;
 		uint32_t current_gain_a, current_gain_b;
 		uint8_t flags; // bit 0: USB powered
-	} __attribute__((packed));
+	} __packed;
 
 	void read_calibration();
 	EEPROM_cal m_cal;

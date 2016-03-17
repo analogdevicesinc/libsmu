@@ -20,6 +20,12 @@
 	do { if (DEBUG_TEST) fprintf(stderr, "DEBUG: %s:%d: " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__); } while(0);
 #define debug(...) _debug(__VA_ARGS__, "")
 
+#ifdef __GNUC__
+#define __packed __attribute__((packed))
+#else
+#define __packed
+#endif
+
 struct sl_session;
 struct sl_device;
 struct sl_signal;
