@@ -21,9 +21,7 @@ set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 # create an OS X package
 set(BUILD_OSX_PKG OFF CACHE BOOL "Create an OS X package")
 
-if (NOT WIN32)
-	include("GNUInstallDirs")
-endif()
+include("GNUInstallDirs")
 
 # handle RPATH issues on OS X
 if(APPLE)
