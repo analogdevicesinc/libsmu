@@ -3,16 +3,14 @@ os: unstable
 environment:
   matrix:
     - TOOLCHAIN: "Visual Studio 14 2015"
-      LIBUSB_ARCHIVE: "libusb-1.0-win-hp-i686.7z"
     - TOOLCHAIN: "Visual Studio 14 2015 Win64"
-      LIBUSB_ARCHIVE: "libusb-1.0-win-hp-x86_64.7z"
 
 matrix:
   fast_finish: true
 
 install:
-  - appveyor DownloadFile "http://swdownloads.analog.com/cse/m1k/%LIBUSB_ARCHIVE%" -FileName "C:\libusb.7z"
-  - 7z x -y "C:\libusb.7z" -o"C:\libusb" > nul
+  # libusb patched for windows hotplug support
+  - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
 
   # wheel needs to be installed in order to build binary wheels for pysmu
   - C:\\Python27\python.exe -m pip install wheel"
@@ -22,11 +20,17 @@ install:
   - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
 
 build_script:
+  # build our own libusb version with hotplug support until upstream merges related patches
+  - ps: pushd "C:\libusb"
+  - git checkout hotplug
+  - msbuild msvc\libusb_2013.sln /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - ps: popd
+
   - cmake -G "%TOOLCHAIN%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\libusb-1.0.a" \
-    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\include" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.lib" \
+    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     .
   - cmake --build . --config Release
 
