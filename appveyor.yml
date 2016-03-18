@@ -23,7 +23,7 @@ build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
   - ps: pushd "C:\libusb"
   - git checkout hotplug
-  - msbuild msvc\libusb_2013.sln /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
   - cmake -G "%TOOLCHAIN%" \
