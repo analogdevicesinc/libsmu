@@ -8,8 +8,8 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <thread>
 #include <string.h>
-#include <unistd.h>
 #include <getopt.h>
 
 using std::cout;
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 			case 'p':
 				// wait around doing nothing (hotplug testing)
 				while (1)
-					sleep(10);
+					std::this_thread::sleep_for(std::chrono::seconds(10));
 				break;
 			case 'l':
 				// list attached device info
