@@ -1,6 +1,9 @@
 os: unstable
 
 environment:
+  global:
+    PYTHON: "C:\\Python27"
+    DISTUTILS_USE_SDK: "1"
   matrix:
     - TOOLCHAIN: "Visual Studio 14 2015"
     - TOOLCHAIN: "Visual Studio 14 2015 Win64"
@@ -13,7 +16,7 @@ install:
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
 
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - C:\\Python27\python.exe -m pip install wheel
+  - "%PYTHON%\\python.exe -m pip install wheel"
 
   # install innosetup for creating installers
   - choco install InnoSetup
@@ -45,7 +48,9 @@ build_script:
 
   # build python wheel
   - ps: pushd bindings/python
-  - C:\\Python27\python.exe setup.py bdist_wheel
+  - set DISTUTILS_USE_SDK=1
+  - set MSSdk=1
+  - "%PYTHON%\\python.exe setup.py bdist_wheel"
   - appveyor PushArtifact dist/*
   - ps: popd
 
