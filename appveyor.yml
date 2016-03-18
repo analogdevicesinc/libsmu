@@ -1,17 +1,25 @@
 os: Visual Studio 2015
 
+platform:
+  - Win32
+  - x64
+
 environment:
   global:
     PYTHON: "C:\\Python27"
     DISTUTILS_USE_SDK: "1"
-  matrix:
-    - TOOLCHAIN: "Visual Studio 14 2015"
-    - TOOLCHAIN: "Visual Studio 14 2015 Win64"
 
 matrix:
   fast_finish: true
 
 install:
+  - ps: >-
+      If ($env:Platform -Match "Win32") {
+        $env:CMAKE_GENERATOR="Visual Studio 14 2015"
+      } Else {
+        $env:CMAKE_GENERATOR="Visual Studio 14 2015 Win64"
+      }
+
   # libusb patched for windows hotplug support
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
 
@@ -29,7 +37,7 @@ build_script:
   - msbuild msvc\libusb_2015.sln /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
-  - cmake -G "%TOOLCHAIN%" \
+  - cmake -G "%CMAKE_GENERATOR%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.lib" \
