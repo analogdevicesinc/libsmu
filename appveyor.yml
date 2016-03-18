@@ -1,8 +1,8 @@
 os: Visual Studio 2015
 
 platform:
-  - Win32
   - x64
+  - Win32
 
 environment:
   global:
@@ -16,10 +16,10 @@ matrix:
 install:
   - ps: >-
       If ($env:Platform -Match "Win32") {
-        $env:PYTHON_ARCH="32"
+        $env:PYTHON_ARCH="x86"
         $env:CMAKE_GENERATOR="Visual Studio 14 2015"
       } Else {
-        $env:PYTHON_ARCH="64"
+        $env:PYTHON_ARCH="x64"
         $env:CMAKE_GENERATOR="Visual Studio 14 2015 Win64"
       }
 
@@ -51,7 +51,7 @@ build_script:
   - cmake -G "%CMAKE_GENERATOR%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\%Platform%\\Release\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     .
   - cmake --build . --config Release
