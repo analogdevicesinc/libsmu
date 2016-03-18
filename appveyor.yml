@@ -13,7 +13,7 @@ install:
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
 
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - C:\\Python27\python.exe -m pip install wheel"
+  - C:\\Python27\python.exe -m pip install wheel
 
   # install innosetup for creating installers
   - choco install InnoSetup
@@ -34,15 +34,20 @@ build_script:
     .
   - cmake --build . --config Release
 
+  # create libsmu zipfile
+  - mkdir c:\libsmu
+  - copy src\libsmu.hpp c:\libsmu\
+  - copy src\Release\libsmu.* c:\libsmu\
+  - 7z a "c:\libsmu.zip" c:\libsmu
+  - appveyor PushArtifact c:\libsmu.zip
+
+  # create libsmu installer
+
   # build python wheel
   - ps: pushd bindings/python
   - C:\\Python27\python.exe setup.py bdist_wheel
   - appveyor PushArtifact dist/*
   - ps: popd
-
-  # create libsmu installer
-
-  # create libsmu zipfile
 
 cache:
   - C:\mingw.7z -> appveyor.yml
