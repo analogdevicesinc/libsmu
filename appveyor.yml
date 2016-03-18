@@ -35,10 +35,14 @@ build_script:
   - cmake --build . --config Release
 
   # build python wheel
-  - cd bindings/python
+  - ps: pushd bindings/python
   - C:\\Python27\python.exe setup.py bdist_wheel
   - appveyor PushArtifact dist/*
+  - ps: popd
 
+  # create libsmu installer
+
+  # create libsmu zipfile
 
 cache:
   - C:\mingw.7z -> appveyor.yml

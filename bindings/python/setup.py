@@ -36,11 +36,14 @@ ext_kwargs = dict(
     libraries=['smu'],
 )
 
+if not sys.platform == 'win32':
+    ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
+
 extensions = []
 extensions.extend([
     Extension(
         'pysmu._pysmu',
-        [os.path.join(BINDINGS_DIR, 'src', 'pysmu.cpp')], **pkgconfig('libusb-1.0', **ext_kwargs)),
+        [os.path.join(BINDINGS_DIR, 'src', 'pysmu.cpp')], **ext_kwargs),
     ])
 
 setup(
