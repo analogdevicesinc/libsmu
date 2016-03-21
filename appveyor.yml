@@ -70,7 +70,9 @@ build_script:
   - "vcvarsall.bat %PYTHON_ARCH%"
   - "python setup.py build_ext --compiler=msvc -L ../../src/Release"
   - "python setup.py bdist_wheel"
-  - appveyor PushArtifact dist/*
+  - "python setup.py bdist --format zip"
+  - "python setup.py bdist --format msi"
+  - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: popd
 
 cache:
