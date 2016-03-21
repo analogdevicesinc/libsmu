@@ -56,6 +56,7 @@ build_script:
   - mkdir c:\libsmu
   - copy src\libsmu.hpp c:\libsmu\
   - copy src\Release\libsmu.* c:\libsmu\
+  - copy src\cli\Release\smu.exe c:\libsmu\
   - 7z a "c:\libsmu.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu.zip
 
