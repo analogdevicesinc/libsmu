@@ -68,7 +68,7 @@ build_script:
   - set MSSdk=1
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
   - "vcvarsall.bat %PYTHON_ARCH%"
-  - "python setup.py build_ext --compiler=msvc -L ../../src/Release -llibsmu"
+  - "python setup.py build_ext --compiler=msvc -L ../../src/Release"
   - "python setup.py bdist_wheel"
   - appveyor PushArtifact dist/*
   - ps: popd
