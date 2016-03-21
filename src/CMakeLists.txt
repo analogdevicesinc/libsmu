@@ -13,6 +13,10 @@ else()
 	find_path(LIBUSB_INCLUDE_DIRS libusb-1.0/libusb.h)
 endif()
 
+if(NOT(CMAKE_VERSION LESS 3.4) AND MSVC)
+	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
 # Classify libusb headers as system headers to suppress various warnings,
 # e.g. http://www.libusb.org/ticket/2.
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
