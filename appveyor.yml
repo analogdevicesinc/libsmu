@@ -4,10 +4,6 @@ platform:
   - Win32
   - x64
 
-environment:
-  global:
-    PYTHON: "C:\\Python27"
-
 matrix:
   fast_finish: true
 
@@ -15,8 +11,12 @@ install:
   - ps: >-
       If ($env:Platform -Match "Win32") {
         $env:CMAKE_GENERATOR="Visual Studio 14 2015"
+        $env:PYTHON="C:\\Python27"
+        $env:PYTHON_ARCH="x86"
       } Else {
         $env:CMAKE_GENERATOR="Visual Studio 14 2015 Win64"
+        $env:PYTHON="C:\\Python27-x64"
+        $env:PYTHON_ARCH="x64"
       }
 
   # libusb patched for windows hotplug support
@@ -66,8 +66,9 @@ build_script:
   - ps: pushd bindings/python
   - set DISTUTILS_USE_SDK=1
   - set MSSdk=1
-  - "python --version"
-  - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;%PATH%
+  - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
+  - "vcvarsall.bat %PYTHON_ARCH%"
+  - "python setup.py build_ext --compiler=msvc -L ../../src/Release -llibsmu"
   - "python setup.py bdist_wheel"
   - appveyor PushArtifact dist/*
   - ps: popd
