@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.7)
-project(libsmu CXX)
+project(libsmu CXX C)
 
 # libsmu soname versioning
 set(LIBSMU_VERSION_MAJOR 0)

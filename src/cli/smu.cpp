@@ -10,7 +10,12 @@
 #include <vector>
 #include <thread>
 #include <string.h>
+
+#ifdef WIN32
+#include "getopt.h"
+#else
 #include <getopt.h>
+#endif
 
 using std::cout;
 using std::cerr;

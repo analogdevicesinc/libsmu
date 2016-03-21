@@ -1,6 +1,14 @@
 include_directories(..)
 
-add_executable(smu_bin smu.cpp)
+include(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS(getopt GETOPT_FOUND)
+
+if(GETOPT_FOUND)
+	add_executable(smu_bin smu.cpp)
+else(GETOPT_FOUND)
+	# use internal getopt implementation
+	add_executable(smu_bin smu.cpp getopt.c)
+endif(GETOPT_FOUND)
 set_target_properties(smu_bin PROPERTIES OUTPUT_NAME smu)
 target_link_libraries(smu_bin smu)
 
