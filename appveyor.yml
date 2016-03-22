@@ -12,11 +12,11 @@ install:
       If ($env:Platform -Match "Win32") {
         $env:CMAKE_GENERATOR="Visual Studio 14 2015"
         $env:PYTHON="C:\\Python27"
-        $env:PYTHON_ARCH="x86"
+        $env:ARCH="x86"
       } Else {
         $env:CMAKE_GENERATOR="Visual Studio 14 2015 Win64"
         $env:PYTHON="C:\\Python27-x64"
-        $env:PYTHON_ARCH="x64"
+        $env:ARCH="x64"
       }
 
   # libusb patched for windows hotplug support
@@ -57,19 +57,20 @@ build_script:
   - copy src\libsmu.hpp c:\libsmu
   - copy src\Release\libsmu.* c:\libsmu
   - copy src\cli\Release\smu.exe c:\libsmu
-  - 7z a "c:\libsmu-%PYTHON_ARCH%.zip" c:\libsmu
-  - appveyor PushArtifact c:\libsmu-%PYTHON_ARCH%.zip
+  - 7z a "c:\libsmu-%ARCH%.zip" c:\libsmu
+  - appveyor PushArtifact c:\libsmu-%ARCH%.zip
 
   # create libsmu installer
   - iscc C:\projects\libsmu\libsmu.iss
-  - appveyor PushArtifact C:\libsmu-setup.exe
+  - mv C:\libsmu-setup.exe C:\libsmu-setup-%ARCH%.exe
+  - appveyor PushArtifact C:\libsmu-setup-%ARCH%.exe
 
   # build python wheel
   - ps: pushd bindings/python
   - set DISTUTILS_USE_SDK=1
   - set MSSdk=1
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
-  - "vcvarsall.bat %PYTHON_ARCH%"
+  - "vcvarsall.bat %ARCH%"
   - "python setup.py build_ext --compiler=msvc -L ../../src/Release"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
