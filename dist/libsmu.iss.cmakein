@@ -1,5 +1,5 @@
 [Setup]
-AppId={{D386A5F6-D38D-4738-94A2-E163DC1896F1}
+AppId={{351792B2-1445-4489-945F-DD0649DD403F}
 AppName="libsmu"
 AppVersion="@LIBSMU_VERSION@"
 AppPublisher="Analog Devices, Inc."
@@ -43,12 +43,8 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "C:\projects\libsmu\build-win32\Release\libsmu.dll"; DestDir: "{sys}"; Check: not Is64BitInstallMode
-Source: "C:\projects\libsmu\build-win64\Release\libsmu.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode
+Source: "C:\libsmu\libsmu.dll"; DestDir: "{sys}";
 
-Source: "C:\projects\libsmu\build-win32\Release\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib"; Check: not Is64BitInstallMode
-Source: "C:\projects\libsmu\build-win64\Release\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
-Source: "C:\projects\libsmu\src\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\include"
-
-Source: "C:\libs\32\libusb-1.0.dll"; DestDir: "{sys}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\libs\64\libusb-1.0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Check: not Is64BitInstallMode
+Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Check: Is64BitInstallMode
+Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"

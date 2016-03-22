@@ -61,6 +61,8 @@ build_script:
   - appveyor PushArtifact c:\libsmu-%PYTHON_ARCH%.zip
 
   # create libsmu installer
+  - iscc C:\projects\libsmu\libsmu.iss
+  - appveyor PushArtifact C:\libsmu-setup.exe
 
   # build python wheel
   - ps: pushd bindings/python
