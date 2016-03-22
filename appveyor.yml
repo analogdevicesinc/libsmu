@@ -74,6 +74,3 @@ build_script:
   - "python setup.py bdist --format msi"
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: popd
-
-cache:
-  - C:\mingw.7z -> appveyor.yml
