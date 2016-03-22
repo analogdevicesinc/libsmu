@@ -30,6 +30,9 @@ following cmake command before running make:
 cmake -DBUILD_PYTHON=ON ..
 ```
 
+They can also be built manually via the setup.py script in the regular python
+manner if libsmu has already been built and/or installed on the host machine.
+
 ##### OS X
 
 For systems running OS X, first install [homebrew](http://brew.sh). Then use
