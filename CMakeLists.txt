@@ -51,7 +51,7 @@ endif()
 
 # windows installer file
 if(WIN32)
-	configure_file(dist/libsmu.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/libsmu.iss @ONLY)
+	configure_file(dist/libsmu.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/dist/libsmu.iss @ONLY)
 endif()
 
 # install pkgconfig file

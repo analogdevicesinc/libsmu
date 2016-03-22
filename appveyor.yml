@@ -61,7 +61,7 @@ build_script:
   - appveyor PushArtifact c:\libsmu-%ARCH%.zip
 
   # create libsmu installer
-  - iscc C:\projects\libsmu\libsmu.iss
+  - iscc C:\projects\libsmu\dist\libsmu.iss
   - mv C:\libsmu-setup.exe C:\libsmu-setup-%ARCH%.exe
   - appveyor PushArtifact C:\libsmu-setup-%ARCH%.exe
 
