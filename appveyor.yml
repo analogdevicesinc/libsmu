@@ -1,4 +1,5 @@
 os: Visual Studio 2015
+clone_depth: 1
 
 platform:
   - Win32
@@ -65,7 +66,7 @@ build_script:
   - mv C:\libsmu-setup.exe C:\libsmu-setup-%ARCH%.exe
   - appveyor PushArtifact C:\libsmu-setup-%ARCH%.exe
 
-  # build python wheel
+  # build python dist files
   - ps: pushd bindings/python
   - set DISTUTILS_USE_SDK=1
   - set MSSdk=1
