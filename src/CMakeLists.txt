@@ -29,7 +29,10 @@ set(LIBSMU_CPPFILES session.cpp device_cee.cpp device_m1000.cpp)
 set(LIBSMU_HEADERS libsmu.hpp)
 
 add_library(smu ${LIBSMU_CPPFILES} ${LIBSMU_HEADERS})
-set_target_properties(smu PROPERTIES VERSION ${LIBSMU_VERSION} SOVERSION ${LIBSMU_VERSION_MAJOR} PUBLIC_HEADER ${LIBSMU_HEADERS})
+set_target_properties(smu PROPERTIES
+	VERSION ${LIBSMU_VERSION}
+	SOVERSION ${LIBSMU_VERSION_MAJOR}
+	PUBLIC_HEADER ${LIBSMU_HEADERS})
 target_link_libraries(smu ${LIBS_TO_LINK})
 
 # force outputted library name for Visual Studio
