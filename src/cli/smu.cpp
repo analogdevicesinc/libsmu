@@ -216,6 +216,7 @@ int main(int argc, char **argv)
 				}
 				if (calibrate(session, optarg))
 					exit(EXIT_FAILURE);
+				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
 				// flash firmware image to all attached m1k devices
