@@ -12,7 +12,7 @@ OutputDir="C:\"
 DefaultDirName={pf}\libsmu
 Compression=lzma
 SolidCompression=yes
-ChangesEnvironment=true
+ChangesEnvironment=yes
 ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
@@ -44,23 +44,24 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "C:\libsmu\libsmu.dll"; DestDir: "{sys}";
+Source: "C:\libsmu\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "C:\libsmu\libsmu.dll"; DestDir: "{app}";
 Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Check: not Is64BitInstallMode
 Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Check: Is64BitInstallMode
 Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"
-Source: "C:\libsmu\smu.exe"; DestDir: "{app}\bin";
+Source: "C:\libsmu\smu.exe"; DestDir: "{app}";
 
 [Tasks]
-Name: modifypath; Description: Add application directory to your environmental path; Flags: unchecked
+Name: modifypath; Description: Add application directory to your environmental path (required);
 
 [Code]
 const
 	ModPathName = 'modifypath';
-	ModPathType = 'user';
+	ModPathType = 'system';
 
 function ModPathDir(): TArrayOfString;
 begin
 	setArrayLength(Result, 1)
-	Result[0] := ExpandConstant('{app}\bin');
+	Result[0] := ExpandConstant('{app}');
 end;
 #include "modpath.iss"
