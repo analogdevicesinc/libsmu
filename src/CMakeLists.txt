@@ -13,7 +13,7 @@ else()
 	find_path(LIBUSB_INCLUDE_DIRS libusb-1.0/libusb.h)
 endif()
 
-if(NOT(CMAKE_VERSION LESS 3.4) AND MSVC)
+if(MSVC)
 	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
