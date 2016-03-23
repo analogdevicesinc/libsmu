@@ -25,10 +25,14 @@ using std::vector;
 
 static void list_devices(Session* session)
 {
-	for (auto dev: session->m_devices) {
-		printf("%s: serial %s: fw %s: hw %s\n",
-				dev->info()->label, dev->serial(),
-				dev->fwver(), dev->hwver());
+	if (session->m_devices.empty()) {
+		cout << "smu: no supported devices plugged in" << endl;
+	} else {
+		for (auto dev: session->m_devices) {
+			printf("%s: serial %s: fw %s: hw %s\n",
+					dev->info()->label, dev->serial(),
+					dev->fwver(), dev->hwver());
+		}
 	}
 }
 
