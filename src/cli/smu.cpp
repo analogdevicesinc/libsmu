@@ -133,6 +133,12 @@ int main(int argc, char **argv)
 	int opt, ret = 0;
 	int option_index = 0;
 
+	// display usage info if no arguments are specified
+	if (argc == 1) {
+		display_usage();
+		exit(EXIT_FAILURE);
+	}
+
 	Session* session = new Session();
 	// add all available devices to the session at startup
 	if (session->update_available_devices()) {
@@ -223,11 +229,6 @@ int main(int argc, char **argv)
 				display_usage();
 				exit(EXIT_FAILURE);
 		}
-	}
-
-	// default to listing attached devices if no option is specified
-	if (optind >= argc) {
-		list_devices(session);
 	}
 
 	exit(EXIT_SUCCESS);
