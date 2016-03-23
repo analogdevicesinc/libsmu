@@ -25,6 +25,8 @@ set(BUILD_PYTHON OFF CACHE BOOL "Build python support")
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 # create an OS X package
 set(BUILD_OSX_PKG OFF CACHE BOOL "Create an OS X package")
+# install udev rules
+set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
 
 include("GNUInstallDirs")
 
@@ -58,6 +60,13 @@ endif()
 set(LIBSMU_PC ${CMAKE_CURRENT_BINARY_DIR}/libsmu.pc)
 configure_file(dist/libsmu.pc.cmakein ${LIBSMU_PC} @ONLY)
 install(FILES ${LIBSMU_PC} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+
+# install udev rules on Linux
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND INSTALL_UDEV_RULES)
+	set(LIBSMU_UDEV_RULES "${CMAKE_CURRENT_SOURCE_DIR}/dist/53-adi-m1k-usb.rules")
+	set(UDEV_RULES_PATH "/etc/udev/rules.d" CACHE STRING "Target directory for udev rule installation.")
+	install(FILES ${LIBSMU_UDEV_RULES} DESTINATION ${UDEV_RULES_PATH})
+endif()
 
 # Create an installer for OS X
 if(APPLE AND BUILD_OSX_PKG)

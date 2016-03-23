@@ -1,0 +1,2 @@
+# allow "plugdev" group read/write access to ADI M1K devices
+SUBSYSTEM=="usb", ATTRS{idVendor}=="064b", ATTRS{idProduct}=="784c", MODE="0664", GROUP="plugdev"
