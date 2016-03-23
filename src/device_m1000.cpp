@@ -127,6 +127,17 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 	int cnt_n, cnt_p;
 	float gain_p, gain_n;
 
+	// reset calibration to the defaults if NULL is passed
+	if (cal_file_name == NULL) {
+		for(int i = 0; i < 8; i++) {
+			m_cal.offset[i] = 0.0f;
+			m_cal.gain_p[i] = 1.0f;
+			m_cal.gain_n[i] = 1.0f;
+		}
+		cal_records_no = 8;
+		goto write_cal;
+	}
+
 	fp = fopen(cal_file_name, "r");
 	if(!fp) {
 		return -1;
@@ -166,20 +177,16 @@ int M1000_Device::write_calibration(const char* cal_file_name) {
 		}
 	}
 
+	fclose(fp);
+
+write_cal:
 	if(cal_records_no != 8) {
-		for(int i = 0; i < 8; i++) {
-			m_cal.offset[i] = 0.0f;
-			m_cal.gain_p[i] = 1.0f;
-			m_cal.gain_n[i] = 1.0f;
-		}
+		// invalid calibration file
 		ret = -EINVAL;
-	}
-	else {
+	} else {
 		m_cal.eeprom_valid = EEPROM_VALID;
 		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	}
-
-	fclose(fp);
 
 	return ret;
 }

@@ -46,6 +46,7 @@ static void display_usage(void)
 		"  -s, --stream                 stream samples to stdout from a single attached device\n"
 		"  -c, --calibrate <cal file>   write calibration data to a single attached device\n"
 		"  -d, --display-calibration    display calibration data from all attached devices\n"
+		"  -r, --reset-calibration      reset calibration data to the defaults on all attached devices\n"
 		"  -f, --flash <firmware image> flash firmware image to all attached devices\n");
 }
 
@@ -79,7 +80,7 @@ int calibrate(Session* session, const char *file)
 		ret = dev->write_calibration(file);
 		if (ret <= 0) {
 			if (ret == -EINVAL)
-				cerr << "smu: invalid calibration data, overwritten using defaults" << endl;
+				cerr << "smu: invalid calibration data format" << endl;
 			else
 				perror("smu: failed to write calibration data");
 			return 1;
@@ -117,6 +118,21 @@ void display_calibration(Session* session)
 			printf("\n");
 		}
 	}
+}
+
+int reset_calibration(Session* session)
+{
+	int ret;
+	for (auto dev: session->m_devices) {
+		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
+			ret = dev->write_calibration(NULL);
+			if (ret <= 0) {
+				perror("smu: failed to write calibration data");
+				return 1;
+			}
+		}
+	}
+	return 0;
 }
 
 int flash_firmware(Session* session, const char *file)
@@ -178,12 +194,13 @@ int main(int argc, char **argv)
 		{"list",     no_argument, 0, 'l'},
 		{"stream",   no_argument, 0, 's'},
 		{"display-calibration", no_argument, 0, 'd'},
+		{"reset-calibration", no_argument, 0, 'r'},
 		{"calibrate", required_argument, 0, 'c'},
 		{"flash", required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	};
 
-	while ((opt = getopt_long(argc, argv, "hplsdc:f:",
+	while ((opt = getopt_long(argc, argv, "hplsdrc:f:",
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
@@ -207,6 +224,17 @@ int main(int argc, char **argv)
 			case 'd':
 				// display calibration data from all attached m1k devices
 				display_calibration(session);
+				break;
+			case 'r':
+				// reset calibration data of all attached m1k devices
+				if (session->m_devices.empty()) {
+					cerr << "smu: no supported devices plugged in" << endl;
+					exit(EXIT_FAILURE);
+				}
+				if (reset_calibration(session)) {
+					exit(EXIT_FAILURE);
+				}
+				cout << "smu: successfully reset calibration data" << endl;
 				break;
 			case 'c':
 				// write calibration data to a single attached m1k device
