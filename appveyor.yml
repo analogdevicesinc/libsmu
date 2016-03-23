@@ -48,7 +48,7 @@ build_script:
   - cmake -G "%CMAKE_GENERATOR%" \
     -DCMAKE_BUILD_TYPE:STRING=Release \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\%Platform%\\Release\\lib\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\%Platform%\\Release\\dll\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     .
   - cmake --build . --config Release
@@ -58,6 +58,7 @@ build_script:
   - copy src\libsmu.hpp c:\libsmu
   - copy src\Release\libsmu.* c:\libsmu
   - copy src\cli\Release\smu.exe c:\libsmu
+  - copy "C:\\libusb\\%Platform%\\Release\\dll\\libusb-1.0.dll" c:\libsmu
   - 7z a "c:\libsmu-%ARCH%.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu-%ARCH%.zip
 
