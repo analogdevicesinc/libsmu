@@ -1,30 +1,65 @@
 os: Visual Studio 2015
 clone_depth: 1
 
-platform:
-  - Win32
-  - x64
-
-matrix:
-  fast_finish: true
-
 install:
-  - ps: >-
-      If ($env:Platform -Match "Win32") {
-        $env:CMAKE_GENERATOR="Visual Studio 14 2015"
-        $env:PYTHON="C:\\Python27"
-        $env:ARCH="x86"
-      } Else {
-        $env:CMAKE_GENERATOR="Visual Studio 14 2015 Win64"
-        $env:PYTHON="C:\\Python27-x64"
-        $env:ARCH="x64"
-      }
-
   # libusb patched for windows hotplug support
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
+  # install innosetup for creating installers
+  - choco install InnoSetup
+  - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
 
+build_script:
+  # build our own libusb version with hotplug support until upstream merges related patches
+  - ps: pushd "C:\libusb"
+  - git checkout hotplug
+  - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - ps: popd
+
+  - mkdir c:\projects\libsmu\32
+  - cd c:\projects\libsmu\32
+  - cmake -G "Visual Studio 14 2015" \
+    -DCMAKE_BUILD_TYPE:STRING=Release \
+    -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    ..
+  - cmake --build . --config Release
+
+  - mkdir c:\projects\libsmu\64
+  - cd c:\projects\libsmu\64
+  - cmake -G "Visual Studio 14 2015 Win64" \
+    -DCMAKE_BUILD_TYPE:STRING=Release \
+    -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\Release\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    ..
+  - cmake --build . --config Release
+
+  # create libsmu 32/64 bit zipfiles
+  - mkdir c:\libsmu-win32
+  - mkdir c:\libsmu-win64
+  - copy ..\src\libsmu.hpp c:\libsmu-win32
+  - copy ..\src\libsmu.hpp c:\libsmu-win64
+  - copy ..\32\src\Release\libsmu.* c:\libsmu-win32
+  - copy ..\64\src\Release\libsmu.* c:\libsmu-win64
+  - copy ..\32\src\cli\Release\smu.exe c:\libsmu-win32
+  - copy ..\64\src\cli\Release\smu.exe c:\libsmu-win64
+  - copy "C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.dll" c:\libsmu-win32
+  - copy "C:\\libusb\\x64\\Release\\dll\\libusb-1.0.dll" c:\libsmu-win64
+  - 7z a "c:\libsmu-win32.zip" c:\libsmu-win32
+  - 7z a "c:\libsmu-win64.zip" c:\libsmu-win64
+  - appveyor PushArtifact c:\libsmu-win32.zip
+  - appveyor PushArtifact c:\libsmu-win64.zip
+
+  # create libsmu installer
+  - copy C:\projects\libsmu\32\dist\libsmu.iss C:\projects\libsmu\dist\libsmu.iss
+  - iscc C:\projects\libsmu\dist\libsmu.iss
+  - appveyor PushArtifact C:\libsmu-setup.exe
+
+  ## build 32 bit python bindings
   # add python dirs to PATH
-  - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
   # check we're using the right python version and arch
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
@@ -34,48 +69,36 @@ install:
   # wheel needs to be installed in order to build binary wheels for pysmu
   - "pip install wheel"
 
-  # install innosetup for creating installers
-  - choco install InnoSetup
-  - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
-
-build_script:
-  # build our own libusb version with hotplug support until upstream merges related patches
-  - ps: pushd "C:\libusb"
-  - git checkout hotplug
-  - msbuild msvc\libusb_2015.sln /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - ps: popd
-
-  - cmake -G "%CMAKE_GENERATOR%" \
-    -DCMAKE_BUILD_TYPE:STRING=Release \
-    -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\%Platform%\\Release\\dll\\libusb-1.0.lib" \
-    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
-    .
-  - cmake --build . --config Release
-
-  # create libsmu zipfile
-  - mkdir c:\libsmu
-  - copy src\libsmu.hpp c:\libsmu
-  - copy src\Release\libsmu.* c:\libsmu
-  - copy src\cli\Release\smu.exe c:\libsmu
-  - copy "C:\\libusb\\%Platform%\\Release\\dll\\libusb-1.0.dll" c:\libsmu
-  - 7z a "c:\libsmu-%ARCH%.zip" c:\libsmu
-  - appveyor PushArtifact c:\libsmu-%ARCH%.zip
-
-  # create libsmu installer
-  - iscc C:\projects\libsmu\dist\libsmu.iss
-  - mv C:\libsmu-setup.exe C:\libsmu-setup-%ARCH%.exe
-  - appveyor PushArtifact C:\libsmu-setup-%ARCH%.exe
-
   # build python dist files
-  - ps: pushd bindings/python
+  - ps: pushd C:\projects\libsmu\bindings\python
   - set DISTUTILS_USE_SDK=1
   - set MSSdk=1
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
-  - "vcvarsall.bat %ARCH%"
-  - "python setup.py build_ext --compiler=msvc -L ../../src/Release"
+
+  - "vcvarsall.bat x86"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/Release"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
+
+  ## build 64 bit python bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python27-x64;C:\\Python27-x64\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+
+  - "vcvarsall.bat x64"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/Release"
+  - "python setup.py bdist_wheel"
+  - "python setup.py bdist --format zip"
+  - "python setup.py bdist --format msi"
+
+  # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: popd

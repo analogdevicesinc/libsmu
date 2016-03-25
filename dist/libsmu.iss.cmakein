@@ -44,12 +44,16 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "C:\libsmu\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
-Source: "C:\libsmu\libsmu.dll"; DestDir: "{app}";
-Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Check: not Is64BitInstallMode
-Source: "C:\libsmu\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Check: Is64BitInstallMode
-Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"
-Source: "C:\libsmu\smu.exe"; DestDir: "{app}";
+Source: "C:\libsmu-win32\libusb-1.0.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu-win64\libusb-1.0.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+
+Source: "C:\libsmu-win32\libsmu.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
+Source: "C:\libsmu-win64\libsmu.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
+Source: "C:\libsmu-win32\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Check: not Is64BitInstallMode
+Source: "C:\libsmu-win64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Check: Is64BitInstallMode
+Source: "C:\projects\libsmu\src\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"
+Source: "C:\libsmu-win32\smu.exe"; DestDir: "{app}"; Check: not Is64BitInstallMode
+Source: "C:\libsmu-win64\smu.exe"; DestDir: "{app}"; Check: Is64BitInstallMode
 
 [Tasks]
 Name: modifypath; Description: Add application directory to your environmental path (required);
