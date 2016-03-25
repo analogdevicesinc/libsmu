@@ -9,6 +9,8 @@ else(GETOPT_FOUND)
 	# use internal getopt implementation
 	add_executable(smu_bin smu.cpp getopt.c)
 endif(GETOPT_FOUND)
+
+include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 set_target_properties(smu_bin PROPERTIES OUTPUT_NAME smu)
 target_link_libraries(smu_bin smu)
 

@@ -10,6 +10,7 @@
 #include <vector>
 #include <thread>
 #include <string.h>
+#include <libusb.h>
 
 #ifdef WIN32
 #include "getopt.h"
@@ -81,6 +82,8 @@ int calibrate(Session* session, const char *file)
 		if (ret <= 0) {
 			if (ret == -EINVAL)
 				cerr << "smu: invalid calibration data format" << endl;
+			else if (ret == LIBUSB_ERROR_PIPE)
+				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 			else
 				perror("smu: failed to write calibration data");
 			return 1;
