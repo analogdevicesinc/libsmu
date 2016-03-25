@@ -17,7 +17,7 @@
 
 using std::vector;
 
-#define LIBSMU_VERSION "v0.88"
+#define LIBSMU_VERSION "0.8.9"
 
 #ifndef M_PI
 #define M_PI (4.0*atan(1.0))
