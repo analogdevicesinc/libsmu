@@ -56,5 +56,5 @@ yourself.
 Prebuilt python support is also available and requires libsmu to be installed
 in addition to python-2.7:
 
-32 bit: [pysmu-0.88.win32-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win32-py2.7.msi?branch=master)
-64 bit: [pysmu-0.88.win-amd64-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win-amd64-py2.7.msi?branch=master)
+- 32 bit: [pysmu-0.88.win32-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win32-py2.7.msi?branch=master)
+- 64 bit: [pysmu-0.88.win-amd64-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win-amd64-py2.7.msi?branch=master)
