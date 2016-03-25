@@ -36,21 +36,19 @@ build_script:
     ..
   - cmake --build . --config Release
 
-  # create libsmu 32/64 bit zipfiles
-  - mkdir c:\libsmu-win32
-  - mkdir c:\libsmu-win64
-  - copy ..\src\libsmu.hpp c:\libsmu-win32
-  - copy ..\src\libsmu.hpp c:\libsmu-win64
-  - copy ..\32\src\Release\libsmu.* c:\libsmu-win32
-  - copy ..\64\src\Release\libsmu.* c:\libsmu-win64
-  - copy ..\32\src\cli\Release\smu.exe c:\libsmu-win32
-  - copy ..\64\src\cli\Release\smu.exe c:\libsmu-win64
-  - copy "C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.dll" c:\libsmu-win32
-  - copy "C:\\libusb\\x64\\Release\\dll\\libusb-1.0.dll" c:\libsmu-win64
-  - 7z a "c:\libsmu-win32.zip" c:\libsmu-win32
-  - 7z a "c:\libsmu-win64.zip" c:\libsmu-win64
-  - appveyor PushArtifact c:\libsmu-win32.zip
-  - appveyor PushArtifact c:\libsmu-win64.zip
+  # create libsmu zipfile
+  - mkdir c:\libsmu
+  - mkdir c:\libsmu\32
+  - mkdir c:\libsmu\64
+  - copy ..\src\libsmu.hpp c:\libsmu
+  - copy ..\32\src\Release\libsmu.* c:\libsmu\32
+  - copy ..\64\src\Release\libsmu.* c:\libsmu\64
+  - copy ..\32\src\cli\Release\smu.exe c:\libsmu\32
+  - copy ..\64\src\cli\Release\smu.exe c:\libsmu\64
+  - copy "C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.dll" c:\libsmu\32
+  - copy "C:\\libusb\\x64\\Release\\dll\\libusb-1.0.dll" c:\libsmu\64
+  - 7z a "c:\libsmu.zip" c:\libsmu
+  - appveyor PushArtifact c:\libsmu.zip
 
   # create libsmu installer
   - copy C:\projects\libsmu\32\dist\libsmu.iss C:\projects\libsmu\dist\libsmu.iss
