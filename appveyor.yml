@@ -74,7 +74,7 @@ build_script:
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
 
   - "vcvarsall.bat x86"
-  - "python setup.py build_ext --compiler=msvc -L ../../32/src/Release"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/Release -I C:\\libusb\\libusb"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
@@ -92,7 +92,7 @@ build_script:
   - "pip install wheel"
 
   - "vcvarsall.bat x64"
-  - "python setup.py build_ext --compiler=msvc -L ../../64/src/Release"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/Release -I C:\\libusb\\libusb"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
