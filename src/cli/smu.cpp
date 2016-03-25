@@ -130,7 +130,10 @@ int reset_calibration(Session* session)
 		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
 			ret = dev->write_calibration(NULL);
 			if (ret <= 0) {
-				perror("smu: failed to write calibration data");
+				if (ret == LIBUSB_ERROR_PIPE)
+					cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
+				else
+					perror("smu: failed to reset calibration data");
 				return 1;
 			}
 		}
