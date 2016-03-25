@@ -48,13 +48,7 @@ as well.
 
 ##### Windows
 
-On Windows, it's easier to use the provided installers instead of building
-things yourself. Both 32 bit and 64 bit versions are available:
-
-64 bit:
-  - [libsmu-setup-x64.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup-x64.exe?branch=master&job=Platform%3A%20x64)
-  - [pysmu-0.88.win-amd64-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win-amd64-py2.7.msi?branch=master&job=Platform%3A%20x64)
-
-32 bit:
-  - [libsmu-setup-x86.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup-x86.exe?branch=master&job=Platform%3A%20Win32)
-  - [pysmu-0.88.win32-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win32-py2.7.msi?branch=master&job=Platform%3A%20x64)
+On Windows, it's easiest to use the provided installer
+([libsmu-setup.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master)
+that includes both 32 and 64 bit library support instead of building things
+yourself.
