@@ -16,6 +16,9 @@ if __name__ == '__main__':
         '-s', '--show', action='store_true', default=True,
         help='display calibration data from a device')
     mux.add_argument(
+        '-r', '--reset', action='store_true',
+        help='reset calibration data on a device to the defaults')
+    mux.add_argument(
         '-w', '--write',
         dest='cal_file', metavar='PATH_TO_CAL_FILE',
         help='write calibration data to a device')
@@ -38,6 +41,11 @@ if __name__ == '__main__':
             parser.error("calibration file doesn't exist: %s".format(options.cal_file))
         try:
             dev.write_calibration(options.cal_file)
+        except (ValueError, RuntimeError) as e:
+            print("calibration failed: {}".format(e.message))
+    elif options.reset:
+        try:
+            dev.write_calibration(None)
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
     elif options.show:

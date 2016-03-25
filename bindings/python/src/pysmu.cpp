@@ -212,7 +212,7 @@ write_calibration(PyObject* self, PyObject* args)
 	const char *file;
 	int ret;
 
-	if (!PyArg_ParseTuple(args, "ss", &dev_serial, &file))
+	if (!PyArg_ParseTuple(args, "sz", &dev_serial, &file))
 		return NULL;
 
 	auto dev = get_device(dev_serial);
@@ -221,7 +221,7 @@ write_calibration(PyObject* self, PyObject* args)
 
 	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
 		ret = dev->write_calibration(file);
-		if (ret <= 0)
+		if (ret <= 0) {
 			if (ret == -EINVAL)
 				PyErr_SetString(PyExc_ValueError, "invalid calibration file");
 			else if (ret == LIBUSB_ERROR_PIPE)
@@ -229,6 +229,7 @@ write_calibration(PyObject* self, PyObject* args)
 			else
 				PyErr_SetString(PyExc_RuntimeError, "writing calibration failed");
 			return NULL;
+		}
 	} else {
 		PyErr_SetString(PyExc_RuntimeError, "calibration only works with ADALM1000 devices");
 		return NULL;
