@@ -50,8 +50,7 @@ as well.
 
 On Windows, it's easiest to use the provided installer
 ([libsmu-setup.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master))
-that includes both 32 and 64 bit library support instead of building things
-yourself.
+that installs either 32 or 64 bit support based off the host system.
 
 Prebuilt python support is also available and requires libsmu to be installed
 in addition to python-2.7:
