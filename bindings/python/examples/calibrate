@@ -36,6 +36,9 @@ if __name__ == '__main__':
     if options.cal_file is not None:
         if not os.path.exists(options.cal_file):
             parser.error("calibration file doesn't exist: %s".format(options.cal_file))
-        dev.write_calibration(options.cal_file)
+        try:
+            dev.write_calibration(options.cal_file)
+        except (ValueError, RuntimeError) as e:
+            print("calibration failed: {}".format(e.message))
     elif options.show:
         print(dev.calibration)

@@ -20,6 +20,7 @@
 #include <functional>
 #include <string>
 #include <condition_variable>
+#include <libusb.h>
 
 #include "libsmu.hpp"
 
@@ -221,8 +222,15 @@ write_calibration(PyObject* self, PyObject* args)
 	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
 		ret = dev->write_calibration(file);
 		if (ret <= 0)
+			if (ret == -EINVAL)
+				PyErr_SetString(PyExc_ValueError, "invalid calibration file");
+			else if (ret == LIBUSB_ERROR_PIPE)
+				PyErr_SetString(PyExc_RuntimeError, "firmware version doesn't support calibration (update to 2.06 or later)");
+			else
+				PyErr_SetString(PyExc_RuntimeError, "writing calibration failed");
 			return NULL;
 	} else {
+		PyErr_SetString(PyExc_RuntimeError, "calibration only works with ADALM1000 devices");
 		return NULL;
 	}
 	Py_RETURN_NONE;
