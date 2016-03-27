@@ -135,7 +135,7 @@ class Channel(object):
         mode = mode.lower()
         if mode in modes.iterkeys():
             _pysmu.set_mode(self.dev, self.chan, modes[mode])
-            self.mode = mode
+            self.mode = modes[mode]
         else:
             raise ValueError('invalid mode: {}'.format(mode))
 
