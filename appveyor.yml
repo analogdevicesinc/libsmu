@@ -48,6 +48,8 @@ build_script:
   - copy ..\64\src\cli\Release\smu.exe c:\libsmu\64
   - copy "C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.dll" c:\libsmu\32
   - copy "C:\\libusb\\x64\\Release\\dll\\libusb-1.0.dll" c:\libsmu\64
+  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
+  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\64
   - 7z a "c:\libsmu.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu.zip
 
