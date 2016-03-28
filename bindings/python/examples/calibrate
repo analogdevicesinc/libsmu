@@ -6,6 +6,8 @@ import argparse
 from collections import OrderedDict
 from itertools import chain
 import os
+import signal
+from signal import signal, SIG_DFL, SIGINT
 import sys
 
 from pysmu import Smu
@@ -28,6 +30,8 @@ def get_value(s):
 
 
 if __name__ == '__main__':
+    signal(SIGINT, SIG_DFL)
+
     parser = argparse.ArgumentParser()
     mux = parser.add_mutually_exclusive_group()
     mux.add_argument(
