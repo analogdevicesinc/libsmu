@@ -96,6 +96,7 @@ build_script:
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
+  - "python setup.py sdist"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
