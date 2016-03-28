@@ -43,11 +43,15 @@ if __name__ == '__main__':
             dev.write_calibration(options.cal_file)
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
+            sys.exit(1)
+        print("successfully updated calibration")
     elif options.reset:
         try:
             dev.write_calibration(None)
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
+            sys.exit(1)
+        print("successfully reset calibration")
     elif options.show:
         cal_map = {
             0: 'Channel A, measure V',
