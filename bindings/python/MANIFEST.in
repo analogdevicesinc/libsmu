@@ -1,3 +1,3 @@
 recursive-include examples *
-recursive-include src *.[ch]
+recursive-include src *.cpp *.[ch]
 global-exclude CMakeLists.txt *.pyc *.pyo __pycache__
