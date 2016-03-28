@@ -49,4 +49,18 @@ if __name__ == '__main__':
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
     elif options.show:
-        print(dev.calibration)
+        cal_map = {
+            0: 'Channel A, measure V',
+            1: 'Channel A, measure I',
+            2: 'Channel A, source V',
+            3: 'Channel A, source I',
+            4: 'Channel B, measure V',
+            5: 'Channel B, measure I',
+            6: 'Channel B, source V',
+            7: 'Channel B, source I',
+        }
+        for i, vals in enumerate(dev.calibration):
+            print(cal_map[i])
+            print("  offset: {:.4f}".format(vals[0]))
+            print("  p gain: {:.4f}".format(vals[1]))
+            print("  n gain: {:.4f}".format(vals[2]))
