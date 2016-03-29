@@ -16,4 +16,5 @@ add_custom_target(python ALL DEPENDS smu ${OUTPUT})
 
 install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install -f
 	--prefix=${CMAKE_INSTALL_PREFIX}
+	--single-version-externally-managed --root=/
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
