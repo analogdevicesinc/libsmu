@@ -14,4 +14,6 @@ add_custom_command(OUTPUT ${OUTPUT}
 	DEPENDS ${DEPS})
 add_custom_target(python ALL DEPENDS smu ${OUTPUT})
 
-install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install)")
+install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install -f
+	--prefix=${CMAKE_INSTALL_PREFIX}
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
