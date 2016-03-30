@@ -31,7 +31,7 @@ class Smu(object):
 
         device_channels = defaultdict(list)
         for k, v in channels.iteritems():
-            device_channels[v[0]].append(Channel(k, *v))
+            device_channels[v[0]].append(Channel(k, self.serials[v[0]], v[1]))
         self.devices = {i: Device(self.serials[i], device_channels[i])
                         for i, v in enumerate(self.devices)}
 
