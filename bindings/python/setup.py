@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import glob
 import os
 import subprocess
 import sys
@@ -56,6 +57,7 @@ setup(
     license='BSD',
     packages=find_packages(),
     ext_modules=extensions,
+    scripts=glob.glob('bin/*'),
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
