@@ -24,10 +24,6 @@
 #define __packed
 #endif
 
-struct sl_session;
-struct sl_device;
-struct sl_signal;
-
 typedef enum sl_type {
 	DEVICE_CEE_1 = 0x10000,
 	DEVICE_M1000,
