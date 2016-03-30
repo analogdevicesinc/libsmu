@@ -1,5 +1,13 @@
 #!/usr/bin/env python2.7
 
+"""Manage calibration for M1K devices.
+
+This tool provides support for displaying, writing, and resetting the
+calibration data for an M1K device. It also supports an interactive method of
+creating a properly formatted calibration data file that steps through the
+instructions found on the wiki (https://wiki.analog.com/university/tools/m1k/calibration).
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -32,7 +40,9 @@ def get_value(s):
 if __name__ == '__main__':
     signal(SIGINT, SIG_DFL)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     mux = parser.add_mutually_exclusive_group()
     mux.add_argument(
         '-s', '--show', action='store_true', default=True,
