@@ -3,9 +3,9 @@
 """Utility for managing M1K devices.
 
 This tool provides support for displaying, writing, and resetting the
-calibration data for an M1K device. It also supports an interactive method of
-creating a properly formatted calibration data file that steps through the
-instructions found on the wiki (https://wiki.analog.com/university/tools/m1k/calibration).
+calibration data for an M1K device. It also supports an semi-automated method
+of creating a properly formatted calibration data file that loosely follows the
+steps found on the wiki (https://wiki.analog.com/university/tools/m1k/calibration).
 """
 
 from __future__ import print_function
@@ -45,17 +45,17 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter)
     mux = parser.add_mutually_exclusive_group()
     mux.add_argument(
-        '-s', '--show', action='store_true', default=True,
+        '-d', '--display-calibration', action='store_true', default=True,
         help='display calibration data from a device')
     mux.add_argument(
-        '-r', '--reset', action='store_true',
+        '-r', '--reset-calibration', action='store_true',
         help='reset calibration data on a device to the defaults')
     mux.add_argument(
-        '-w', '--write', metavar='PATH_TO_CAL_FILE',
+        '-w', '--write-calibration', metavar='PATH_TO_CAL_FILE',
         help='write calibration data to a device')
     mux.add_argument(
-        '-c', '--create', metavar='PATH_TO_CAL_FILE',
-        help='create calibration file')
+        '-c', '--calibrate', metavar='PATH_TO_CAL_FILE',
+        help='create calibration file in a semi-automated fashion')
     options = parser.parse_args()
 
     x = Smu()
