@@ -8,8 +8,25 @@
 import atexit
 from collections import defaultdict
 import operator
+import warnings
 
 import _pysmu
+
+
+def _ctrl_transfer(dev_serial, bm_request_type, b_request, wValue, wIndex,
+                   data, wLength, timeout):
+    data = str(data)
+    if bm_request_type & 0x80 == 0x80:
+        if data == '0':
+            data = '\x00' * wLength
+    else:
+        wLength = 0
+    ret = _pysmu.ctrl_transfer(
+        dev_serial, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout)
+    if bm_request_type & 0x80 == 0x80:
+        return map(ord, data)
+    else:
+        return ret
 
 
 class Smu(object):
@@ -35,6 +52,13 @@ class Smu(object):
         self.devices = {i: Device(self.serials[i], device_channels[i])
                         for i, v in enumerate(self.devices)}
 
+    @staticmethod
+    def ctrl_transfer(*args, **kwargs):
+        warnings.warn(
+            "ctrl_transfer() moving to Device class"
+            "(removal on next major version)", DeprecationWarning)
+        return _ctrl_transfer(*args, **kwargs)
+
     def __repr__(self):
         return 'Devices: ' + str(self.devices)
 
@@ -50,7 +74,8 @@ class Device(object):
                       data, wLength, timeout):
         """Perform raw USB control transfers.
 
-        The arguments map directly to those of the underlying libusb call.
+        The arguments map directly to those of the underlying
+        libusb_control_transfer call.
 
         Args:
             bm_request_type: the request type field for the setup packet
@@ -64,18 +89,8 @@ class Device(object):
 
         Returns: the number of bytes actually transferred
         """
-        data = str(data)
-        if bm_request_type & 0x80 == 0x80:
-            if data == '0':
-                data = '\x00'*wLength
-        else:
-            wLength = 0
-        ret = _pysmu.ctrl_transfer(
+        return _ctrl_transfer(
             self.serial, bm_request_type, b_request, wValue, wIndex, data, wLength, timeout)
-        if bm_request_type & 0x80 == 0x80:
-            return map(ord, data)
-        else:
-            return ret
 
     def get_samples(self, n_samples):
         """Query the device for a given number of samples from all channels.
