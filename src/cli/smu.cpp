@@ -57,15 +57,11 @@ static void stream_samples(Session* session)
 	auto dev_info = dev->info();
 	for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
 		auto ch_info = dev->channel_info(ch_i);
-		dev->set_mode(ch_i, 1);
+		dev->set_mode(ch_i, DISABLED);
 		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
 			auto sig = dev->signal(ch_i, sig_i);
 			auto sig_info = sig->info();
 			sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
-			if (strncmp(sig_info->label, "Voltage", 4) == 0){
-				cout << "setting voltage" << endl;
-				sig->source_sine(0, 5, 128, 32);
-			}
 		}
 	}
 	session->configure(dev->get_default_rate());
