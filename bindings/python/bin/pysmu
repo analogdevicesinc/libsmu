@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-"""Manage calibration for M1K devices.
+"""Utility for managing M1K devices.
 
 This tool provides support for displaying, writing, and resetting the
 calibration data for an M1K device. It also supports an interactive method of
