@@ -39,16 +39,16 @@ static void list_devices(Session* session)
 
 static void display_usage(void)
 {
-	printf("smu: simple libsmu-based tool\n"
+	printf("smu: utility for managing M1K devices\n"
 		"\n"
-		"  -h, --help                   print this help message and exit\n"
-		"  -l, --list                   list supported devices currently attached to the system\n"
-		"  -p, --hotplug                simple session device hotplug testing\n"
-		"  -s, --stream                 stream samples to stdout from a single attached device\n"
-		"  -c, --calibrate <cal file>   write calibration data to a single attached device\n"
-		"  -d, --display-calibration    display calibration data from all attached devices\n"
-		"  -r, --reset-calibration      reset calibration data to the defaults on all attached devices\n"
-		"  -f, --flash <firmware image> flash firmware image to all attached devices\n");
+		" -h, --help                   print this help message and exit\n"
+		" -l, --list                   list supported devices currently attached to the system\n"
+		" -p, --hotplug                simple session device hotplug testing\n"
+		" -s, --stream                 stream samples to stdout from a single attached device\n"
+		" -d, --display-calibration    display calibration data from all attached devices\n"
+		" -r, --reset-calibration      reset calibration data to the defaults on all attached devices\n"
+		" -w, --write-calibration <cal file> write calibration data to a single attached device\n"
+		" -f, --flash <firmware image> flash firmware image to all attached devices\n");
 }
 
 static void stream_samples(Session* session)
@@ -71,7 +71,7 @@ static void stream_samples(Session* session)
 	while ( 1 == 1 ) {session->wait_for_completion();};
 }
 
-int calibrate(Session* session, const char *file)
+int write_calibration(Session* session, const char *file)
 {
 	int ret;
 	auto dev = *(session->m_devices.begin());
@@ -199,12 +199,12 @@ int main(int argc, char **argv)
 		{"stream",   no_argument, 0, 's'},
 		{"display-calibration", no_argument, 0, 'd'},
 		{"reset-calibration", no_argument, 0, 'r'},
-		{"calibrate", required_argument, 0, 'c'},
+		{"write-calibration", required_argument, 0, 'w'},
 		{"flash", required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	};
 
-	while ((opt = getopt_long(argc, argv, "hplsdrc:f:",
+	while ((opt = getopt_long(argc, argv, "hplsdrw:f:",
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 				}
 				cout << "smu: successfully reset calibration data" << endl;
 				break;
-			case 'c':
+			case 'w':
 				// write calibration data to a single attached m1k device
 				if (session->m_devices.empty()) {
 					cerr << "smu: no supported devices plugged in" << endl;
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 					cerr << "Please detach all devices except the one targeted for calibration." << endl;
 					exit(EXIT_FAILURE);
 				}
-				if (calibrate(session, optarg))
+				if (write_calibration(session, optarg))
 					exit(EXIT_FAILURE);
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
