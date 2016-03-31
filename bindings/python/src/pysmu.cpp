@@ -62,7 +62,7 @@ static PyObject *
 cleanupSession(PyObject* self, PyObject* args)
 {
 	session->end();
-	return PyInt_FromLong(0l);
+	Py_RETURN_NONE;
 }
 
 static PyObject *
