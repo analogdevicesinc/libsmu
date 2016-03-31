@@ -376,6 +376,7 @@ ctrlTransfer(PyObject* self, PyObject* args)
 	PyObject* data;
 	unsigned wLength;
 	unsigned timeout;
+	int ret;
 
 	if (!PyArg_ParseTuple(args, "sIIIISII", &dev_serial, &bmRequestType, &bRequest, &wValue, &wIndex, &data, &wLength, &timeout))
 		return NULL;
@@ -386,8 +387,12 @@ ctrlTransfer(PyObject* self, PyObject* args)
 	auto dev = get_device(dev_serial);
 	if (dev == NULL)
 		return NULL;
-	dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
-	Py_RETURN_NONE;
+	ret = dev->ctrl_transfer(bmRequestType, bRequest, wValue, wIndex, data_use, wLength, timeout);
+	if (ret < 0) {
+		PyErr_SetString(PyExc_IOError, "USB control transfer failed");
+		return NULL;
+	}
+	return PyInt_FromSize_t(ret);
 }
 
 static PyObject *
