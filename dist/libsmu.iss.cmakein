@@ -48,7 +48,9 @@ Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Check: not Is64BitInsta
 Source: "C:\libsmu\64\libusb-1.0.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 
 Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
 Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\vcruntime140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 
 Source: "C:\libsmu\32\libsmu.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
 Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
