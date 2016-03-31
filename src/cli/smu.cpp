@@ -154,7 +154,7 @@ int flash_firmware(Session* session, const char *file)
 
 int main(int argc, char **argv)
 {
-	int opt, ret = 0;
+	int opt;
 	int option_index = 0;
 
 	// display usage info if no arguments are specified
