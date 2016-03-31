@@ -61,7 +61,9 @@ static void stream_samples(Session* session)
 		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
 			auto sig = dev->signal(ch_i, sig_i);
 			auto sig_info = sig->info();
-			sig->measure_callback([=](float d){cout<<ch_i << "," << sig_i << "," <<d<<endl;});
+			sig->measure_callback([=](float d){
+				printf("Channel %s, %s: %f\n", ch_info->label, sig_info->label, d);
+			});
 		}
 	}
 	session->configure(dev->get_default_rate());
