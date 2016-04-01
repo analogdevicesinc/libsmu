@@ -55,11 +55,6 @@ build_script:
   - 7z a "c:\libsmu.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu.zip
 
-  # create libsmu installer
-  - copy C:\projects\libsmu\32\dist\libsmu.iss C:\projects\libsmu\dist\libsmu.iss
-  - iscc C:\projects\libsmu\dist\libsmu.iss
-  - appveyor PushArtifact C:\libsmu-setup.exe
-
   ## build 32 bit python bindings
   # add python dirs to PATH
   - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
@@ -105,4 +100,15 @@ build_script:
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+  # copy python binding MSIs for installer
+  # TODO: glob these file copies
+  - mkdir c:\libsmu-python
+  - copy dist\pysmu-0.88.win-amd64-py2.7.msi c:\libsmu-python\pysmu-amd64.msi
+  - copy dist\pysmu-0.88.win32-py2.7.msi c:\libsmu-python\pysmu-win32.msi
   - ps: popd
+
+  # create libsmu installer
+  - copy C:\projects\libsmu\32\dist\libsmu.iss C:\projects\libsmu\dist\libsmu.iss
+  - iscc C:\projects\libsmu\dist\libsmu.iss
+  - appveyor PushArtifact C:\libsmu-setup.exe
