@@ -50,10 +50,10 @@ Source: "C:\libsmu-python\pysmu-win32.msi"; DestDir: "{tmp}"; Check: not Is64Bit
 Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
 Source: "C:\libsmu\64\libusb-1.0.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 
-Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\vcruntime140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\32\msvcp140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\32\vcruntime140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\64\msvcp140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\64\vcruntime140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 
 Source: "C:\libsmu\32\libsmu.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
 Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
