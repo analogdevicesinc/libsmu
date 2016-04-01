@@ -2,14 +2,14 @@
 AppId={{351792B2-1445-4489-945F-DD0649DD403F}
 AppName="libsmu"
 AppVersion="@LIBSMU_VERSION@"
-AppPublisher="Analog Devices, Inc."
+AppPublisher="Analog Devices"
 AppPublisherURL="http://www.analog.com"
 AppSupportURL="http://www.analog.com"
 AppUpdatesURL="http://www.analog.com"
 LicenseFile="C:\projects\libsmu\LICENSE"
 OutputBaseFilename=libsmu-setup
 OutputDir="C:\"
-DefaultDirName={pf}\libsmu
+DefaultDirName="{pf}\Analog Devices\libsmu"
 Compression=lzma
 SolidCompression=yes
 ChangesEnvironment=yes
