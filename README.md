@@ -50,13 +50,6 @@ as well.
 
 On Windows, it's easiest to use the provided installer
 ([libsmu-setup.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master))
-that installs either 32 or 64 bit support based off the host system. Note that
-it requires the [Visual C++ Redistributable for Visual Studio
-2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) to be
-installed (again either x86 or x64 matching the host system).
-
-Prebuilt python support is also available and requires libsmu to be installed
-in addition to python-2.7:
-
-- 32 bit: [pysmu-0.88.win32-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win32-py2.7.msi?branch=master)
-- 64 bit: [pysmu-0.88.win-amd64-py2.7.msi](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/pysmu-0.88.win-amd64-py2.7.msi?branch=master)
+that installs either 32 or 64 bit support based off the host system. During the
+install process an option is provided to also install the python bindings for
+libsmu.
