@@ -55,6 +55,8 @@ setup(
     description='python library for the m1k device',
     url='https://github.com/analogdevicesinc/libsmu',
     license='BSD',
+    maintainer='Tim Harder',
+    maintainer_email='radhermit@gmail.com',
     packages=find_packages(),
     ext_modules=extensions,
     scripts=glob.glob('bin/*'),
