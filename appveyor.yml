@@ -102,10 +102,9 @@ build_script:
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
   # copy python binding MSIs for installer
-  # TODO: glob these file copies
   - mkdir c:\libsmu-python
-  - copy dist\pysmu-0.88.win-amd64-py2.7.msi c:\libsmu-python\pysmu-amd64.msi
-  - copy dist\pysmu-0.88.win32-py2.7.msi c:\libsmu-python\pysmu-win32.msi
+  - ps: Copy-Item dist\pysmu-*amd64-py*.msi c:\libsmu-python\pysmu-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu-win32.msi
   - ps: popd
 
   # create libsmu installer
