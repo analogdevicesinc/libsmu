@@ -1,6 +1,10 @@
 os: Visual Studio 2015
 clone_depth: 1
 
+configuration:
+  - Release
+  - Debug
+
 install:
   # libusb patched for windows hotplug support
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
@@ -12,29 +16,29 @@ build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
   - ps: pushd "C:\libusb"
   - git checkout hotplug
-  - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
   - mkdir c:\projects\libsmu\32
   - cd c:\projects\libsmu\32
   - cmake -G "Visual Studio 14 2015" \
-    -DCMAKE_BUILD_TYPE:STRING=Release \
+    -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     ..
-  - cmake --build . --config Release
+  - cmake --build . --config %CONFIGURATION%
 
   - mkdir c:\projects\libsmu\64
   - cd c:\projects\libsmu\64
   - cmake -G "Visual Studio 14 2015 Win64" \
-    -DCMAKE_BUILD_TYPE:STRING=Release \
+    -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\Release\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     ..
-  - cmake --build . --config Release
+  - cmake --build . --config %CONFIGURATION%
 
   # create libsmu zipfile
   - mkdir c:\libsmu
@@ -42,12 +46,12 @@ build_script:
   - mkdir c:\libsmu\64
   - copy ..\src\libsmu.hpp c:\libsmu
   - copy ..\src\libsmu.h c:\libsmu
-  - copy ..\32\src\Release\libsmu.* c:\libsmu\32
-  - copy ..\64\src\Release\libsmu.* c:\libsmu\64
-  - copy ..\32\src\cli\Release\smu.exe c:\libsmu\32
-  - copy ..\64\src\cli\Release\smu.exe c:\libsmu\64
-  - copy "C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.dll" c:\libsmu\32
-  - copy "C:\\libusb\\x64\\Release\\dll\\libusb-1.0.dll" c:\libsmu\64
+  - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
+  - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
+  - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
+  - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64
+  - copy "C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.dll" c:\libsmu\32
+  - copy "C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.dll" c:\libsmu\64
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\64
@@ -74,7 +78,7 @@ build_script:
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
 
   - "vcvarsall.bat x86"
-  - "python setup.py build_ext --compiler=msvc -L ../../32/src/Release -I C:\\libusb\\libusb"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
@@ -92,7 +96,7 @@ build_script:
   - "pip install wheel"
 
   - "vcvarsall.bat x64"
-  - "python setup.py build_ext --compiler=msvc -L ../../64/src/Release -I C:\\libusb\\libusb"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
   - "python setup.py bdist_wheel"
   - "python setup.py bdist --format zip"
   - "python setup.py bdist --format msi"
