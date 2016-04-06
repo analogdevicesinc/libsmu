@@ -176,21 +176,6 @@ int main(int argc, char **argv)
 	session->m_completion_callback = [=](unsigned status){};
 	session->m_progress_callback = [=](sample_t n){};
 
-	session->m_hotplug_detach_callback = [=](Device* device){
-		session->cancel();
-		session->remove_device(device);
-		printf("removed device: %s: serial %s: fw %s: hw %s\n",
-				device->info()->label, device->serial(),
-				device->fwver(), device->hwver());
-	};
-
-	session->m_hotplug_attach_callback = [=](Device* device){
-		if (session->add_device(device))
-			printf("added device: %s: serial %s: fw %s: hw %s\n",
-				device->info()->label, device->serial(),
-				device->fwver(), device->hwver());
-	};
-
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
@@ -208,6 +193,21 @@ int main(int argc, char **argv)
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
+				session->m_hotplug_detach_callback = [=](Device* device){
+					session->cancel();
+					session->remove_device(device);
+					printf("removed device: %s: serial %s: fw %s: hw %s\n",
+							device->info()->label, device->serial(),
+							device->fwver(), device->hwver());
+				};
+
+				session->m_hotplug_attach_callback = [=](Device* device){
+					if (session->add_device(device))
+						printf("added device: %s: serial %s: fw %s: hw %s\n",
+							device->info()->label, device->serial(),
+							device->fwver(), device->hwver());
+				};
+
 				// wait around doing nothing (hotplug testing)
 				while (1)
 					std::this_thread::sleep_for(std::chrono::seconds(10));
