@@ -83,6 +83,9 @@ public:
 	/// Cancel capture and block waiting for it to complete
 	void cancel();
 
+	/// Update device firmware for the first attached device found.
+	int flash_firmware(const char *file);
+
 	/// internal: Called by devices on the USB thread when they are complete
 	void completion();
 
@@ -181,9 +184,6 @@ public:
 
 	/// Get the device calibration data from the EEPROM.
 	virtual void calibration(vector<vector<float>>* cal) {};
-
-	/// Flash a firmware image to this device.
-	virtual int flash_firmware(const char* file) { return 0; }
 
 protected:
 	Device(Session* s, libusb_device* d);

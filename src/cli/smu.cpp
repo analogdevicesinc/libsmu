@@ -48,7 +48,7 @@ static void display_usage(void)
 		" -d, --display-calibration    display calibration data from all attached devices\n"
 		" -r, --reset-calibration      reset calibration data to the defaults on all attached devices\n"
 		" -w, --write-calibration <cal file> write calibration data to a single attached device\n"
-		" -f, --flash <firmware image> flash firmware image to all attached devices\n");
+		" -f, --flash <firmware image> flash firmware image to a single attached device\n");
 }
 
 static void stream_samples(Session* session)
@@ -132,19 +132,6 @@ int reset_calibration(Session* session)
 					cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 				else
 					perror("smu: failed to reset calibration data");
-				return 1;
-			}
-		}
-	}
-	return 0;
-}
-
-int flash_firmware(Session* session, const char *file)
-{
-	for (auto dev: session->m_devices) {
-		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-			if (dev->flash_firmware(file)) {
-				perror("smu: failed to flash firmware image");
 				return 1;
 			}
 		}
@@ -255,9 +242,21 @@ int main(int argc, char **argv)
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
-				// flash firmware image to all attached m1k devices
-				if (flash_firmware(session, optarg))
+				if (session->m_devices.empty()) {
+					cerr << "smu: no supported devices plugged in" << endl;
 					exit(EXIT_FAILURE);
+				} else if (session->m_devices.size() > 1) {
+					cerr << "smu: multiple devices attached, flashing only works on a single device" << endl;
+					cerr << "Please detach all devices except the one targeted for flashing." << endl;
+					exit(EXIT_FAILURE);
+				}
+				// flash firmware image to an attached m1k device
+				if (session->flash_firmware(optarg)) {
+					cout << "smu: failed updating firmware" << endl;
+					exit(EXIT_FAILURE);
+				}
+				cout << "smu: successfully updated firmware" << endl;
+				cout << "Please unplug and replug the device to finish the process." << endl;
 				break;
 			case 'h':
 				display_usage();

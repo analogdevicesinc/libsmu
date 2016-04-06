@@ -6,6 +6,7 @@
 
 #include "libsmu.hpp"
 #include <iostream>
+#include <fstream>
 #include <libusb.h>
 #include <string.h>
 #include "device_cee.hpp"
@@ -87,6 +88,149 @@ void Session::detached(libusb_device *device)
 	}
 }
 
+/// Internal function to write raw SAM-BA commands to a libusb handle.
+static int usb_write(libusb_device_handle *handle, const char* data) {
+	int transferred;
+	libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
+	smu_debug("USB bytes written: %i\n", transferred);
+	return transferred;
+}
+
+/// Internal function to read raw SAM-BA commands to a libusb handle.
+static int usb_read(libusb_device_handle *handle, unsigned char* data) {
+	int transferred;
+	libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
+	smu_debug("USB bytes read: %i\n", transferred);
+	return transferred;
+}
+
+/// Update device firmware for the first attached device found.
+int Session::flash_firmware(const char *file)
+{
+	struct libusb_device *dev = NULL;
+	struct libusb_device_handle *handle = NULL;
+	struct libusb_device **devs;
+	struct libusb_device_descriptor info;
+	const uint16_t SAMBA_VENDOR_ID = 0x03eb;
+	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
+	unsigned char *usb_data = new unsigned char[512];
+	unsigned int device_count, page;
+	int ret = 0;
+
+	std::ifstream firmware (file, std::ios::in | std::ios::binary);
+	long firmware_size;
+	char *buf;
+	const uint32_t flashbase = 0x80000;
+
+	if (!firmware.is_open()) {
+		smu_debug("failed to open firmware file\n");
+		return 1;
+	}
+
+	// force attached m1k into command mode
+	if (!this->m_devices.empty()) {
+		auto m1k = *(this->m_devices.begin());
+		m1k->ctrl_transfer(0x40, 0xBB, 0, 0, NULL, 0, 100);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+
+	device_count = libusb_get_device_list(NULL, &devs);
+	if (device_count <= 0) {
+		smu_debug("error enumerating USB devices\n");
+		return 1;
+	}
+
+	// Walk the list of USB devices looking for the device in SAM-BA mode.
+	for (unsigned int i = 0; i < device_count; i++) {
+		libusb_get_device_descriptor(devs[i], &info);
+		if (info.idVendor == SAMBA_VENDOR_ID && info.idProduct == SAMBA_PRODUCT_ID) {
+			// Take the first device found, we disregard multiple devices.
+			dev = devs[i];
+			break;
+		}
+	}
+
+	if (dev == NULL) {
+		smu_debug("no supported devices plugged in\n");
+		ret = 1;
+		goto libusb_clean;
+	}
+
+	if (libusb_open(dev, &handle)) {
+		smu_debug("failed opening USB device\n");
+		ret = 1;
+		goto libusb_clean;
+	}
+#ifndef WIN32
+	libusb_detach_kernel_driver(handle, 0);
+	libusb_detach_kernel_driver(handle, 1);
+#endif
+	libusb_set_configuration(handle, 1);
+
+	// erase flash
+	usb_write(handle, "W400E0804,5A000005#");
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	usb_read(handle, usb_data);
+	// check if flash is erased
+	usb_write(handle, "w400E0808,4#");
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	usb_read(handle, usb_data);
+	usb_read(handle, usb_data);
+	usb_read(handle, usb_data);
+
+	// read firmware file into buffer
+	firmware.seekg(0, std::ios::end);
+	firmware_size = firmware.tellg();
+	firmware_size = firmware_size + (256 - firmware_size % 256);
+	firmware.seekg(0, std::ios::beg);
+	buf = new char[firmware_size];
+	firmware.read(buf, firmware_size);
+	firmware.close();
+
+	// write firmware
+	page = 0;
+	char cmd[20];
+	uint32_t data;
+	for (auto pos = 0; pos < firmware_size; pos += 4) {
+		memcpy(&data, &buf[pos], 4);
+		sprintf(cmd, "W%.8X,%.8X#", flashbase + pos, data);
+		usb_write(handle, cmd);
+		usb_read(handle, usb_data);
+		usb_read(handle, usb_data);
+		// On page boundaries, write the page.
+		if ((pos & 0xFC) == 0xFC) {
+			sprintf(cmd, "W400E0804,5A00%.2X03#", page);
+			usb_write(handle, cmd);
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			usb_read(handle, usb_data);
+			usb_read(handle, usb_data);
+			// Verify page is written.
+			usb_write(handle, "w400E0808,4#");
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			usb_read(handle, usb_data);
+			usb_read(handle, usb_data);
+			usb_read(handle, usb_data);
+			// TODO: check page status
+			page++;
+		}
+	}
+
+	// disable SAM-BA
+	usb_write(handle, "W400E0804,5A00010B#");
+	usb_read(handle, usb_data);
+	usb_read(handle, usb_data);
+	// jump to flash
+	usb_write(handle, "G00000000#");
+	usb_read(handle, usb_data);
+
+	libusb_close(handle);
+	delete[] buf;
+
+libusb_clean:
+	libusb_free_device_list(devs, 1);
+	delete usb_data;
+	return ret;
+}
 
 /// remove a specified Device from the list of available devices
 void Session::destroy_available(Device *dev) {
