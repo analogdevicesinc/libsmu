@@ -86,9 +86,10 @@ build_script:
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext %PYTHON_DEBUG% --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py bdist_wheel"
-  - "python setup.py bdist --format zip"
-  - "python setup.py bdist --format msi"
+  - "python setup.py build %PYTHON_DEBUG%"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
 
   ## build 64 bit python bindings
   # add python dirs to PATH
@@ -104,9 +105,10 @@ build_script:
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext %PYTHON_DEBUG% --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py bdist_wheel"
-  - "python setup.py bdist --format zip"
-  - "python setup.py bdist --format msi"
+  - "python setup.py build %PYTHON_DEBUG%"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
 
   # push all dist files as artifacts
