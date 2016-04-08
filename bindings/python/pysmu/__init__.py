@@ -84,7 +84,7 @@ class Device(object):
             wIndex: the index field for the setup packet
             data: a suitably-sized data buffer for either input or output
             wLength: the length field for the setup packet
-            timeout: timeout (in millseconds) that this function should wait
+            timeout: timeout (in milliseconds) that this function should wait
                 before giving up due to no response being received
 
         Returns: the number of bytes actually transferred
