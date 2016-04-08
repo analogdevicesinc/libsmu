@@ -11,6 +11,7 @@
   #include <cmath>
   #include <Python.h>
 #else
+  // force non-debug python lib use for debug builds under Visual Studio
   #ifdef _DEBUG
     #undef _DEBUG
     #include <Python.h>
