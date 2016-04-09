@@ -32,13 +32,13 @@ def pkgconfig(*packages, **kw):
 
 ext_kwargs = dict(
     include_dirs=[os.path.join(TOPDIR, 'src')],
-    extra_compile_args=['-std=c++11'],
     library_dirs=[os.path.join(TOPDIR, 'src')],
 )
 
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
 else:
+    ext_kwargs['extra_compile_args'] = ['-std=c++11']
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
 
