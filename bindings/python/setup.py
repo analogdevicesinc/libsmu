@@ -11,6 +11,7 @@ from setuptools import setup, find_packages, Extension
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
+SRCDIR = os.path.join(TOPDIR, 'src')
 
 def pkgconfig(*packages, **kw):
     """Translate pkg-config data to compatible Extension parameters."""
@@ -31,8 +32,8 @@ def pkgconfig(*packages, **kw):
     return kw
 
 ext_kwargs = dict(
-    include_dirs=[os.path.join(TOPDIR, 'src')],
-    library_dirs=[os.path.join(TOPDIR, 'src')],
+    include_dirs=[SRCDIR],
+    library_dirs=[SRCDIR],
 )
 
 if sys.platform == 'win32':
