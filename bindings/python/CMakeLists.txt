@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8.7)
-
 set(Python_ADDITIONAL_VERSIONS 2.7)
 include(FindPythonLibs REQUIRED)
 
