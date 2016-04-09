@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 
+from distutils.command.build_ext import build_ext
 from setuptools import setup, find_packages, Extension
 
 # top level bindings directory
@@ -12,6 +13,20 @@ BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
 SRCDIR = os.path.join(TOPDIR, 'src')
+
+
+class build_ext_compiler_check(build_ext):
+    """Add custom compile flags for compiled extensions."""
+
+    def build_extensions(self):
+        compiler = self.compiler.compiler_type
+        cxxflags = []
+        if compiler != 'msvc':
+            cxxflags.append('-std=c++11')
+        for ext in self.extensions:
+            ext.extra_compile_args.extend(cxxflags)
+        return build_ext.build_extensions(self)
+
 
 def pkgconfig(*packages, **kw):
     """Translate pkg-config data to compatible Extension parameters."""
@@ -39,7 +54,6 @@ ext_kwargs = dict(
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
 else:
-    ext_kwargs['extra_compile_args'] = ['-std=c++11']
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
 
@@ -61,6 +75,7 @@ setup(
     packages=find_packages(),
     ext_modules=extensions,
     scripts=glob.glob('bin/*'),
+    cmdclass={'build_ext': build_ext_compiler_check},
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
