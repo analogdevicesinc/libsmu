@@ -364,7 +364,9 @@ setOutputArbitrary(PyObject* self, PyObject* args)
 		free(dev_buf);
 		return NULL;
 	}
-	auto sgnl = dev->signal(chan_num, mode);
+	auto sgnl =  dev->signal(chan_num, 0);
+	if (mode == SIMV)
+		sgnl = dev->signal(chan_num, 1);
 	bool flag = false;
 	if (repeat>0)
 		flag = true;
