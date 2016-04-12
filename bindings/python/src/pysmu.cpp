@@ -338,9 +338,7 @@ setOutputArbitrary(PyObject* self, PyObject* args)
 {
 	PyObject* buf;
 	const char *dev_serial;
-	int chan_num;
-	int mode;
-	int repeat;
+	int chan_num, mode, repeat;
 	if (!PyArg_ParseTuple(args, "Osiii", &buf, &dev_serial, &chan_num, &mode, &repeat))
 		return NULL;
 	size_t buf_len = PyObject_Length(buf);
@@ -368,7 +366,7 @@ setOutputArbitrary(PyObject* self, PyObject* args)
 	if (mode == SIMV)
 		sgnl = dev->signal(chan_num, 1);
 	bool flag = false;
-	if (repeat>0)
+	if (repeat)
 		flag = true;
 	sgnl->source_buffer(dev_buf, buf_len, flag);
 	Py_RETURN_NONE;
