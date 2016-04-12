@@ -154,10 +154,15 @@ class Channel(object):
         else:
             raise ValueError('invalid mode: {}'.format(mode))
 
-    def arbitrary(self, waveform, repeat=0):
-        """Output an arbitrary waveform."""
-        wave = map(float, reduce(operator.add, [[s]*100*n for s, n in waveform]))
-        return _pysmu.set_output_buffer(wave, self.dev, self.chan, self.mode, repeat)
+    def arbitrary(self, waveform, repeat=False):
+        """Output an arbitrary waveform.
+
+        Args:
+            waveform: sequence of raw waveform values (floats or ints)
+            repeat (boolean): repeat the waveform when arriving at the end of
+                its available samples
+        """
+        return _pysmu.set_output_buffer(waveform, self.dev, self.chan, self.mode, repeat)
 
     def get_samples(self, n_samples):
         """Query the channel for a given number of samples.
