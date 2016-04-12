@@ -341,20 +341,22 @@ setOutputArbitrary(PyObject* self, PyObject* args)
 	int chan_num, mode, repeat;
 	if (!PyArg_ParseTuple(args, "Osiii", &buf, &dev_serial, &chan_num, &mode, &repeat))
 		return NULL;
-	size_t buf_len = PyObject_Length(buf);
+
+	if (!PySequence_Check(buf)) {
+		PyErr_SetString(PyExc_TypeError, "set_output_buffer(): first arg must be a sequence of floats or ints");
+		return NULL;
+	}
+
+	size_t buf_len = PySequence_Length(buf);
 	float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
-	for (size_t i = 0; i < buf_len; i++){
+	for (auto i = 0; i < buf_len; i++){
 		PyObject* val = PySequence_GetItem(buf, i);
-		if (!PyFloat_Check(val)){
+		if (!PyFloat_Check(val) && !PyInt_Check(val)) {
 			free(dev_buf);
-			PyErr_SetString(PyExc_TypeError, "set_output_buffer() first arg must be a list of floats");
+			PyErr_SetString(PyExc_TypeError, "set_output_buffer(): first arg must be a sequence of floats or ints");
 			return NULL;
 		}
-		char* tmp = (char*)malloc(100);
-		double intermediary = PyFloat_AsDouble(val);
-		sprintf(tmp, "%f", intermediary);
-		dev_buf[i] = atof(tmp);
-		free(tmp);
+		dev_buf[i] = (float)PyFloat_AsDouble(val);
 	}
 
 	auto dev = get_device(dev_serial);
