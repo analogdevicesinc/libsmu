@@ -445,7 +445,7 @@ void M1000_Device::sync() {
 void M1000_Device::start_run(uint64_t samples) {
 	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
-		debug("control transfer failed with code %i", ret);
+		debug("control transfer failed with code %i\n", ret);
 		return;
 	}
 	std::lock_guard<std::mutex> lock(m_state);
@@ -466,7 +466,7 @@ void M1000_Device::cancel() {
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
 	if ( (ret_in != ret_out) || (ret_in != 0) || (ret_out != 0) )
-		debug("cancel error in: %s out: %s", libusb_error_name(ret_in), libusb_error_name(ret_out));
+		debug("cancel error in: %s out: %s\n", libusb_error_name(ret_in), libusb_error_name(ret_out));
 }
 
 /// put outputs into high-impedance mode, stop sampling
