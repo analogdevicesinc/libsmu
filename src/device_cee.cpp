@@ -144,16 +144,16 @@ int CEE_Device::init() {
 	if (have_version_info) {
 		m_min_per = version_info.min_per;
 		if (version_info.per_ns != 250) {
-			debug("Error: alternate timer clock %i is not supported in this release.\n", version_info.per_ns);
+			smu_debug("Error: alternate timer clock %i is not supported in this release.\n", version_info.per_ns);
 		}
 
 	} else {
 		m_min_per = 100;
 	}
 
-	debug("Hardware: %s\n", m_hw_version.c_str());
-	debug("Firmware version: %s ( %s )\n", m_fw_version.c_str(), m_git_version.c_str());
-	debug("Supported sample rate: %f ksps\n", (double) CEE_timer_clock / (double) m_min_per / 1000.0);
+	smu_debug("Hardware: %s\n", m_hw_version.c_str());
+	smu_debug("Firmware version: %s ( %s )\n", m_fw_version.c_str(), m_git_version.c_str());
+	smu_debug("Supported sample rate: %f ksps\n", (double) CEE_timer_clock / (double) m_min_per / 1000.0);
 	return 0;
 }
 
@@ -187,7 +187,7 @@ void CEE_Device::read_calibration() {
 	};
 	int r = libusb_control_transfer(m_usb, 0xC0, 0xE0, 0, 0, buf, 64, 100);
 	if (!r || magic != EEPROM_VALID_MAGIC) {
-		debug("Reading calibration data failed: %i\n", r);
+		smu_debug("Reading calibration data failed: %i\n", r);
 		memset(&m_cal, 0xff, sizeof(m_cal));
 
 		m_cal.offset_a_v = m_cal.offset_a_i = m_cal.offset_b_v = m_cal.offset_b_i = 0;
@@ -206,7 +206,7 @@ void CEE_Device::read_calibration() {
 		m_cal.current_gain_b = CEE_default_current_gain;
 	}
 
-	debug("Current gain %i %i\n", m_cal.current_gain_a, m_cal.current_gain_b);
+	smu_debug("Current gain %i %i\n", m_cal.current_gain_a, m_cal.current_gain_b);
 }
 
 void CEE_Device::set_current_limit(unsigned mode) {
@@ -221,7 +221,7 @@ void CEE_Device::set_current_limit(unsigned mode) {
 	} else if (mode == 2000) {
 		ilimit_cal_a = ilimit_cal_b = 0;
 	} else {
-		debug("Invalid current limit: %u\n", mode);
+		smu_debug("Invalid current limit: %u\n", mode);
 		return;
 	}
 
@@ -301,7 +301,7 @@ void CEE_Device::configure(uint64_t rate) {
 
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 
-	debug("CEE prepare %i transfers %u\n", m_xmega_per, m_packets_per_transfer);
+	smu_debug("CEE prepare %i transfers %u\n", m_xmega_per, m_packets_per_transfer);
 }
 
 inline uint16_t CEE_Device::encode_out(unsigned chan, uint32_t igain) {
@@ -338,7 +338,7 @@ bool CEE_Device::submit_out_transfer(libusb_transfer* t) {
 
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			debug("libusb_submit_transfer out: %i\n", r);
+			smu_debug("libusb_submit_transfer out: %i\n", r);
 		}
 		m_out_transfers.num_active++;
 		return true;
@@ -350,7 +350,7 @@ bool CEE_Device::submit_in_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
-			debug("libusb_submit_transfer in: %i\n", r);
+			smu_debug("libusb_submit_transfer in: %i\n", r);
 		}
 		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
@@ -370,7 +370,7 @@ void CEE_Device::handle_in_transfer(libusb_transfer* t) {
 		IN_packet *pkt = &((IN_packet*)t->buffer)[p];
 
 		if ((pkt->flags & FLAG_PACKET_DROPPED) && m_in_sampleno != 0) {
-			debug("Warning: dropped packet\n");
+			smu_debug("Warning: dropped packet\n");
 		}
 
 		for (int i=0; i<IN_SAMPLES_PER_PACKET; i++) {

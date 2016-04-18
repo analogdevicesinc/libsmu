@@ -16,7 +16,7 @@
 #define DEBUG_TEST 0
 #endif
 
-#define debug(...) do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while(0);
+#define smu_debug(...) do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while(0);
 
 #ifdef __GNUC__
 #define __packed __attribute__((packed))
