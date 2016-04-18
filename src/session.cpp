@@ -21,12 +21,12 @@ Session::Session() {
 	m_active_devices = 0;
 
 	if (int r = libusb_init(&m_usb_cx) != 0) {
-		debug("libusb init failed: %i\n", r);
+		smu_debug("libusb init failed: %i\n", r);
 		abort();
 	}
 
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-		debug("Using libusb hotplug\n");
+		smu_debug("Using libusb hotplug\n");
 		if (int r = libusb_hotplug_register_callback(NULL,
 			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
 			(libusb_hotplug_flag) 0,
@@ -37,10 +37,10 @@ Session::Session() {
 			this,
 			NULL
 		) != 0) {
-		debug("libusb hotplug cb reg failed: %i\n", r);
+		smu_debug("libusb hotplug cb reg failed: %i\n", r);
 	};
 	} else {
-		debug("Libusb hotplug not supported. Only devices already attached will be used.\n");
+		smu_debug("Libusb hotplug not supported. Only devices already attached will be used.\n");
 	}
 	start_usb_thread();
 
@@ -68,7 +68,7 @@ void Session::attached(libusb_device *device) {
 	if (dev) {
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
-		debug("Session::attached ser: %s\n", dev->serial());
+		smu_debug("Session::attached ser: %s\n", dev->serial());
 		if (this->m_hotplug_attach_callback) {
 			this->m_hotplug_attach_callback(&*dev);
 		}
@@ -81,7 +81,7 @@ void Session::detached(libusb_device *device)
 	if (this->m_hotplug_detach_callback) {
 		shared_ptr<Device> dev = this->find_existing_device(device);
 		if (dev) {
-			debug("Session::detached ser: %s\n", dev->serial());
+			smu_debug("Session::detached ser: %s\n", dev->serial());
 			this->m_hotplug_detach_callback(&*dev);
 		}
 	}
@@ -147,7 +147,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	libusb_device_descriptor desc;
 	int r = libusb_get_device_descriptor(device, &desc);
 	if (r != 0) {
-		debug("Error %i in get_device_descriptor\n", r);
+		smu_debug("Error %i in get_device_descriptor\n", r);
 		return NULL;
 	}
 
@@ -197,7 +197,7 @@ Device* Session::get_device(const char* serial) {
 Device* Session::add_device(Device* device) {
 	if ( device ) {
 		m_devices.insert(device);
-		debug("device insert: %s\n", device->serial());
+		smu_debug("device insert: %s\n", device->serial());
 		device->added();
 		return device;
 	}
@@ -211,7 +211,7 @@ void Session::remove_device(Device* device) {
 		device->removed();
 	}
 	else {
-		debug("no device removed\n");
+		smu_debug("no device removed\n");
 	}
 }
 
@@ -237,7 +237,7 @@ void Session::end() {
 	//	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	// wait on m_completion, return m_active_devices compared with 0
 	if (!res) {
-		debug("timed out\n");
+		smu_debug("timed out\n");
 	}
 	for (auto i: m_devices) {
 		i->off();
@@ -277,7 +277,7 @@ void Session::handle_error(int status, const char * tag) {
 	std::lock_guard<std::mutex> lock(m_lock);
 	// a canceled transfer completing is not an error...
 	if ((m_cancellation == 0) && (status != LIBUSB_TRANSFER_CANCELLED) ) {
-		debug("error condition at %s: %s\n", tag, libusb_error_name(status));
+		smu_debug("error condition at %s: %s\n", tag, libusb_error_name(status));
 		m_cancellation = status;
 		cancel();
 	}
