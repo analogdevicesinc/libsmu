@@ -24,6 +24,8 @@ using std::endl;
 using std::string;
 using std::vector;
 
+using namespace smu;
+
 static void list_devices(Session* session)
 {
 	if (session->m_devices.empty()) {

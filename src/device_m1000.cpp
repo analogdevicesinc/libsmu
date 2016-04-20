@@ -5,14 +5,14 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #include "device_m1000.hpp"
-#include <libusb.h>
-#include <iostream>
-#include <cstring>
+#include "internal.hpp"
+#include "libsmu.hpp"
+
 #include <cmath>
-#include <cassert>
+#include <cstring>
 #include <vector>
 
-using std::vector;
+#include <libusb.h>
 
 #define EP_OUT 0x02
 #define EP_IN 0x81
@@ -35,6 +35,8 @@ const double BUFFER_TIME = 0.050;
 #else
 const double BUFFER_TIME = 0.020;
 #endif
+
+using namespace smu;
 
 static const sl_device_info m1000_info = {DEVICE_M1000, "ADALM1000", 2};
 
@@ -75,9 +77,11 @@ int M1000_Device::get_default_rate() {
 int M1000_Device::init() {
 	int d = Device::init();
 
-	if (d!=0) { return d; }
-	else { return 0; }
-
+	if (d != 0) {
+		return d;
+	} else {
+		return 0;
+	}
 }
 
 int M1000_Device::added() {
@@ -94,7 +98,7 @@ int M1000_Device::removed() {
 void M1000_Device::read_calibration() {
 	int ret;
 
-	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+	ret = this->ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	if(ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
 		for(int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
@@ -105,7 +109,7 @@ void M1000_Device::read_calibration() {
 }
 
 // Provide external read access to EEPROM calibration data.
-void M1000_Device::calibration(vector<vector<float>>* cal) {
+void M1000_Device::calibration(std::vector<std::vector<float>>* cal) {
 	(*cal).resize(8);
 	for (int i = 0; i < 8; i++) {
 		(*cal)[i].resize(3);
@@ -183,7 +187,7 @@ write_cal:
 		ret = -EINVAL;
 	} else {
 		m_cal.eeprom_valid = EEPROM_VALID;
-		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+		ret = this->ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	}
 
 	return ret;
@@ -249,14 +253,15 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 void M1000_Device::configure(uint64_t rate) {
 	double sample_time = 1.0/rate;
 	double M1K_timer_clock;
+
 	// if FW version is 023314a - initial production, use 3e6 for timer clock
+	// otherwise, assume a more recent firmware, and use the audacious clock
 	if (strcmp(this->m_fw_version, "023314a*") == 0) {
 		M1K_timer_clock = 3e6;
-	}
-	// otherwise, assume a more recent firmware, and use the audacious clock
-	else {
+	} else {
 		M1K_timer_clock = 48e6;
 	}
+
 	m_sam_per = round(sample_time * M1K_timer_clock) / 2;
 	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
 	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
@@ -264,8 +269,8 @@ void M1000_Device::configure(uint64_t rate) {
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
-	m_in_transfers.alloc( transfers, m_usb, EP_IN,	LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,	10000, m1000_in_completion,  this);
+	m_in_transfers.alloc(transfers, m_usb, EP_IN,LIBUSB_TRANSFER_TYPE_BULK,
+		m_packets_per_transfer*in_packet_size,10000, m1000_in_completion, this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
@@ -472,4 +477,16 @@ void M1000_Device::off() {
 	set_mode(A, DISABLED);
 	set_mode(B, DISABLED);
 	libusb_control_transfer(m_usb, 0x40, 0xC5, 0, 0, 0, 0, 100);
+}
+
+// Force the device into SAM-BA command mode.
+void M1000_Device::samba_mode() {
+	int ret;
+
+	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
+		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
+	}
 }

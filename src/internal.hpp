@@ -4,13 +4,23 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifndef _LIBSMU_INTERNAL_HPP
-#define _LIBSMU_INTERNAL_HPP
+#ifndef __LIBSMU_INTERNAL_HPP__
+#define __LIBSMU_INTERNAL_HPP__
+
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
 
 #include <libusb.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <vector>
+
+#ifdef DEBUG
+#define DEBUG_TEST 1
+#else
+#define DEBUG_TEST 0
+#endif
+
+#define smu_debug(...) do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while(0);
 
 inline static float constrain(float val, float lo, float hi){
 	if (val > hi) val = hi;
@@ -101,4 +111,4 @@ struct Transfers {
 	int32_t num_active;
 };
 
-#endif // _LIBSMU_INTERNAL_HPP
+#endif // __LIBSMU_INTERNAL_HPP__
