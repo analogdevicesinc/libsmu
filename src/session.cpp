@@ -4,14 +4,19 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
+#include "internal.hpp"
 #include "libsmu.hpp"
-#include <iostream>
-#include <fstream>
-#include <libusb.h>
-#include <string.h>
 #include "device_m1000.hpp"
 
+#include <iostream>
+#include <fstream>
+#include <string.h>
+
+#include <libusb.h>
+
 using std::shared_ptr;
+
+using namespace smu;
 
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
@@ -245,7 +250,8 @@ void Session::destroy_available(Device *dev) {
 
 /// low-level callback for hotplug events, proxies to session methods
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
+{
 	(void) ctx;
 	Session *sess = (Session *) user_data;
 	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
@@ -453,41 +459,5 @@ void Session::progress() {
 		if (m_progress_callback) {
 			m_progress_callback(m_min_progress);
 		}
-	}
-}
-
-Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d) {
-	libusb_ref_device(m_device);
-}
-
-// generic device init - libusb_open
-int Device::init() {
-	int r = libusb_open(m_device, &m_usb);
-	return r;
-}
-
-// generic device teardown - libusb_close
-Device::~Device() {
-	if (m_usb)
-		libusb_close(m_usb);
-	if (m_device)
-		libusb_unref_device(m_device);
-}
-
-// generic implementation of ctrl_transfers
-int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
-{
-	return libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
-}
-
-// Force the device into SAM-BA command mode.
-void Device::samba_mode() {
-	int ret;
-
-	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
-		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
 	}
 }
