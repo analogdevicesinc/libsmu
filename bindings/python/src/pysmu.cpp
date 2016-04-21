@@ -349,6 +349,11 @@ setOutputArbitrary(PyObject* self, PyObject* args)
 
 	size_t buf_len = PySequence_Length(buf);
 	float* dev_buf = (float*)(malloc(sizeof(float) * buf_len));
+	if (!dev_buf) {
+		PyErr_SetString(PyExc_MemoryError, "set_output_buffer(): sequence is too big to fit in memory");
+		return NULL;
+	}
+
 	for (auto i = 0; i < buf_len; i++){
 		PyObject* val = PySequence_GetItem(buf, i);
 		if (!PyFloat_Check(val) && !PyInt_Check(val)) {
