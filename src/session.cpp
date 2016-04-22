@@ -121,11 +121,10 @@ void Session::flash_firmware(const char *file, Device *dev)
 	struct libusb_device_handle *usb_handle = NULL;
 	struct libusb_device **usb_devs;
 	struct libusb_device_descriptor usb_info;
-	const uint16_t SAMBA_VENDOR_ID = 0x03eb;
-	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
 	unsigned char usb_data[512];
 	unsigned int device_count, page;
 	int ret;
+	std::vector<uint16_t> samba_device_id;
 
 	std::ifstream firmware (file, std::ios::in | std::ios::binary);
 	long firmware_size;
@@ -154,7 +153,9 @@ void Session::flash_firmware(const char *file, Device *dev)
 	// Walk the list of USB devices looking for the device in SAM-BA mode.
 	for (unsigned int i = 0; i < device_count; i++) {
 		libusb_get_device_descriptor(usb_devs[i], &usb_info);
-		if (usb_info.idVendor == SAMBA_VENDOR_ID && usb_info.idProduct == SAMBA_PRODUCT_ID) {
+		samba_device_id = {usb_info.idVendor, usb_info.idProduct};
+		if (std::find(SAMBA_DEVICES.begin(), SAMBA_DEVICES.end(), samba_device_id)
+				!= SAMBA_DEVICES.end()) {
 			// Take the first device found, we disregard multiple devices.
 			usb_dev = usb_devs[i];
 			break;
