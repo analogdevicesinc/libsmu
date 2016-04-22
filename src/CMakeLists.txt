@@ -31,7 +31,7 @@ set(LIBS_TO_LINK ${LIBUSB_LIBRARIES})
 if(CMAKE_COMPILER_IS_GNUCXX)
 	SET(LIBS_TO_LINK ${LIBS_TO_LINK} m)
 endif()
-set(LIBSMU_CPPFILES session.cpp device.cpp device_m1000.cpp signal.cpp libsmu.cpp)
+set(LIBSMU_CPPFILES session.cpp device.cpp device_m1000.cpp signal.cpp)
 set(LIBSMU_HEADERS libsmu.hpp)
 
 add_library(smu ${LIBSMU_CPPFILES} ${LIBSMU_HEADERS})

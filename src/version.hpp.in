@@ -1,0 +1,28 @@
+// Released under the terms of the BSD License
+// (C) 2016, Analog Devices, Inc.
+
+#ifndef __LIBSMU_VERSION_HPP__
+#define __LIBSMU_VERSION_HPP__
+
+#define LIBSMU_VERSION_MAJOR @LIBSMU_VERSION_MAJOR@
+#define LIBSMU_VERSION_MINOR @LIBSMU_VERSION_MINOR@
+#define LIBSMU_VERSION_PATCH @LIBSMU_VERSION_PATCH@
+#define LIBSMU_VERSION "@LIBSMU_VERSION@"
+
+inline const char* libsmu_version(void) {
+    return LIBSMU_VERSION;
+}
+
+inline int libsmu_version_major(void) {
+    return LIBSMU_VERSION_MAJOR;
+}
+
+inline int libsmu_version_minor(void) {
+    return LIBSMU_VERSION_MINOR;
+}
+
+inline int libsmu_version_patch(void) {
+    return LIBSMU_VERSION_PATCH;
+}
+
+#endif // __LIBSMU_VERSION_HPP__

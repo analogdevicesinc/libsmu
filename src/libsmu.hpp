@@ -7,6 +7,8 @@
 #ifndef __LIBSMU_HPP__
 #define __LIBSMU_HPP__
 
+#include "version.hpp"
+
 #include <cstdint>
 #include <cstddef>
 #include <string>
@@ -18,8 +20,6 @@
 #include <vector>
 
 #include <libusb.h>
-
-#define LIBSMU_VERSION "0.8.9"
 
 namespace smu {
 	class Device;
@@ -116,9 +116,6 @@ enum Modes {
 
 
 namespace smu {
-	/// Get the current library version.
-	const char* get_version();
-
 	class Session {
 	public:
 		Session();
