@@ -56,6 +56,7 @@ Source: "C:\libsmu\drivers\m1k-winusbx64.cat"; DestDir: "{app}\drivers"; Tasks: 
 Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"
 Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Tasks: visualstudio
 Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
+Source: "C:\libsmu\version.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
 Source: "C:\libsmu\64\smu.exe"; DestDir: "{app}"
 
 [Tasks]
