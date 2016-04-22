@@ -33,6 +33,12 @@ const std::vector<std::vector<uint16_t>> SUPPORTED_DEVICES = {
 	{0x064b, 0x784c},
 };
 
+/// List of supported devices in SAM-BA bootloader mode, using vendor and
+/// project IDs from USB information formatted as {vendor_id, product_id}.
+const std::vector<std::vector<uint16_t>> SAMBA_DEVICES = {
+	{0x03eb, 0x6124},
+};
+
 typedef enum sl_type {
 	DEVICE_M1000 = 0x10000,
 	CHANNEL_SMU = 0x20000,
