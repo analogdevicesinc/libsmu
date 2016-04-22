@@ -8,6 +8,7 @@
 #include "libsmu.hpp"
 #include "device_m1000.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <string.h>
@@ -303,9 +304,9 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 		return NULL;
 	}
 
-	if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
-	} else if (desc.idVendor == 0x064B && desc.idProduct == 0x784C) {
+	std::vector<uint16_t> device_id = {desc.idVendor, desc.idProduct};
+	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
+			!= SUPPORTED_DEVICES.end()) {
 		dev = shared_ptr<Device>(new M1000_Device(this, device));
 	}
 
