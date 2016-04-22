@@ -5,11 +5,14 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #include "libsmu.hpp"
-#include <iostream>
+#include "version.hpp"
+
 #include <cstdint>
+#include <cstring>
+#include <iostream>
 #include <vector>
 #include <thread>
-#include <string.h>
+
 #include <libusb.h>
 
 #ifdef WIN32
@@ -44,6 +47,7 @@ static void display_usage(void)
 	printf("smu: utility for managing M1K devices\n"
 		"\n"
 		" -h, --help                   print this help message and exit\n"
+		" -v, --version                show libsmu version\n"
 		" -l, --list                   list supported devices currently attached to the system\n"
 		" -p, --hotplug                simple session device hotplug testing\n"
 		" -s, --stream                 stream samples to stdout from a single attached device\n"
@@ -160,6 +164,7 @@ int main(int argc, char **argv)
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
+		{"version",     no_argument, 0, 'v'},
 		{"hotplug",  no_argument, 0, 'p'},
 		{"list",     no_argument, 0, 'l'},
 		{"stream",   no_argument, 0, 's'},
@@ -170,7 +175,7 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	while ((opt = getopt_long(argc, argv, "hplsdrw:f:",
+	while ((opt = getopt_long(argc, argv, "hvplsdrw:f:",
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
@@ -248,6 +253,9 @@ int main(int argc, char **argv)
 				break;
 			case 'h':
 				display_usage();
+				break;
+			case 'v':
+				cout << libsmu_version() << endl;
 				break;
 			default:
 				display_usage();
