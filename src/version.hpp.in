@@ -6,10 +6,13 @@
 #define LIBSMU_VERSION_MAJOR @LIBSMU_VERSION_MAJOR@
 #define LIBSMU_VERSION_MINOR @LIBSMU_VERSION_MINOR@
 #define LIBSMU_VERSION_PATCH @LIBSMU_VERSION_PATCH@
-#define LIBSMU_VERSION "@LIBSMU_VERSION@"
+#define LIBSMU_VERSION ((LIBSMU_VERSION_MAJOR << 16) |\
+			(LIBSMU_VERSION_MINOR << 8) |\
+			LIBSMU_VERSION_PATCH)
+#define LIBSMU_VERSION_STR "@LIBSMU_VERSION@"
 
 inline const char* libsmu_version(void) {
-    return LIBSMU_VERSION;
+    return LIBSMU_VERSION_STR;
 }
 
 inline int libsmu_version_major(void) {
