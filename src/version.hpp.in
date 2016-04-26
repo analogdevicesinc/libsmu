@@ -1,8 +1,7 @@
 // Released under the terms of the BSD License
 // (C) 2016, Analog Devices, Inc.
 
-#ifndef __LIBSMU_VERSION_HPP__
-#define __LIBSMU_VERSION_HPP__
+#pragma once
 
 #define LIBSMU_VERSION_MAJOR @LIBSMU_VERSION_MAJOR@
 #define LIBSMU_VERSION_MINOR @LIBSMU_VERSION_MINOR@
@@ -24,5 +23,3 @@ inline int libsmu_version_minor(void) {
 inline int libsmu_version_patch(void) {
     return LIBSMU_VERSION_PATCH;
 }
-
-#endif // __LIBSMU_VERSION_HPP__

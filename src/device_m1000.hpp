@@ -4,8 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifndef __LIBSMU_DEVICE_M1000_HPP__
-#define __LIBSMU_DEVICE_M1000_HPP__
+#pragma once
 
 #include "internal.hpp"
 #include "libsmu.hpp"
@@ -79,5 +78,3 @@ namespace smu {
 		unsigned m_mode[2];
 	};
 }
-
-#endif // __LIBSMU_DEVICE_M1000_HPP__
