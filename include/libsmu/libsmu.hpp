@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "version.hpp"
-#include "device.hpp"
-#include "signal.hpp"
-#include "session.hpp"
+#include <libsmu/version.hpp>
+#include <libsmu/device.hpp>
+#include <libsmu/signal.hpp>
+#include <libsmu/session.hpp>
 
 #include <cstdint>
 #include <vector>

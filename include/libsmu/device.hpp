@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "signal.hpp"
-#include "session.hpp"
+#include <libsmu/signal.hpp>
+#include <libsmu/session.hpp>
 
 #include <cstdint>
 #include <mutex>

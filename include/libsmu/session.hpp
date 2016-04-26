@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "device.hpp"
+#include <libsmu/device.hpp>
 
 #include <cstdint>
 #include <set>

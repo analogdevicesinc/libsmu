@@ -6,7 +6,9 @@
 
 #include "device_m1000.hpp"
 #include "internal.hpp"
-#include "libsmu.hpp"
+#include <libsmu/device.hpp>
+#include <libsmu/session.hpp>
+#include <libsmu/signal.hpp>
 
 #include <cmath>
 #include <cstring>
