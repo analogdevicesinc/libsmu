@@ -4,8 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifndef __LIBSMU_HPP__
-#define __LIBSMU_HPP__
+#pragma once
 
 #include "version.hpp"
 
@@ -371,5 +370,3 @@ namespace smu {
 		float m_latest_measurement;
 	};
 }
-
-#endif // __LIBSMU_HPP__
