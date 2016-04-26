@@ -4,8 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "libsmu.hpp"
-#include "version.hpp"
+#include <libsmu/libsmu.hpp>
 
 #include <cstdint>
 #include <cstring>

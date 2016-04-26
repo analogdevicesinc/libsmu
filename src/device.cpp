@@ -5,7 +5,8 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #include "internal.hpp"
-#include "libsmu.hpp"
+#include <libsmu/device.hpp>
+#include <libsmu/session.hpp>
 
 #include <libusb.h>
 

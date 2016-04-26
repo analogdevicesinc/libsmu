@@ -4,7 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "libsmu.hpp"
+#include <libsmu/signal.hpp>
 
 #include <cmath>
 #include <cstddef>
