@@ -427,28 +427,28 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 		case DISABLED:
 		default: pset = 0x3000;
 	};
-	libusb_control_transfer(m_usb, 0x40, 0x59, chan, pset, 0, 0, 100);
+	this->ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
 	// set mode
-	libusb_control_transfer(m_usb, 0x40, 0x53, chan, mode, 0, 0, 100);
+	this->ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
 }
 
 /// turn on power supplies, clear sampling state
 void M1000_Device::on() {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
 
-	libusb_control_transfer(m_usb, 0x40, 0xC5, 0, 0, 0, 0, 100);
-	libusb_control_transfer(m_usb, 0x40, 0xCC, 0, 0, 0, 0, 100);
+	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	this->ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
 /// get current microframe index, set m_sof_start to be time in the future
 void M1000_Device::sync() {
-	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
+	this->ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start+0xff)&0x3c00;
 }
 
 /// command device to start sampling
 void M1000_Device::start_run(uint64_t samples) {
-	int ret = libusb_control_transfer(m_usb, 0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
+	int ret = this->ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
 		smu_debug("control transfer failed with code %i\n", ret);
 		return;
@@ -478,7 +478,7 @@ void M1000_Device::cancel() {
 void M1000_Device::off() {
 	set_mode(A, DISABLED);
 	set_mode(B, DISABLED);
-	libusb_control_transfer(m_usb, 0x40, 0xC5, 0, 0, 0, 0, 100);
+	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 }
 
 // Force the device into SAM-BA command mode.
