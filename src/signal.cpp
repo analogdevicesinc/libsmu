@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 
 #ifndef M_PI
 #define M_PI (4.0*atan(1.0))

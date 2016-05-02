@@ -9,9 +9,10 @@
 #include <libsmu/device.hpp>
 
 #include <cstdint>
-#include <set>
-#include <mutex>
 #include <condition_variable>
+#include <functional>
+#include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
 
