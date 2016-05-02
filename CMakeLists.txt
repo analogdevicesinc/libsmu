@@ -8,8 +8,8 @@ project(libsmu CXX C)
 
 # libsmu versioning
 set(LIBSMU_VERSION_MAJOR 0)
-set(LIBSMU_VERSION_MINOR 8)
-set(LIBSMU_VERSION_PATCH 9)
+set(LIBSMU_VERSION_MINOR 9)
+set(LIBSMU_VERSION_PATCH 0)
 set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERSION_PATCH})
 
 # support creating some basic binpkgs via `make package`
