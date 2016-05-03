@@ -70,6 +70,16 @@ class Device(object):
         self.serial = serial
         self.channels = channels
 
+    @property
+    def fwver(self):
+        """Return device's firmware revision."""
+        return _pysmu.fwver(self.serial)
+
+    @property
+    def hwver(self):
+        """Return device's hardware revision."""
+        return _pysmu.hwver(self.serial)
+
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
         """Perform raw USB control transfers.

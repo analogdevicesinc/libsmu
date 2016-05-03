@@ -309,6 +309,36 @@ setOutputWave(PyObject* self, PyObject* args)
 	Py_RETURN_NONE;
 }
 
+static PyObject*
+fwver(PyObject* self, PyObject* args)
+{
+	const char *dev_serial;
+
+	if (!PyArg_ParseTuple(args, "s", &dev_serial))
+		return NULL;
+
+	auto dev = get_device(dev_serial);
+	if (dev == NULL)
+		return NULL;
+
+	return PyString_FromString(dev->fwver());
+}
+
+static PyObject*
+hwver(PyObject* self, PyObject* args)
+{
+	const char *dev_serial;
+
+	if (!PyArg_ParseTuple(args, "s", &dev_serial))
+		return NULL;
+
+	auto dev = get_device(dev_serial);
+	if (dev == NULL)
+		return NULL;
+
+	return PyString_FromString(dev->hwver());
+}
+
 static PyObject *
 setOutputConstant(PyObject* self, PyObject* args)
 {
@@ -526,6 +556,8 @@ static PyMethodDef pysmu_methods [] = {
 	{ "set_mode", setMode, METH_VARARGS, "set channel mode"  },
 	{ "write_calibration", write_calibration, METH_VARARGS, "write calibration data to a device's EEPROM"  },
 	{ "calibration", calibration, METH_VARARGS, "show calibration data"  },
+	{ "fwver", fwver, METH_VARARGS, "show a device's firmware revision"  },
+	{ "hwver", hwver, METH_VARARGS, "show a device's hardware revision"  },
 	{ "get_inputs", getInputs, METH_VARARGS, "get measured voltage and current from a channel"  },
 	{ "get_all_inputs", getAllInputs, METH_VARARGS, "get measured voltage and current from all channels"  },
 	{ "iterate_inputs", inputs_iter, METH_VARARGS, "iterate over measured voltage and current from selected channels"  },
