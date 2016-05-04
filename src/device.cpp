@@ -4,7 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "internal.hpp"
+#include "debug.hpp"
 #include <libsmu/device.hpp>
 #include <libsmu/session.hpp>
 

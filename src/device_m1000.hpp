@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "internal.hpp"
+#include "debug.hpp"
+#include "transfers.hpp"
 #include <libsmu/device.hpp>
 #include <libsmu/session.hpp>
 #include <libsmu/signal.hpp>
