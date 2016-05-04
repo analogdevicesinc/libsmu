@@ -307,9 +307,9 @@ inline uint16_t M1000_Device::encode_out(unsigned chan) {
 /// submit data transfers to usb thread - from host to device
 bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
-		for (unsigned p=0; p<m_packets_per_transfer; p++) {
-			uint8_t* buf = (uint8_t*) (t->buffer + p*out_packet_size);
-			for (unsigned i=0; i < chunk_size; i++) {
+		for (unsigned p = 0; p < m_packets_per_transfer; p++) {
+			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
+			for (unsigned i = 0; i < chunk_size; i++) {
 				if (strncmp(this->m_fw_version, "2.", 2) == 0) {
 					uint16_t a = encode_out(0);
 					buf[i*4+0] = a >> 8;
@@ -363,10 +363,10 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 /// reformat received data - integer to float conversion
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 	float val;
-	for (unsigned p=0; p<m_packets_per_transfer; p++) {
-		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
+	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
+		uint8_t* buf = (uint8_t*) (t->buffer + p * in_packet_size);
 
-		for (unsigned i=0; i<chunk_size; i++) {
+		for (unsigned i = 0; i < chunk_size; i++) {
 			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
 				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
