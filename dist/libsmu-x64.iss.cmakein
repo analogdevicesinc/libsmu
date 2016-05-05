@@ -2,7 +2,7 @@
 AppId={{351792B2-1445-4489-945F-DD0649DD403F}
 AppName="libsmu"
 AppVersion="@LIBSMU_VERSION@"
-AppPublisher="Analog Devices"
+AppPublisher="Analog Devices, Inc."
 AppPublisherURL="http://www.analog.com"
 AppSupportURL="http://www.analog.com"
 AppUpdatesURL="http://www.analog.com"
