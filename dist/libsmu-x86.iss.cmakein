@@ -7,7 +7,7 @@ AppPublisherURL="http://www.analog.com"
 AppSupportURL="http://www.analog.com"
 AppUpdatesURL="http://www.analog.com"
 LicenseFile="C:\projects\libsmu\LICENSE"
-OutputBaseFilename=libsmu-setup
+OutputBaseFilename=libsmu-setup-x86
 OutputDir="C:\"
 DefaultDirName="{pf}\Analog Devices\libsmu"
 Compression=lzma
@@ -44,25 +44,18 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "C:\libsmu-python\pysmu-amd64.msi"; DestDir: "{tmp}"; Check: Is64BitInstallMode; Flags: deleteafterinstall
-Source: "C:\libsmu-python\pysmu-win32.msi"; DestDir: "{tmp}"; Check: not Is64BitInstallMode; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu-win32.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
-Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\libsmu\64\libusb-1.0.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
-Source: "C:\libsmu\32\msvcp140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\libsmu\32\vcruntime140.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\libsmu\64\msvcp140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\libsmu\64\vcruntime140.dll"; DestDir: "{app}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\libsmu\32\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "C:\libsmu\32\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
-Source: "C:\libsmu\32\libsmu.dll"; DestDir: "{app}"; Check: not Is64BitInstallMode
-Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"; Check: Is64BitInstallMode
-Source: "C:\libsmu\32\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Check: not Is64BitInstallMode; Tasks: visualstudio
-Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Check: Is64BitInstallMode; Tasks: visualstudio
+Source: "C:\libsmu\32\libsmu.dll"; DestDir: "{app}"
+Source: "C:\libsmu\32\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Tasks: visualstudio
 Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
 Source: "C:\libsmu\libsmu.h"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
-Source: "C:\libsmu\32\smu.exe"; DestDir: "{app}"; Check: not Is64BitInstallMode
-Source: "C:\libsmu\64\smu.exe"; DestDir: "{app}"; Check: Is64BitInstallMode
+Source: "C:\libsmu\32\smu.exe"; DestDir: "{app}"
 
 [Tasks]
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
@@ -70,8 +63,7 @@ Name: visualstudio; Description: Install Visual Studio 2015 support for building
 Name: python; Description: Install python bindings for libsmu; Flags: unchecked
 
 [Run]
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-amd64.msi"""; Flags: hidewizard; Check: Is64BitInstallMode; Tasks: python
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-win32.msi"""; Flags: hidewizard; Check: not Is64BitInstallMode; Tasks: python
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-win32.msi"""; Flags: hidewizard; Tasks: python
 
 [Code]
 const

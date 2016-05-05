@@ -120,7 +120,10 @@ build_script:
   - ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu-win32.msi
   - ps: popd
 
-  # create libsmu installer
-  - copy C:\projects\libsmu\32\dist\libsmu.iss C:\projects\libsmu\dist\libsmu.iss
-  - iscc C:\projects\libsmu\dist\libsmu.iss
-  - appveyor PushArtifact C:\libsmu-setup.exe
+  # create libsmu installers
+  - copy C:\projects\libsmu\32\dist\libsmu-x86.iss C:\projects\libsmu\dist\libsmu-x86.iss
+  - copy C:\projects\libsmu\32\dist\libsmu-x64.iss C:\projects\libsmu\dist\libsmu-x64.iss
+  - iscc C:\projects\libsmu\dist\libsmu-x86.iss
+  - iscc C:\projects\libsmu\dist\libsmu-x64.iss
+  - appveyor PushArtifact C:\libsmu-setup-x86.exe
+  - appveyor PushArtifact C:\libsmu-setup-x64.exe

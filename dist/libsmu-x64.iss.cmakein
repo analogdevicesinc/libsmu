@@ -1,0 +1,78 @@
+[Setup]
+AppId={{351792B2-1445-4489-945F-DD0649DD403F}
+AppName="libsmu"
+AppVersion="@LIBSMU_VERSION@"
+AppPublisher="Analog Devices"
+AppPublisherURL="http://www.analog.com"
+AppSupportURL="http://www.analog.com"
+AppUpdatesURL="http://www.analog.com"
+LicenseFile="C:\projects\libsmu\LICENSE"
+OutputBaseFilename=libsmu-setup-x64
+OutputDir="C:\"
+DefaultDirName="{pf}\Analog Devices\libsmu"
+Compression=lzma
+SolidCompression=yes
+ChangesEnvironment=yes
+ArchitecturesInstallIn64BitMode=x64
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+Name: "catalan"; MessagesFile: "compiler:Languages\Catalan.isl"
+Name: "corsican"; MessagesFile: "compiler:Languages\Corsican.isl"
+Name: "czech"; MessagesFile: "compiler:Languages\Czech.isl"
+Name: "danish"; MessagesFile: "compiler:Languages\Danish.isl"
+Name: "dutch"; MessagesFile: "compiler:Languages\Dutch.isl"
+Name: "finnish"; MessagesFile: "compiler:Languages\Finnish.isl"
+Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
+Name: "greek"; MessagesFile: "compiler:Languages\Greek.isl"
+Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
+Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
+Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
+Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
+Name: "norwegian"; MessagesFile: "compiler:Languages\Norwegian.isl"
+Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
+Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+Name: "scottishgaelic"; MessagesFile: "compiler:Languages\ScottishGaelic.isl"
+Name: "serbiancyrillic"; MessagesFile: "compiler:Languages\SerbianCyrillic.isl"
+Name: "serbianlatin"; MessagesFile: "compiler:Languages\SerbianLatin.isl"
+Name: "slovenian"; MessagesFile: "compiler:Languages\Slovenian.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
+
+[Files]
+Source: "C:\libsmu-python\pysmu-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+
+Source: "C:\libsmu\64\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+
+Source: "C:\libsmu\64\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "C:\libsmu\64\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+
+Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"
+Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Tasks: visualstudio
+Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
+Source: "C:\libsmu\libsmu.h"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
+Source: "C:\libsmu\64\smu.exe"; DestDir: "{app}"
+
+[Tasks]
+Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
+Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
+Name: python; Description: Install python bindings for libsmu; Flags: unchecked
+
+[Run]
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-amd64.msi"""; Flags: hidewizard; Tasks: python
+
+[Code]
+const
+	ModPathName = 'modifypath';
+	ModPathType = 'system';
+
+function ModPathDir(): TArrayOfString;
+begin
+	setArrayLength(Result, 1)
+	Result[0] := ExpandConstant('{app}');
+end;
+#include "modpath.iss"
