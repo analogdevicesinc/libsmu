@@ -43,7 +43,7 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		virtual void set_mode(unsigned channel, unsigned mode) = 0;
 
-		/// Perform a raw USB control transfer on the underlying USB device
+		/// Perform a raw USB control transfer on the underlying USB device.
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
@@ -71,7 +71,10 @@ namespace smu {
 
 	protected:
 		Device(Session* s, libusb_device* d);
+
+		/// generic device initialization
 		virtual int init();
+
 		virtual int added() { return 0; }
 		virtual int removed() { return 0; }
 		virtual void configure(uint64_t sampleRate) = 0;
