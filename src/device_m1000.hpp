@@ -30,7 +30,6 @@ namespace smu {
 		virtual ~M1000_Device();
 		virtual const sl_device_info* info() const;
 		virtual const sl_channel_info* channel_info(unsigned channel) const;
-		//virtual sl_mode_info* mode_info(unsigned mode);
 		virtual Signal* signal(unsigned channel, unsigned signal);
 
 		/// set output mode
