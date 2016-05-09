@@ -366,7 +366,7 @@ public:
 				return m_src_v2 - norm_phase * pkpk;
 
 			case SRC_STAIRSTEP:
-				return m_src_v2 - floorf(norm_phase*10)/10 * pkpk;
+				return m_src_v2 - floorf(norm_phase*10) * pkpk / 9;
 
 			case SRC_SINE:
 				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * pkpk/2;
