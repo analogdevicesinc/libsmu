@@ -283,11 +283,11 @@ setOutputWave(PyObject* self, PyObject* args)
 	double duty;
 	double period;
 	double phase;
-	float val1;
-	float val2;
+	float midpoint;
+	float peak;
 
 	if (!PyArg_ParseTuple(args, "siiiffddd", &dev_serial, &chan_num, &mode,
-							&wave, &val1, &val2, &period, &phase, &duty))
+							&wave, &midpoint, &peak, &period, &phase, &duty))
 		return NULL;
 
 	auto dev = get_device(dev_serial);
@@ -297,15 +297,15 @@ setOutputWave(PyObject* self, PyObject* args)
 	if (mode == SIMV)
 		sgnl = dev->signal(chan_num, 1);
 	if (wave == SRC_SQUARE)
-		sgnl->source_square(val1, val2, period, duty, phase);
+		sgnl->source_square(midpoint, peak, period, duty, phase);
 	if (wave == SRC_SAWTOOTH)
-		sgnl->source_sawtooth(val1, val2, period, phase);
+		sgnl->source_sawtooth(midpoint, peak, period, phase);
 	if (wave == SRC_STAIRSTEP)
-		sgnl->source_stairstep(val1, val2, period, phase);
+		sgnl->source_stairstep(midpoint, peak, period, phase);
 	if (wave == SRC_TRIANGLE)
-		sgnl->source_triangle(val1, val2, period, phase);
+		sgnl->source_triangle(midpoint, peak, period, phase);
 	if (wave == SRC_SINE)
-		sgnl->source_sine(val1, val2, period, phase);
+		sgnl->source_sine(midpoint, peak, period, phase);
 	Py_RETURN_NONE;
 }
 

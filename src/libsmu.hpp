@@ -251,38 +251,37 @@ public:
 		m_src = SRC_CONSTANT;
 		m_src_v1 = val;
 	}
-	void source_square(value_t v1, value_t v2, double period, double duty, double phase) {
+	void source_square(value_t midpoint, value_t peak, double period, double duty, double phase) {
 		m_src = SRC_SQUARE;
 		update_phase(period, phase);
-		m_src_v1 = v1;
-		m_src_v2 = v2;
+		m_src_v1 = midpoint;
+		m_src_v2 = peak;
 		m_src_duty = duty;
 	}
-	void source_sawtooth(value_t v1, value_t v2, double period, double phase) {
+	void source_sawtooth(value_t midpoint, value_t peak, double period, double phase) {
 		m_src = SRC_SAWTOOTH;
 		update_phase(period, phase);
-		m_src_v1 = v1;
-		m_src_v2 = v2;
+		m_src_v1 = midpoint;
+		m_src_v2 = peak;
 	}
-	void source_stairstep(value_t v1, value_t v2, double period, double phase) {
+	void source_stairstep(value_t midpoint, value_t peak, double period, double phase) {
 		m_src = SRC_STAIRSTEP;
 		update_phase(period, phase);
-		m_src_v1 = v1;
-		m_src_v2 = v2;
+		m_src_v1 = midpoint;
+		m_src_v2 = peak;
 	}
-	void source_sine(value_t center, value_t amplitude, double period, double phase) {
+	void source_sine(value_t midpoint, value_t peak, double period, double phase) {
 		m_src = SRC_SINE;
 		update_phase(period, phase);
-		m_src_v1 = center;
-		m_src_v2 = amplitude;
+		m_src_v1 = midpoint;
+		m_src_v2 = peak;
 	}
-	void source_triangle(value_t v1, value_t v2, double period, double phase) {
+	void source_triangle(value_t midpoint, value_t peak, double period, double phase) {
 		m_src = SRC_TRIANGLE;
 		update_phase(period, phase);
-		m_src_v1 = v1;
-		m_src_v2 = v2;
+		m_src_v1 = midpoint;
+		m_src_v2 = peak;
 	}
-	//void source_arb(arb_point_t* points, size_t len, bool repeat);
 	void source_buffer(value_t* buf, size_t len, bool repeat) {
 		m_src = SRC_BUFFER;
 		m_src_buf = buf;
@@ -352,10 +351,11 @@ public:
 		case SRC_STAIRSTEP:
 		case SRC_TRIANGLE:
 
-			auto pkpk = m_src_v2 - m_src_v1;
+			auto peak_to_peak = m_src_v2 - m_src_v1;
 			auto phase = m_src_phase;
 			auto norm_phase = phase / m_src_period;
-			if (norm_phase < 0) norm_phase += 1;
+			if (norm_phase < 0)
+				norm_phase += 1;
 			m_src_phase = fmod(m_src_phase + 1, m_src_period);
 
 			switch (m_src) {
@@ -363,16 +363,16 @@ public:
 				return (norm_phase < m_src_duty) ? m_src_v1 : m_src_v2;
 
 			case SRC_SAWTOOTH:
-				return m_src_v2 - norm_phase * pkpk;
+				return m_src_v2 - norm_phase * peak_to_peak;
 
 			case SRC_STAIRSTEP:
-				return m_src_v2 - floorf(norm_phase*10) * pkpk / 9;
+				return m_src_v2 - floorf(norm_phase*10) * peak_to_peak / 9;
 
 			case SRC_SINE:
-				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * pkpk/2;
+				return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * peak_to_peak / 2;
 
 			case SRC_TRIANGLE:
-				return m_src_v1 + fabs(1 - norm_phase*2) * pkpk;
+				return m_src_v1 + fabs(1 - norm_phase*2) * peak_to_peak;
 			default:
 				return 0;
 			}
