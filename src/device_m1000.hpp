@@ -32,10 +32,18 @@ namespace smu {
 		virtual const sl_channel_info* channel_info(unsigned channel) const;
 		//virtual sl_mode_info* mode_info(unsigned mode);
 		virtual Signal* signal(unsigned channel, unsigned signal);
+
+		/// set output mode
 		virtual void set_mode(unsigned channel, unsigned mode);
+
+		/// get current microframe index, set m_sof_start to be time in the future
 		virtual void sync();
+
 		virtual int write_calibration(const char* cal_file_name);
+
+		/// Provide external read access to EEPROM calibration data.
 		virtual void calibration(vector<vector<float>>* cal);
+
 		virtual void samba_mode();
 
 		void in_completion(libusb_transfer *t);
@@ -51,16 +59,32 @@ namespace smu {
 		virtual int get_default_rate();
 		virtual int added();
 		virtual int removed();
+
+		/// calculate values for sampling period for SAM3U timer
 		virtual void configure(uint64_t sampleRate);
+
+		/// command device to start sampling
 		virtual void start_run(uint64_t nsamples);
+
+		/// cancel pending libusb transactions
 		virtual void cancel();
+
+		/// turn on power supplies, clear sampling state
 		virtual void on();
+
+		/// put outputs into high-impedance mode, stop sampling
 		virtual void off();
 
+		/// submit data transfers to usb thread - from host to device
 		bool submit_out_transfer(libusb_transfer* t);
+
+		/// submit data transfers to usb thread - from device to host
 		bool submit_in_transfer(libusb_transfer* t);
+
+		/// reformat received data - integer to float conversion
 		void handle_in_transfer(libusb_transfer* t);
 
+		/// encode output samples
 		uint16_t encode_out(unsigned chan);
 
 		unsigned m_packets_per_transfer;
