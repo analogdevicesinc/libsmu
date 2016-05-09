@@ -48,8 +48,9 @@ as well.
 
 ##### Windows
 
-On Windows, it's easiest to use the provided installer
-([libsmu-setup.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master&job=Configuration%3A%20Release))
-that installs either 32 or 64 bit support based off the host system. During the
-install process an option is provided to also install the python bindings for
-libsmu.
+On Windows, it's easiest to use the provided installers,
+[libsmu-setup-x86.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master&job=Configuration%3A%20Release) and
+[libsmu-setup-x64.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup.exe?branch=master&job=Configuration%3A%20Release)
+that install either 32 or 64 bit support, respectively. During the
+install process options are provided to install python and Visual Studio
+development support.
