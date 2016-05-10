@@ -362,8 +362,24 @@ public:
 			case SRC_SQUARE:
 				return (norm_phase < m_src_duty) ? m_src_v1 : m_src_v2;
 
-			case SRC_SAWTOOTH:
-				return m_src_v2 - norm_phase * peak_to_peak;
+			case SRC_SAWTOOTH: {
+
+			float int_period = truncf(m_src_period);
+			float int_phase = truncf(phase);
+			float frac_period = m_src_period - int_period;
+			float frac_phase = phase - int_phase;
+			float max_int_phase ;
+
+			// Get the integer part of the maximum value phase will be set at
+			// E.g. If m_src_period = 100.6, phase first value = 0.3 then phase will take values: 0.3, 1.3, ..., 98.3, 99.3, 100.3
+			//      If m_src_period = 100.6, phase first value = 0.7 then phase will take values: 0.7, 1.7, ..., 98.7, 99.7
+			if (frac_period <= frac_phase)
+				max_int_phase = int_period - 1;
+			else
+				max_int_phase = int_period;
+
+				return m_src_v2 - int_phase / max_int_phase * peak_to_peak;
+            }
 
 			case SRC_STAIRSTEP:
 				return m_src_v2 - floorf(norm_phase*10) * peak_to_peak / 9;
