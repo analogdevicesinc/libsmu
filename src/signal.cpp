@@ -93,7 +93,6 @@ void Signal::measure_callback(std::function<void(float value)> callback)
 	m_dest_callback = callback;
 }
 
-/// internal: Called by Device
 void Signal::put_sample(float val)
 {
 	m_latest_measurement = val;
@@ -107,7 +106,6 @@ void Signal::put_sample(float val)
 	}
 }
 
-/// internal: Called by Device
 float Signal::get_sample()
 {
 	switch (m_src) {
