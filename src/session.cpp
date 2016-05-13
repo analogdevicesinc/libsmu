@@ -163,15 +163,15 @@ void Session::flash_firmware(const char *file, Device *dev)
 		}
 	}
 
+	libusb_free_device_list(usb_devs, 1);
+
 	if (usb_dev == NULL) {
-		libusb_free_device_list(usb_devs, 1);
 		throw std::runtime_error("no supported devices plugged in");
 	}
 
 	ret = libusb_open(usb_dev, &usb_handle);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		libusb_free_device_list(usb_devs, 1);
 		throw std::runtime_error("failed opening USB device: " + libusb_error_str);
 	}
 #ifndef WIN32
@@ -239,7 +239,6 @@ void Session::flash_firmware(const char *file, Device *dev)
 
 	libusb_release_interface(usb_handle, 1);
 	libusb_close(usb_handle);
-	libusb_free_device_list(usb_devs, 1);
 }
 
 /// remove a specified Device from the list of available devices
