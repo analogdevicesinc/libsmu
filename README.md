@@ -36,11 +36,12 @@ manner if libsmu has already been built and/or installed on the host machine.
 ##### OS X
 
 For systems running OS X, first install [homebrew](http://brew.sh). Then use
-brew to install cmake, libusb, pkg-config, and optionally python (to build the
+brew to install libusb, cmake, pkg-config, and optionally python (to build the
 python bindings):
 
 ```
-brew install cmake libusb pkg-config python
+brew install libusb --universal
+brew install cmake pkg-config python
 ```
 
 Then the command line instructions in the previous section should work on OS X
