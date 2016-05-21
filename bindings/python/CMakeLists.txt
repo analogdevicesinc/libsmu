@@ -7,7 +7,7 @@ set(DEPS "${CMAKE_CURRENT_SOURCE_DIR}/pysmu/__init__.py")
 set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
 
 add_custom_command(OUTPUT ${OUTPUT}
-	COMMAND ${PYTHON} ${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}"
+	COMMAND ${PYTHON} ${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}/src"
 	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	DEPENDS ${DEPS})
 add_custom_target(python ALL DEPENDS smu ${OUTPUT})
