@@ -4,12 +4,6 @@ if(MSVC)
 else()
 	cmake_minimum_required(VERSION 3.1)
 endif()
-
-if(APPLE)
-	# build universal binaries by default
-	set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
-endif()
-
 project(libsmu CXX C)
 
 # libsmu versioning
