@@ -176,7 +176,7 @@ getAllInputs(PyObject* self, PyObject* args)
 {
 	const char *dev_serial;
 	int nsamples; /* number of samples to acquire */
-	unsigned num_channels; /* number of channels passed */
+	size_t num_channels; /* number of channels passed */
 	vector< vector<float> > buf_v, buf_i; /* 2d vector of voltage/current samples per channel */
 
 	if (!PyArg_ParseTuple(args, "si", &dev_serial, &nsamples))
