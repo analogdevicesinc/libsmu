@@ -17,6 +17,12 @@
 
 using namespace smu;
 
+Signal::~Signal()
+{
+	if(m_src_buf)
+		delete[] m_src_buf;
+}
+
 void Signal::source_constant(float val)
 {
 	m_src = SRC_CONSTANT;

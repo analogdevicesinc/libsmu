@@ -94,6 +94,7 @@ namespace smu {
 	public:
 		/// internal: Do not call the constructor directly; obtain a Signal from a Device
 		Signal(const sl_signal_info* info): m_info(info), m_src(SRC_CONSTANT), m_src_v1(0), m_dest(DEST_NONE) {}
+		~Signal();
 
 		/// Get the descriptor struct of the Signal.
 		/// Pointed-to memory is valid for the lifetime of the Device.
@@ -141,7 +142,7 @@ namespace smu {
 		double m_src_duty;
 		double m_src_phase;
 
-		float* m_src_buf;
+		float* m_src_buf = NULL;
 		size_t m_src_i;
 		size_t m_src_buf_len;
 		bool m_src_buf_repeat;
