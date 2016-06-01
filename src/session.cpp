@@ -114,7 +114,7 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 void Session::start_usb_thread() {
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
-		while(m_usb_thread_loop) libusb_handle_events(m_usb_cx);
+		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_cx, NULL);
 	});
 }
 
