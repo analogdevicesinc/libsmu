@@ -33,6 +33,16 @@ cmake -DBUILD_PYTHON=ON ..
 They can also be built manually via the setup.py script in the regular python
 manner if libsmu has already been built and/or installed on the host machine.
 
+##### Linux
+
+By default, libsmu is installed into various directories inside /usr/local. If
+run-time linking errors occur, try running `sudo ldconfig` to regenerate the
+run-time linker cache.
+
+If the same errors still happen, make sure the directory the libsmu library is
+installed to is in the sourced files for /etc/ld.so.conf before running
+ldconfig.
+
 ##### OS X
 
 For systems running OS X, first install [homebrew](http://brew.sh). Then use
