@@ -242,17 +242,16 @@ int main(int argc, char **argv)
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
-				if (session->m_devices.empty()) {
-					cerr << "smu: no supported devices plugged in" << endl;
-					exit(EXIT_FAILURE);
-				} else if (session->m_devices.size() > 1) {
+				if (session->m_devices.size() > 1) {
 					cerr << "smu: multiple devices attached, flashing only works on a single device" << endl;
 					cerr << "Please detach all devices except the one targeted for flashing." << endl;
 					exit(EXIT_FAILURE);
 				}
 				// flash firmware image to an attached m1k device
-				if (session->flash_firmware(optarg)) {
-					cout << "smu: failed updating firmware" << endl;
+				try {
+					session->flash_firmware(optarg);
+				} catch (const std::exception& e) {
+					cout << "smu: failed updating firmware: " << e.what() << endl;
 					exit(EXIT_FAILURE);
 				}
 				cout << "smu: successfully updated firmware" << endl;

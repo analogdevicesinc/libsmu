@@ -105,7 +105,7 @@ static int usb_read(libusb_device_handle *handle, unsigned char* data) {
 }
 
 /// Update device firmware for the first attached device found.
-int Session::flash_firmware(const char *file)
+void Session::flash_firmware(const char *file)
 {
 	struct libusb_device *dev = NULL;
 	struct libusb_device_handle *handle = NULL;
@@ -113,18 +113,15 @@ int Session::flash_firmware(const char *file)
 	struct libusb_device_descriptor info;
 	const uint16_t SAMBA_VENDOR_ID = 0x03eb;
 	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
-	unsigned char *usb_data = new unsigned char[512];
+	unsigned char usb_data[512];
 	unsigned int device_count, page;
-	int ret = 0;
 
 	std::ifstream firmware (file, std::ios::in | std::ios::binary);
 	long firmware_size;
-	char *buf;
 	const uint32_t flashbase = 0x80000;
 
 	if (!firmware.is_open()) {
-		smu_debug("failed to open firmware file\n");
-		return 1;
+		throw std::runtime_error("failed to open firmware file");
 	}
 
 	// force attached m1k into command mode
@@ -136,8 +133,7 @@ int Session::flash_firmware(const char *file)
 
 	device_count = libusb_get_device_list(NULL, &devs);
 	if (device_count <= 0) {
-		smu_debug("error enumerating USB devices\n");
-		return 1;
+		throw std::runtime_error("error enumerating USB devices");
 	}
 
 	// Walk the list of USB devices looking for the device in SAM-BA mode.
@@ -151,15 +147,13 @@ int Session::flash_firmware(const char *file)
 	}
 
 	if (dev == NULL) {
-		smu_debug("no supported devices plugged in\n");
-		ret = 1;
-		goto libusb_clean;
+		libusb_free_device_list(devs, 1);
+		throw std::runtime_error("no supported devices plugged in");
 	}
 
 	if (libusb_open(dev, &handle)) {
-		smu_debug("failed opening USB device\n");
-		ret = 1;
-		goto libusb_clean;
+		libusb_free_device_list(devs, 1);
+		throw std::runtime_error("failed opening USB device");
 	}
 #ifndef WIN32
 	libusb_detach_kernel_driver(handle, 0);
@@ -183,8 +177,8 @@ int Session::flash_firmware(const char *file)
 	firmware_size = firmware.tellg();
 	firmware_size = firmware_size + (256 - firmware_size % 256);
 	firmware.seekg(0, std::ios::beg);
-	buf = new char[firmware_size];
-	firmware.read(buf, firmware_size);
+	auto buf = std::unique_ptr<char[]>{ new char[firmware_size] };
+	firmware.read(buf.get(), firmware_size);
 	firmware.close();
 
 	// write firmware
@@ -224,12 +218,7 @@ int Session::flash_firmware(const char *file)
 	usb_read(handle, usb_data);
 
 	libusb_close(handle);
-	delete[] buf;
-
-libusb_clean:
 	libusb_free_device_list(devs, 1);
-	delete usb_data;
-	return ret;
 }
 
 /// remove a specified Device from the list of available devices

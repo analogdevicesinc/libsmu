@@ -84,7 +84,7 @@ public:
 	void cancel();
 
 	/// Update device firmware for the first attached device found.
-	int flash_firmware(const char *file);
+	void flash_firmware(const char *file);
 
 	/// internal: Called by devices on the USB thread when they are complete
 	void completion();
