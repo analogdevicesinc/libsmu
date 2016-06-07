@@ -27,7 +27,7 @@ using std::vector;
 static void list_devices(Session* session)
 {
 	if (session->m_devices.empty()) {
-		cout << "smu: no supported devices plugged in" << endl;
+		cerr << "smu: no supported devices plugged in" << endl;
 	} else {
 		for (auto dev: session->m_devices) {
 			printf("%s: serial %s: fw %s: hw %s\n",
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 	// display usage info if no arguments are specified
 	if (argc == 1) {
 		display_usage();
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	Session* session = new Session();
@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 					stream_samples(session);
 				} else {
 					cerr << "smu: no supported devices plugged in" << endl;
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				break;
 			case 'd':
@@ -220,10 +220,10 @@ int main(int argc, char **argv)
 				// reset calibration data of all attached m1k devices
 				if (session->m_devices.empty()) {
 					cerr << "smu: no supported devices plugged in" << endl;
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				if (reset_calibration(session)) {
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				cout << "smu: successfully reset calibration data" << endl;
 				break;
@@ -231,14 +231,14 @@ int main(int argc, char **argv)
 				// write calibration data to a single attached m1k device
 				if (session->m_devices.empty()) {
 					cerr << "smu: no supported devices plugged in" << endl;
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				} else if (session->m_devices.size() > 1) {
 					cerr << "smu: multiple devices attached, calibration only works on a single device" << endl;
 					cerr << "Please detach all devices except the one targeted for calibration." << endl;
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				if (write_calibration(session, optarg))
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 					session->flash_firmware(optarg);
 				} catch (const std::exception& e) {
 					cout << "smu: failed updating firmware: " << e.what() << endl;
-					exit(EXIT_FAILURE);
+					return EXIT_FAILURE;
 				}
 				cout << "smu: successfully updated firmware" << endl;
 				cout << "Please unplug and replug the device to finish the process." << endl;
@@ -257,9 +257,9 @@ int main(int argc, char **argv)
 				break;
 			default:
 				display_usage();
-				exit(EXIT_FAILURE);
+				return EXIT_FAILURE;
 		}
 	}
 
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
