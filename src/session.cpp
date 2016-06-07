@@ -120,6 +120,10 @@ void Session::flash_firmware(const char *file)
 	long firmware_size;
 	const uint32_t flashbase = 0x80000;
 
+	if (this->m_devices.size() > 1) {
+		throw std::runtime_error("multiple devices attached, flashing only works on a single device");
+	}
+
 	if (!firmware.is_open()) {
 		throw std::runtime_error("failed to open firmware file");
 	}
