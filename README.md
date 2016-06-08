@@ -49,8 +49,8 @@ html subdir of the build directory.
 
 ##### Python
 
-Bindings for python2.7 are also available and are built if enabled via the
-following cmake command before running make:
+Bindings for python (2.7, 3.4, and 3.5) are available and can be enabled via
+the following cmake command:
 
 ```
 $ cmake -DBUILD_PYTHON=ON .
@@ -58,6 +58,9 @@ $ cmake -DBUILD_PYTHON=ON .
 
 They can also be built manually via the setup.py script in the regular python
 manner if libsmu has already been built and/or installed on the host machine.
+
+Note that they also require a recent version of cython to be installed when
+building from git.
 
 ##### Linux
 
