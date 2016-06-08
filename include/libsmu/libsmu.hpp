@@ -107,13 +107,6 @@ namespace smu {
 		Session();
 		~Session();
 
-		/// @brief Scan system for all supported devices.
-		/// Updates the list of available, supported devices for the session
-		/// (m_available_devices).
-		/// @return On success, 0 is returned.
-		/// @return On error, a negative errno code is returned.
-		int scan();
-
 		/// @brief Devices that are present on the system.
 		/// Note that these devices consist of all supported devices currently
 		/// recognized on the system; however, the devices aren't necessarily
@@ -128,6 +121,13 @@ namespace smu {
 
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
+
+		/// @brief Scan system for all supported devices.
+		/// Updates the list of available, supported devices for the session
+		/// (m_available_devices).
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		int scan();
 
 		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
