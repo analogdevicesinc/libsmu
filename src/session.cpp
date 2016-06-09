@@ -104,8 +104,9 @@ static int usb_read(libusb_device_handle *handle, unsigned char* data) {
 	return transferred;
 }
 
-/// Update device firmware for the first attached device found.
-void Session::flash_firmware(const char *file)
+/// Update device firmware for the specified device or the first device
+/// found, either in the current session or in SAMBA command mode.
+void Session::flash_firmware(const char *file, Device *dev)
 {
 	struct libusb_device *usb_dev = NULL;
 	struct libusb_device_handle *usb_handle = NULL;
@@ -120,7 +121,7 @@ void Session::flash_firmware(const char *file)
 	long firmware_size;
 	const uint32_t flashbase = 0x80000;
 
-	if (this->m_devices.size() > 1) {
+	if (!dev && this->m_devices.size() > 1) {
 		throw std::runtime_error("multiple devices attached, flashing only works on a single device");
 	}
 
@@ -129,9 +130,10 @@ void Session::flash_firmware(const char *file)
 	}
 
 	// force attached m1k into command mode
-	if (!this->m_devices.empty()) {
-		auto m1k = *(this->m_devices.begin());
-		m1k->ctrl_transfer(0x40, 0xBB, 0, 0, NULL, 0, 100);
+	if (dev || !this->m_devices.empty()) {
+		if (!dev)
+			dev = *(this->m_devices.begin());
+		dev->ctrl_transfer(0x40, 0xBB, 0, 0, NULL, 0, 100);
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 

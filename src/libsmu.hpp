@@ -83,8 +83,9 @@ public:
 	/// Cancel capture and block waiting for it to complete
 	void cancel();
 
-	/// Update device firmware for the first attached device found.
-	void flash_firmware(const char *file);
+	/// Update device firmware for a given device. When device is NULL the
+	/// first attached device will be used instead.
+	void flash_firmware(const char *file, Device* device = NULL);
 
 	/// internal: Called by devices on the USB thread when they are complete
 	void completion();
