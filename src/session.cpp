@@ -107,10 +107,10 @@ static int usb_read(libusb_device_handle *handle, unsigned char* data) {
 /// Update device firmware for the first attached device found.
 void Session::flash_firmware(const char *file)
 {
-	struct libusb_device *dev = NULL;
-	struct libusb_device_handle *handle = NULL;
-	struct libusb_device **devs;
-	struct libusb_device_descriptor info;
+	struct libusb_device *usb_dev = NULL;
+	struct libusb_device_handle *usb_handle = NULL;
+	struct libusb_device **usb_devs;
+	struct libusb_device_descriptor usb_info;
 	const uint16_t SAMBA_VENDOR_ID = 0x03eb;
 	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
 	unsigned char usb_data[512];
@@ -135,46 +135,46 @@ void Session::flash_firmware(const char *file)
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
-	device_count = libusb_get_device_list(NULL, &devs);
+	device_count = libusb_get_device_list(NULL, &usb_devs);
 	if (device_count <= 0) {
 		throw std::runtime_error("error enumerating USB devices");
 	}
 
 	// Walk the list of USB devices looking for the device in SAM-BA mode.
 	for (unsigned int i = 0; i < device_count; i++) {
-		libusb_get_device_descriptor(devs[i], &info);
-		if (info.idVendor == SAMBA_VENDOR_ID && info.idProduct == SAMBA_PRODUCT_ID) {
+		libusb_get_device_descriptor(usb_devs[i], &usb_info);
+		if (usb_info.idVendor == SAMBA_VENDOR_ID && usb_info.idProduct == SAMBA_PRODUCT_ID) {
 			// Take the first device found, we disregard multiple devices.
-			dev = devs[i];
+			usb_dev = usb_devs[i];
 			break;
 		}
 	}
 
-	if (dev == NULL) {
-		libusb_free_device_list(devs, 1);
+	if (usb_dev == NULL) {
+		libusb_free_device_list(usb_devs, 1);
 		throw std::runtime_error("no supported devices plugged in");
 	}
 
-	if (libusb_open(dev, &handle)) {
-		libusb_free_device_list(devs, 1);
+	if (libusb_open(usb_dev, &usb_handle)) {
+		libusb_free_device_list(usb_devs, 1);
 		throw std::runtime_error("failed opening USB device");
 	}
 #ifndef WIN32
-	libusb_detach_kernel_driver(handle, 0);
-	libusb_detach_kernel_driver(handle, 1);
+	libusb_detach_kernel_driver(usb_handle, 0);
+	libusb_detach_kernel_driver(usb_handle, 1);
 #endif
-	libusb_set_configuration(handle, 1);
+	libusb_set_configuration(usb_handle, 1);
 
 	// erase flash
-	usb_write(handle, "W400E0804,5A000005#");
+	usb_write(usb_handle, "W400E0804,5A000005#");
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	usb_read(handle, usb_data);
+	usb_read(usb_handle, usb_data);
 	// check if flash is erased
-	usb_write(handle, "w400E0808,4#");
+	usb_write(usb_handle, "w400E0808,4#");
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	usb_read(handle, usb_data);
-	usb_read(handle, usb_data);
-	usb_read(handle, usb_data);
+	usb_read(usb_handle, usb_data);
+	usb_read(usb_handle, usb_data);
+	usb_read(usb_handle, usb_data);
 
 	// read firmware file into buffer
 	firmware.seekg(0, std::ios::end);
@@ -192,37 +192,37 @@ void Session::flash_firmware(const char *file)
 	for (auto pos = 0; pos < firmware_size; pos += 4) {
 		memcpy(&data, &buf[pos], 4);
 		sprintf(cmd, "W%.8X,%.8X#", flashbase + pos, data);
-		usb_write(handle, cmd);
-		usb_read(handle, usb_data);
-		usb_read(handle, usb_data);
+		usb_write(usb_handle, cmd);
+		usb_read(usb_handle, usb_data);
+		usb_read(usb_handle, usb_data);
 		// On page boundaries, write the page.
 		if ((pos & 0xFC) == 0xFC) {
 			sprintf(cmd, "W400E0804,5A00%.2X03#", page);
-			usb_write(handle, cmd);
+			usb_write(usb_handle, cmd);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			usb_read(handle, usb_data);
-			usb_read(handle, usb_data);
+			usb_read(usb_handle, usb_data);
+			usb_read(usb_handle, usb_data);
 			// Verify page is written.
-			usb_write(handle, "w400E0808,4#");
+			usb_write(usb_handle, "w400E0808,4#");
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			usb_read(handle, usb_data);
-			usb_read(handle, usb_data);
-			usb_read(handle, usb_data);
+			usb_read(usb_handle, usb_data);
+			usb_read(usb_handle, usb_data);
+			usb_read(usb_handle, usb_data);
 			// TODO: check page status
 			page++;
 		}
 	}
 
 	// disable SAM-BA
-	usb_write(handle, "W400E0804,5A00010B#");
-	usb_read(handle, usb_data);
-	usb_read(handle, usb_data);
+	usb_write(usb_handle, "W400E0804,5A00010B#");
+	usb_read(usb_handle, usb_data);
+	usb_read(usb_handle, usb_data);
 	// jump to flash
-	usb_write(handle, "G00000000#");
-	usb_read(handle, usb_data);
+	usb_write(usb_handle, "G00000000#");
+	usb_read(usb_handle, usb_data);
 
-	libusb_close(handle);
-	libusb_free_device_list(devs, 1);
+	libusb_close(usb_handle);
+	libusb_free_device_list(usb_devs, 1);
 }
 
 /// remove a specified Device from the list of available devices
