@@ -192,7 +192,8 @@ void Session::flash_firmware(const char *file, Device *dev)
 	char cmd[20];
 	uint32_t data;
 	for (auto pos = 0; pos < firmware_size; pos += 4) {
-		memcpy(&data, &buf[pos], 4);
+		data = (uint8_t)buf[pos] | (uint8_t)buf[pos+1] << 8 |
+			(uint8_t)buf[pos+2] << 16 | (uint8_t)buf[pos+3] << 24;
 		sprintf(cmd, "W%.8X,%.8X#", flashbase + pos, data);
 		usb_write(usb_handle, cmd);
 		usb_read(usb_handle, usb_data);
