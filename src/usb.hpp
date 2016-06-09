@@ -20,14 +20,17 @@ unsigned int libusb_to_errno(int libusb_err);
 // Wrapper for a collection of libusb transfers.
 class Transfers {
 	public:
+		~Transfers() { clear(); }
+
+		// Currently running usb tranfers.
 		std::vector<libusb_transfer*> m_transfers;
 
-		// allocates a new collection of libusb transfers
+		// Allocate a new collection of libusb transfers.
 		void alloc(unsigned count, libusb_device_handle* handle,
 				unsigned char endpoint, unsigned char type, size_t buf_size,
 				unsigned timeout, libusb_transfer_cb_fn callback, void* user_data);
 
-		// Removes a transfer that was not successfully submitted from the
+		// Remove a transfer that was not successfully submitted from the
 		// collection of pending transfers.
 		void failed(libusb_transfer* t);
 
@@ -37,13 +40,13 @@ class Transfers {
 		// Signal cleanup - stop streaming and cleanup libusb state.
 		// Loop over pending transfers, canceling each remaining transfer that
 		// hasn't already been canceled. Returns an error code if one of the
-		// transfers doesn't complete, or zero for success
+		// transfers doesn't complete, or zero for success.
 		int cancel();
 
+		// Number of current usb transfers.
 		size_t size() { return m_transfers.size(); }
 
-		~Transfers() { clear(); } 
-
+		// Treat m_transfers like an iterator.
 		typedef std::vector<libusb_transfer*>::iterator iterator;
 		typedef std::vector<libusb_transfer*>::const_iterator const_iterator;
 		iterator begin() { return m_transfers.begin(); }
@@ -51,6 +54,6 @@ class Transfers {
 		iterator end() { return m_transfers.end(); }
 		const_iterator end() const { return m_transfers.end(); }
 
-		// Count of pending transfers
+		// Count of pending transfers.
 		int32_t num_active;
 };
