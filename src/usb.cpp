@@ -47,13 +47,15 @@ unsigned int libusb_to_errno(int libusb_err)
 		return EIO;
 }
 
-void Transfers::alloc(unsigned count, libusb_device_handle* handle,
+int Transfers::alloc(unsigned count, libusb_device_handle* handle,
 			unsigned char endpoint, unsigned char type, size_t buf_size,
 			unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
 	clear();
 	m_transfers.resize(count, NULL);
 	for (size_t i = 0; i < count; i++) {
 		auto t = m_transfers[i] = libusb_alloc_transfer(0);
+		if (!t)
+			return 1;
 		t->dev_handle = handle;
 		t->flags = LIBUSB_TRANSFER_FREE_BUFFER;
 		t->endpoint = endpoint;
@@ -63,7 +65,10 @@ void Transfers::alloc(unsigned count, libusb_device_handle* handle,
 		t->callback = callback;
 		t->user_data = user_data;
 		t->buffer = (uint8_t*) malloc(buf_size);
+		if (!t->buffer)
+			return 1;
 	}
+	return 0;
 }
 
 void Transfers::failed(libusb_transfer* t)

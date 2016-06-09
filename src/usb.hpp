@@ -26,7 +26,9 @@ class Transfers {
 		std::vector<libusb_transfer*> m_transfers;
 
 		// Allocate a new collection of libusb transfers.
-		void alloc(unsigned count, libusb_device_handle* handle,
+		// @return 0 if transfer allocation successful.
+		// @return 1 if transfer allocation failed.
+		int alloc(unsigned count, libusb_device_handle* handle,
 				unsigned char endpoint, unsigned char type, size_t buf_size,
 				unsigned timeout, libusb_transfer_cb_fn callback, void* user_data);
 
