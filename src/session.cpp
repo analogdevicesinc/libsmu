@@ -385,11 +385,15 @@ void Session::remove(Device* device)
 	}
 }
 
-void Session::configure(uint64_t sampleRate)
+int Session::configure(uint64_t sampleRate)
 {
+	int ret = 0;
 	for (auto i: m_devices) {
-		i->configure(sampleRate);
+		ret = i->configure(sampleRate);
+		if (ret != 0)
+			return ret;
 	}
+	return ret;
 }
 
 void Session::run(uint64_t samples)
