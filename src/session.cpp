@@ -388,8 +388,8 @@ void Session::remove(Device* device)
 int Session::configure(uint64_t sampleRate)
 {
 	int ret = 0;
-	for (auto i: m_devices) {
-		ret = i->configure(sampleRate);
+	for (auto dev: m_devices) {
+		ret = dev->configure(sampleRate);
 		if (ret != 0)
 			return ret;
 	}
@@ -410,8 +410,8 @@ void Session::end()
 	if (!res) {
 		DEBUG("timed out\n");
 	}
-	for (auto i: m_devices) {
-		i->off();
+	for (auto dev: m_devices) {
+		dev->off();
 	}
 }
 
@@ -424,13 +424,13 @@ void Session::wait_for_completion()
 void Session::start(uint64_t samples)
 {
 	m_cancellation = 0;
-	for (auto i: m_devices) {
-		i->on();
+	for (auto dev: m_devices) {
+		dev->on();
 		// make sure all devices are synchronized
 		if (m_devices.size() > 1) {
-			i->sync();
+			dev->sync();
 		}
-		i->run(samples);
+		dev->run(samples);
 		m_active_devices++;
 	}
 }
@@ -438,8 +438,8 @@ void Session::start(uint64_t samples)
 void Session::cancel()
 {
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
-	for (auto i: m_devices) {
-		i->cancel();
+	for (auto dev: m_devices) {
+		dev->cancel();
 	}
 }
 
