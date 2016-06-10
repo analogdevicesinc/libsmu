@@ -55,7 +55,7 @@ int Transfers::alloc(unsigned count, libusb_device_handle* handle,
 	for (size_t i = 0; i < count; i++) {
 		auto t = m_transfers[i] = libusb_alloc_transfer(0);
 		if (!t)
-			return 1;
+			return -ENOMEM;
 		t->dev_handle = handle;
 		t->flags = LIBUSB_TRANSFER_FREE_BUFFER;
 		t->endpoint = endpoint;
@@ -66,7 +66,7 @@ int Transfers::alloc(unsigned count, libusb_device_handle* handle,
 		t->user_data = user_data;
 		t->buffer = (uint8_t*) malloc(buf_size);
 		if (!t->buffer)
-			return 1;
+			return -ENOMEM;
 	}
 	return 0;
 }
