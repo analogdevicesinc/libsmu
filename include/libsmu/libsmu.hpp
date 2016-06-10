@@ -163,8 +163,10 @@ namespace smu {
 
 		/// @brief Configure the session's sample rate.
 		/// @param sampleRate The requested sample rate for the session.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
 		/// This method may not be called while the session is active.
-		void configure(uint64_t sampleRate);
+		int configure(uint64_t sampleRate);
 
 		/// @brief Run the currently configured capture and wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
@@ -352,7 +354,9 @@ namespace smu {
 
 		/// @brief Configurization and initialization for device sampling.
 		/// @param sampleRate The requested sampling rate for the device.
-		virtual void configure(uint64_t sampleRate) = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int configure(uint64_t sampleRate) = 0;
 
 		/// @brief Turn on power supplies and clear sampling state.
 		/// @return On success, 0 is returned.
