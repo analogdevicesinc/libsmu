@@ -36,7 +36,9 @@ struct EEPROM_cal {
 namespace smu {
 	class M1000_Device: public Device {
 	public:
+		// Handle incoming USB transfers.
 		void in_completion(libusb_transfer *t);
+		// Handle outgoing USB transfers.
 		void out_completion(libusb_transfer *t);
 
 		// Override virtual methods of the base Device class.
@@ -76,6 +78,7 @@ namespace smu {
 		void handle_in_transfer(libusb_transfer* t);
 
 		// Encode output samples.
+		// @param chan Target channel index.
 		uint16_t encode_out(unsigned chan);
 
 		unsigned m_packets_per_transfer;
@@ -87,6 +90,7 @@ namespace smu {
 		// Device calibration data.
 		EEPROM_cal m_cal;
 
+		// Number of requested samples.
 		uint64_t m_sample_count = 0;
 
 		// Override virtual methods of the base Device class.
