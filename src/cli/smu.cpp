@@ -75,19 +75,15 @@ int write_calibration(Session* session, const char *file)
 {
 	int ret;
 	auto dev = *(session->m_devices.begin());
-	if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-		ret = dev->write_calibration(file);
-		if (ret <= 0) {
-			if (ret == -EINVAL)
-				cerr << "smu: invalid calibration data format" << endl;
-			else if (ret == LIBUSB_ERROR_PIPE)
-				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
-			else
-				perror("smu: failed to write calibration data");
-			return 1;
-		}
-	} else {
-		cerr << "smu: calibration only works with ADALM1000 devices" << endl;
+	ret = dev->write_calibration(file);
+	if (ret <= 0) {
+		if (ret == -EINVAL)
+			cerr << "smu: invalid calibration data format" << endl;
+		else if (ret == LIBUSB_ERROR_PIPE)
+			cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
+		else
+			perror("smu: failed to write calibration data");
+		return 1;
 	}
 	return 0;
 }
@@ -96,28 +92,26 @@ void display_calibration(Session* session)
 {
 	vector<vector<float>> cal;
 	for (auto dev: session->m_devices) {
-		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-			printf("%s: serial %s: fw %s: hw %s\n",
-				dev->info()->label, dev->serial(),
-				dev->fwver(), dev->hwver());
-			dev->calibration(&cal);
-			for (int i = 0; i < 8; i++) {
-				switch (i) {
-					case 0: printf("  Channel A, measure V\n"); break;
-					case 1: printf("  Channel A, measure I\n"); break;
-					case 2: printf("  Channel A, source V\n"); break;
-					case 3: printf("  Channel A, source I\n"); break;
-					case 4: printf("  Channel B, measure V\n"); break;
-					case 5: printf("  Channel B, measure I\n"); break;
-					case 6: printf("  Channel B, source V\n"); break;
-					case 7: printf("  Channel B, source I\n"); break;
-				}
-				printf("    offset: %.4f\n", cal[i][0]);
-				printf("    p gain: %.4f\n", cal[i][1]);
-				printf("    n gain: %.4f\n", cal[i][2]);
+		printf("%s: serial %s: fw %s: hw %s\n",
+			dev->info()->label, dev->serial(),
+			dev->fwver(), dev->hwver());
+		dev->calibration(&cal);
+		for (int i = 0; i < 8; i++) {
+			switch (i) {
+				case 0: printf("  Channel A, measure V\n"); break;
+				case 1: printf("  Channel A, measure I\n"); break;
+				case 2: printf("  Channel A, source V\n"); break;
+				case 3: printf("  Channel A, source I\n"); break;
+				case 4: printf("  Channel B, measure V\n"); break;
+				case 5: printf("  Channel B, measure I\n"); break;
+				case 6: printf("  Channel B, source V\n"); break;
+				case 7: printf("  Channel B, source I\n"); break;
 			}
-			printf("\n");
+			printf("    offset: %.4f\n", cal[i][0]);
+			printf("    p gain: %.4f\n", cal[i][1]);
+			printf("    n gain: %.4f\n", cal[i][2]);
 		}
+		printf("\n");
 	}
 }
 
@@ -125,15 +119,13 @@ int reset_calibration(Session* session)
 {
 	int ret;
 	for (auto dev: session->m_devices) {
-		if (strncmp(dev->info()->label, "ADALM1000", 9) == 0) {
-			ret = dev->write_calibration(NULL);
-			if (ret <= 0) {
-				if (ret == LIBUSB_ERROR_PIPE)
-					cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
-				else
-					perror("smu: failed to reset calibration data");
-				return 1;
-			}
+		ret = dev->write_calibration(NULL);
+		if (ret <= 0) {
+			if (ret == LIBUSB_ERROR_PIPE)
+				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
+			else
+				perror("smu: failed to reset calibration data");
+			return 1;
 		}
 	}
 	return 0;
