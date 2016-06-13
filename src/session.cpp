@@ -9,7 +9,6 @@
 #include <fstream>
 #include <libusb.h>
 #include <string.h>
-#include "device_cee.hpp"
 #include "device_m1000.hpp"
 
 using std::shared_ptr;
@@ -291,9 +290,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 		return NULL;
 	}
 
-	if (desc.idVendor == 0x59e3 && desc.idProduct == 0xCEE1) {
-		dev = shared_ptr<Device>(new CEE_Device(this, device));
-	} else if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
+	if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
 		dev = shared_ptr<Device>(new M1000_Device(this, device));
 	} else if (desc.idVendor == 0x064B && desc.idProduct == 0x784C) {
 		dev = shared_ptr<Device>(new M1000_Device(this, device));
