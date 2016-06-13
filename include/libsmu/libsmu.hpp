@@ -308,6 +308,7 @@ namespace smu {
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
+		/// See the libusb_control_transfer() docs for parameter descriptions.
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
