@@ -477,6 +477,8 @@ int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wV
 void Device::command_mode() {
 	int ret;
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 100);
-	if (ret < 0)
-		throw std::runtime_error("failed to enable SAM-BA command mode");
+	if (ret < 0) {
+		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
+	}
 }
