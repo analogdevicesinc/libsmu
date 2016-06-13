@@ -136,7 +136,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 	if (dev || !this->m_devices.empty()) {
 		if (!dev)
 			dev = *(this->m_devices.begin());
-		dev->command_mode();
+		dev->samba_mode();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
@@ -478,7 +478,7 @@ int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wV
 }
 
 // Force the device into SAM-BA command mode.
-void Device::command_mode() {
+void Device::samba_mode() {
 	int ret;
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 100);
 	if (ret < 0) {
