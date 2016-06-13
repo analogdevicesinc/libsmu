@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "readerwriterqueue.hpp"
+
 #include <cstdint>
 #include <atomic>
 #include <condition_variable>
@@ -298,6 +300,12 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		virtual int set_mode(unsigned channel, unsigned mode) = 0;
 
+		/// @brief Get data from all channels and signals of a device.
+		/// @param samples Number of samples to return.
+		/// @param timeout Amount of time in milliseconds to wait for samples
+		/// to be available. If 0, return immediately.
+		//virtual std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout) = 0;
+
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
@@ -416,6 +424,7 @@ namespace smu {
 			m_src(SRC_CONSTANT),
 			m_src_v1(0),
 			m_dest(DEST_DEFAULT)
+			//m_dest_queue(10000)
 			{}
 
 		~Signal();
@@ -541,5 +550,11 @@ namespace smu {
 	protected:
 		/// The most recent measured sample value from this signal.
 		float m_latest_measurement;
+
+		/// @brief Producer/consumer queue that buffers 100ms worth of sample values at the default rate.
+		/// Sample values are pushed into this queue by default if no other
+		/// destination is selected. Note that the blocking variant provides both
+		/// blocking and nonblocking methods.
+		//moodycamel::BlockingReaderWriterQueue<float> m_dest_queue;
 	};
 }

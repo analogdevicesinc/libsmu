@@ -46,6 +46,7 @@ namespace smu {
 		const sl_channel_info* channel_info(unsigned channel) const override;
 		Signal* signal(unsigned channel, unsigned signal) override;
 		int set_mode(unsigned channel, unsigned mode) override;
+		//std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
