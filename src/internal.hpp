@@ -5,7 +5,6 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #pragma once
-#include "libsmu.h"
 #include <libusb.h>
 #include <stdint.h>
 #include <stdlib.h>
