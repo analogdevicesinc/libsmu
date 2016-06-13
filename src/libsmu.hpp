@@ -23,10 +23,6 @@ using std::vector;
 #define M_PI (4.0*atan(1.0))
 #endif
 
-#ifdef _WIN32
-#define __api __declspec(dllexport)
-#endif
-
 class Device;
 class Signal;
 struct libusb_device;
