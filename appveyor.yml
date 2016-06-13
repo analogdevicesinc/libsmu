@@ -52,7 +52,6 @@ build_script:
   - mkdir c:\libsmu\32
   - mkdir c:\libsmu\64
   - copy ..\src\libsmu.hpp c:\libsmu
-  - copy ..\src\libsmu.h c:\libsmu
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
