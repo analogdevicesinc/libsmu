@@ -4,7 +4,9 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#pragma once
+#ifndef _LIBSMU_DEVICE_M1000_HPP
+#define _LIBSMU_DEVICE_M1000_HPP
+
 #include <mutex>
 #include "libsmu.hpp"
 #include "internal.hpp"
@@ -74,3 +76,5 @@ protected:
 	Signal m_signals[2][2];
 	unsigned m_mode[2];
 };
+
+#endif // _LIBSMU_DEVICE_M1000_HPP

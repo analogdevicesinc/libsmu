@@ -4,7 +4,9 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#pragma once
+#ifndef _LIBSMU_INTERNAL_HPP
+#define _LIBSMU_INTERNAL_HPP
+
 #include <libusb.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -98,3 +100,5 @@ struct Transfers {
 	// count of pending transfers
 	int32_t num_active;
 };
+
+#endif // _LIBSMU_INTERNAL_HPP

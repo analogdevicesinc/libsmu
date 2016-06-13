@@ -4,7 +4,9 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#pragma once
+#ifndef _LIBSMU_HPP
+#define _LIBSMU_HPP
+
 #include <cstdint>
 #include <cstddef>
 #include <string>
@@ -490,3 +492,5 @@ protected:
 
 	float m_latest_measurement;
 };
+
+#endif // _LIBSMU_HPP
