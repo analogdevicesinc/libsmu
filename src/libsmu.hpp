@@ -167,6 +167,9 @@ public:
 	int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 		               unsigned char *data, unsigned wLength, unsigned timeout);
 
+	/// Force the device into SAM-BA command mode.
+	void command_mode();
+
 	/// Get the default sample rate.
 	virtual int get_default_rate() { return 10000; }
 

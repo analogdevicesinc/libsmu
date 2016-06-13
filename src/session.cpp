@@ -133,7 +133,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 	if (dev || !this->m_devices.empty()) {
 		if (!dev)
 			dev = *(this->m_devices.begin());
-		dev->ctrl_transfer(0x40, 0xBB, 0, 0, NULL, 0, 100);
+		dev->command_mode();
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
@@ -474,4 +474,12 @@ Device::~Device() {
 int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
 {
 	return libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
+}
+
+// Force the device into SAM-BA command mode.
+void Device::command_mode() {
+	int ret;
+	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 100);
+	if (ret < 0)
+		throw std::runtime_error("failed to enable SAM-BA command mode");
 }
