@@ -360,7 +360,7 @@ void Session::configure(uint64_t sampleRate) {
 }
 
 /// stream nsamples, then stop
-void Session::run(sample_t nsamples) {
+void Session::run(uint64_t nsamples) {
 	start(nsamples);
 	end();
 }
@@ -388,7 +388,7 @@ void Session::wait_for_completion() {
 }
 
 /// start streaming data
-void Session::start(sample_t nsamples) {
+void Session::start(uint64_t nsamples) {
 	m_min_progress = 0;
 	m_cancellation = 0;
 	for (auto i: m_devices) {
@@ -434,7 +434,7 @@ void Session::completion() {
 }
 
 void Session::progress() {
-	sample_t min_progress = ULLONG_MAX;
+	uint64_t min_progress = ULLONG_MAX;
 	for (auto i: m_devices) {
 		if (i->m_in_sampleno < min_progress) {
 			min_progress = i->m_in_sampleno;

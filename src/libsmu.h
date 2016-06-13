@@ -70,7 +70,4 @@ typedef struct sl_device_info {
 	size_t channel_count;
 } sl_device_info;
 
-typedef float value_t;
-typedef uint64_t sample_t;
-
 #endif

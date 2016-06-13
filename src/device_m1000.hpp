@@ -41,7 +41,7 @@ protected:
 	virtual int added();
 	virtual int removed();
 	virtual void configure(uint64_t sampleRate);
-	virtual void start_run(sample_t nsamples);
+	virtual void start_run(uint64_t nsamples);
 	virtual void cancel();
 	virtual void on();
 	virtual void off();

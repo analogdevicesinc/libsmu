@@ -74,11 +74,11 @@ public:
 	void configure(uint64_t sampleRate);
 
 	/// Run the currently configured capture and wait for it to complete
-	void run(sample_t nsamples);
+	void run(uint64_t nsamples);
 
 	/// Start the currently configured capture, but do not wait for it to complete. Once started,
 	/// the only allowed Session methods are cancel() and end() until the session has stopped.
-	void start(sample_t nsamples);
+	void start(uint64_t nsamples);
 
 	/// Cancel capture and block waiting for it to complete
 	void cancel();
@@ -106,7 +106,7 @@ public:
 	void end();
 
 	/// Callback called on the USB thread with the sample number as samples are received
-	std::function<void(sample_t)> m_progress_callback;
+	std::function<void(uint64_t)> m_progress_callback;
 
 	/// Callback called on the USB thread on completion
 	std::function<void(unsigned)> m_completion_callback;
@@ -120,7 +120,7 @@ public:
 	unsigned m_cancellation = 0;
 
 protected:
-	sample_t m_min_progress = 0;
+	uint64_t m_min_progress = 0;
 
 	void start_usb_thread();
 	std::thread m_usb_thread;
@@ -198,7 +198,7 @@ protected:
 
 	virtual void on() = 0;
 	virtual void off() = 0;
-	virtual void start_run(sample_t nsamples) = 0;
+	virtual void start_run(uint64_t nsamples) = 0;
 	virtual void cancel() = 0;
 
 	Session* const m_session;
@@ -206,9 +206,9 @@ protected:
 	libusb_device_handle* m_usb = NULL;
 
 	// State owned by USB thread
-	sample_t m_requested_sampleno = 0;
-	sample_t m_in_sampleno = 0;
-	sample_t m_out_sampleno = 0;
+	uint64_t m_requested_sampleno = 0;
+	uint64_t m_in_sampleno = 0;
+	uint64_t m_out_sampleno = 0;
 
 	std::mutex m_state;
 
@@ -251,73 +251,73 @@ public:
 	const sl_signal_info* info() const { return m_info; }
 	const sl_signal_info* const m_info;
 
-	void source_constant(value_t val) {
+	void source_constant(float val) {
 		m_src = SRC_CONSTANT;
 		m_src_v1 = val;
 	}
-	void source_square(value_t midpoint, value_t peak, double period, double duty, double phase) {
+	void source_square(float midpoint, float peak, double period, double duty, double phase) {
 		m_src = SRC_SQUARE;
 		update_phase(period, phase);
 		m_src_v1 = midpoint;
 		m_src_v2 = peak;
 		m_src_duty = duty;
 	}
-	void source_sawtooth(value_t midpoint, value_t peak, double period, double phase) {
+	void source_sawtooth(float midpoint, float peak, double period, double phase) {
 		m_src = SRC_SAWTOOTH;
 		update_phase(period, phase);
 		m_src_v1 = midpoint;
 		m_src_v2 = peak;
 	}
-	void source_stairstep(value_t midpoint, value_t peak, double period, double phase) {
+	void source_stairstep(float midpoint, float peak, double period, double phase) {
 		m_src = SRC_STAIRSTEP;
 		update_phase(period, phase);
 		m_src_v1 = midpoint;
 		m_src_v2 = peak;
 	}
-	void source_sine(value_t midpoint, value_t peak, double period, double phase) {
+	void source_sine(float midpoint, float peak, double period, double phase) {
 		m_src = SRC_SINE;
 		update_phase(period, phase);
 		m_src_v1 = midpoint;
 		m_src_v2 = peak;
 	}
-	void source_triangle(value_t midpoint, value_t peak, double period, double phase) {
+	void source_triangle(float midpoint, float peak, double period, double phase) {
 		m_src = SRC_TRIANGLE;
 		update_phase(period, phase);
 		m_src_v1 = midpoint;
 		m_src_v2 = peak;
 	}
-	void source_buffer(value_t* buf, size_t len, bool repeat) {
+	void source_buffer(float* buf, size_t len, bool repeat) {
 		m_src = SRC_BUFFER;
 		m_src_buf = buf;
 		m_src_buf_len = len;
 		m_src_buf_repeat = repeat;
 		m_src_i = 0;
 	}
-	void source_callback(std::function<value_t (sample_t index)> callback) {
+	void source_callback(std::function<float (uint64_t index)> callback) {
 		m_src = SRC_CALLBACK;
 		m_src_callback = callback;
 		m_src_i = 0;
 	}
 
 	/// Get the last measured sample from this signal.
-	value_t measure_instantaneous() { return m_latest_measurement; }
+	float measure_instantaneous() { return m_latest_measurement; }
 
 	/// Configure received samples to be stored into `buf`, up to `len` points.
 	/// After `len` points, samples will be dropped.
-	void measure_buffer(value_t* buf, size_t len) {
+	void measure_buffer(float* buf, size_t len) {
 		m_dest = DEST_BUFFER;
 		m_dest_buf = buf;
 		m_dest_buf_len = len;
 	}
 
 	/// Configure received samples to be passed to the provided callback.
-	void measure_callback(std::function<void(value_t value)> callback) {
+	void measure_callback(std::function<void(float value)> callback) {
 		m_dest = DEST_CALLBACK;
 		m_dest_callback = callback;
 	}
 
 	/// internal: Called by Device
-	inline void put_sample(value_t val) {
+	inline void put_sample(float val) {
 		m_latest_measurement = val;
 		if (m_dest == DEST_BUFFER) {
 			if (m_dest_buf_len) {
@@ -330,7 +330,7 @@ public:
 	}
 
 	/// internal: Called by Device
-	inline value_t get_sample() {
+	inline float get_sample() {
 		switch (m_src) {
 		case SRC_CONSTANT:
 			return m_src_v1;
@@ -402,13 +402,13 @@ public:
 		return 0;
 	}
 	Src m_src;
-	value_t m_src_v1;
-	value_t m_src_v2;
+	float m_src_v1;
+	float m_src_v2;
 	double m_src_period;
 	double m_src_duty;
 	double m_src_phase;
 
-	value_t* m_src_buf;
+	float* m_src_buf;
 	size_t m_src_i;
 	size_t m_src_buf_len;
 	bool m_src_buf_repeat;
@@ -418,18 +418,18 @@ public:
 		m_src_period = new_period;
 	}
 
-	std::function<value_t (sample_t index)> m_src_callback;
+	std::function<float (uint64_t index)> m_src_callback;
 
 	Dest m_dest;
 
 	// valid if m_dest == DEST_BUF
-	value_t* m_dest_buf;
+	float* m_dest_buf;
 	size_t m_dest_buf_len;
 
 	// valid if m_dest == DEST_CALLBACK
-	std::function<void(value_t val)> m_dest_callback;
+	std::function<void(float val)> m_dest_callback;
 
 protected:
 
-	value_t m_latest_measurement;
+	float m_latest_measurement;
 };

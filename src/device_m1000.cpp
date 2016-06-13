@@ -357,7 +357,7 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 
 /// reformat received data - integer to float conversion
 void M1000_Device::handle_in_transfer(libusb_transfer* t) {
-	value_t val;
+	float val;
 	for (unsigned p=0; p<m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p*in_packet_size);
 
