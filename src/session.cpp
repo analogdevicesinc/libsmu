@@ -88,19 +88,23 @@ void Session::detached(libusb_device *device)
 }
 
 /// Internal function to write raw SAM-BA commands to a libusb handle.
-static int usb_write(libusb_device_handle *handle, const char* data) {
-	int transferred;
-	libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
-	smu_debug("USB bytes written: %i\n", transferred);
-	return transferred;
+static void usb_write(libusb_device_handle *handle, const char* data) {
+	int transferred, ret;
+	ret = libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
+	if (ret < 0) {
+		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+		throw std::runtime_error("failed to write SAM-BA command: " + libusb_error_str);
+	}
 }
 
 /// Internal function to read raw SAM-BA commands to a libusb handle.
-static int usb_read(libusb_device_handle *handle, unsigned char* data) {
-	int transferred;
-	libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
-	smu_debug("USB bytes read: %i\n", transferred);
-	return transferred;
+static void usb_read(libusb_device_handle *handle, unsigned char* data) {
+	int transferred, ret;
+	ret = libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
+	if (ret < 0) {
+		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+		throw std::runtime_error("failed to read SAM-BA response: " + libusb_error_str);
+	}
 }
 
 /// Update device firmware for the specified device or the first device
