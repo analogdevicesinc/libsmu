@@ -354,6 +354,11 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
+//std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout)
+//{
+// Fix to use new queue structure.
+//}
+
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
 {
 	float val;

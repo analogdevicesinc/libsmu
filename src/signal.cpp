@@ -114,6 +114,13 @@ void Signal::put_sample(float val)
 		}
 	} else if (m_dest == DEST_CALLBACK) {
 		m_dest_callback(val);
+	} else {
+		// Push samples into FIFO queue by default. Note that this only
+		// succeeds if the queue has an empty slot (i.e. data overflows are
+		// thrown away.)
+		//bool queued = m_dest_queue.try_enqueue(val);
+		// DEBUG
+		//assert(queued);
 	}
 }
 
