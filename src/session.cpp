@@ -480,8 +480,9 @@ int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wV
 // Force the device into SAM-BA command mode.
 void Device::samba_mode() {
 	int ret;
+
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 100);
-	if (ret < 0) {
+	if (ret < 0 && ret != LIBUSB_ERROR_IO) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
 	}
