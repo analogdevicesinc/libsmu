@@ -196,13 +196,13 @@ void Session::flash_firmware(const char *file, Device *dev)
 	for (auto pos = 0; pos < firmware_size; pos += 4) {
 		data = (uint8_t)buf[pos] | (uint8_t)buf[pos+1] << 8 |
 			(uint8_t)buf[pos+2] << 16 | (uint8_t)buf[pos+3] << 24;
-		sprintf(cmd, "W%.8X,%.8X#", flashbase + pos, data);
+		snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
 		samba_usb_write(usb_handle, cmd);
 		samba_usb_read(usb_handle, usb_data);
 		samba_usb_read(usb_handle, usb_data);
 		// On page boundaries, write the page.
 		if ((pos & 0xFC) == 0xFC) {
-			sprintf(cmd, "W400E0804,5A00%.2X03#", page);
+			snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
 			samba_usb_write(usb_handle, cmd);
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			samba_usb_read(usb_handle, usb_data);
