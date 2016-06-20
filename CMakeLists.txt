@@ -6,6 +6,8 @@ else()
 endif()
 project(libsmu CXX C)
 
+option(WITH_DOC "Generate documentation with Doxygen" OFF)
+
 # libsmu versioning
 set(LIBSMU_VERSION_MAJOR 0)
 set(LIBSMU_VERSION_MINOR 9)
@@ -91,6 +93,21 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND INSTALL_UDEV_RULES)
 	set(LIBSMU_UDEV_RULES "${CMAKE_CURRENT_SOURCE_DIR}/dist/53-adi-m1k-usb.rules")
 	set(UDEV_RULES_PATH "/etc/udev/rules.d" CACHE STRING "Target directory for udev rule installation.")
 	install(FILES ${LIBSMU_UDEV_RULES} DESTINATION ${UDEV_RULES_PATH})
+endif()
+
+# generate API docs with doxygen
+if(WITH_DOC)
+	find_package(Doxygen REQUIRED)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dist/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+	set(HTML_DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/html)
+
+	add_custom_target(doc
+		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "Generating API documentation with Doxygen" VERBATIM
+	)
+
+	install(DIRECTORY ${HTML_DEST_DIR} DESTINATION ${CMAKE_INSTALL_DOCDIR})
 endif()
 
 # create a package build script for OS X
