@@ -66,7 +66,8 @@ M1000_Device::M1000_Device(Session* s, libusb_device* device):
 
 M1000_Device::~M1000_Device() {}
 
-int M1000_Device::get_default_rate() {
+int M1000_Device::get_default_rate()
+{
 	// rev0 firmware
 	if (strcmp(this->m_fw_version, "023314a*") == 0) {
 		return 62500;
@@ -77,7 +78,8 @@ int M1000_Device::get_default_rate() {
 	}
 }
 
-int M1000_Device::init() {
+int M1000_Device::init()
+{
 	int d = Device::init();
 
 	if (d != 0) {
@@ -87,18 +89,21 @@ int M1000_Device::init() {
 	}
 }
 
-int M1000_Device::added() {
+int M1000_Device::added()
+{
 	libusb_claim_interface(m_usb, 0);
 	read_calibration();
 	return 0;
 }
 
-int M1000_Device::removed() {
+int M1000_Device::removed()
+{
 	libusb_release_interface(m_usb, 0);
 	return 0;
 }
 
-void M1000_Device::read_calibration() {
+void M1000_Device::read_calibration()
+{
 	int ret;
 
 	ret = this->ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
@@ -111,7 +116,8 @@ void M1000_Device::read_calibration() {
 	}
 }
 
-void M1000_Device::calibration(std::vector<std::vector<float>>* cal) {
+void M1000_Device::calibration(std::vector<std::vector<float>>* cal)
+{
 	(*cal).resize(8);
 	for (int i = 0; i < 8; i++) {
 		(*cal)[i].resize(3);
@@ -121,7 +127,8 @@ void M1000_Device::calibration(std::vector<std::vector<float>>* cal) {
 	}
 }
 
-int M1000_Device::write_calibration(const char* cal_file_name) {
+int M1000_Device::write_calibration(const char* cal_file_name)
+{
 	int cal_records_no = 0;
 	int ret;
 	FILE* fp;
@@ -196,7 +203,8 @@ write_cal:
 }
 
 /// Runs in USB thread
-extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t) {
+extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t)
+{
 	if (!t->user_data) {
 		libusb_free_transfer(t);
 		return;
@@ -205,8 +213,8 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t) {
 	dev->in_completion(t);
 }
 
-void M1000_Device::in_completion(libusb_transfer *t) {
-
+void M1000_Device::in_completion(libusb_transfer *t)
+{
 	std::lock_guard<std::mutex> lock(m_state);
 	m_in_transfers.num_active--;
 
@@ -225,7 +233,8 @@ void M1000_Device::in_completion(libusb_transfer *t) {
 }
 
 /// Runs in USB thread
-extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t) {
+extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t)
+{
 	// if the user_data field is empty, something's wrong, but we have a completed transfer, so free it
 	if (!t->user_data) {
 		libusb_free_transfer(t);
@@ -235,7 +244,8 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t) {
 	dev->out_completion(t);
 }
 
-void M1000_Device::out_completion(libusb_transfer *t) {
+void M1000_Device::out_completion(libusb_transfer *t)
+{
 	std::lock_guard<std::mutex> lock(m_state);
 	m_out_transfers.num_active--;
 
@@ -251,7 +261,8 @@ void M1000_Device::out_completion(libusb_transfer *t) {
 	}
 }
 
-void M1000_Device::configure(uint64_t rate) {
+void M1000_Device::configure(uint64_t rate)
+{
 	double sample_time = 1.0/rate;
 	double M1K_timer_clock;
 
@@ -277,7 +288,8 @@ void M1000_Device::configure(uint64_t rate) {
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 }
 
-uint16_t M1000_Device::encode_out(unsigned chan) {
+uint16_t M1000_Device::encode_out(unsigned chan)
+{
 	int v = 0;
 	if (m_mode[chan] == SVMI) {
 		float val = m_signals[chan][0].get_sample();
@@ -302,7 +314,8 @@ uint16_t M1000_Device::encode_out(unsigned chan) {
 	return v;
 }
 
-bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
+bool M1000_Device::submit_out_transfer(libusb_transfer* t)
+{
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
@@ -340,7 +353,8 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t) {
 }
 
 
-bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
+bool M1000_Device::submit_in_transfer(libusb_transfer* t)
+{
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
@@ -356,7 +370,8 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t) {
 	return false;
 }
 
-void M1000_Device::handle_in_transfer(libusb_transfer* t) {
+void M1000_Device::handle_in_transfer(libusb_transfer* t)
+{
 	float val;
 	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p * in_packet_size);
@@ -389,11 +404,13 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 }
 
 // get device info struct
-const sl_device_info* M1000_Device::info() const {
+const sl_device_info* M1000_Device::info() const
+{
 	return &m1000_info;
 }
 
-const sl_channel_info* M1000_Device::channel_info(unsigned channel) const {
+const sl_channel_info* M1000_Device::channel_info(unsigned channel) const
+{
 	if (channel < 2) {
 		return &m1000_channel_info[channel];
 	} else {
@@ -401,7 +418,8 @@ const sl_channel_info* M1000_Device::channel_info(unsigned channel) const {
 	}
 }
 
-Signal* M1000_Device::signal(unsigned channel, unsigned signal) {
+Signal* M1000_Device::signal(unsigned channel, unsigned signal)
+{
 	if (channel < 2 && signal < 2) {
 		return &m_signals[channel][signal];
 	} else {
@@ -409,7 +427,8 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal) {
 	}
 }
 
-void M1000_Device::set_mode(unsigned chan, unsigned mode) {
+void M1000_Device::set_mode(unsigned chan, unsigned mode)
+{
 	if (chan < 2) {
 		m_mode[chan] = mode;
 	}
@@ -426,19 +445,22 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode) {
 	this->ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
 }
 
-void M1000_Device::on() {
+void M1000_Device::on()
+{
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
 
 	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 	this->ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
-void M1000_Device::sync() {
+void M1000_Device::sync()
+{
 	this->ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start+0xff)&0x3c00;
 }
 
-void M1000_Device::start_run(uint64_t samples) {
+void M1000_Device::start_run(uint64_t samples)
+{
 	int ret = this->ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
 		smu_debug("control transfer failed with code %i\n", ret);
@@ -457,21 +479,24 @@ void M1000_Device::start_run(uint64_t samples) {
 	}
 }
 
-void M1000_Device::cancel() {
+void M1000_Device::cancel()
+{
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
-	if ( (ret_in != ret_out) || (ret_in != 0) || (ret_out != 0) )
+	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0))
 		smu_debug("cancel error in: %s out: %s\n", libusb_error_name(ret_in), libusb_error_name(ret_out));
 }
 
-void M1000_Device::off() {
+void M1000_Device::off()
+{
 	set_mode(A, DISABLED);
 	set_mode(B, DISABLED);
 	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 }
 
 // Force the device into SAM-BA command mode.
-void M1000_Device::samba_mode() {
+void M1000_Device::samba_mode()
+{
 	int ret;
 
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);

@@ -12,16 +12,19 @@
 
 using namespace smu;
 
-Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d) {
+Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
+{
 	libusb_ref_device(m_device);
 }
 
-int Device::init() {
+int Device::init()
+{
 	int r = libusb_open(m_device, &m_usb);
 	return r;
 }
 
-Device::~Device() {
+Device::~Device()
+{
 	if (m_usb)
 		libusb_close(m_usb);
 	if (m_device)
