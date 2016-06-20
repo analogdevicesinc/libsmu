@@ -5,7 +5,10 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 /// @file libsmu.hpp
-/// @brief Public interface.
+/// @brief Main public interface.
+/// This is the main header that should generally be the only one
+/// imported by third parties. All public classes and methods will be
+/// available through it.
 
 #pragma once
 
