@@ -263,9 +263,9 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	}
 }
 
-void M1000_Device::configure(uint64_t rate)
+void M1000_Device::configure(uint64_t sampleRate)
 {
-	double sample_time = 1.0/rate;
+	double sample_time = 1.0 / sampleRate;
 	double M1K_timer_clock;
 
 	// if FW version is 023314a - initial production, use 3e6 for timer clock
