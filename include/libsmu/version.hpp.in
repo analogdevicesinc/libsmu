@@ -2,38 +2,23 @@
 // (C) 2016, Analog Devices, Inc.
 
 /// @file version.hpp
-/// @brief Library version handling.
+/// @brief Library versioning support.
 
 #pragma once
 
+/// @brief The major version of the libsmu library (X.0.0).
 #define LIBSMU_VERSION_MAJOR @LIBSMU_VERSION_MAJOR@
+
+/// @brief The minor version of the libsmu library (0.X.0).
 #define LIBSMU_VERSION_MINOR @LIBSMU_VERSION_MINOR@
+
+/// @brief The patch version of the libsmu library (0.0.X).
 #define LIBSMU_VERSION_PATCH @LIBSMU_VERSION_PATCH@
+
+/// @brief A numerical libsmu library version.
 #define LIBSMU_VERSION ((LIBSMU_VERSION_MAJOR << 16) |\
 			(LIBSMU_VERSION_MINOR << 8) |\
 			LIBSMU_VERSION_PATCH)
+
+/// @brief A string representing the libsmu library version.
 #define LIBSMU_VERSION_STR "@LIBSMU_VERSION@"
-
-/// @brief Get the version of the libsmu library.
-/// @return A pointer to the version string.
-inline const char* libsmu_version(void) {
-    return LIBSMU_VERSION_STR;
-}
-
-/// @brief Get the major version of the libsmu library.
-/// @return An integer relating to the major library version.
-inline int libsmu_version_major(void) {
-    return LIBSMU_VERSION_MAJOR;
-}
-
-/// @brief Get the minor version of the libsmu library.
-/// @return An integer relating to the minor library version.
-inline int libsmu_version_minor(void) {
-    return LIBSMU_VERSION_MINOR;
-}
-
-/// @brief Get the patch version of the libsmu library.
-/// @return An integer relating to the patch library version.
-inline int libsmu_version_patch(void) {
-    return LIBSMU_VERSION_PATCH;
-}
