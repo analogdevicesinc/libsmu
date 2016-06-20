@@ -254,7 +254,7 @@ int main(int argc, char **argv)
 				display_usage();
 				break;
 			case 'v':
-				cout << libsmu_version() << endl;
+				cout << LIBSMU_VERSION_STR << endl;
 				break;
 			default:
 				display_usage();
