@@ -197,6 +197,8 @@ write_cal:
 	} else {
 		m_cal.eeprom_valid = EEPROM_VALID;
 		ret = this->ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+		if (ret > 0)
+			ret = 0;
 	}
 
 	return ret;
