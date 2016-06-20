@@ -73,7 +73,7 @@ static void stream_samples(Session* session)
 	}
 	session->configure(dev->get_default_rate());
 	session->start(0);
-	while ( 1 == 1 ) {session->wait_for_completion();};
+	while (true) {session->wait_for_completion();};
 }
 
 int write_calibration(Session* session, const char *file)
