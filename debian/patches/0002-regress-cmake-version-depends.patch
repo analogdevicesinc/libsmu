@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2,7 +2,7 @@
+ 	# needed for CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS support
+ 	cmake_minimum_required(VERSION 3.4)
+ else()
+-	cmake_minimum_required(VERSION 3.1)
++	cmake_minimum_required(VERSION 3.0)
+ endif()
+ project(libsmu CXX C)
+ 
