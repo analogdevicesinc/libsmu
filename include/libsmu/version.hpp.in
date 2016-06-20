@@ -3,6 +3,8 @@
 
 /// @file version.hpp
 /// @brief Library versioning support.
+/// Versioning for libsmu follows the guidelines of semantic versioning for
+/// shared libraries (http://semver.org/).
 
 #pragma once
 
