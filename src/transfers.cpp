@@ -13,7 +13,8 @@
 
 #include <libusb.h>
 
-float constrain(float val, float lo, float hi){
+float constrain(float val, float lo, float hi)
+{
 	if (val > hi) val = hi;
 	if (val < lo) val = lo;
 	return val;
@@ -38,7 +39,8 @@ void Transfers::alloc(unsigned count, libusb_device_handle* handle,
 	}
 }
 
-void Transfers::failed(libusb_transfer* t) {
+void Transfers::failed(libusb_transfer* t)
+{
 	for (int i = m_transfers.size(); i == 0; i--) {
 		if (m_transfers[i] == t) {
 			libusb_free_transfer(t);
@@ -47,7 +49,8 @@ void Transfers::failed(libusb_transfer* t) {
 	}
 }
 
-void Transfers::clear() {
+void Transfers::clear()
+{
 	for (auto i: m_transfers) {
 		libusb_free_transfer(i);
 	}
@@ -56,8 +59,8 @@ void Transfers::clear() {
 	m_transfers.clear();
 }
 
-int Transfers::cancel() {
-	// for i in pending transfers
+int Transfers::cancel()
+{
 	for (auto i: m_transfers) {
 		if (num_active > 1) {
 			smu_debug("num_active before cancel: %i\n", num_active);

@@ -24,7 +24,8 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 
 /// session constructor
-Session::Session() {
+Session::Session()
+{
 	m_active_devices = 0;
 
 	if (int r = libusb_init(&m_usb_cx) != 0) {
@@ -57,7 +58,8 @@ Session::Session() {
 }
 
 /// session destructor
-Session::~Session() {
+Session::~Session()
+{
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	// Run device destructors before libusb_exit
 	m_usb_thread_loop = 0;
@@ -70,7 +72,8 @@ Session::~Session() {
 }
 
 /// callback for device attach events
-void Session::attached(libusb_device *device) {
+void Session::attached(libusb_device *device)
+{
 	shared_ptr<Device> dev = probe_device(device);
 	if (dev) {
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
@@ -242,7 +245,8 @@ void Session::flash_firmware(const char *file, Device *dev)
 }
 
 /// remove a specified Device from the list of available devices
-void Session::destroy_available(Device *dev) {
+void Session::destroy_available(Device *dev)
+{
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	if (dev)
 		for (unsigned i = 0; i < m_available_devices.size(); i++)
@@ -265,7 +269,8 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 }
 
 /// spawn thread for USB transaction handling
-void Session::start_usb_thread() {
+void Session::start_usb_thread()
+{
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
 		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_cx, NULL);
@@ -273,7 +278,8 @@ void Session::start_usb_thread() {
 }
 
 /// update list of attached USB devices
-int Session::update_available_devices() {
+int Session::update_available_devices()
+{
 	m_lock_devlist.lock();
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
@@ -295,7 +301,8 @@ int Session::update_available_devices() {
 }
 
 /// identify devices supported by libsmu
-shared_ptr<Device> Session::probe_device(libusb_device* device) {
+shared_ptr<Device> Session::probe_device(libusb_device* device)
+{
 	shared_ptr<Device> dev = find_existing_device(device);
 
 	libusb_device_descriptor desc;
@@ -324,7 +331,8 @@ shared_ptr<Device> Session::probe_device(libusb_device* device) {
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
+shared_ptr<Device> Session::find_existing_device(libusb_device* device)
+{
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (auto d: m_available_devices) {
 		if (d->m_device == device) {
@@ -335,7 +343,8 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
 }
 
 /// get the device matching a given serial from the session
-Device* Session::get_device(const char* serial) {
+Device* Session::get_device(const char* serial)
+{
 	for (auto d: m_devices) {
 		if (strncmp(d->serial(), serial, 31) == 0) {
 			return d;
@@ -345,8 +354,9 @@ Device* Session::get_device(const char* serial) {
 }
 
 /// adds a new device to the session
-Device* Session::add_device(Device* device) {
-	if ( device ) {
+Device* Session::add_device(Device* device)
+{
+	if (device) {
 		m_devices.insert(device);
 		smu_debug("device insert: %s\n", device->serial());
 		device->added();
@@ -356,8 +366,9 @@ Device* Session::add_device(Device* device) {
 }
 
 /// removes an existing device from the session
-void Session::remove_device(Device* device) {
-	if ( device ) {
+void Session::remove_device(Device* device)
+{
+	if (device) {
 		m_devices.erase(device);
 		device->removed();
 	}
@@ -367,20 +378,23 @@ void Session::remove_device(Device* device) {
 }
 
 /// configures sampling for all devices
-void Session::configure(uint64_t sampleRate) {
+void Session::configure(uint64_t sampleRate)
+{
 	for (auto i: m_devices) {
 		i->configure(sampleRate);
 	}
 }
 
 /// stream nsamples, then stop
-void Session::run(uint64_t nsamples) {
+void Session::run(uint64_t nsamples)
+{
 	start(nsamples);
 	end();
 }
 
 /// wait for completion of sample stream, disable all devices
-void Session::end() {
+void Session::end()
+{
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
@@ -395,14 +409,16 @@ void Session::end() {
 	}
 }
 /// wait for completion of sample stream
-void Session::wait_for_completion() {
+void Session::wait_for_completion()
+{
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 }
 
 /// start streaming data
-void Session::start(uint64_t nsamples) {
+void Session::start(uint64_t nsamples)
+{
 	m_min_progress = 0;
 	m_cancellation = 0;
 	for (auto i: m_devices) {
@@ -416,7 +432,8 @@ void Session::start(uint64_t nsamples) {
 }
 
 /// cancel all pending USB transactions
-void Session::cancel() {
+void Session::cancel()
+{
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (auto i: m_devices) {
 		i->cancel();
@@ -424,7 +441,8 @@ void Session::cancel() {
 }
 
 /// Called on the USB thread when a device encounters an error
-void Session::handle_error(int status, const char * tag) {
+void Session::handle_error(int status, const char * tag)
+{
 	std::lock_guard<std::mutex> lock(m_lock);
 	// a canceled transfer completing is not an error...
 	if ((m_cancellation == 0) && (status != LIBUSB_TRANSFER_CANCELLED) ) {
@@ -435,7 +453,8 @@ void Session::handle_error(int status, const char * tag) {
 }
 
 /// called upon completion of a sample stream
-void Session::completion() {
+void Session::completion()
+{
 	// On USB thread
 	m_active_devices -= 1;
 	std::lock_guard<std::mutex> lock(m_lock);
@@ -447,7 +466,8 @@ void Session::completion() {
 	}
 }
 
-void Session::progress() {
+void Session::progress()
+{
 	uint64_t min_progress = ULLONG_MAX;
 	for (auto i: m_devices) {
 		if (i->m_in_sampleno < min_progress) {

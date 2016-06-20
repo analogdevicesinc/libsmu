@@ -60,7 +60,7 @@ static void stream_samples(Session* session)
 {
 	auto dev = *(session->m_devices.begin());
 	auto dev_info = dev->info();
-	for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
+	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
 		auto ch_info = dev->channel_info(ch_i);
 		dev->set_mode(ch_i, DISABLED);
 		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
