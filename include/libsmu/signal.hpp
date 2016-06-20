@@ -1,6 +1,9 @@
 // Released under the terms of the BSD License
 // (C) 2016, Analog Devices, Inc.
 
+/// @file signal.hpp
+/// @brief Signal handling.
+
 #pragma once
 
 #include <cstddef>
@@ -90,6 +93,7 @@ enum Modes {
 };
 
 namespace smu {
+	/// @brief Generic signal class.
 	class Signal {
 	public:
 		/// internal: Do not call the constructor directly; obtain a Signal from a Device
