@@ -4,6 +4,9 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
+/// @file device.hpp
+/// @brief Device handling.
+
 #pragma once
 
 #include <libsmu/signal.hpp>
@@ -16,67 +19,85 @@
 #include <libusb.h>
 
 namespace smu {
+	/// @brief Generic device class.
 	class Device {
 	public:
 		virtual ~Device();
 
-		/// Get the descriptor for the device.
-		/// Pointed-to memory is valid for the lifetime of the Device.
-		/// This method may be called on a device that is not added to the session.
+		/// @brief Get the descriptor for the device.
 		virtual const sl_device_info* info() const = 0;
 
-		/// Get the descriptor for the specified channel.
-		/// Pointed-to memory is valid for the lifetime of the Device.
+		/// @brief Get the descriptor for the specified channel.
+		/// @param channel An unsigned integer relating to the requested channel.
 		virtual const sl_channel_info* channel_info(unsigned channel) const = 0;
 
-		/// Get the specified Signal.
+		/// @brief Get the specified signal.
+		/// @param channel An unsigned integer relating to the requested channel.
+		/// @param channel An unsigned integer relating to the requested signal.
 		virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 
-		/// Get the serial number of the device.
-		/// Pointed-to memory is valid for the lifetime of the Device.
-		/// This method may be called on a device that is not added to the session.
+		/// @brief Get the serial number of the device.
 		virtual const char* serial() const { return this->serial_num; }
+
+		/// @brief Get the firmware version of the device.
 		virtual const char* fwver() const { return this->m_fw_version; }
+
+		/// @brief Get the hardware version of the device.
 		virtual const char* hwver() const { return this->m_hw_version; }
 
-		/// Set the mode of the specified channel.
+		/// @brief Set the mode of the specified channel.
+		/// @param channel An unsigned integer relating to the requested channel.
+		/// @param mode An unsigned integer relating to the requested mode.
 		/// This method may not be called while the session is active.
 		virtual void set_mode(unsigned channel, unsigned mode) = 0;
 
-		/// Perform a raw USB control transfer on the underlying USB device.
+		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
-		/// Force the device into SAM-BA command mode.
+		/// @brief Force the device into SAM-BA command mode.
 		virtual void samba_mode() = 0;
 
-		/// Get the default sample rate.
+		/// @brief Get the default sample rate.
 		virtual int get_default_rate() { return 10000; }
 
-		/// Prepare multi-device synchronization.
+		/// @brief Prepare multi-device synchronization.
 		virtual void sync() = 0;
 
-		/// Lock the Device's mutex, preventing this device's transfers from being processed. Hold
-		/// this lock only briefly, while modifying Signal state.
+		/// @brief Lock the device's mutex.
+		/// This prevents this device's transfers from being processed. Hold
+		/// only briefly, while modifying signal state.
 		virtual void lock() { m_state.lock(); }
 
-		/// Unlock the Device's mutex, allowing this device's transfers to be processed.
+		/// @brief Unlock the device's mutex.
+		/// Allows this device's transfers to be processed.
 		virtual void unlock() { m_state.unlock(); }
 
-		/// Write the device calibration data into the EEPROM.
+		/// @brief Write the device calibration data into the EEPROM.
+		/// @param cal_file_name The path to a properly-formatted calibration
+		/// data file to write to the device.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative integer is returned.
 		virtual int write_calibration(const char* cal_file_name) { return 0; }
 
-		/// Get the device calibration data from the EEPROM.
+		/// @brief Get the device calibration data from the EEPROM.
+		/// @param cal A pointer to a vector of floats.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;
 
 	protected:
 		Device(Session* s, libusb_device* d);
 
-		/// generic device initialization
+		/// @brief Generic device initialization.
 		virtual int init();
 
+		/// @brief Device claiming and initialization when a session adds this device.
 		virtual int added() { return 0; }
+
+		/// @brief Device releasing when a session removes this device.
 		virtual int removed() { return 0; }
+
+		/// @brief Configurization and initialization for device sampling.
+		/// @param sampleRate The requests sampling rate for the device.
 		virtual void configure(uint64_t sampleRate) = 0;
 
 		virtual void on() = 0;

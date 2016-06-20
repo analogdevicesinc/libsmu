@@ -4,6 +4,9 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
+/// @file session.hpp
+/// @brief Session handling.
+
 #pragma once
 
 #include <libsmu/device.hpp>
@@ -19,33 +22,46 @@
 #include <libusb.h>
 
 namespace smu {
+	/// @brief Generic session class.
 	class Session {
 	public:
 		Session();
 		~Session();
 
+		/// @brief Scan system for all supported devices.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative integer relating to a libusb error code is returned.
 		int update_available_devices();
-		unsigned m_active_devices;
 
-		/// Devices that are present on the system, but aren't necessarily in bound to this session.
-		/// Only `Device::serial` and `Device::info` may be called on a Device that is not added to
-		/// the session.
+		/// @brief Devices that are present on the system.
+		/// Note that these devices aren't necessarily bound to a session.
 		std::vector<std::shared_ptr<Device>> m_available_devices;
 
-		/// Add a device (from m_available_devices) to the session.
+		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
-		Device* add_device(Device*);
+		/// @param device A pointer to the device to be added.
+		/// @return On success, the pointer to the added device is returned.
+		/// @return On error, NULL is returned.
+		Device* add_device(Device* device);
 
-		/// Devices that are part of this session. These devices will be started when start() is called.
+		/// @brief Devices that are part of this session.
+		/// These devices will be started when start() is called.
 		/// Use `add_device` and `remove_device` to manipulate this list.
 		std::set<Device*> m_devices;
 
-		/// get the device matching a given serial from the session
+		/// @brief Number of devices currently streaming samples.
+		unsigned m_active_devices;
+		
+		/// @brief Get the device matching a given serial from the session.
+		/// @param serial A pointer to the string for a device's serial number.
+		/// @return On success, the pointer to the found device is returned.
+		/// @return If no matching device is found, NULL is returned.
 		Device* get_device(const char* serial);
 
-		/// Remove a device from the session.
-		/// This method may not be called while the session is active
-		void remove_device(Device*);
+		/// @brief Remove a device from the session.
+		/// @param device A pointer to the device to be removed.
+		/// This method may not be called while the session is active.
+		void remove_device(Device* device);
 
 		/// Remove a device from the list of available devices.
 		/// Devices are automatically added to this list on attach.
