@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -18,8 +18,12 @@
+ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+ 
+ # C++11 is required
+-set(CMAKE_CXX_STANDARD 11)
+-set(CXX_STANDARD_REQUIRED ON)
++if(CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_VERSION VERSION_LESS 3.1))
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
++else()
++    set(CMAKE_CXX_STANDARD 11)
++    set(CXX_STANDARD_REQUIRED ON)
++endif()
+ 
+ # don't complain about extra format args for g++
+ if(CMAKE_COMPILER_IS_GNUCXX)
