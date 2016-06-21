@@ -4,8 +4,6 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include <libsmu/signal.hpp>
-
 #ifdef WIN32
 #define _USE_MATH_DEFINES // needed for VS to define math constants (e.g. M_PI)
 #endif
@@ -14,6 +12,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+
+#include <libsmu/libsmu.hpp>
 
 using namespace smu;
 

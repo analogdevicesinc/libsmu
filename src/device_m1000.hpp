@@ -13,9 +13,7 @@
 
 #include "debug.hpp"
 #include "transfers.hpp"
-#include <libsmu/device.hpp>
-#include <libsmu/session.hpp>
-#include <libsmu/signal.hpp>
+#include <libsmu/libsmu.hpp>
 
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
