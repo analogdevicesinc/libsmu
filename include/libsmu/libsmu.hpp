@@ -12,13 +12,13 @@
 
 #pragma once
 
+#include <cstdint>
+#include <vector>
+
 #include <libsmu/version.hpp>
 #include <libsmu/device.hpp>
 #include <libsmu/signal.hpp>
 #include <libsmu/session.hpp>
-
-#include <cstdint>
-#include <vector>
 
 /// @brief List of supported devices.
 /// The list uses the vendor and project IDs from USB

@@ -4,7 +4,11 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include <libsmu/libsmu.hpp>
+#ifdef WIN32
+#include "getopt.h"
+#else
+#include <getopt.h>
+#endif
 
 #include <cstdint>
 #include <cstring>
@@ -14,17 +18,12 @@
 
 #include <libusb.h>
 
-#ifdef WIN32
-#include "getopt.h"
-#else
-#include <getopt.h>
-#endif
+#include <libsmu/libsmu.hpp>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::string;
-using std::vector;
 
 using namespace smu;
 
@@ -95,7 +94,7 @@ int write_calibration(Session* session, const char *file)
 
 void display_calibration(Session* session)
 {
-	vector<vector<float>> cal;
+	std::vector<std::vector<float>> cal;
 	for (auto dev: session->m_devices) {
 		printf("%s: serial %s: fw %s: hw %s\n",
 			dev->info()->label, dev->serial(),

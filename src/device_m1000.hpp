@@ -6,18 +6,16 @@
 
 #pragma once
 
-#include "debug.hpp"
-#include "transfers.hpp"
-#include <libsmu/device.hpp>
-#include <libsmu/session.hpp>
-#include <libsmu/signal.hpp>
-
 #include <mutex>
 #include <vector>
 
 #include <libusb.h>
 
-using std::vector;
+#include "debug.hpp"
+#include "transfers.hpp"
+#include <libsmu/device.hpp>
+#include <libsmu/session.hpp>
+#include <libsmu/signal.hpp>
 
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
@@ -41,7 +39,7 @@ namespace smu {
 		virtual int write_calibration(const char* cal_file_name);
 
 		/// Provide external read access to EEPROM calibration data.
-		virtual void calibration(vector<vector<float>>* cal);
+		virtual void calibration(std::vector<std::vector<float>>* cal);
 
 		virtual void samba_mode();
 

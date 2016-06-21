@@ -4,11 +4,12 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "debug.hpp"
 #include <libsmu/device.hpp>
-#include <libsmu/session.hpp>
 
 #include <libusb.h>
+
+#include "debug.hpp"
+#include <libsmu/session.hpp>
 
 using namespace smu;
 
