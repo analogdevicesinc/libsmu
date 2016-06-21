@@ -5,17 +5,18 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #include "device_m1000.hpp"
-#include "debug.hpp"
-#include "transfers.hpp"
-#include <libsmu/device.hpp>
-#include <libsmu/session.hpp>
-#include <libsmu/signal.hpp>
 
 #include <cmath>
 #include <cstring>
 #include <vector>
 
 #include <libusb.h>
+
+#include "debug.hpp"
+#include "transfers.hpp"
+#include <libsmu/device.hpp>
+#include <libsmu/session.hpp>
+#include <libsmu/signal.hpp>
 
 #define EP_OUT 0x02
 #define EP_IN 0x81

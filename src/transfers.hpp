@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "debug.hpp"
-
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
 
 #include <libusb.h>
+
+#include "debug.hpp"
 
 float constrain(float val, float lo, float hi);
 

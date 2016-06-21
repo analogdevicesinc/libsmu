@@ -9,14 +9,14 @@
 
 #pragma once
 
-#include <libsmu/signal.hpp>
-#include <libsmu/session.hpp>
-
 #include <cstdint>
 #include <mutex>
 #include <vector>
 
 #include <libusb.h>
+
+#include <libsmu/signal.hpp>
+#include <libsmu/session.hpp>
 
 namespace smu {
 	/// @brief Generic device class.

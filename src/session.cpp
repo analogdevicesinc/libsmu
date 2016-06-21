@@ -4,10 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "debug.hpp"
-#include "device_m1000.hpp"
 #include <libsmu/session.hpp>
-#include <libsmu/libsmu.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -15,6 +12,10 @@
 #include <string.h>
 
 #include <libusb.h>
+
+#include "debug.hpp"
+#include "device_m1000.hpp"
+#include <libsmu/libsmu.hpp>
 
 using std::shared_ptr;
 

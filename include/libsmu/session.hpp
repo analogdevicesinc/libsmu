@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include <libsmu/device.hpp>
-
 #include <cstdint>
 #include <condition_variable>
 #include <functional>
@@ -20,6 +18,8 @@
 #include <vector>
 
 #include <libusb.h>
+
+#include <libsmu/device.hpp>
 
 namespace smu {
 	/// @brief Generic session class.
@@ -51,7 +51,7 @@ namespace smu {
 
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
-		
+
 		/// @brief Get the device matching a given serial from the session.
 		/// @param serial A pointer to the string for a device's serial number.
 		/// @return On success, the pointer to the found device is returned.
