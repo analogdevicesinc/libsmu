@@ -6,14 +6,14 @@
 
 #include <libsmu/signal.hpp>
 
+#ifdef WIN32
+#define _USE_MATH_DEFINES // needed for VS to define math constants (e.g. M_PI)
+#endif
+
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-
-#ifndef M_PI
-#define M_PI (4.0*atan(1.0))
-#endif
 
 using namespace smu;
 
