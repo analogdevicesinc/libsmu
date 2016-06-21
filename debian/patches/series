@@ -1,4 +1,3 @@
-0001-fix-quote-cxx-flags.patch
 0002-regress-cmake-version-depends.patch
 0003-use-explicit-cxx-std-on-older-cmake.patch
 0004-remove-absolute-lib-include-paths.patch
