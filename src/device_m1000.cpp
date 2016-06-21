@@ -14,9 +14,7 @@
 
 #include "debug.hpp"
 #include "transfers.hpp"
-#include <libsmu/device.hpp>
-#include <libsmu/session.hpp>
-#include <libsmu/signal.hpp>
+#include <libsmu/libsmu.hpp>
 
 #define EP_OUT 0x02
 #define EP_IN 0x81
