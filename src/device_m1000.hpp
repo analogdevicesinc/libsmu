@@ -20,10 +20,16 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
 #define EEPROM_VALID 0x01ee02dd
 
+static const sl_signal_info m1000_signal_info[2] = {
+	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V, 0.0, 5.0, 5.0/65536 },
+	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
+};
+
 namespace smu {
 	class M1000_Device: public Device {
 	public:
-		virtual ~M1000_Device();
+		virtual ~M1000_Device() {}
+
 		virtual const sl_device_info* info() const;
 		virtual const sl_channel_info* channel_info(unsigned channel) const;
 		virtual Signal* signal(unsigned channel, unsigned signal);
@@ -49,7 +55,18 @@ namespace smu {
 		friend void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
 		friend void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
-		M1000_Device(Session* s, libusb_device* device);
+		Signal m_signals[2][2];
+		unsigned m_mode[2];
+
+		M1000_Device(Session* s, libusb_device* device):
+			Device(s, device),
+			m_signals {
+				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
+				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
+			},
+			m_mode{0,0}
+			{}
+
 		virtual int init();
 		virtual int get_default_rate();
 		virtual int added();
@@ -97,8 +114,5 @@ namespace smu {
 		EEPROM_cal m_cal;
 
 		uint64_t m_sample_count = 0;
-
-		Signal m_signals[2][2];
-		unsigned m_mode[2];
 	};
 }
