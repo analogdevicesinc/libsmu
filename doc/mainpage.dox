@@ -1,0 +1,36 @@
+/**
+@mainpage
+
+@tableofcontents
+
+@section arch Architecture and design
+
+@section session Using sessions
+
+TODO
+
+@subsection session_creation Session creation
+
+TODO
+
+@subsection session_devices Interacting with devices in a session
+
+TODO
+
+@section devices Device usage
+
+TODO
+
+@subsection reading_data Reading data from a device
+
+TODO
+
+@subsection writing_data Writing data to a device
+
+TODO
+
+@section signals Signals
+
+TODO
+
+*/
