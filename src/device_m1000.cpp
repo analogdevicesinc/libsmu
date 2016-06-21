@@ -47,23 +47,7 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{CHANNEL_SMU, "B", 3, 2},
 };
 
-static const sl_signal_info m1000_signal_info[2] = {
-	{ SIGNAL, "Voltage", 0x7, 0x2, unit_V,	0.0, 5.0, 5.0/65536 },
-	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
-};
-
 const float current_limit = 0.2;
-
-M1000_Device::M1000_Device(Session* s, libusb_device* device):
-	Device(s, device),
-	m_signals {
-		{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
-		{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
-	},
-	m_mode{0,0}
-{	}
-
-M1000_Device::~M1000_Device() {}
 
 int M1000_Device::get_default_rate()
 {
