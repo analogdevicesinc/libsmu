@@ -119,6 +119,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
 	unsigned char usb_data[512];
 	unsigned int device_count, page;
+	int ret;
 
 	std::ifstream firmware (file, std::ios::in | std::ios::binary);
 	long firmware_size;
@@ -159,15 +160,17 @@ void Session::flash_firmware(const char *file, Device *dev)
 		throw std::runtime_error("no supported devices plugged in");
 	}
 
-	if (libusb_open(usb_dev, &usb_handle)) {
+	ret = libusb_open(usb_dev, &usb_handle);
+	if (ret < 0) {
+		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		libusb_free_device_list(usb_devs, 1);
-		throw std::runtime_error("failed opening USB device");
+		throw std::runtime_error("failed opening USB device: " + libusb_error_str);
 	}
 #ifndef WIN32
 	libusb_detach_kernel_driver(usb_handle, 0);
 	libusb_detach_kernel_driver(usb_handle, 1);
 #endif
-	libusb_set_configuration(usb_handle, 1);
+	libusb_claim_interface(usb_handle, 1);
 
 	// erase flash
 	samba_usb_write(usb_handle, "W400E0804,5A000005#");
@@ -226,6 +229,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 	samba_usb_write(usb_handle, "G00000000#");
 	samba_usb_read(usb_handle, usb_data);
 
+	libusb_release_interface(usb_handle, 1);
 	libusb_close(usb_handle);
 	libusb_free_device_list(usb_devs, 1);
 }
@@ -481,10 +485,9 @@ void Device::samba_mode() {
 	int ret;
 
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	if (ret < 0 && ret != LIBUSB_ERROR_IO) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
 	}
-
-	std::this_thread::sleep_for(std::chrono::seconds(1));
 }
