@@ -51,18 +51,24 @@ Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexis
 Source: "C:\libsmu\32\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "C:\libsmu\32\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
+Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\x86\dpinst.exe"; DestDir: "{tmp}\drivers"; Tasks: drivers; Flags: deleteafterinstall
+Source: "C:\libsmu\m1k-winusb.inf"; DestDir: "{tmp}\drivers"; Tasks: drivers
+
 Source: "C:\libsmu\32\libsmu.dll"; DestDir: "{app}"
 Source: "C:\libsmu\32\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib"; Tasks: visualstudio
 Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
 Source: "C:\libsmu\32\smu.exe"; DestDir: "{app}"
 
 [Tasks]
+; Only allow driver installs for Windows 7 (version 6.2 maps to Windows 8).
+Name: drivers; Description: Install WinUSB drivers for the M1K; OnlyBelowVersion: 6.2
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
 Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
 Name: python; Description: Install python bindings for libsmu; Flags: unchecked
 
 [Run]
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-win32.msi"""; Flags: hidewizard; Tasks: python
+Filename: "{tmp}\drivers\dpinst.exe"; Parameters: "/Q"; Flags: waituntilterminated runhidden; Tasks: drivers
 
 [Code]
 const

@@ -1,0 +1,38 @@
+; Install the WinUSB drivers for the M1K.
+
+[Version]                                                       ; Version section
+Signature="$Windows NT$"                                        ; All Windows versions
+Class=USBDevice                                                 ; Use the WinUSB driver
+ClassGuid={CBE8E6F9-63B8-4A60-A5BC-21DF2D6B85FF}                ; Associated GUID
+Provider=%ADI%                                                  ; Driver is provided by Analog Devices, Inc.
+DriverVer=09/04/2012,13.54.20.543                               ; Driver version
+
+[DestinationDirs]                                               ; DestinationDirs section
+DefaultDestDir=12                                               ; Default install directory is \drivers or \IOSubSys
+
+[Manufacturer]                                                  ; Manufacturer section
+%ADI%=ADI,NTamd64                                               ; Only one manufacturer (ADI), models section is named ADI
+
+[ADI]                                                           ; Models section
+%M1K%=WinUSB.Install,USB\VID_064B&PID_784C                      ; M1K device
+%M1K-SAMBA%=WinUSB.Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
+
+[ADI.NTamd64]                                                   ; Models section
+%M1K%=WinUSB.Install,USB\VID_064B&PID_784C                      ; M1K device
+%M1K-SAMBA%=WinUSB.Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
+
+[WinUSB.Install]                                                ; Install section
+Include=winusb.inf
+AddReg=WinUSB.AddReg                                            ; Registry keys to add are listed in WinUSB.AddReg
+
+[WinUSB.AddReg]                                                 ; AddReg section
+HKR,,DeviceInterfaceGUIDs,0x10000,"{9f543223-cede-4fa3-b376-a25ce9a30e74}"
+
+[WinUSB.Install.Services]                                       ; Services section
+Include=winusb.inf
+Needs=WINUSB.NT.Services
+
+[Strings]                                                       ; Strings section
+ADI="Analog Devices, Inc."                                      ; String value for the ADI symbol
+M1K="M1K WinUSB driver"                                         ; String value for the M1K symbol
+M1K-SAMBA="M1K SAM-BA WinUSB driver"                            ; String value for the M1K-SAMBA symbol
