@@ -486,7 +486,7 @@ void Device::samba_mode() {
 
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (ret < 0 && ret != LIBUSB_ERROR_IO) {
+	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
 	}
