@@ -126,3 +126,7 @@ build_script:
   - iscc C:\projects\libsmu\dist\libsmu-x64.iss
   - appveyor PushArtifact C:\libsmu-setup-x86.exe
   - appveyor PushArtifact C:\libsmu-setup-x64.exe
+
+cache:
+  # cache innosetup download
+  - C:\Users\appveyor\AppData\Local\Temp\chocolatey
