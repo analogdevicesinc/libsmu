@@ -51,8 +51,8 @@ Source: "C:\libsmu\64\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexis
 Source: "C:\libsmu\64\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "C:\libsmu\64\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
-Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\amd64\dpinst.exe"; DestDir: "{tmp}\drivers"; Tasks: drivers; Flags: deleteafterinstall
-Source: "C:\libsmu\m1k-winusb.inf"; DestDir: "{tmp}\drivers"; Tasks: drivers
+Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\amd64\dpinst.exe"; DestDir: "{tmp}"; Tasks: drivers; Flags: deleteafterinstall
+Source: "C:\libsmu\m1k-winusb.inf"; DestDir: "{app}\drivers"; Tasks: drivers
 
 Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"
 Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Tasks: visualstudio
@@ -68,7 +68,7 @@ Name: python; Description: Install python bindings for libsmu; Flags: unchecked
 
 [Run]
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-amd64.msi"""; Flags: hidewizard; Tasks: python
-Filename: "{tmp}\drivers\dpinst.exe"; Parameters: "/Q"; Flags: waituntilterminated runhidden; Tasks: drivers
+Filename: "{tmp}\dpinst.exe"; Parameters: "/q /path ""{app}\drivers"""; Flags: waituntilterminated runhidden; Tasks: drivers
 
 [Code]
 const
