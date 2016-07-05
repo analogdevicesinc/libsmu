@@ -68,7 +68,7 @@ Name: python; Description: Install python bindings for libsmu; Flags: unchecked
 
 [Run]
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-win32.msi"""; Flags: hidewizard; Tasks: python
-Filename: "{app}\drivers\dpinst.exe"; Parameters: "/lm /q /path ""{app}\drivers"""; Flags: waituntilterminated runhidden; Tasks: drivers
+Filename: "{app}\drivers\dpinst.exe"; Parameters: "/lm /path ""{app}\drivers"""; Flags: waituntilterminated; Tasks: drivers
 
 [Code]
 const
