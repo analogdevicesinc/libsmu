@@ -14,10 +14,12 @@ DefaultDestDir=12                                               ; Default instal
 %ADI%=ADI,NTamd64                                               ; Models section is named ADI
 
 [ADI]                                                           ; Models section
-%M1K%=WinUSB_Install,USB\VID_064B&PID_784C,USB\VID_03EB&PID_6124 ; M1K device in regular and SAM-BA mode
+%M1K%=WinUSB_Install,USB\VID_064B&PID_784C                      ; M1K device in regular mode
+%M1K_SAMBA%=WinUSB_Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
 
 [ADI.NTamd64]                                                   ; Models section
-%M1K%=WinUSB_Install,USB\VID_064B&PID_784C,USB\VID_03EB&PID_6124 ; M1K device in regular and SAM-BA mode
+%M1K%=WinUSB_Install,USB\VID_064B&PID_784C                      ; M1K device in regular mode
+%M1K_SAMBA%=WinUSB_Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
 
 [WinUSB_Install]                                                ; Install section
 Include=winusb.inf
@@ -33,3 +35,4 @@ Needs=WINUSB.NT.Services
 [Strings]                                                       ; Strings section
 ADI="Analog Devices, Inc."                                      ; String value for the ADI symbol
 M1K="ADALM1000 WinUSB driver"                                   ; String value for the M1K symbol
+M1K_SAMBA="ADALM1000 SAM-BA WinUSB driver"                      ; String value for the M1K_SAMBA symbol
