@@ -60,8 +60,8 @@ typedef struct sl_signal_info {
 /// @brief Channel info.
 typedef struct sl_channel_info {
 	const char* label; ///< Channel label.
-	size_t mode_count;
-	size_t signal_count;
+	size_t mode_count; ///< Number of available modes.
+	size_t signal_count; ///< Number of available signals.
 } sl_channel_info;
 
 /// @brief Device info.
@@ -117,8 +117,8 @@ namespace smu {
 
 		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
-		/// @param device A pointer to a Device to be added.
-		/// @return On success, the pointer to the added device is returned.
+		/// @param device The Device to be added.
+		/// @return On success, the added device is returned.
 		/// @return On error, NULL is returned.
 		Device* add_device(Device* device);
 
@@ -131,18 +131,18 @@ namespace smu {
 		unsigned m_active_devices;
 
 		/// @brief Get the device matching a given serial from the session.
-		/// @param serial A pointer to the string for a device's serial number.
-		/// @return On success, the pointer to the matching Device is returned.
+		/// @param serial A string of a device's serial number.
+		/// @return On success, the matching Device is returned.
 		/// @return If no match is found, NULL is returned.
 		Device* get_device(const char* serial);
 
 		/// @brief Remove a device from the session.
-		/// @param device A pointer to a Device to be removed.
+		/// @param device A Device to be removed.
 		/// This method may not be called while the session is active.
 		void remove_device(Device* device);
 
 		/// @brief Remove a device from the list of available devices.
-		/// @param device A pointer to a Device to be removed from the available list.
+		/// @param device A Device to be removed from the available list.
 		/// Devices are automatically added to this list on attach.
 		/// Devices must be removed from this list on detach.
 		/// This method may not be called while the session is active
@@ -168,7 +168,7 @@ namespace smu {
 
 		/// @brief Update device firmware for a given device.
 		/// @param file Firmware file started for deployment to the device.
-		/// @param device Pointer to a Device targeted for updating.
+		/// @param device The Device targeted for updating.
 		/// If device is NULL the first attached device in a session will be
 		/// used instead. If no configured devices are found, devices in SAM-BA
 		/// bootloader mode are searched for and the first matching device is used.
@@ -234,16 +234,16 @@ namespace smu {
 		libusb_context* m_usb_cx;
 
 		/// @brief Identify devices supported by libsmu.
-		/// @param device Pointer to a libusb device handle.
+		/// @param device a libusb device handle
 		/// @return If the usb device relates
-		/// to a supported device a pointer to the device is returned,
+		/// to a supported device the Device is returned,
 		/// otherwise NULL is returned.
 		std::shared_ptr<Device> probe_device(libusb_device* device);
 
 		/// @brief Find an existing, available device.
-		/// @param device Pointer to a libusb device handle.
+		/// @param device a libusb device handle
 		/// @return If the usb device relates to an existing,
-		/// available device a pointer to the device is returned,
+		/// available device the Device is returned,
 		/// otherwise NULL is returned.
 		std::shared_ptr<Device> find_existing_device(libusb_device* device);
 	};
@@ -262,7 +262,8 @@ namespace smu {
 
 		/// @brief Get the specified signal.
 		/// @param channel An unsigned integer relating to the requested channel.
-		/// @param channel An unsigned integer relating to the requested signal.
+		/// @param signal An unsigned integer relating to the requested signal.
+		/// @return The related Signal.
 		virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 
 		/// @brief Get the serial number of the device.
@@ -281,6 +282,7 @@ namespace smu {
 		virtual void set_mode(unsigned channel, unsigned mode) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
+		/// @return Passes through the return value of the underlying libusb_control_transfer method.
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
@@ -311,10 +313,11 @@ namespace smu {
 		virtual int write_calibration(const char* cal_file_name) { return 0; }
 
 		/// @brief Get the device calibration data from the EEPROM.
-		/// @param cal A pointer to a vector of floats.
+		/// @param cal A vector of float values.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;
 
 	protected:
+		/// @brief Device constructor.
 		Device(Session* s, libusb_device* d);
 
 		/// @brief Generic device initialization.
@@ -342,8 +345,12 @@ namespace smu {
 		/// @brief Cancel all pending libusb transactions.
 		virtual void cancel() = 0;
 
+		/// @brief Session this device is associated with.
 		Session* const m_session;
+
+		/// @brief Underlying libusb device.
 		libusb_device* const m_device = NULL;
+		/// @brief Underlying libusb device handle.
 		libusb_device_handle* m_usb = NULL;
 
 		// State owned by USB thread
@@ -353,8 +360,11 @@ namespace smu {
 
 		std::mutex m_state;
 
+		/// firmware version
 		char m_fw_version[32];
+		/// hardware version
 		char m_hw_version[32];
+		/// serial number
 		char serial_num[32];
 
 		friend class Session;
