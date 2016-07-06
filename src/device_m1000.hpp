@@ -35,8 +35,6 @@ struct EEPROM_cal {
 namespace smu {
 	class M1000_Device: public Device {
 	public:
-		virtual ~M1000_Device() {}
-
 		void in_completion(libusb_transfer *t);
 		void out_completion(libusb_transfer *t);
 
