@@ -261,5 +261,6 @@ int main(int argc, char **argv)
 		}
 	}
 
+	delete session;
 	return EXIT_SUCCESS;
 }
