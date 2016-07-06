@@ -308,12 +308,19 @@ namespace smu {
 		virtual int removed() { return 0; }
 
 		/// @brief Configurization and initialization for device sampling.
-		/// @param sampleRate The requests sampling rate for the device.
+		/// @param sampleRate The requested sampling rate for the device.
 		virtual void configure(uint64_t sampleRate) = 0;
 
+		/// @brief Turn on power supplies and clear sampling state.
 		virtual void on() = 0;
+
+		/// @brief Stop sampling and put outputs into high-impedance mode.
 		virtual void off() = 0;
+
+		/// @brief Make the device start sampling.
 		virtual void start_run(uint64_t nsamples) = 0;
+
+		/// @brief Cancel all pending libusb transactions.
 		virtual void cancel() = 0;
 
 		Session* const m_session;

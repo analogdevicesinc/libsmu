@@ -65,36 +65,16 @@ namespace smu {
 			m_mode{0,0}
 			{}
 
-		virtual int init();
-		virtual int get_default_rate();
-		virtual int added();
-		virtual int removed();
-
-		/// calculate values for sampling period for SAM3U timer
-		virtual void configure(uint64_t sampleRate);
-
-		/// command device to start sampling
-		virtual void start_run(uint64_t nsamples);
-
-		/// cancel pending libusb transactions
-		virtual void cancel();
-
-		/// turn on power supplies, clear sampling state
-		virtual void on();
-
-		/// put outputs into high-impedance mode, stop sampling
-		virtual void off();
-
-		/// submit data transfers to usb thread - from host to device
+		// submit data transfers to usb thread - from host to device
 		bool submit_out_transfer(libusb_transfer* t);
 
-		/// submit data transfers to usb thread - from device to host
+		// submit data transfers to usb thread - from device to host
 		bool submit_in_transfer(libusb_transfer* t);
 
-		/// reformat received data - integer to float conversion
+		// reformat received data - integer to float conversion
 		void handle_in_transfer(libusb_transfer* t);
 
-		/// encode output samples
+		// encode output samples
 		uint16_t encode_out(unsigned chan);
 
 		unsigned m_packets_per_transfer;
@@ -105,5 +85,16 @@ namespace smu {
 		EEPROM_cal m_cal;
 
 		uint64_t m_sample_count = 0;
+
+		// Override virtual methods of the base Device class.
+		int init() override;
+		int get_default_rate() override;
+		int added() override;
+		int removed() override;
+		void configure(uint64_t sampleRate) override;
+		void on() override;
+		void off() override;
+		void cancel() override;
+		void start_run(uint64_t nsamples) override;
 	};
 }
