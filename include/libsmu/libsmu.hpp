@@ -36,19 +36,8 @@ const std::vector<std::vector<uint16_t>> SAMBA_DEVICES = {
 	{0x03eb, 0x6124},
 };
 
-typedef enum sl_type {
-	DEVICE_M1000 = 0x10000,
-	CHANNEL_SMU = 0x20000,
-	MODE_HIGH_Z = 0x40000,
-	MODE_SVMI,
-	MODE_SIMV,
-	SIGNAL = 0x80000,
-} sl_type;
-
 /// @brief Signal information.
 typedef struct sl_signal_info {
-	sl_type type;
-
 	/// Signal label.
 	const char* label;
 
@@ -70,7 +59,6 @@ typedef struct sl_signal_info {
 
 /// @brief Channel info.
 typedef struct sl_channel_info {
-	sl_type type;
 	const char* label; ///< Channel label.
 	size_t mode_count;
 	size_t signal_count;
@@ -78,7 +66,6 @@ typedef struct sl_channel_info {
 
 /// @brief Device info.
 typedef struct sl_device_info {
-	sl_type type;
 	const char* label; ///< Device label.
 	size_t channel_count; ///< Number of available channels.
 } sl_device_info;
