@@ -1,11 +1,9 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 """Utility for managing M1K devices.
 
 This tool provides support for displaying, writing, and resetting the
-calibration data for an M1K device. It also supports an semi-automated method
-of creating a properly formatted calibration data file that loosely follows the
-steps found on the wiki (https://wiki.analog.com/university/tools/m1k/calibration).
+calibration data for an M1K device.
 """
 
 from __future__ import print_function
@@ -18,23 +16,7 @@ import signal
 from signal import signal, SIG_DFL, SIGINT
 import sys
 
-from pysmu import Smu
-
-
-def print_cmd(s):
-    """Prompt for user to perform a physical action."""
-    print("> {}: (hit Enter to continue)".format(s), end='')
-    raw_input()
-
-
-def get_value(s):
-    """Validate user-entered floating point values."""
-    try:
-        val = float(raw_input("{}: ".format(s)))
-    except ValueError:
-        print('Invalid decimal value!')
-        val = get_value(s)
-    return val
+from pysmu import Session
 
 
 if __name__ == '__main__':
@@ -45,30 +27,28 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter)
     mux = parser.add_mutually_exclusive_group()
     mux.add_argument(
-        '-d', '--display-calibration', action='store_true', default=True,
+        '-d', '--display-calibration', action='store_true', default=True, dest='display',
         help='display calibration data from a device')
     mux.add_argument(
-        '-r', '--reset-calibration', action='store_true',
+        '-r', '--reset-calibration', action='store_true', dest='reset',
         help='reset calibration data on a device to the defaults')
     mux.add_argument(
-        '-w', '--write-calibration', metavar='PATH_TO_CAL_FILE',
+        '-w', '--write-calibration', metavar='PATH_TO_CAL_FILE', dest='write',
         help='write calibration data to a device')
-    mux.add_argument(
-        '-c', '--calibrate', metavar='PATH_TO_CAL_FILE',
-        help='create calibration file in a semi-automated fashion')
     options = parser.parse_args()
 
-    x = Smu()
-    if not x.devices:
+    session = Session()
+    session.add_all()
+    if not session.devices:
         sys.stderr.write("No supported devices are plugged in.\n")
         sys.exit(1)
 
-    if len(x.devices) > 1:
+    if len(session.devices) > 1:
         sys.stderr.write("Multiple devices are attached, calibration only works on a single device.\n")
         sys.stderr.write("Please detach all devices except the one targeted for calibration.\n")
         sys.exit(1)
 
-    dev = x.devices[0]
+    dev = session.devices[0]
 
     cal_str_map = {
         0: 'Channel A, measure V',
@@ -97,103 +77,7 @@ if __name__ == '__main__':
             print("calibration failed: {}".format(e.message))
             sys.exit(1)
         print("successfully reset calibration")
-    elif options.create:
-        if os.path.exists(options.create):
-            parser.error("file already exists: {}".format(options.create))
-
-        cal = OrderedDict([
-            ('chan_A_meas_V', ([0.0000, 0.0000], [2.5000, 2.5000])),
-            ('chan_A_meas_I', ([0.0000, 0.0000], [0.1000, 0.1000], [-0.1000, -0.1000])),
-            ('chan_A_src_V', ([0.0000, 0.0000], [2.5000, 2.5000])),
-            ('chan_A_src_I', ([0.0000, 0.0000], [0.1000, 0.1000], [-0.1000, -0.1000])),
-            ('chan_B_meas_V', ([0.0000, 0.0000], [2.5000, 2.5000])),
-            ('chan_B_meas_I', ([0.0000, 0.0000], [0.1000, 0.1000], [-0.1000, -0.1000])),
-            ('chan_B_src_V', ([0.0000, 0.0000], [2.5000, 2.5000])),
-            ('chan_B_src_I', ([0.0000, 0.0000], [0.1000, 0.1000], [-0.1000, -0.1000])),
-        ])
-
-        print('Voltage measurement calibration')
-        print_cmd('Connect CH A and CH B inputs to GND')
-        print_cmd('In Pixelpulse set the mode for both channels to Measure Voltage')
-        cal['chan_A_meas_V'][0][1] = get_value('enter CH A voltage measurement from Pixelpulse')
-        cal['chan_B_meas_V'][0][1] = get_value('enter CH B voltage measurement from Pixelpulse')
-        print_cmd('Connect CH A input to 2.5V')
-        cal['chan_A_meas_V'][1][1] = get_value('enter CH A voltage measurement from Pixelpulse')
-        print_cmd('Connect CH B input to 2.5V')
-        cal['chan_B_meas_V'][1][1] = get_value('enter CH B voltage measurement from Pixelpulse')
-        print_cmd('Use a multimeter to read the actual value of the 2.5V output')
-        cal['chan_A_meas_V'][1][0] = cal['chan_B_meas_V'][1][0] = get_value('enter 2.5V output voltage measurement from multimeter')
-
-        print('\nVoltage source calibration')
-        print_cmd('In Pixelpulse set the mode for both channels to Source Voltage, Measure Current')
-        print_cmd('In Pixelpulse make sure that the Repeated Sweep mode is not active')
-        print_cmd('In PixelPulse source 0V on CH A and CH B')
-        cal['chan_A_src_V'][0][1] = get_value('enter CH A voltage measurement relative to GND from multimeter')
-        cal['chan_B_src_V'][0][1] = get_value('enter CH B voltage measurement relative to GND from multimeter')
-        print_cmd('In PixelPulse source 2.5V on CH A and CH B (make sure to set it to the exact value by clicking and editing the number directly)')
-        cal['chan_A_src_V'][1][1] = get_value('enter CH A voltage measurement relative to GND from multimeter')
-        cal['chan_B_src_V'][1][1] = get_value('enter CH B voltage measurement relative to GND from multimeter')
-
-        print('\nCurrent measurement calibration')
-        print_cmd('Leave both CH A and CH B open')
-        print_cmd('In Pixelpulse set the mode for both channels to Source Voltage, Measure Current')
-        cal['chan_A_meas_I'][0][1] = get_value('enter CH A current measurement from Pixelpulse')
-        cal['chan_B_meas_I'][0][1] = get_value('enter CH B current measurement from Pixelpulse')
-        print_cmd('Connect CH A to one end of a resistor (between 2.5-25 ohms) and the other end to the current input of the multimeter')
-        print_cmd("Connect GND of the multimeter to the device's 2.5V pin")
-        print_cmd('In Pixelpulse source a voltage value on CH A so that the current measurement is close to 100mA')
-        cal['chan_A_meas_I'][1][0] = get_value('enter CH A current measurement from multimeter')
-        cal['chan_A_meas_I'][1][1] = get_value('enter CH A current measurement from Pixelpulse')
-        print_cmd('Now connect CH B to the resistor instead of CH A')
-        print_cmd('In Pixelpulse source a voltage value on CH B so that the current measurement is close to 100mA')
-        cal['chan_B_meas_I'][1][0] = get_value('enter CH B current measurement from multimeter')
-        cal['chan_B_meas_I'][1][1] = get_value('enter CH B current measurement from Pixelpulse')
-
-        print_cmd('In Pixelpulse source a voltage value on CH B so that the current measurement is close to -100mA')
-        cal['chan_B_meas_I'][2][0] = get_value('enter CH B current measurement from multimeter')
-        cal['chan_B_meas_I'][2][1] = get_value('enter CH B current measurement from Pixelpulse')
-        print_cmd('Now connect CH A to the resistor instead of CH B')
-        print_cmd('In Pixelpulse source a voltage value on CH A so that the current measurement is close to -100mA')
-        cal['chan_A_meas_I'][2][0] = get_value('enter CH A current measurement from multimeter')
-        cal['chan_A_meas_I'][2][1] = get_value('enter CH A current measurement from Pixelpulse')
-
-        print('\nCurrent source calibration')
-        print_cmd('In Pixelpulse set the mode for both channels to Source Current, Measure Voltage')
-        print_cmd('Connect CH A to one end of the resistor and the other end to the current input of the multimeter')
-        print_cmd("Connect GND of the multimeter to the device's 2.5V pin")
-        print_cmd('In Pixelpulse source 0A on CH A')
-        cal['chan_A_src_I'][0][0] = get_value('enter CH A current measurement from Pixelpulse')
-        cal['chan_A_src_I'][0][1] = get_value('enter CH A current measurement from multimeter')
-        print_cmd('Now connect CH B to the resistor instead of CH A')
-        print_cmd('In Pixelpulse source 0A on CH B')
-        cal['chan_B_src_I'][0][0] = get_value('enter CH B current measurement from Pixelpulse')
-        cal['chan_B_src_I'][0][1] = get_value('enter CH B current measurement from multimeter')
-
-        print_cmd('In Pixelpulse source 100mA on CH B')
-        cal['chan_B_src_I'][1][0] = get_value('enter CH B current measurement from Pixelpulse')
-        cal['chan_B_src_I'][1][1] = get_value('enter CH B current measurement from multimeter')
-        print_cmd('Now connect CH A to the resistor instead of CH B')
-        print_cmd('In Pixelpulse source 100mA on CH A')
-        cal['chan_A_src_I'][1][0] = get_value('enter CH A current measurement from Pixelpulse')
-        cal['chan_A_src_I'][1][1] = get_value('enter CH A current measurement from multimeter')
-
-        print_cmd('In Pixelpulse source -100mA on CH A')
-        cal['chan_A_src_I'][2][0] = get_value('enter CH A current measurement from Pixelpulse')
-        cal['chan_A_src_I'][2][1] = get_value('enter CH A current measurement from multimeter')
-        print_cmd('Now connect CH B to the resistor instead of CH A')
-        print_cmd('In Pixelpulse source -100mA on CH B')
-        cal['chan_B_src_I'][2][0] = get_value('enter CH B current measurement from Pixelpulse')
-        cal['chan_B_src_I'][2][1] = get_value('enter CH B current measurement from multimeter')
-
-        with open(options.create, 'w') as f:
-            for i, v in enumerate(cal.itervalues()):
-                f.write('# {}\n'.format(cal_str_map[i]))
-                f.write('</>\n')
-                for t in chain(v):
-                    f.write('<{:.4f}, {:.4f}>\n'.format(*t))
-                f.write('<\>\n')
-                f.write('\n')
-    elif options.show:
+    elif options.display:
         for i, vals in enumerate(dev.calibration):
             print(cal_str_map[i])
             print("  offset: {:.4f}".format(vals[0]))

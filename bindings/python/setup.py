@@ -7,12 +7,12 @@ import sys
 
 from distutils.command.build_ext import build_ext
 from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 
 # top level bindings directory
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
-SRCDIR = os.path.join(TOPDIR, 'src')
 
 
 class build_ext_compiler_check(build_ext):
@@ -46,10 +46,7 @@ def pkgconfig(*packages, **kw):
             kw.setdefault('extra_compile_args', []).append(token)
     return kw
 
-ext_kwargs = dict(
-    include_dirs=[SRCDIR],
-    library_dirs=[SRCDIR],
-)
+ext_kwargs = {}
 
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
@@ -60,8 +57,8 @@ else:
 extensions = []
 extensions.extend([
     Extension(
-        'pysmu._pysmu',
-        [os.path.join(BINDINGS_DIR, 'src', 'pysmu.cpp')], **ext_kwargs),
+        'pysmu.libsmu',
+        [os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.pyx')], **ext_kwargs),
     ])
 
 setup(
@@ -72,7 +69,7 @@ setup(
     license='BSD',
     maintainer='Analog Devices, Inc.',
     packages=find_packages(),
-    ext_modules=extensions,
+    ext_modules=cythonize(extensions),
     scripts=glob.glob('bin/*'),
     cmdclass={'build_ext': build_ext_compiler_check},
     classifiers=[
