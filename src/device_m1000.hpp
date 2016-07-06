@@ -25,6 +25,13 @@ static const sl_signal_info m1000_signal_info[2] = {
 	{ SIGNAL, "Current", 0x6, 0x4, unit_A, -0.2, 0.2, 0.4/65536 },
 };
 
+struct EEPROM_cal {
+	uint32_t eeprom_valid;
+	float offset[8];
+	float gain_p[8];
+	float gain_n[8];
+};
+
 namespace smu {
 	class M1000_Device: public Device {
 	public:
@@ -95,13 +102,6 @@ namespace smu {
 		unsigned m_packets_per_transfer;
 		Transfers m_in_transfers;
 		Transfers m_out_transfers;
-
-		struct EEPROM_cal{
-			uint32_t eeprom_valid;
-			float offset[8];
-			float gain_p[8];
-			float gain_n[8];
-		};
 
 		void read_calibration();
 		EEPROM_cal m_cal;
