@@ -30,25 +30,18 @@ namespace smu {
 	public:
 		virtual ~M1000_Device() {}
 
-		virtual const sl_device_info* info() const;
-		virtual const sl_channel_info* channel_info(unsigned channel) const;
-		virtual Signal* signal(unsigned channel, unsigned signal);
-
-		/// set output mode
-		virtual void set_mode(unsigned channel, unsigned mode);
-
-		/// get current microframe index, set m_sof_start to be time in the future
-		virtual void sync();
-
-		virtual int write_calibration(const char* cal_file_name);
-
-		/// Provide external read access to EEPROM calibration data.
-		virtual void calibration(std::vector<std::vector<float>>* cal);
-
-		virtual void samba_mode();
-
 		void in_completion(libusb_transfer *t);
 		void out_completion(libusb_transfer *t);
+
+		// Override virtual methods of the base Device class.
+		const sl_device_info* info() const override;
+		const sl_channel_info* channel_info(unsigned channel) const override;
+		Signal* signal(unsigned channel, unsigned signal) override;
+		void set_mode(unsigned channel, unsigned mode) override;
+		void sync() override;
+		int write_calibration(const char* cal_file_name) override;
+		void calibration(std::vector<std::vector<float>>* cal) override;
+		void samba_mode() override;
 
 	protected:
 		friend class Session;

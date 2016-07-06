@@ -272,6 +272,7 @@ namespace smu {
 		virtual int get_default_rate() { return 10000; }
 
 		/// @brief Prepare multi-device synchronization.
+		/// Get current microframe index, set m_sof_start to be time in the future.
 		virtual void sync() = 0;
 
 		/// @brief Lock the device's mutex.
