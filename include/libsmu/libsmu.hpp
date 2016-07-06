@@ -152,40 +152,52 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		void remove_device(Device* device);
 
-		/// Remove a device from the list of available devices.
+		/// @brief Remove a device from the list of available devices.
+		/// @param device A pointer to the device to be removed from the available list.
 		/// Devices are automatically added to this list on attach.
-		/// Devies must be removed from this list on detach.
+		/// Devices must be removed from this list on detach.
 		/// This method may not be called while the session is active
-		void destroy_available(Device*);
+		void destroy_available(Device* device);
 
-		/// Configure the session's sample rate.
+		/// @brief Configure the session's sample rate.
+		/// @param sampleRate The requested sample rate for the session.
 		/// This method may not be called while the session is active.
 		void configure(uint64_t sampleRate);
 
-		/// Run the currently configured capture and wait for it to complete
+		/// @brief Run the currently configured capture and wait for it to complete.
+		/// @param nsamples Number of samples to capture until we stop. If 0, run in continuous mode.
 		void run(uint64_t nsamples);
 
-		/// Start the currently configured capture, but do not wait for it to complete. Once started,
-		/// the only allowed Session methods are cancel() and end() until the session has stopped.
+		/// @brief Start the currently configured capture, but do not wait for it to complete.
+		/// @param nsamples Number of samples to capture until we stop. If 0, run in continuous mode.
+		/// Once started, the only allowed Session methods are cancel() and end()
+		/// until the session has stopped.
 		void start(uint64_t nsamples);
 
-		/// Cancel capture and block waiting for it to complete
+		/// @brief Cancel capture and block waiting for it to complete.
 		void cancel();
 
-		/// Update device firmware for a given device. When device is NULL the
-		/// first attached device will be used instead.
+		/// @brief Update device firmware for a given device.
+		/// @param file Firmware file started for deployment to the device.
+		/// @param device Device targeted for updating.
+		/// If device is NULL the first attached device in a session will be
+		/// used instead. If no configured devices are found, devices in SAM-BA
+		/// bootloader mode are searched for and the first matching device is used.
+		/// @throws std::runtime_error for various USB failures causing aborted flashes.
 		void flash_firmware(const char *file, Device* device = NULL);
 
-		/// internal: Called by devices on the USB thread when they are complete
+		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();
 
-		/// internal: Called by devices on the USB thread when a device encounters an error
+		/// internal: Called by devices on the USB thread when a device encounters an error.
 		void handle_error(int status, const char * tag);
 
-		/// internal: Called by devices on the USB thread with progress updates
+		/// internal: Called by devices on the USB thread with progress updates.
 		void progress();
-		/// internal: called by hotplug events on the USB thread
+
+		/// internal: Called by hotplug events on the USB thread.
 		void attached(libusb_device* device);
+		/// internal: Called by hotplug events on the USB thread.
 		void detached(libusb_device* device);
 
 		/// Block until all devices have completed
@@ -261,7 +273,7 @@ namespace smu {
 		int ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex,
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
-		/// @brief Force the device into SAM-BA command mode.
+		/// @brief Force the device into SAM-BA bootloader mode.
 		virtual void samba_mode() = 0;
 
 		/// @brief Get the default sample rate.
