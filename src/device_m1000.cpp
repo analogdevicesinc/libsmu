@@ -388,7 +388,6 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 	m_session->progress();
 }
 
-// get device info struct
 const sl_device_info* M1000_Device::info() const
 {
 	return &m1000_info;
@@ -479,7 +478,6 @@ void M1000_Device::off()
 	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 }
 
-// Force the device into SAM-BA command mode.
 void M1000_Device::samba_mode()
 {
 	int ret;
