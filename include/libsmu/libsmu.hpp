@@ -45,22 +45,28 @@ typedef enum sl_type {
 	SIGNAL = 0x80000,
 } sl_type;
 
+/// @brief Signal information.
 typedef struct sl_signal_info {
 	sl_type type;
 
 	const char* label;
 
-	/// Bitmask of modes for which this signal is enabled as input
+	/// Bitmask of modes for which this signal is enabled as input.
 	uint32_t inputModes;
 
-	/// Bitmask of modes for which this signal is enabled as output
+	/// Bitmask of modes for which this signal is enabled as output.
 	uint32_t outputModes;
 
+	/// Minimum possible value for the signal.
 	double min;
+
+	/// Maximum possible value for the signal.
 	double max;
+
 	double resolution;
 } sl_signal_info;
 
+/// @brief Channel info.
 typedef struct sl_channel_info {
 	sl_type type;
 	const char* label;
@@ -68,18 +74,21 @@ typedef struct sl_channel_info {
 	size_t signal_count;
 } sl_channel_info;
 
+/// @brief Device info.
 typedef struct sl_device_info {
 	sl_type type;
 	const char* label;
 	size_t channel_count;
 } sl_device_info;
 
+/// @brief Available signal destinations.
 enum Dest {
 	DEST_NONE,
 	DEST_BUFFER,
 	DEST_CALLBACK,
 };
 
+/// @brief Available signal sources.
 enum Src {
 	SRC_CONSTANT,
 	SRC_SQUARE,
@@ -91,6 +100,7 @@ enum Src {
 	SRC_CALLBACK,
 };
 
+/// @brief Available channel modes.
 enum Modes {
 	DISABLED,
 	SVMI,
