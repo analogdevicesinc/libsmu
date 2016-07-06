@@ -64,7 +64,7 @@ extensions.extend([
 setup(
     name='pysmu',
     version='0.88',
-    description='python library for the m1k device',
+    description='python library for the ADALM1000 device',
     url='https://github.com/analogdevicesinc/libsmu',
     license='BSD',
     maintainer='Analog Devices, Inc.',
@@ -76,5 +76,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
 )
