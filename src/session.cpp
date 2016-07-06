@@ -96,7 +96,7 @@ void Session::detached(libusb_device *device)
 	}
 }
 
-/// Internal function to write raw SAM-BA commands to a libusb handle.
+// Internal function to write raw SAM-BA commands to a libusb handle.
 static void samba_usb_write(libusb_device_handle *handle, const char* data) {
 	int transferred, ret;
 	ret = libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
@@ -106,7 +106,7 @@ static void samba_usb_write(libusb_device_handle *handle, const char* data) {
 	}
 }
 
-/// Internal function to read raw SAM-BA commands to a libusb handle.
+// Internal function to read raw SAM-BA commands to a libusb handle.
 static void samba_usb_read(libusb_device_handle *handle, unsigned char* data) {
 	int transferred, ret;
 	ret = libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
@@ -116,8 +116,6 @@ static void samba_usb_read(libusb_device_handle *handle, unsigned char* data) {
 	}
 }
 
-/// Update device firmware for the specified device or the first device
-/// found, either in the current session or in SAMBA command mode.
 void Session::flash_firmware(const char *file, Device *dev)
 {
 	struct libusb_device *usb_dev = NULL;
@@ -243,7 +241,6 @@ void Session::flash_firmware(const char *file, Device *dev)
 	libusb_close(usb_handle);
 }
 
-/// remove a specified Device from the list of available devices
 void Session::destroy_available(Device *dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
@@ -253,7 +250,7 @@ void Session::destroy_available(Device *dev)
 				m_available_devices.erase(m_available_devices.begin()+i);
 }
 
-/// low-level callback for hotplug events, proxies to session methods
+// Low-level callback for hotplug events, proxies to session methods.
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
 {
@@ -267,7 +264,6 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 	return 0;
 }
 
-/// spawn thread for USB transaction handling
 void Session::start_usb_thread()
 {
 	m_usb_thread_loop = true;
@@ -276,7 +272,6 @@ void Session::start_usb_thread()
 	});
 }
 
-/// update list of attached USB devices
 int Session::update_available_devices()
 {
 	int num_devices = 0;
@@ -302,7 +297,6 @@ int Session::update_available_devices()
 	return 0;
 }
 
-/// identify devices supported by libsmu
 shared_ptr<Device> Session::probe_device(libusb_device* device)
 {
 	shared_ptr<Device> dev = find_existing_device(device);
@@ -433,7 +427,6 @@ void Session::start(uint64_t nsamples)
 	}
 }
 
-/// cancel all pending USB transactions
 void Session::cancel()
 {
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;

@@ -128,7 +128,7 @@ namespace smu {
 
 		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
-		/// @param device A pointer to the device to be added.
+		/// @param device A pointer to a Device to be added.
 		/// @return On success, the pointer to the added device is returned.
 		/// @return On error, NULL is returned.
 		Device* add_device(Device* device);
@@ -148,12 +148,12 @@ namespace smu {
 		Device* get_device(const char* serial);
 
 		/// @brief Remove a device from the session.
-		/// @param device A pointer to the device to be removed.
+		/// @param device A pointer to a Device to be removed.
 		/// This method may not be called while the session is active.
 		void remove_device(Device* device);
 
 		/// @brief Remove a device from the list of available devices.
-		/// @param device A pointer to the device to be removed from the available list.
+		/// @param device A pointer to a Device to be removed from the available list.
 		/// Devices are automatically added to this list on attach.
 		/// Devices must be removed from this list on detach.
 		/// This method may not be called while the session is active
@@ -179,7 +179,7 @@ namespace smu {
 
 		/// @brief Update device firmware for a given device.
 		/// @param file Firmware file started for deployment to the device.
-		/// @param device Device targeted for updating.
+		/// @param device Pointer to a Device targeted for updating.
 		/// If device is NULL the first attached device in a session will be
 		/// used instead. If no configured devices are found, devices in SAM-BA
 		/// bootloader mode are searched for and the first matching device is used.
@@ -200,40 +200,62 @@ namespace smu {
 		/// internal: Called by hotplug events on the USB thread.
 		void detached(libusb_device* device);
 
-		/// Block until all devices have completed
+		/// @brief Block until all devices have completed.
 		void wait_for_completion();
 
-		/// Block until all devices have completed, then turn off the devices
+		/// @brief Block until all devices have completed, then turn off the devices.
 		void end();
 
-		/// Callback called on the USB thread with the sample number as samples are received
+		/// @brief Callback called on the USB thread with the sample number as samples are received.
 		std::function<void(uint64_t)> m_progress_callback;
 
-		/// Callback called on the USB thread on completion
+		/// @brief Callback called on the USB thread on completion.
 		std::function<void(unsigned)> m_completion_callback;
 
-		/// Callback called on the USB thread when a device is plugged into the system
+		/// @brief Callback called on the USB thread when a device is plugged into the system.
 		std::function<void(Device* device)> m_hotplug_detach_callback;
 
-		/// Callback called on the USB thread when a device is removed from the system
+		/// @brief Callback called on the USB thread when a device is removed from the system.
 		std::function<void(Device* device)> m_hotplug_attach_callback;
 
+		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
 
 	protected:
+		/// @brief Flag for TODO
 		uint64_t m_min_progress = 0;
 
+		/// @brief Spawn thread for USB transaction handling.
 		void start_usb_thread();
+		/// @brief Flag for TODO
 		std::thread m_usb_thread;
+		/// @brief Flag for TODO
 		bool m_usb_thread_loop;
 
+		/// @brief Flag for TODO
 		std::mutex m_lock;
+		/// @brief Flag for TODO
 		std::mutex m_lock_devlist;
+		/// @brief Flag for TODO
 		std::condition_variable m_completion;
 
+		/// @brief libusb context related with a session. This allows for segregating
+		/// libusb usage so external users can also use libusb without interfering
+		/// with internal usage.
 		libusb_context* m_usb_cx;
 
+		/// @brief Identify devices supported by libsmu.
+		/// @param device Pointer to a libusb device handle.
+		/// @return If the usb device relates
+		/// to a supported device a pointer to the device is returned,
+		/// otherwise NULL is returned.
 		std::shared_ptr<Device> probe_device(libusb_device* device);
+
+		/// @brief Find an existing, available device.
+		/// @param device Pointer to a libusb device handle.
+		/// @return If the usb device relates to an existing,
+		/// available device a pointer to the device is returned,
+		/// otherwise NULL is returned.
 		std::shared_ptr<Device> find_existing_device(libusb_device* device);
 	};
 

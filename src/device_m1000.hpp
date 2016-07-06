@@ -65,23 +65,25 @@ namespace smu {
 			m_mode{0,0}
 			{}
 
-		// submit data transfers to usb thread - from host to device
+		// Submit data transfers to usb thread, from host to device.
 		bool submit_out_transfer(libusb_transfer* t);
 
-		// submit data transfers to usb thread - from device to host
+		// Submit data transfers to usb thread, from device to host.
 		bool submit_in_transfer(libusb_transfer* t);
 
-		// reformat received data - integer to float conversion
+		// Reformat received data, performs integer to float conversion.
 		void handle_in_transfer(libusb_transfer* t);
 
-		// encode output samples
+		// Encode output samples.
 		uint16_t encode_out(unsigned chan);
 
 		unsigned m_packets_per_transfer;
 		Transfers m_in_transfers;
 		Transfers m_out_transfers;
 
+		// Read calibration data from a device's EEPROM.
 		void read_calibration();
+		// Device calibration data.
 		EEPROM_cal m_cal;
 
 		uint64_t m_sample_count = 0;
