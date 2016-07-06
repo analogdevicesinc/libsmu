@@ -187,7 +187,7 @@ write_cal:
 	return ret;
 }
 
-/// Runs in USB thread
+// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t)
 {
 	if (!t->user_data) {
@@ -217,7 +217,7 @@ void M1000_Device::in_completion(libusb_transfer *t)
 	}
 }
 
-/// Runs in USB thread
+// Runs in USB thread
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t)
 {
 	// if the user_data field is empty, something's wrong, but we have a completed transfer, so free it
