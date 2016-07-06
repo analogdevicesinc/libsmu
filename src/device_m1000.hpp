@@ -21,8 +21,8 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 #define EEPROM_VALID 0x01ee02dd
 
 static const sl_signal_info m1000_signal_info[2] = {
-	{SIGNAL, "Voltage", 0x7, 0x2, 0.0, 5.0, 5.0/65536},
-	{SIGNAL, "Current", 0x6, 0x4, -0.2, 0.2, 0.4/65536},
+	{"Voltage", 0x7, 0x2, 0.0, 5.0, 5.0/65536},
+	{"Current", 0x6, 0x4, -0.2, 0.2, 0.4/65536},
 };
 
 struct EEPROM_cal {

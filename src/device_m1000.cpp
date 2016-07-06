@@ -40,11 +40,11 @@ const double BUFFER_TIME = 0.020;
 
 using namespace smu;
 
-static const sl_device_info m1000_info = {DEVICE_M1000, "ADALM1000", 2};
+static const sl_device_info m1000_info = {"ADALM1000", 2};
 
 static const sl_channel_info m1000_channel_info[2] = {
-	{CHANNEL_SMU, "A", 3, 2},
-	{CHANNEL_SMU, "B", 3, 2},
+	{"A", 3, 2},
+	{"B", 3, 2},
 };
 
 const float current_limit = 0.2;
