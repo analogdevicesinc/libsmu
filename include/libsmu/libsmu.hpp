@@ -49,6 +49,7 @@ typedef enum sl_type {
 typedef struct sl_signal_info {
 	sl_type type;
 
+	/// Signal label.
 	const char* label;
 
 	/// Bitmask of modes for which this signal is enabled as input.
@@ -63,13 +64,14 @@ typedef struct sl_signal_info {
 	/// Maximum possible value for the signal.
 	double max;
 
+	/// Signal resolution.
 	double resolution;
 } sl_signal_info;
 
 /// @brief Channel info.
 typedef struct sl_channel_info {
 	sl_type type;
-	const char* label;
+	const char* label; ///< Channel label.
 	size_t mode_count;
 	size_t signal_count;
 } sl_channel_info;
@@ -77,34 +79,34 @@ typedef struct sl_channel_info {
 /// @brief Device info.
 typedef struct sl_device_info {
 	sl_type type;
-	const char* label;
-	size_t channel_count;
+	const char* label; ///< Device label.
+	size_t channel_count; ///< Number of available channels.
 } sl_device_info;
 
-/// @brief Available signal destinations.
-enum Dest {
-	DEST_NONE,
-	DEST_BUFFER,
-	DEST_CALLBACK,
-};
-
-/// @brief Available signal sources.
+/// @brief Supported signal sources.
 enum Src {
-	SRC_CONSTANT,
-	SRC_SQUARE,
-	SRC_SAWTOOTH,
-	SRC_STAIRSTEP,
-	SRC_SINE,
-	SRC_TRIANGLE,
-	SRC_BUFFER,
-	SRC_CALLBACK,
+	SRC_CONSTANT, ///< Constant value output. 
+	SRC_SQUARE, ///< Square wave output.
+	SRC_SAWTOOTH, ///< Sawtooth wave output.
+	SRC_STAIRSTEP, ///< Stairstep wave output.
+	SRC_SINE, ///< Sine wave output.
+	SRC_TRIANGLE, ///< Triangle wave output.
+	SRC_BUFFER, ///< Use samples from a specified buffer.
+	SRC_CALLBACK, ///< Use samples from a specified callback function.
 };
 
-/// @brief Available channel modes.
+/// @brief Supported signal destinations.
+enum Dest {
+	DEST_NONE, ///< Samples are discarded.
+	DEST_BUFFER, ///< Samples are buffered into a specified location.
+	DEST_CALLBACK, ///< Samples are passed to a specified callback function.
+};
+
+/// @brief Supported channel modes.
 enum Modes {
-	DISABLED,
-	SVMI,
-	SIMV,
+	DISABLED, ///< Channel is disabled.
+	SVMI, ///< Source voltage, measure current.
+	SIMV, ///< Source current, measure voltage.
 };
 
 namespace smu {
@@ -143,8 +145,8 @@ namespace smu {
 
 		/// @brief Get the device matching a given serial from the session.
 		/// @param serial A pointer to the string for a device's serial number.
-		/// @return On success, the pointer to the found device is returned.
-		/// @return If no matching device is found, NULL is returned.
+		/// @return On success, the pointer to the matching Device is returned.
+		/// @return If no match is found, NULL is returned.
 		Device* get_device(const char* serial);
 
 		/// @brief Remove a device from the session.
@@ -195,9 +197,9 @@ namespace smu {
 		/// internal: Called by devices on the USB thread with progress updates.
 		void progress();
 
-		/// internal: Called by hotplug events on the USB thread.
+		/// internal: Called by device attach events on the USB thread.
 		void attached(libusb_device* device);
-		/// internal: Called by hotplug events on the USB thread.
+		/// internal: Called by device detach events on the USB thread.
 		void detached(libusb_device* device);
 
 		/// @brief Block until all devices have completed.
