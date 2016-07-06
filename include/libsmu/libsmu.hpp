@@ -45,19 +45,6 @@ typedef enum sl_type {
 	SIGNAL = 0x80000,
 } sl_type;
 
-typedef struct sl_unit {
-	int8_t m;
-	int8_t kg;
-	int8_t s;
-	int8_t A;
-	int8_t K;
-	int8_t mol;
-	int8_t cd;
-} sl_unit;
-
-const sl_unit unit_V = { 2,  1, -3, -1,  0,  0,  0};
-const sl_unit unit_A = { 0,  0,  0,  1,  0,  0,  0};
-
 typedef struct sl_signal_info {
 	sl_type type;
 
@@ -69,7 +56,6 @@ typedef struct sl_signal_info {
 	/// Bitmask of modes for which this signal is enabled as output
 	uint32_t outputModes;
 
-	sl_unit unit;
 	double min;
 	double max;
 	double resolution;
