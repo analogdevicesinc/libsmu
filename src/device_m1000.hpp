@@ -89,7 +89,6 @@ namespace smu {
 		uint64_t m_sample_count = 0;
 
 		// Override virtual methods of the base Device class.
-		int init() override;
 		int get_default_rate() override;
 		int added() override;
 		int removed() override;
