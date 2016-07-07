@@ -351,6 +351,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 		uint8_t* buf = (uint8_t*) (t->buffer + p * in_packet_size);
 
 		for (unsigned i = 0; i < chunk_size; i++) {
+			// M1K firmware versions >= 2.00 use an interleaved data format.
 			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
 				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
