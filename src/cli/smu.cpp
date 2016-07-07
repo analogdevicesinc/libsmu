@@ -148,12 +148,12 @@ int main(int argc, char **argv)
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
-	if (session->update_available_devices()) {
+	if (session->scan()) {
 		cerr << "error initializing session" << endl;
 		return 1;
 	}
 	for (auto dev: session->m_available_devices) {
-		session->add_device(&*dev);
+		session->add(&*dev);
 	}
 
 	session->m_completion_callback = [=](unsigned status){};
@@ -179,14 +179,14 @@ int main(int argc, char **argv)
 			case 'p':
 				session->m_hotplug_detach_callback = [=](Device* device){
 					session->cancel();
-					session->remove_device(device);
+					session->remove(device);
 					printf("removed device: %s: serial %s: fw %s: hw %s\n",
 							device->info()->label, device->serial(),
 							device->fwver(), device->hwver());
 				};
 
 				session->m_hotplug_attach_callback = [=](Device* device){
-					if (session->add_device(device))
+					if (session->add(device))
 						printf("added device: %s: serial %s: fw %s: hw %s\n",
 							device->info()->label, device->serial(),
 							device->fwver(), device->hwver());
