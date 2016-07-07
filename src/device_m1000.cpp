@@ -240,8 +240,8 @@ void M1000_Device::configure(uint64_t sampleRate)
 	double sample_time = 1.0 / sampleRate;
 	double M1K_timer_clock;
 
-	// if FW version is 023314a - initial production, use 3e6 for timer clock
-	// otherwise, assume a more recent firmware, and use the audacious clock
+	// If firmware version is 023314a, initial production, use 3e6 for timer clock
+	// otherwise, assume a more recent firmware, and use a faster clock.
 	if (strcmp(this->m_fw_version, "023314a*") == 0) {
 		M1K_timer_clock = 3e6;
 	} else {
