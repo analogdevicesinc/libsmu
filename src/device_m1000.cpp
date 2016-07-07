@@ -315,8 +315,6 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t)
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			m_out_transfers.failed(t);
-			// writes to t->status is illegal
-			// t->status = (libusb_transfer_status) r;
 			m_session->handle_error(r, "M1000_Device::submit_out_transfer");
 			return false;
 		}
@@ -333,7 +331,6 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t)
 		int r = libusb_submit_transfer(t);
 		if (r != 0) {
 			m_in_transfers.failed(t);
-			//t->status = (libusb_transfer_status) r;
 			m_session->handle_error(r, "M1000_Device::submit_in_transfer");
 			return false;
 		}
