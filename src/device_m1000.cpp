@@ -473,6 +473,10 @@ void M1000_Device::samba_mode()
 	int ret;
 
 	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
+	// Wait for 1 second for the device to drop into SAM-BA bootloader mode.
+	// Without a delay often the code scanning the system for device signatures
+	// matching SAM-BA mode won't find anything because the device hasn't fully
+	// switched over yet and been re-enumerated by the host system.
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
