@@ -11,4 +11,4 @@
 #define DEBUG_TEST 0
 #endif
 
-#define smu_debug(...) do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while(0);
+#define DEBUG(...) do { if (DEBUG_TEST) fprintf(stderr, __VA_ARGS__); } while(0);
