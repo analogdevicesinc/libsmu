@@ -25,7 +25,7 @@ void Transfers::alloc(unsigned count, libusb_device_handle* handle,
 			unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {
 	clear();
 	m_transfers.resize(count, NULL);
-	for (size_t i=0; i<count; i++) {
+	for (size_t i = 0; i < count; i++) {
 		auto t = m_transfers[i] = libusb_alloc_transfer(0);
 		t->dev_handle = handle;
 		t->flags = LIBUSB_TRANSFER_FREE_BUFFER;

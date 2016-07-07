@@ -62,7 +62,7 @@ static void stream_samples(Session* session)
 	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
 		auto ch_info = dev->channel_info(ch_i);
 		dev->set_mode(ch_i, DISABLED);
-		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
+		for (unsigned sig_i = 0; sig_i < ch_info->signal_count; sig_i++) {
 			auto sig = dev->signal(ch_i, sig_i);
 			auto sig_info = sig->info();
 			sig->measure_callback([=](float d){
