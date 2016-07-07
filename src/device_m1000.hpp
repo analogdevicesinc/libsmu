@@ -12,7 +12,7 @@
 #include <libusb.h>
 
 #include "debug.hpp"
-#include "transfers.hpp"
+#include "usb_transfers.hpp"
 #include <libsmu/libsmu.hpp>
 
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
