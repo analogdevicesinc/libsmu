@@ -228,10 +228,10 @@ namespace smu {
 		/// @brief Flag for TODO
 		std::condition_variable m_completion;
 
-		/// @brief libusb context related with a session. This allows for segregating
-		/// libusb usage so external users can also use libusb without interfering
-		/// with internal usage.
-		libusb_context* m_usb_cx;
+		/// @brief libusb context related with a session.
+		/// This allows for segregating libusb usage so external users can
+		/// also use libusb without interfering with internal usage.
+		libusb_context* m_usb_ctx;
 
 		/// @brief Identify devices supported by libsmu.
 		/// @param device a libusb device handle

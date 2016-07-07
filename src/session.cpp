@@ -26,7 +26,7 @@ Session::Session()
 {
 	m_active_devices = 0;
 
-	if (int r = libusb_init(&m_usb_cx) != 0) {
+	if (int r = libusb_init(&m_usb_ctx) != 0) {
 		smu_debug("libusb init failed: %i\n", r);
 		abort();
 	}
@@ -51,7 +51,7 @@ Session::Session()
 	start_usb_thread();
 
 	if (getenv("LIBUSB_DEBUG")) {
-		libusb_set_debug(m_usb_cx, 4);
+		libusb_set_debug(m_usb_ctx, 4);
 	}
 }
 
@@ -65,7 +65,7 @@ Session::~Session()
 	if (m_usb_thread.joinable()) {
 		m_usb_thread.join();
 	}
-	libusb_exit(m_usb_cx);
+	libusb_exit(m_usb_ctx);
 }
 
 void Session::attached(libusb_device *device)
@@ -264,7 +264,7 @@ void Session::start_usb_thread()
 {
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
-		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_cx, NULL);
+		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_ctx, NULL);
 	});
 }
 
@@ -276,7 +276,7 @@ int Session::update_available_devices()
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
 	libusb_device** list;
-	num_devices = libusb_get_device_list(m_usb_cx, &list);
+	num_devices = libusb_get_device_list(m_usb_ctx, &list);
 	if (num_devices < 0)
 		return num_devices;
 
