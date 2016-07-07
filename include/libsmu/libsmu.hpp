@@ -370,7 +370,7 @@ namespace smu {
 	/// @brief Generic signal class.
 	class Signal {
 	public:
-		/// internal: Do not call the constructor directly; obtain a Signal from a Device
+		/// internal: Do not call the constructor directly; obtain a Signal from a Device.
 		Signal(const sl_signal_info* info):
 			m_info(info),
 			m_src(SRC_CONSTANT),
@@ -378,9 +378,10 @@ namespace smu {
 			m_dest(DEST_NONE)
 			{}
 
+		/// Signal destructor.
 		~Signal();
 
-		/// Get the descriptor struct of the Signal.
+		/// @brief Get the descriptor struct of the Signal.
 		/// Pointed-to memory is valid for the lifetime of the Device.
 		const sl_signal_info* info() const { return m_info; }
 		const sl_signal_info* const m_info;
@@ -404,11 +405,15 @@ namespace smu {
 		/// Get the last measured sample from this signal.
 		float measure_instantaneous() { return m_latest_measurement; }
 
-		/// Configure received samples to be stored into `buf`, up to `len` points.
-		/// After `len` points, samples will be dropped.
+		/// @brief Store received samples in a buffer.
+		/// @param buf Buffer to use for sample storage.
+		/// @param len Number of samples to store.
+		/// Samples are dropped once the number of samples received surpasses the
+		/// configured storage length.
 		void measure_buffer(float* buf, size_t len);
 
-		/// Configure received samples to be passed to the provided callback.
+		/// @brief Configure received samples to be passed to the provided callback.
+		/// @param callback Callback method to operate on sample stream float values.
 		void measure_callback(std::function<void(float value)> callback);
 
 		/// internal: Called by Device
