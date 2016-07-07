@@ -17,12 +17,6 @@ Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 	libusb_ref_device(m_device);
 }
 
-int Device::init()
-{
-	int r = libusb_open(m_device, &m_usb);
-	return r;
-}
-
 Device::~Device()
 {
 	if (m_usb)

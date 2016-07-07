@@ -61,17 +61,6 @@ int M1000_Device::get_default_rate()
 	}
 }
 
-int M1000_Device::init()
-{
-	int d = Device::init();
-
-	if (d != 0) {
-		return d;
-	} else {
-		return 0;
-	}
-}
-
 int M1000_Device::added()
 {
 	libusb_claim_interface(m_usb, 0);

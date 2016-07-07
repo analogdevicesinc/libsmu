@@ -320,9 +320,6 @@ namespace smu {
 		/// @brief Device constructor.
 		Device(Session* s, libusb_device* d);
 
-		/// @brief Generic device initialization.
-		virtual int init();
-
 		/// @brief Device claiming and initialization when a session adds this device.
 		virtual int added() { return 0; }
 
