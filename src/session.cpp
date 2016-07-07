@@ -236,13 +236,13 @@ void Session::flash_firmware(const char *file, Device *dev)
 	libusb_close(usb_handle);
 }
 
-void Session::destroy_available(Device *dev)
+void Session::destroy(Device *dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	if (dev)
 		for (unsigned i = 0; i < m_available_devices.size(); i++)
 			if (m_available_devices[i]->serial() == dev->serial())
-				m_available_devices.erase(m_available_devices.begin()+i);
+				m_available_devices.erase(m_available_devices.begin() + i);
 }
 
 // Low-level callback for hotplug events, proxies to session methods.
@@ -267,7 +267,7 @@ void Session::start_usb_thread()
 	});
 }
 
-int Session::update_available_devices()
+int Session::scan()
 {
 	int num_devices = 0;
 
@@ -343,7 +343,7 @@ Device* Session::get_device(const char* serial)
 	return NULL;
 }
 
-Device* Session::add_device(Device* device)
+Device* Session::add(Device* device)
 {
 	if (device) {
 		m_devices.insert(device);
@@ -354,7 +354,7 @@ Device* Session::add_device(Device* device)
 	return NULL;
 }
 
-void Session::remove_device(Device* device)
+void Session::remove(Device* device)
 {
 	if (device) {
 		m_devices.erase(device);

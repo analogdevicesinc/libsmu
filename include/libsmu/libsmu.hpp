@@ -107,20 +107,18 @@ namespace smu {
 		~Session();
 
 		/// @brief Scan system for all supported devices.
+		/// Updates the list of available, supported devices for the session
+		/// (m_available_devices).
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative integer relating to a libusb error code is returned.
-		int update_available_devices();
+		int scan();
 
 		/// @brief Devices that are present on the system.
-		/// Note that these devices aren't necessarily bound to a session.
+		/// Note that these devices consist of all supported devices currently
+		/// recognized on the system; however, the devices aren't necessarily
+		/// bound to a session. In order to add devices to a session, add()
+		/// must be used.
 		std::vector<std::shared_ptr<Device>> m_available_devices;
-
-		/// @brief Add a device to the session.
-		/// This method may not be called while the session is active.
-		/// @param device The Device to be added.
-		/// @return On success, the added device is returned.
-		/// @return On error, NULL is returned.
-		Device* add_device(Device* device);
 
 		/// @brief Devices that are part of this session.
 		/// These devices will be started when start() is called.
@@ -130,6 +128,13 @@ namespace smu {
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
 
+		/// @brief Add a device to the session.
+		/// This method may not be called while the session is active.
+		/// @param device The Device to be added.
+		/// @return On success, the added device is returned.
+		/// @return On error, NULL is returned.
+		Device* add(Device* device);
+		
 		/// @brief Get the device matching a given serial from the session.
 		/// @param serial A string of a device's serial number.
 		/// @return On success, the matching Device is returned.
@@ -139,14 +144,14 @@ namespace smu {
 		/// @brief Remove a device from the session.
 		/// @param device A Device to be removed.
 		/// This method may not be called while the session is active.
-		void remove_device(Device* device);
+		void remove(Device* device);
 
 		/// @brief Remove a device from the list of available devices.
 		/// @param device A Device to be removed from the available list.
 		/// Devices are automatically added to this list on attach.
 		/// Devices must be removed from this list on detach.
 		/// This method may not be called while the session is active
-		void destroy_available(Device* device);
+		void destroy(Device* device);
 
 		/// @brief Configure the session's sample rate.
 		/// @param sampleRate The requested sample rate for the session.
