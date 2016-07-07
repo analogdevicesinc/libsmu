@@ -249,16 +249,17 @@ void M1000_Device::configure(uint64_t sampleRate)
 	}
 
 	m_sam_per = round(sample_time * M1K_timer_clock) / 2;
-	if (m_sam_per < m_min_per) m_sam_per = m_min_per;
+	if (m_sam_per < m_min_per)
+		m_sam_per = m_min_per;
 	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
 
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
 	m_in_transfers.alloc(transfers, m_usb, EP_IN,LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*in_packet_size,10000, m1000_in_completion, this);
+		m_packets_per_transfer * in_packet_size, 10000, m1000_in_completion, this);
 	m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
-		m_packets_per_transfer*out_packet_size, 10000, m1000_out_completion, this);
+		m_packets_per_transfer * out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 }
 
@@ -283,8 +284,10 @@ uint16_t M1000_Device::encode_out(unsigned chan)
 	} else if (m_mode[chan] == DISABLED) {
 		v = 32768*4/5;
 	}
-	if (v > 65535) v = 65535;
-	if (v < 0) v = 0;
+	if (v > 65535)
+		v = 65535;
+	if (v < 0)
+		v = 0;
 	return v;
 }
 
