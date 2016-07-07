@@ -234,14 +234,14 @@ namespace smu {
 		libusb_context* m_usb_ctx;
 
 		/// @brief Identify devices supported by libsmu.
-		/// @param device a libusb device handle
+		/// @param device libusb device handle
 		/// @return If the usb device relates
 		/// to a supported device the Device is returned,
 		/// otherwise NULL is returned.
 		std::shared_ptr<Device> probe_device(libusb_device* device);
 
 		/// @brief Find an existing, available device.
-		/// @param device a libusb device handle
+		/// @param device libusb device handle
 		/// @return If the usb device relates to an existing,
 		/// available device the Device is returned,
 		/// otherwise NULL is returned.
@@ -333,7 +333,7 @@ namespace smu {
 		/// @brief Turn on power supplies and clear sampling state.
 		virtual void on() = 0;
 
-		/// @brief Stop sampling and put outputs into high-impedance mode.
+		/// @brief Stop sampling and put outputs into high impedance mode.
 		virtual void off() = 0;
 
 		/// @brief Make the device start sampling.

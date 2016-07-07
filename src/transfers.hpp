@@ -17,25 +17,27 @@
 
 float constrain(float val, float lo, float hi);
 
-// Wrapper for a collection of libusb transfers
+// Wrapper for a collection of libusb transfers.
 class Transfers {
 	public:
 		std::vector<libusb_transfer*> m_transfers;
 
-		/// allocates a new collection of libusb transfers
+		// allocates a new collection of libusb transfers
 		void alloc(unsigned count, libusb_device_handle* handle,
 				unsigned char endpoint, unsigned char type, size_t buf_size,
 				unsigned timeout, libusb_transfer_cb_fn callback, void* user_data);
 
-		/// removes a transfer that was not successfully submitted from the collection of pending transfers
+		// Removes a transfer that was not successfully submitted from the
+		// collection of pending transfers.
 		void failed(libusb_transfer* t);
 
-		/// free and clear collection of libusb transfers
+		// Free and clear collection of libusb transfers.
 		void clear();
 
-		/// signal cleanup - stop streaming and cleanup libusb state
-		/// loop over pending transfers, canceling each remaining transfer that hasn't already been canceled.
-		/// returns an error code if one of the transfers doesn't complete, or zero for success
+		// Signal cleanup - stop streaming and cleanup libusb state.
+		// Loop over pending transfers, canceling each remaining transfer that
+		// hasn't already been canceled. Returns an error code if one of the
+		// transfers doesn't complete, or zero for success
 		int cancel();
 
 		size_t size() { return m_transfers.size(); }
@@ -49,6 +51,6 @@ class Transfers {
 		iterator end() { return m_transfers.end(); }
 		const_iterator end() const { return m_transfers.end(); }
 
-		/// count of pending transfers
+		// Count of pending transfers
 		int32_t num_active;
 };
