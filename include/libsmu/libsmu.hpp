@@ -84,7 +84,7 @@ enum Src {
 
 /// @brief Supported signal destinations.
 enum Dest {
-	DEST_NONE, ///< Samples are discarded.
+	DEST_DEFAULT, ///< Samples are pushed into a FIFO buffer.
 	DEST_BUFFER, ///< Samples are buffered into a specified location.
 	DEST_CALLBACK, ///< Samples are passed to a specified callback function.
 };
@@ -375,7 +375,7 @@ namespace smu {
 			m_info(info),
 			m_src(SRC_CONSTANT),
 			m_src_v1(0),
-			m_dest(DEST_NONE)
+			m_dest(DEST_DEFAULT)
 			{}
 
 		/// Signal destructor.
