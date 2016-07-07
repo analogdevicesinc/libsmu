@@ -34,17 +34,16 @@ Session::Session()
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
 		smu_debug("Using libusb hotplug\n");
 		if (int r = libusb_hotplug_register_callback(NULL,
-			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-			(libusb_hotplug_flag) 0,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			hotplug_callback_usbthread,
-			this,
-			NULL
-		) != 0) {
-		smu_debug("libusb hotplug cb reg failed: %i\n", r);
-	};
+				(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+				(libusb_hotplug_flag) 0,
+				LIBUSB_HOTPLUG_MATCH_ANY,
+				LIBUSB_HOTPLUG_MATCH_ANY,
+				LIBUSB_HOTPLUG_MATCH_ANY,
+				hotplug_callback_usbthread,
+				this,
+				NULL) != 0) {
+			smu_debug("libusb hotplug cb reg failed: %i\n", r);
+		}
 	} else {
 		smu_debug("Libusb hotplug not supported. Only devices already attached will be used.\n");
 	}
@@ -58,7 +57,7 @@ Session::Session()
 Session::~Session()
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	// Run device destructors before libusb_exit
+	// run device destructors before libusb_exit
 	m_usb_thread_loop = 0;
 	m_devices.clear();
 	m_available_devices.clear();
@@ -360,8 +359,7 @@ void Session::remove_device(Device* device)
 	if (device) {
 		m_devices.erase(device);
 		device->removed();
-	}
-	else {
+	} else {
 		smu_debug("no device removed\n");
 	}
 }
@@ -385,8 +383,6 @@ void Session::end()
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
 	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
-	//	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
-	// wait on m_completion, return m_active_devices compared with 0
 	if (!res) {
 		smu_debug("timed out\n");
 	}
@@ -408,6 +404,7 @@ void Session::start(uint64_t nsamples)
 	m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
+		// make sure all devices are syncronized
 		if (m_devices.size() > 1) {
 			i->sync();
 		}
