@@ -309,10 +309,10 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t)
 					buf[i*4+3] = b & 0xff;
 				} else {
 					uint16_t a = encode_out(0);
-					buf[(i+chunk_size*0)*2	] = a >> 8;
+					buf[(i+chunk_size*0)*2]   = a >> 8;
 					buf[(i+chunk_size*0)*2+1] = a & 0xff;
 					uint16_t b = encode_out(1);
-					buf[(i+chunk_size*1)*2	] = b >> 8;
+					buf[(i+chunk_size*1)*2]   = b >> 8;
 					buf[(i+chunk_size*1)*2+1] = b & 0xff;
 				}
 				m_out_sampleno++;
