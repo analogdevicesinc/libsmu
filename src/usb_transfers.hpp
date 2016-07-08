@@ -17,6 +17,9 @@
 
 float constrain(float val, float lo, float hi);
 
+// Map libusb error codes to system errnos.
+unsigned int libusb_to_errno(int error);
+
 // Wrapper for a collection of libusb transfers.
 class Transfers {
 	public:
