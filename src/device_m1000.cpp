@@ -47,8 +47,6 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{"B", 3, 2},
 };
 
-const float current_limit = 0.2;
-
 int M1000_Device::get_default_rate()
 {
 	// rev0 firmware
@@ -79,7 +77,7 @@ void M1000_Device::read_calibration()
 	int ret;
 
 	ret = this->ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
-	if(ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
+	if (ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
 		for(int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
 			m_cal.gain_p[i] = 1.0f;
@@ -279,17 +277,17 @@ uint16_t M1000_Device::encode_out(unsigned chan)
 	if (m_mode[chan] == SVMI) {
 		float val = m_signals[chan][0].get_sample();
 		val = (val - m_cal.offset[chan*4+2]) * m_cal.gain_p[chan*4+2];
-		val = constrain(val, 0, 5.0);
-		v = 65535*val/5.0;
+		val = constrain(val, m_signals[chan][0].info()->min, m_signals[chan][0].info()->max);
+		v = val * m_signals[chan][0].info()->resolution;
 	} else if (m_mode[chan] == SIMV) {
 		float val = m_signals[chan][1].get_sample();
-		if(val > 0) {
+		if (val > 0) {
 			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_p[chan*4+3];
 		}
 		else {
 			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_n[chan*4+3];
 		}
-		val = constrain(val, -current_limit, current_limit);
+		val = constrain(val, m_signals[chan][1].info()->min, m_signals[chan][1].info()->max);
 		v = 65536*(2./5. + 0.8*0.2*20.*0.5*val);
 	} else if (m_mode[chan] == DISABLED) {
 		v = 32768*4/5;
@@ -363,22 +361,22 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
 			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
-				val = (buf[i*8+0] << 8 | buf[i*8+1]) / 65535.0 * 5.0;
+				val = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
-				val = (((buf[i*8+2] << 8 | buf[i*8+3]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				val = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
 				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
-				val = (buf[i*8+4] << 8 | buf[i*8+5]) / 65535.0 * 5.0;
+				val = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution;
 				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
-				val = (((buf[i*8+6] << 8 | buf[i*8+7]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				val = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
 				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			} else {
-				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0;
+				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) * m_signals[0][0].info()->resolution;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
-				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25;
+				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
 				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
-				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0;
+				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) * m_signals[1][0].info()->resolution;
 				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
-				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25;
+				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
 				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
 			}
 			m_in_sampleno++;
