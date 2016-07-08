@@ -15,13 +15,6 @@
 
 #include <libusb.h>
 
-float constrain(float val, float lo, float hi)
-{
-	if (val > hi) val = hi;
-	if (val < lo) val = lo;
-	return val;
-}
-
 // Mapping of libusb error codes to system errnos.
 static std::map<int, int> libusb_to_errno_map = {
 	{LIBUSB_ERROR_INVALID_PARAM, EINVAL},
