@@ -171,6 +171,8 @@ write_cal:
 		ret = this->ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 		if (ret > 0)
 			ret = 0;
+		else
+			ret = -libusb_to_errno(ret);
 	}
 
 	return ret;
