@@ -265,6 +265,14 @@ void M1000_Device::configure(uint64_t sampleRate)
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
 }
 
+// Constrain a given value by low and high bounds.
+static float constrain(float val, float lo, float hi)
+{
+	if (val > hi) val = hi;
+	if (val < lo) val = lo;
+	return val;
+}
+
 uint16_t M1000_Device::encode_out(unsigned chan)
 {
 	int v = 0;
