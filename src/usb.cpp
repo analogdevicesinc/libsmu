@@ -15,6 +15,8 @@
 
 #include <libusb.h>
 
+#include "debug.hpp"
+
 // Mapping of libusb error codes to system errnos.
 static std::map<int, int> libusb_to_errno_map = {
 	{LIBUSB_ERROR_INVALID_PARAM, EINVAL},

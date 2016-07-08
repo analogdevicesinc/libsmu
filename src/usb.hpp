@@ -13,8 +13,6 @@
 
 #include <libusb.h>
 
-#include "debug.hpp"
-
 // Map libusb error codes to system errnos.
 // If there is no match, EIO is returned.
 unsigned int libusb_to_errno(int libusb_err);
