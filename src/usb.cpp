@@ -39,6 +39,12 @@ static std::map<int, int> libusb_to_errno_map = {
 
 unsigned int libusb_to_errno(int libusb_err)
 {
+	// All libusb errors that require mapping are negative. All non-negative
+	// values either define success (0) or relate to a value that should be
+	// returned as is.
+	if (libusb_err >= 0)
+		return libusb_err;
+
 	auto sys_err = libusb_to_errno_map.find(libusb_err);
 	if (sys_err != libusb_to_errno_map.end())
 		return sys_err->second;
