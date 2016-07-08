@@ -16,8 +16,6 @@
 #include <vector>
 #include <thread>
 
-#include <libusb.h>
-
 #include <libsmu/libsmu.hpp>
 
 using std::cout;
@@ -83,7 +81,7 @@ int write_calibration(Session* session, const char *file)
 	if (ret <= 0) {
 		if (ret == -EINVAL)
 			cerr << "smu: invalid calibration data format" << endl;
-		else if (ret == LIBUSB_ERROR_PIPE)
+		else if (ret == -EPIPE)
 			cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 		else
 			perror("smu: failed to write calibration data");
@@ -125,7 +123,7 @@ int reset_calibration(Session* session)
 	for (auto dev: session->m_devices) {
 		ret = dev->write_calibration(NULL);
 		if (ret <= 0) {
-			if (ret == LIBUSB_ERROR_PIPE)
+			if (ret == -EPIPE)
 				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 			else
 				perror("smu: failed to reset calibration data");
