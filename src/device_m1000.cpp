@@ -292,10 +292,7 @@ uint16_t M1000_Device::encode_out(unsigned chan)
 	} else if (m_mode[chan] == DISABLED) {
 		v = 32768*4/5;
 	}
-	if (v > 65535)
-		v = 65535;
-	if (v < 0)
-		v = 0;
+	v = constrain(v, 0, 65535);
 	return v;
 }
 
