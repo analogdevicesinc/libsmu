@@ -6,9 +6,11 @@
 
 #include "usb.hpp"
 
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <vector>
 
 #include <libusb.h>
@@ -20,40 +22,28 @@ float constrain(float val, float lo, float hi)
 	return val;
 }
 
-static const unsigned int libusb_to_errno_codes[] = {
-	[- LIBUSB_ERROR_INVALID_PARAM] = EINVAL,
-	[- LIBUSB_ERROR_ACCESS]        = EACCES,
-	[- LIBUSB_ERROR_NO_DEVICE]     = ENODEV,
-	[- LIBUSB_ERROR_NOT_FOUND]     = ENXIO,
-	[- LIBUSB_ERROR_BUSY]          = EBUSY,
-	[- LIBUSB_ERROR_TIMEOUT]       = ETIMEDOUT,
-	[- LIBUSB_ERROR_OVERFLOW]      = EIO,
-	[- LIBUSB_ERROR_PIPE]          = EPIPE,
-	[- LIBUSB_ERROR_INTERRUPTED]   = EINTR,
-	[- LIBUSB_ERROR_NO_MEM]        = ENOMEM,
-	[- LIBUSB_ERROR_NOT_SUPPORTED] = ENOSYS,
+// Mapping of libusb error codes to system errnos.
+static std::map<int, int> libusb_to_errno_map = {
+	{LIBUSB_ERROR_INVALID_PARAM, EINVAL},
+	{LIBUSB_ERROR_ACCESS, EACCES},
+	{LIBUSB_ERROR_NO_DEVICE, ENODEV},
+	{LIBUSB_ERROR_NOT_FOUND, ENXIO},
+	{LIBUSB_ERROR_BUSY, EBUSY},
+	{LIBUSB_ERROR_TIMEOUT, ETIMEDOUT},
+	{LIBUSB_ERROR_OVERFLOW, EIO},
+	{LIBUSB_ERROR_PIPE, EPIPE},
+	{LIBUSB_ERROR_INTERRUPTED, EINTR},
+	{LIBUSB_ERROR_NO_MEM, ENOMEM},
+	{LIBUSB_ERROR_NOT_SUPPORTED, ENOSYS},
 };
 
-unsigned int libusb_to_errno(int error)
+unsigned int libusb_to_errno(int libusb_err)
 {
-	switch ((enum libusb_error) error) {
-	case LIBUSB_ERROR_INVALID_PARAM:
-	case LIBUSB_ERROR_ACCESS:
-	case LIBUSB_ERROR_NO_DEVICE:
-	case LIBUSB_ERROR_NOT_FOUND:
-	case LIBUSB_ERROR_BUSY:
-	case LIBUSB_ERROR_TIMEOUT:
-	case LIBUSB_ERROR_PIPE:
-	case LIBUSB_ERROR_INTERRUPTED:
-	case LIBUSB_ERROR_NO_MEM:
-	case LIBUSB_ERROR_NOT_SUPPORTED:
-		return libusb_to_errno_codes[- (int) error];
-	case LIBUSB_ERROR_IO:
-	case LIBUSB_ERROR_OTHER:
-	case LIBUSB_ERROR_OVERFLOW:
-	default:
+	auto sys_err = libusb_to_errno_map.find(libusb_err);
+	if (sys_err != libusb_to_errno_map.end())
+		return sys_err->second;
+	else
 		return EIO;
-	}
 }
 
 void Transfers::alloc(unsigned count, libusb_device_handle* handle,
