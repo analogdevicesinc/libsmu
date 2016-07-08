@@ -22,8 +22,8 @@
 const unsigned chunk_size = 256;
 #define OUT_SAMPLES_PER_PACKET chunk_size
 #define IN_SAMPLES_PER_PACKET chunk_size
-#define A 0
-#define B 1
+#define CHAN_A 0
+#define CHAN_B 1
 
 const unsigned out_packet_size = chunk_size * 2 * 2;
 const unsigned in_packet_size = chunk_size * 4 * 2;
@@ -473,8 +473,8 @@ void M1000_Device::cancel()
 
 void M1000_Device::off()
 {
-	set_mode(A, DISABLED);
-	set_mode(B, DISABLED);
+	set_mode(CHAN_A, DISABLED);
+	set_mode(CHAN_B, DISABLED);
 	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 }
 
