@@ -4,7 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "usb_transfers.hpp"
+#include "usb.hpp"
 
 #include <cstdint>
 #include <cstdio>
