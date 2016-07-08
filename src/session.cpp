@@ -134,7 +134,9 @@ void Session::flash_firmware(const char *file, Device *dev)
 		throw std::runtime_error("failed to open firmware file");
 	}
 
-	// force attached m1k into command mode
+	// TODO: verify that file is a compatible firmware file
+
+	// force attached device into command mode
 	if (dev || !this->m_devices.empty()) {
 		if (!dev)
 			dev = *(this->m_devices.begin());
@@ -223,6 +225,8 @@ void Session::flash_firmware(const char *file, Device *dev)
 			page++;
 		}
 	}
+
+	// TODO: verify flashed data
 
 	// disable SAM-BA
 	samba_usb_write(usb_handle, "W400E0804,5A00010B#");
