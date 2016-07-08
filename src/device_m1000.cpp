@@ -13,7 +13,7 @@
 #include <libusb.h>
 
 #include "debug.hpp"
-#include "usb_transfers.hpp"
+#include "usb.hpp"
 #include <libsmu/libsmu.hpp>
 
 #define EP_OUT 0x02
