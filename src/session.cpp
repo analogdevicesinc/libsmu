@@ -385,7 +385,7 @@ void Session::end()
 	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
 	if (!res) {
 		DEBUG("timed out\n");
 	}
