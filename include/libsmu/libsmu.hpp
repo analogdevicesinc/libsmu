@@ -72,7 +72,7 @@ typedef struct sl_device_info {
 
 /// @brief Supported signal sources.
 enum Src {
-	SRC_CONSTANT, ///< Constant value output. 
+	SRC_CONSTANT, ///< Constant value output.
 	SRC_SQUARE, ///< Square wave output.
 	SRC_SAWTOOTH, ///< Sawtooth wave output.
 	SRC_STAIRSTEP, ///< Stairstep wave output.
@@ -130,27 +130,27 @@ namespace smu {
 
 		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
-		/// @param device The Device to be added.
+		/// @param device The device to be added to the session.
 		/// @return On success, the added device is returned.
 		/// @return On error, NULL is returned.
 		Device* add(Device* device);
 		
 		/// @brief Get the device matching a given serial from the session.
 		/// @param serial A string of a device's serial number.
-		/// @return On success, the matching Device is returned.
+		/// @return On success, the matching device is returned.
 		/// @return If no match is found, NULL is returned.
 		Device* get_device(const char* serial);
 
 		/// @brief Remove a device from the session.
-		/// @param device A Device to be removed.
+		/// @param device A device to be removed from the session.
 		/// This method may not be called while the session is active.
 		void remove(Device* device);
 
 		/// @brief Remove a device from the list of available devices.
-		/// @param device A Device to be removed from the available list.
+		/// @param device A device to be removed from the available list.
 		/// Devices are automatically added to this list on attach.
 		/// Devices must be removed from this list on detach.
-		/// This method may not be called while the session is active
+		/// This method may not be called while the session is active.
 		void destroy(Device* device);
 
 		/// @brief Configure the session's sample rate.
@@ -312,9 +312,10 @@ namespace smu {
 
 		/// @brief Write the device calibration data into the EEPROM.
 		/// @param cal_file_name The path to a properly-formatted calibration
-		/// data file to write to the device.
+		/// data file to write to the device. If NULL is passed, calibration
+		/// is reset to the default setting.
 		/// @return On success, 0 is returned.
-		/// @return On error, a negative integer is returned.
+		/// @return On error, a negative integer is returned relating to the error status.
 		virtual int write_calibration(const char* cal_file_name) { return 0; }
 
 		/// @brief Get the device calibration data from the EEPROM.
@@ -383,7 +384,6 @@ namespace smu {
 			m_dest(DEST_DEFAULT)
 			{}
 
-		/// Signal destructor.
 		~Signal();
 
 		/// @brief Get the descriptor struct of the Signal.

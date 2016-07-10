@@ -25,6 +25,7 @@ static const sl_signal_info m1000_signal_info[2] = {
 	{"Current", 0x6, 0x4, -0.2, 0.2, 0.4/65536},
 };
 
+// Calibration data format stored in the device's EEPROM.
 struct EEPROM_cal {
 	uint32_t eeprom_valid;
 	float offset[8];
