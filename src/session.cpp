@@ -425,7 +425,7 @@ void Session::start(uint64_t samples)
 			i->sync();
 		}
 		i->run(samples);
-		m_active_devices += 1;
+		m_active_devices++;
 	}
 }
 
