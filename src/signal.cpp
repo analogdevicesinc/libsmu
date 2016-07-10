@@ -32,42 +32,47 @@ void Signal::source_constant(float val)
 void Signal::source_square(float midpoint, float peak, double period, double duty, double phase)
 {
 	m_src = SRC_SQUARE;
-	update_phase(period, phase);
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
+	m_src_period = period;
 	m_src_duty = duty;
+	m_src_phase = phase;
 }
 
 void Signal::source_sawtooth(float midpoint, float peak, double period, double phase)
 {
 	m_src = SRC_SAWTOOTH;
-	update_phase(period, phase);
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
+	m_src_period = period;
+	m_src_phase = phase;
 }
 
 void Signal::source_stairstep(float midpoint, float peak, double period, double phase)
 {
 	m_src = SRC_STAIRSTEP;
-	update_phase(period, phase);
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
+	m_src_period = period;
+	m_src_phase = phase;
 }
 
 void Signal::source_sine(float midpoint, float peak, double period, double phase)
 {
 	m_src = SRC_SINE;
-	update_phase(period, phase);
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
+	m_src_period = period;
+	m_src_phase = phase;
 }
 
 void Signal::source_triangle(float midpoint, float peak, double period, double phase)
 {
 	m_src = SRC_TRIANGLE;
-	update_phase(period, phase);
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
+	m_src_period = period;
+	m_src_phase = phase;
 }
 
 void Signal::source_buffer(float* buf, size_t len, bool repeat)
@@ -183,10 +188,4 @@ float Signal::get_sample()
 		}
 	}
 	return 0;
-}
-
-void Signal::update_phase(double new_period, double new_phase)
-{
-	m_src_phase = new_phase;
-	m_src_period = new_period;
 }

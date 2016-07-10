@@ -435,8 +435,6 @@ namespace smu {
 		/// internal: Called by Device
 		float get_sample();
 
-		void update_phase(double new_period, double new_phase);
-
 		Src m_src;
 		float m_src_v1;
 		float m_src_v2;
