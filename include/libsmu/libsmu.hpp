@@ -166,14 +166,14 @@ namespace smu {
 		void configure(uint64_t sampleRate);
 
 		/// @brief Run the currently configured capture and wait for it to complete.
-		/// @param nsamples Number of samples to capture until we stop. If 0, run in continuous mode.
-		void run(uint64_t nsamples);
+		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
+		void run(uint64_t samples);
 
 		/// @brief Start the currently configured capture, but do not wait for it to complete.
-		/// @param nsamples Number of samples to capture until we stop. If 0, run in continuous mode.
+		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
 		/// Once started, the only allowed Session methods are cancel() and end()
 		/// until the session has stopped.
-		void start(uint64_t nsamples);
+		void start(uint64_t samples);
 
 		/// @brief Cancel capture and block waiting for it to complete.
 		void cancel();

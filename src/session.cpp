@@ -387,9 +387,9 @@ void Session::configure(uint64_t sampleRate)
 	}
 }
 
-void Session::run(uint64_t nsamples)
+void Session::run(uint64_t samples)
 {
-	start(nsamples);
+	start(samples);
 	end();
 }
 
@@ -414,7 +414,7 @@ void Session::wait_for_completion()
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 }
 
-void Session::start(uint64_t nsamples)
+void Session::start(uint64_t samples)
 {
 	m_min_progress = 0;
 	m_cancellation = 0;
@@ -424,7 +424,7 @@ void Session::start(uint64_t nsamples)
 		if (m_devices.size() > 1) {
 			i->sync();
 		}
-		i->run(nsamples);
+		i->run(samples);
 		m_active_devices += 1;
 	}
 }

@@ -97,6 +97,6 @@ namespace smu {
 		void on() override;
 		void off() override;
 		void cancel() override;
-		void start_run(uint64_t nsamples) override;
+		void run(uint64_t samples) override;
 	};
 }
