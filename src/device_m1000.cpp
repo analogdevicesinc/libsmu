@@ -50,7 +50,7 @@ static const sl_channel_info m1000_channel_info[2] = {
 int M1000_Device::get_default_rate()
 {
 	// rev0 firmware
-	if (strcmp(this->m_fw_version, "023314a*") == 0) {
+	if (strcmp(m_fw_version, "023314a*") == 0) {
 		return 62500;
 	}
 	// modern fw
@@ -76,7 +76,7 @@ void M1000_Device::read_calibration()
 {
 	int ret;
 
-	ret = this->ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	if (ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
 		for(int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
@@ -166,7 +166,7 @@ write_cal:
 		ret = -EINVAL;
 	} else {
 		m_cal.eeprom_valid = EEPROM_VALID;
-		ret = this->ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
+		ret = ctrl_transfer(0x40, 0x02, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 		if (ret > 0)
 			ret = 0;
 		else
@@ -242,7 +242,7 @@ void M1000_Device::configure(uint64_t sampleRate)
 
 	// If firmware version is 023314a, initial production, use 3e6 for timer clock
 	// otherwise, assume a more recent firmware, and use a faster clock.
-	if (strcmp(this->m_fw_version, "023314a*") == 0) {
+	if (strcmp(m_fw_version, "023314a*") == 0) {
 		M1K_timer_clock = 3e6;
 	} else {
 		M1K_timer_clock = 48e6;
@@ -301,7 +301,7 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t)
 		for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
 			for (unsigned i = 0; i < chunk_size; i++) {
-				if (strncmp(this->m_fw_version, "2.", 2) == 0) {
+				if (strncmp(m_fw_version, "2.", 2) == 0) {
 					uint16_t a = encode_out(0);
 					buf[i*4+0] = a >> 8;
 					buf[i*4+1] = a & 0xff;
@@ -356,7 +356,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
-			if (strncmp(this->m_fw_version, "2.", 2) == 0) {
+			if (strncmp(m_fw_version, "2.", 2) == 0) {
 				val = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
 				val = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
@@ -418,28 +418,28 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 		case DISABLED:
 		default: pset = 0x3000;
 	};
-	this->ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
+	ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
 	// set mode
-	this->ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
+	ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
 }
 
 void M1000_Device::on()
 {
 	libusb_set_interface_alt_setting(m_usb, 0, 1);
 
-	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
-	this->ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
+	ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
 }
 
 void M1000_Device::sync()
 {
-	this->ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
+	ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start + 0xff) & 0x3c00;
 }
 
 void M1000_Device::run(uint64_t samples)
 {
-	int ret = this->ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
+	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
 		DEBUG("control transfer failed with code %i\n", ret);
 		return;
@@ -469,14 +469,14 @@ void M1000_Device::off()
 {
 	set_mode(CHAN_A, DISABLED);
 	set_mode(CHAN_B, DISABLED);
-	this->ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 }
 
 void M1000_Device::samba_mode()
 {
 	int ret;
 
-	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
+	ret = ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
 	// Wait for 1 second for the device to drop into SAM-BA bootloader mode.
 	// Without a delay often the code scanning the system for device signatures
 	// matching SAM-BA mode won't find anything because the device hasn't fully
