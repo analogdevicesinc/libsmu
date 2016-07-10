@@ -360,6 +360,16 @@ Device* Session::add(Device* device)
 	return NULL;
 }
 
+int Session::add_all()
+{
+	int ret = 0;
+	for (auto dev: m_available_devices) {
+		if (!add(&*dev))
+			ret++;
+	}
+	return ret;
+}
+
 void Session::remove(Device* device)
 {
 	if (device) {
