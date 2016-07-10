@@ -154,9 +154,6 @@ int main(int argc, char **argv)
 		session->add(&*dev);
 	}
 
-	session->m_completion_callback = [=](unsigned status){};
-	session->m_progress_callback = [=](uint64_t n){};
-
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
