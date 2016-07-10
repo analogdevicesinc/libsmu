@@ -275,19 +275,19 @@ void Session::start_usb_thread()
 
 int Session::scan()
 {
-	int num_devices = 0;
+	int device_count = 0;
 
 	m_lock_devlist.lock();
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
 	struct libusb_device **usb_devs;
-	num_devices = libusb_get_device_list(m_usb_ctx, &usb_devs);
-	if (num_devices < 0)
-		return -libusb_to_errno(num_devices);
+	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
+	if (device_count < 0)
+		return -libusb_to_errno(device_count);
 
 	// Iterate over the attached USB devices on the system, adding supported
 	// devices to the available list.
-	for (int i = 0; i < num_devices; i++) {
+	for (int i = 0; i < device_count; i++) {
 		shared_ptr<Device> dev = probe_device(usb_devs[i]);
 		if (dev) {
 			m_lock_devlist.lock();
