@@ -288,6 +288,7 @@ uint16_t M1000_Device::encode_out(unsigned chan)
 			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_n[chan*4+3];
 		}
 		val = constrain(val, m_signals[chan][1].info()->min, m_signals[chan][1].info()->max);
+		// TODO: Where does this scaling factor come from?
 		v = (0.8*0.2*20.*0.5*val) * m_signals[chan][1].info()->resolution;
 	}
 	v = constrain(v, 0, 65535);
