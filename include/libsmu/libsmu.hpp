@@ -279,13 +279,13 @@ namespace smu {
 		virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 
 		/// @brief Get the serial number of the device.
-		virtual const char* serial() const { return this->serial_num; }
+		virtual const char* serial() const { return m_serial; }
 
 		/// @brief Get the firmware version of the device.
-		virtual const char* fwver() const { return this->m_fw_version; }
+		virtual const char* fwver() const { return m_fw_version; }
 
 		/// @brief Get the hardware version of the device.
-		virtual const char* hwver() const { return this->m_hw_version; }
+		virtual const char* hwver() const { return m_hw_version; }
 
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
@@ -376,7 +376,7 @@ namespace smu {
 		/// hardware version
 		char m_hw_version[32];
 		/// serial number
-		char serial_num[32];
+		char m_serial[32];
 
 		friend class Session;
 	};
