@@ -320,7 +320,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
 	if (dev) {
 		if (libusb_open(dev->m_device, &dev->m_usb) == 0) {
 			// read serial number, hardware/firmware versions from device
-			libusb_get_string_descriptor_ascii(dev->m_usb, usb_desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
+			libusb_get_string_descriptor_ascii(dev->m_usb, usb_desc.iSerialNumber, (unsigned char*)&dev->m_serial, 32);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
 			return dev;
