@@ -13,6 +13,7 @@
 
 #include "debug.hpp"
 #include "device_m1000.hpp"
+#include "usb.hpp"
 #include <libsmu/libsmu.hpp>
 
 using std::shared_ptr;
@@ -281,8 +282,10 @@ int Session::scan()
 	libusb_device** list;
 	num_devices = libusb_get_device_list(m_usb_ctx, &list);
 	if (num_devices < 0)
-		return num_devices;
+		return -libusb_to_errno(num_devices);
 
+	// Iterate over the attached USB devices on the system, adding supported
+	// devices to the available list.
 	for (int i = 0; i < num_devices; i++) {
 		shared_ptr<Device> dev = probe_device(list[i]);
 		if (dev) {
@@ -292,7 +295,7 @@ int Session::scan()
 		}
 	}
 
-	libusb_free_device_list(list, true);
+	libusb_free_device_list(list, 1);
 	return 0;
 }
 

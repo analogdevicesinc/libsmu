@@ -110,7 +110,7 @@ namespace smu {
 		/// Updates the list of available, supported devices for the session
 		/// (m_available_devices).
 		/// @return On success, 0 is returned.
-		/// @return On error, a negative integer relating to a libusb error code is returned.
+		/// @return On error, a negative errno code is returned.
 		int scan();
 
 		/// @brief Devices that are present on the system.
@@ -122,7 +122,7 @@ namespace smu {
 
 		/// @brief Devices that are part of this session.
 		/// These devices will be started when start() is called.
-		/// Use `add_device` and `remove_device` to manipulate this list.
+		/// Use `add()` and `remove()` to manipulate this set.
 		std::set<Device*> m_devices;
 
 		/// @brief Number of devices currently streaming samples.
