@@ -350,7 +350,8 @@ namespace smu {
 		virtual void off() = 0;
 
 		/// @brief Make the device start sampling.
-		virtual void start_run(uint64_t nsamples) = 0;
+		/// @param samples Number of samples to run before stopping.
+		virtual void run(uint64_t samples) = 0;
 
 		/// @brief Cancel all pending libusb transactions.
 		virtual void cancel() = 0;

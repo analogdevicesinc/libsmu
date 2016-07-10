@@ -420,11 +420,11 @@ void Session::start(uint64_t nsamples)
 	m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
-		// make sure all devices are syncronized
+		// make sure all devices are synchronized
 		if (m_devices.size() > 1) {
 			i->sync();
 		}
-		i->start_run(nsamples);
+		i->run(nsamples);
 		m_active_devices += 1;
 	}
 }
