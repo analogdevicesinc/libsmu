@@ -123,7 +123,7 @@ float Signal::get_sample()
 			if (m_src_buf_repeat) {
 				m_src_i = 0;
 			} else {
-				return m_src_buf[m_src_buf_len-1];
+				return m_src_buf[m_src_buf_len - 1];
 			}
 		}
 		return m_src_buf[m_src_i++];
@@ -142,7 +142,7 @@ float Signal::get_sample()
 		auto phase = m_src_phase;
 		auto norm_phase = phase / m_src_period;
 		if (norm_phase < 0)
-			norm_phase += 1;
+			norm_phase++;
 		m_src_phase = fmod(m_src_phase + 1, m_src_period);
 
 		switch (m_src) {
@@ -171,13 +171,13 @@ float Signal::get_sample()
 		}
 
 		case SRC_STAIRSTEP:
-			return m_src_v2 - floorf(norm_phase*10) * peak_to_peak / 9;
+			return m_src_v2 - floorf(norm_phase * 10) * peak_to_peak / 9;
 
 		case SRC_SINE:
 			return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * peak_to_peak / 2;
 
 		case SRC_TRIANGLE:
-			return m_src_v1 + fabs(1 - norm_phase*2) * peak_to_peak;
+			return m_src_v1 + fabs(1 - norm_phase * 2) * peak_to_peak;
 		default:
 			return 0;
 		}
