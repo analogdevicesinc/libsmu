@@ -21,7 +21,7 @@ using std::shared_ptr;
 using namespace smu;
 
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data);
 
 Session::Session()
 {
@@ -58,8 +58,9 @@ Session::Session()
 Session::~Session()
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
+	// stop USB thread loop
+	m_usb_thread_loop = false;
 	// run device destructors before libusb_exit
-	m_usb_thread_loop = 0;
 	m_devices.clear();
 	m_available_devices.clear();
 	if (m_usb_thread.joinable()) {
@@ -68,9 +69,9 @@ Session::~Session()
 	libusb_exit(m_usb_ctx);
 }
 
-void Session::attached(libusb_device *device)
+void Session::attached(libusb_device *usb_dev)
 {
-	shared_ptr<Device> dev = probe_device(device);
+	shared_ptr<Device> dev = probe_device(usb_dev);
 	if (dev) {
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
@@ -81,10 +82,10 @@ void Session::attached(libusb_device *device)
 	}
 }
 
-void Session::detached(libusb_device *device)
+void Session::detached(libusb_device *usb_dev)
 {
 	if (m_hotplug_detach_callback) {
-		shared_ptr<Device> dev = find_existing_device(device);
+		shared_ptr<Device> dev = find_existing_device(usb_dev);
 		if (dev) {
 			DEBUG("Session::detached ser: %s\n", dev->serial());
 			m_hotplug_detach_callback(&*dev);
@@ -93,9 +94,9 @@ void Session::detached(libusb_device *device)
 }
 
 // Internal function to write raw SAM-BA commands to a libusb handle.
-static void samba_usb_write(libusb_device_handle *handle, const char* data) {
+static void samba_usb_write(libusb_device_handle *usb_handle, const char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to write SAM-BA command: " + libusb_error_str);
@@ -103,9 +104,9 @@ static void samba_usb_write(libusb_device_handle *handle, const char* data) {
 }
 
 // Internal function to read raw SAM-BA commands to a libusb handle.
-static void samba_usb_read(libusb_device_handle *handle, unsigned char* data) {
+static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x82, data, 512, &transferred, 1);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to read SAM-BA response: " + libusb_error_str);
@@ -252,14 +253,14 @@ void Session::destroy(Device *dev)
 
 // Low-level callback for hotplug events, proxies to session methods.
 extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
+	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
 {
-	(void) ctx;
-	Session *sess = (Session *) user_data;
-	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		sess->attached(device);
-	} else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		sess->detached(device);
+	(void) usb_ctx;
+	Session *session = (Session *) user_data;
+	if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+		session->attached(usb_dev);
+	} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+		session->detached(usb_dev);
 	}
 	return 0;
 }
@@ -279,15 +280,15 @@ int Session::scan()
 	m_lock_devlist.lock();
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
-	libusb_device** list;
-	num_devices = libusb_get_device_list(m_usb_ctx, &list);
+	struct libusb_device **usb_devs;
+	num_devices = libusb_get_device_list(m_usb_ctx, &usb_devs);
 	if (num_devices < 0)
 		return -libusb_to_errno(num_devices);
 
 	// Iterate over the attached USB devices on the system, adding supported
 	// devices to the available list.
 	for (int i = 0; i < num_devices; i++) {
-		shared_ptr<Device> dev = probe_device(list[i]);
+		shared_ptr<Device> dev = probe_device(usb_devs[i]);
 		if (dev) {
 			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
@@ -295,31 +296,31 @@ int Session::scan()
 		}
 	}
 
-	libusb_free_device_list(list, 1);
+	libusb_free_device_list(usb_devs, 1);
 	return 0;
 }
 
-shared_ptr<Device> Session::probe_device(libusb_device* device)
+shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
 {
-	shared_ptr<Device> dev = find_existing_device(device);
+	shared_ptr<Device> dev = find_existing_device(usb_dev);
 
-	libusb_device_descriptor desc;
-	int r = libusb_get_device_descriptor(device, &desc);
+	libusb_device_descriptor usb_desc;
+	int r = libusb_get_device_descriptor(usb_dev, &usb_desc);
 	if (r != 0) {
 		DEBUG("Error %i in get_device_descriptor\n", r);
 		return NULL;
 	}
 
-	std::vector<uint16_t> device_id = {desc.idVendor, desc.idProduct};
+	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
 	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
 			!= SUPPORTED_DEVICES.end()) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
+		dev = shared_ptr<Device>(new M1000_Device(this, usb_dev));
 	}
 
 	if (dev) {
 		if (libusb_open(dev->m_device, &dev->m_usb) == 0) {
 			// read serial number, hardware/firmware versions from device
-			libusb_get_string_descriptor_ascii(dev->m_usb, desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
+			libusb_get_string_descriptor_ascii(dev->m_usb, usb_desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
 			return dev;
@@ -328,11 +329,11 @@ shared_ptr<Device> Session::probe_device(libusb_device* device)
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* device)
+shared_ptr<Device> Session::find_existing_device(libusb_device* usb_dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (auto d: m_available_devices) {
-		if (d->m_device == device) {
+		if (d->m_device == usb_dev) {
 			return d;
 		}
 	}
