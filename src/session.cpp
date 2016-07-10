@@ -75,19 +75,19 @@ void Session::attached(libusb_device *device)
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
 		DEBUG("Session::attached ser: %s\n", dev->serial());
-		if (this->m_hotplug_attach_callback) {
-			this->m_hotplug_attach_callback(&*dev);
+		if (m_hotplug_attach_callback) {
+			m_hotplug_attach_callback(&*dev);
 		}
 	}
 }
 
 void Session::detached(libusb_device *device)
 {
-	if (this->m_hotplug_detach_callback) {
-		shared_ptr<Device> dev = this->find_existing_device(device);
+	if (m_hotplug_detach_callback) {
+		shared_ptr<Device> dev = find_existing_device(device);
 		if (dev) {
 			DEBUG("Session::detached ser: %s\n", dev->serial());
-			this->m_hotplug_detach_callback(&*dev);
+			m_hotplug_detach_callback(&*dev);
 		}
 	}
 }
@@ -127,7 +127,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 	long firmware_size;
 	const uint32_t flashbase = 0x80000;
 
-	if (!dev && this->m_devices.size() > 1) {
+	if (!dev && m_devices.size() > 1) {
 		throw std::runtime_error("multiple devices attached, flashing only works on a single device");
 	}
 
@@ -138,9 +138,9 @@ void Session::flash_firmware(const char *file, Device *dev)
 	// TODO: verify that file is a compatible firmware file
 
 	// force attached device into command mode
-	if (dev || !this->m_devices.empty()) {
+	if (dev || !m_devices.empty()) {
 		if (!dev)
-			dev = *(this->m_devices.begin());
+			dev = *(m_devices.begin());
 		dev->samba_mode();
 	}
 
