@@ -437,7 +437,7 @@ void M1000_Device::sync()
 	m_sof_start = (m_sof_start + 0xff) & 0x3c00;
 }
 
-void M1000_Device::start_run(uint64_t samples)
+void M1000_Device::run(uint64_t samples)
 {
 	int ret = this->ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
