@@ -179,6 +179,13 @@ namespace smu {
 		/// @brief Cancel capture and block waiting for it to complete.
 		void cancel();
 
+		/// @brief Determine the cancellation status of a session.
+		/// @return True, if the session has been cancelled (usually from
+		/// explicitly calling cancel() or cancelled USB transactions).
+		/// @return False, if the session hasn't been started, is running, or
+		/// has been stopped successfully.
+		bool cancelled() { return m_cancellation != 0; }
+
 		/// @brief Update device firmware for a given device.
 		/// @param file Firmware file started for deployment to the device.
 		/// @param device The Device targeted for updating.
@@ -217,10 +224,10 @@ namespace smu {
 		/// @brief Callback called on the USB thread when a device is removed from the system.
 		std::function<void(Device* device)> m_hotplug_attach_callback;
 
+	protected:
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
 
-	protected:
 		/// @brief Spawn thread for USB transaction handling.
 		void start_usb_thread();
 		/// @brief Flag for controlling USB event handling.
