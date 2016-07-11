@@ -417,7 +417,6 @@ void Session::wait_for_completion()
 
 void Session::start(uint64_t samples)
 {
-	m_min_progress = 0;
 	m_cancellation = 0;
 	for (auto i: m_devices) {
 		i->on();
@@ -459,22 +458,5 @@ void Session::completion()
 			m_completion_callback(m_cancellation);
 		}
 		m_completion.notify_all();
-	}
-}
-
-void Session::progress()
-{
-	uint64_t min_progress = ULLONG_MAX;
-	for (auto i: m_devices) {
-		if (i->m_in_sampleno < min_progress) {
-			min_progress = i->m_in_sampleno;
-		}
-	}
-
-	if (min_progress > m_min_progress) {
-		m_min_progress = min_progress;
-		if (m_progress_callback) {
-			m_progress_callback(m_min_progress);
-		}
 	}
 }
