@@ -57,8 +57,8 @@ namespace smu {
 		Signal m_signals[2][2];
 		unsigned m_mode[2];
 
-		M1000_Device(Session* s, libusb_device* device):
-			Device(s, device),
+		M1000_Device(Session* s, libusb_device* usb_dev):
+			Device(s, usb_dev),
 			m_signals {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},

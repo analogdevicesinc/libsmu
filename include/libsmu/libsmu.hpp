@@ -202,9 +202,9 @@ namespace smu {
 		void handle_error(int status, const char * tag);
 
 		/// internal: Called by device attach events on the USB thread.
-		void attached(libusb_device* device);
+		void attached(libusb_device* usb_dev);
 		/// internal: Called by device detach events on the USB thread.
-		void detached(libusb_device* device);
+		void detached(libusb_device* usb_dev);
 
 		/// @brief Block until all devices have are finished streaming in the session.
 		void wait_for_completion();
@@ -250,17 +250,17 @@ namespace smu {
 		libusb_context* m_usb_ctx;
 
 		/// @brief Identify devices supported by libsmu.
-		/// @param device libusb device handle
+		/// @param usb_dev libusb device
 		/// @return If the usb device relates to a supported device the Device is returned,
 		/// otherwise NULL is returned.
-		std::shared_ptr<Device> probe_device(libusb_device* device);
+		std::shared_ptr<Device> probe_device(libusb_device* usb_dev);
 
 		/// @brief Find an existing, available device.
-		/// @param device libusb device handle
+		/// @param usb_dev libusb device
 		/// @return If the usb device relates to an existing,
 		/// available device the Device is returned,
 		/// otherwise NULL is returned.
-		std::shared_ptr<Device> find_existing_device(libusb_device* device);
+		std::shared_ptr<Device> find_existing_device(libusb_device* usb_dev);
 	};
 
 	/// @brief Generic device class.
@@ -340,7 +340,7 @@ namespace smu {
 
 	protected:
 		/// @brief Device constructor.
-		Device(Session* s, libusb_device* d);
+		Device(Session* s, libusb_device* usb_dev);
 
 		/// @brief Device claiming and initialization when a session adds this device.
 		/// @return On success, 0 is returned.
