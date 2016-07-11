@@ -43,11 +43,11 @@ namespace smu {
 		const sl_device_info* info() const override;
 		const sl_channel_info* channel_info(unsigned channel) const override;
 		Signal* signal(unsigned channel, unsigned signal) override;
-		void set_mode(unsigned channel, unsigned mode) override;
-		void sync() override;
+		int set_mode(unsigned channel, unsigned mode) override;
+		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
-		void samba_mode() override;
+		int samba_mode() override;
 
 	protected:
 		friend class Session;
@@ -94,9 +94,9 @@ namespace smu {
 		int added() override;
 		int removed() override;
 		void configure(uint64_t sampleRate) override;
-		void on() override;
-		void off() override;
-		void cancel() override;
-		void run(uint64_t samples) override;
+		int on() override;
+		int off() override;
+		int cancel() override;
+		int run(uint64_t samples) override;
 	};
 }

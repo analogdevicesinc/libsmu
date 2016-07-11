@@ -143,7 +143,9 @@ void Session::flash_firmware(const char *file, Device *dev)
 	if (dev || !m_devices.empty()) {
 		if (!dev)
 			dev = *(m_devices.begin());
-		dev->samba_mode();
+		ret = dev->samba_mode();
+		if (ret < 0)
+			throw std::runtime_error("failed to enable SAM-BA command mode");
 	}
 
 	device_count = libusb_get_device_list(NULL, &usb_devs);
