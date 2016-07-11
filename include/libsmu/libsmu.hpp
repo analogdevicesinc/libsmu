@@ -197,10 +197,8 @@ namespace smu {
 
 		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();
-
 		/// internal: Called by devices on the USB thread when a device encounters an error.
 		void handle_error(int status, const char * tag);
-
 		/// internal: Called by device attach events on the USB thread.
 		void attached(libusb_device* usb_dev);
 		/// internal: Called by device detach events on the USB thread.
@@ -385,11 +383,14 @@ namespace smu {
 		/// @brief Underlying libusb device handle.
 		libusb_device_handle* m_usb = NULL;
 
-		// State owned by USB thread
+		/// Cumulative sample number being handled for input.
 		uint64_t m_requested_sampleno = 0;
+		/// Current sample number being handled for input.
 		uint64_t m_in_sampleno = 0;
+		/// Current sample number being submitted for output.
 		uint64_t m_out_sampleno = 0;
 
+		/// Lock for transfer state.
 		std::mutex m_state;
 
 		/// firmware version
@@ -418,6 +419,7 @@ namespace smu {
 		/// @brief Get the descriptor struct of the Signal.
 		/// Pointed-to memory is valid for the lifetime of the Device.
 		const sl_signal_info* info() const { return m_info; }
+		/// Signal information.
 		const sl_signal_info* const m_info;
 
 		/// @brief Enable constant value output.
@@ -486,36 +488,54 @@ namespace smu {
 		/// @param callback Callback method to operate on sample stream float values.
 		void measure_callback(std::function<void(float value)> callback);
 
-		/// internal: Called by Device
+		/// @brief Handle incoming sample values from device to host.
+		/// Note that this function is for internal use only and is called by Device.
 		void put_sample(float val);
 
-		/// internal: Called by Device
+		/// @brief Handle acquiring output sample values from host to device.
+		/// Note that this function is for internal use only and is called by Device.
 		float get_sample();
 
+		/// Selected signal source waveform.
 		Src m_src;
+		/// Initial signal source waveform value.
 		float m_src_v1;
+		/// End signal source waveform value.
 		float m_src_v2;
+		/// Signal source waveform period.
 		double m_src_period;
+		/// Signal source waveform duty (currently only valid for square waves).
 		double m_src_duty;
+		/// Signal source waveform phase.
 		double m_src_phase;
 
+		/// Source buffer for sample values (valid when source_buffer() is called).
 		float* m_src_buf = NULL;
+		/// Current source buffer sample index.
 		size_t m_src_i;
+		/// Length of the source buffer.
 		size_t m_src_buf_len;
+		/// Wrap back to the beginning of the source buffer on reaching the end when sampling.
 		bool m_src_buf_repeat;
 
+		/// @brief Callback function to execute to acquire new sample values.
+		/// Note that this is only valid after calling source_callback().
 		std::function<float (uint64_t index)> m_src_callback;
 
+		/// Selected sample destination.
 		Dest m_dest;
 
-		// valid if m_dest == DEST_BUF
+		/// Destination buffer to store incoming sample values in (valid when measure_buffer() is called).
 		float* m_dest_buf;
+		/// Length of destination buffer.
 		size_t m_dest_buf_len;
 
-		// valid if m_dest == DEST_CALLBACK
+		/// @brief Callback function to execute for each acquired sample value.
+		/// Note that this is only valid after calling measure_callback().
 		std::function<void(float val)> m_dest_callback;
 
 	protected:
+		/// The most recent measured sample value from this signal.
 		float m_latest_measurement;
 	};
 }
