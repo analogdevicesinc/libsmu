@@ -25,15 +25,15 @@
 /// The list uses the vendor and project IDs from USB
 /// information formatted as {vendor_id, product_id}.
 const std::vector<std::vector<uint16_t>> SUPPORTED_DEVICES = {
-	{0x0456, 0xcee2},
-	{0x064b, 0x784c},
+	{0x0456, 0xcee2}, // old
+	{0x064b, 0x784c}, // new
 };
 
 /// @brief List of supported devices in SAM-BA bootloader mode.
 /// The list uses the vendor and project IDs from USB information
 /// formatted as {vendor_id, product_id}.
 const std::vector<std::vector<uint16_t>> SAMBA_DEVICES = {
-	{0x03eb, 0x6124},
+	{0x03eb, 0x6124}, // shows up as a CDC device by default
 };
 
 /// @brief Signal information.
