@@ -296,8 +296,9 @@ uint16_t M1000_Device::encode_out(unsigned chan)
 	return v;
 }
 
-bool M1000_Device::submit_out_transfer(libusb_transfer* t)
+int M1000_Device::submit_out_transfer(libusb_transfer* t)
 {
+	int ret;
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 		for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
@@ -320,33 +321,34 @@ bool M1000_Device::submit_out_transfer(libusb_transfer* t)
 				m_out_sampleno++;
 			}
 		}
-		int r = libusb_submit_transfer(t);
-		if (r != 0) {
+		ret = libusb_submit_transfer(t);
+		if (ret != 0) {
 			m_out_transfers.failed(t);
-			m_session->handle_error(r, "M1000_Device::submit_out_transfer");
-			return false;
+			m_session->handle_error(ret, "M1000_Device::submit_out_transfer");
+			return ret;
 		}
 		m_out_transfers.num_active++;
-		return true;
+		return 0;
 	}
-	return false;
+	return -1;
 }
 
 
-bool M1000_Device::submit_in_transfer(libusb_transfer* t)
+int M1000_Device::submit_in_transfer(libusb_transfer* t)
 {
+	int ret;
 	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
-		int r = libusb_submit_transfer(t);
-		if (r != 0) {
+		ret = libusb_submit_transfer(t);
+		if (ret != 0) {
 			m_in_transfers.failed(t);
-			m_session->handle_error(r, "M1000_Device::submit_in_transfer");
-			return false;
+			m_session->handle_error(ret, "M1000_Device::submit_in_transfer");
+			return ret;
 		}
 		m_in_transfers.num_active++;
 		m_requested_sampleno += m_packets_per_transfer * IN_SAMPLES_PER_PACKET;
-		return true;
+		return 0;
 	}
-	return false;
+	return -1;
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
@@ -481,11 +483,11 @@ int M1000_Device::run(uint64_t samples)
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
 	for (auto i: m_in_transfers) {
-		if (submit_in_transfer(i) != 0) break;
+		if (submit_in_transfer(i)) break;
 	}
 
 	for (auto i: m_out_transfers) {
-		if (submit_out_transfer(i) != 0) break;
+		if (submit_out_transfer(i)) break;
 	}
 	return 0;
 }

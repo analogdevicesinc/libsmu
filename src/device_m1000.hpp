@@ -67,10 +67,10 @@ namespace smu {
 			{}
 
 		// Submit data transfers to usb thread, from host to device.
-		bool submit_out_transfer(libusb_transfer* t);
+		int submit_out_transfer(libusb_transfer* t);
 
 		// Submit data transfers to usb thread, from device to host.
-		bool submit_in_transfer(libusb_transfer* t);
+		int submit_in_transfer(libusb_transfer* t);
 
 		// Reformat received data, performs integer to float conversion.
 		void handle_in_transfer(libusb_transfer* t);
