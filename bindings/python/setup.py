@@ -46,7 +46,7 @@ def pkgconfig(*packages, **kw):
             kw.setdefault('extra_compile_args', []).append(token)
     return kw
 
-ext_kwargs = {}
+ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
 
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
