@@ -3,3 +3,4 @@
 /dist
 /.coverage
 /*.egg-info
+pysmu/*.cpp
