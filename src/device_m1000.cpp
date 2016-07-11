@@ -194,8 +194,7 @@ void M1000_Device::in_completion(libusb_transfer *t)
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
 		handle_in_transfer(t);
-		// m_cancellation == 0, everything OK
-		if (m_session->m_cancellation == 0) {
+		if (!m_session->cancelled()) {
 			submit_in_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
@@ -224,7 +223,7 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	m_out_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
-		if (m_session->m_cancellation == 0) {
+		if (!m_session->cancelled()) {
 			submit_out_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
