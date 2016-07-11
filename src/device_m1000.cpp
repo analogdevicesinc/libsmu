@@ -378,8 +378,6 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 			m_in_sampleno++;
 		}
 	}
-
-	m_session->progress();
 }
 
 const sl_device_info* M1000_Device::info() const

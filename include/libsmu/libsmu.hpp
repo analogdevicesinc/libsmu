@@ -194,9 +194,6 @@ namespace smu {
 		/// internal: Called by devices on the USB thread when a device encounters an error.
 		void handle_error(int status, const char * tag);
 
-		/// internal: Called by devices on the USB thread with progress updates.
-		void progress();
-
 		/// internal: Called by device attach events on the USB thread.
 		void attached(libusb_device* device);
 		/// internal: Called by device detach events on the USB thread.
@@ -207,10 +204,6 @@ namespace smu {
 
 		/// @brief Block until all devices have completed, then turn off the devices.
 		void end();
-
-		/// @brief Callback run via the USB thread as samples are received.
-		/// Called with the current sample number as an argument.
-		std::function<void(uint64_t)> m_progress_callback;
 
 		/// @brief Callback run via the USB thread on session completion.
 		/// Called with the current value of m_cancellation as an argument,
@@ -228,9 +221,6 @@ namespace smu {
 		unsigned m_cancellation = 0;
 
 	protected:
-		/// @brief Flag for TODO
-		uint64_t m_min_progress = 0;
-
 		/// @brief Spawn thread for USB transaction handling.
 		void start_usb_thread();
 		/// @brief Flag for controlling USB event handling.
