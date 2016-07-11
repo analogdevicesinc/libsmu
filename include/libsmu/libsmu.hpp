@@ -293,8 +293,10 @@ namespace smu {
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
 		/// @param mode An unsigned integer relating to the requested mode.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative integer is returned relating to the error status.
 		/// This method may not be called while the session is active.
-		virtual void set_mode(unsigned channel, unsigned mode) = 0;
+		virtual int set_mode(unsigned channel, unsigned mode) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
@@ -302,14 +304,18 @@ namespace smu {
 						unsigned char *data, unsigned wLength, unsigned timeout);
 
 		/// @brief Force the device into SAM-BA bootloader mode.
-		virtual void samba_mode() = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int samba_mode() = 0;
 
 		/// @brief Get the default sample rate.
 		virtual int get_default_rate() { return 100000; }
 
 		/// @brief Prepare multi-device synchronization.
 		/// Get current microframe index, set m_sof_start to be time in the future.
-		virtual void sync() = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int sync() = 0;
 
 		/// @brief Lock the device's mutex.
 		/// This prevents this device's transfers from being processed. Hold
@@ -337,9 +343,13 @@ namespace smu {
 		Device(Session* s, libusb_device* d);
 
 		/// @brief Device claiming and initialization when a session adds this device.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
 		virtual int added() { return 0; }
 
 		/// @brief Device releasing when a session removes this device.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
 		virtual int removed() { return 0; }
 
 		/// @brief Configurization and initialization for device sampling.
@@ -347,17 +357,25 @@ namespace smu {
 		virtual void configure(uint64_t sampleRate) = 0;
 
 		/// @brief Turn on power supplies and clear sampling state.
-		virtual void on() = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int on() = 0;
 
 		/// @brief Stop sampling and put outputs into high impedance mode.
-		virtual void off() = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int off() = 0;
 
 		/// @brief Make the device start sampling.
 		/// @param samples Number of samples to run before stopping.
-		virtual void run(uint64_t samples) = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int run(uint64_t samples) = 0;
 
 		/// @brief Cancel all pending libusb transactions.
-		virtual void cancel() = 0;
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		virtual int cancel() = 0;
 
 		/// @brief Session this device is associated with.
 		Session* const m_session;

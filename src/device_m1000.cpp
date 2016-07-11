@@ -61,15 +61,17 @@ int M1000_Device::get_default_rate()
 
 int M1000_Device::added()
 {
-	libusb_claim_interface(m_usb, 0);
+	int ret = 0;
+	ret = libusb_claim_interface(m_usb, 0);
 	read_calibration();
-	return 0;
+	return -libusb_to_errno(ret);
 }
 
 int M1000_Device::removed()
 {
-	libusb_release_interface(m_usb, 0);
-	return 0;
+	int ret = 0;
+	ret = libusb_release_interface(m_usb, 0);
+	return -libusb_to_errno(ret);
 }
 
 void M1000_Device::read_calibration()
@@ -78,7 +80,7 @@ void M1000_Device::read_calibration()
 
 	ret = ctrl_transfer(0xC0, 0x01, 0, 0, (unsigned char*)&m_cal, sizeof(EEPROM_cal), 100);
 	if (ret <= 0 || m_cal.eeprom_valid != EEPROM_VALID) {
-		for(int i = 0; i < 8; i++) {
+		for (int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
 			m_cal.gain_p[i] = 1.0f;
 			m_cal.gain_n[i] = 1.0f;
@@ -402,8 +404,10 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 	}
 }
 
-void M1000_Device::set_mode(unsigned chan, unsigned mode)
+int M1000_Device::set_mode(unsigned chan, unsigned mode)
 {
+	int ret = 0;
+
 	if (chan < 2) {
 		m_mode[chan] = mode;
 	}
@@ -415,31 +419,62 @@ void M1000_Device::set_mode(unsigned chan, unsigned mode)
 		case DISABLED:
 		default: pset = 0x3000;
 	};
-	ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
+
+	ret = ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
+	if (ret < 0)
+		return -libusb_to_errno(ret);
+
 	// set mode
-	ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
+	ret = ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
+	if (ret < 0) {
+		ret = -libusb_to_errno(ret);
+	} else {
+		// We don't care about the number of bytes transferred so reset to 0 if successful.
+		ret = 0;
+	}
+	return ret;
 }
 
-void M1000_Device::on()
+int M1000_Device::on()
 {
-	libusb_set_interface_alt_setting(m_usb, 0, 1);
+	int ret = 0;
+	ret = libusb_set_interface_alt_setting(m_usb, 0, 1);
+	if (ret < 0)
+		return -libusb_to_errno(ret);
 
-	ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
-	ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
+	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	if (ret < 0)
+		return -libusb_to_errno(ret);
+	ret = ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
+	if (ret < 0) {
+		ret = -libusb_to_errno(ret);
+	} else {
+		// We don't care about the number of bytes transferred so reset to 0 if successful.
+		ret = 0;
+	}
+	return ret;
 }
 
-void M1000_Device::sync()
+int M1000_Device::sync()
 {
-	ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
+	int ret = 0;
+	ret = ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start + 0xff) & 0x3c00;
+
+	if (ret < 0) {
+		ret = -libusb_to_errno(ret);
+	} else {
+		// We don't care about the number of bytes transferred so reset to 0 if successful.
+		ret = 0;
+	}
+	return ret;
 }
 
-void M1000_Device::run(uint64_t samples)
+int M1000_Device::run(uint64_t samples)
 {
 	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0) {
-		DEBUG("control transfer failed with code %i\n", ret);
-		return;
+		return -libusb_to_errno(ret);
 	}
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
@@ -452,26 +487,41 @@ void M1000_Device::run(uint64_t samples)
 	for (auto i: m_out_transfers) {
 		if (submit_out_transfer(i) != 0) break;
 	}
+	return 0;
 }
 
-void M1000_Device::cancel()
+int M1000_Device::cancel()
 {
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
 	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0))
-		DEBUG("cancel error in: %s out: %s\n", libusb_error_name(ret_in), libusb_error_name(ret_out));
+		return -1;
+	return 0;
 }
 
-void M1000_Device::off()
+int M1000_Device::off()
 {
-	set_mode(CHAN_A, DISABLED);
-	set_mode(CHAN_B, DISABLED);
-	ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	int ret = 0;
+	ret = set_mode(CHAN_A, DISABLED);
+	if (ret < 0)
+		return ret;
+	ret = set_mode(CHAN_B, DISABLED);
+	if (ret < 0)
+		return ret;
+
+	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	if (ret < 0) {
+		ret = -libusb_to_errno(ret);
+	} else {
+		// We don't care about the number of bytes transferred so reset to 0 if successful.
+		ret = 0;
+	}
+	return ret;
 }
 
-void M1000_Device::samba_mode()
+int M1000_Device::samba_mode()
 {
-	int ret;
+	int ret = 0;
 
 	ret = ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
 	// Wait for 1 second for the device to drop into SAM-BA bootloader mode.
@@ -479,8 +529,7 @@ void M1000_Device::samba_mode()
 	// matching SAM-BA mode won't find anything because the device hasn't fully
 	// switched over yet and been re-enumerated by the host system.
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
-		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
-	}
+	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE))
+		return -libusb_to_errno(ret);
+	return 0;
 }
