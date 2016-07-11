@@ -305,7 +305,7 @@ namespace smu {
 		virtual void samba_mode() = 0;
 
 		/// @brief Get the default sample rate.
-		virtual int get_default_rate() { return 10000; }
+		virtual int get_default_rate() { return 100000; }
 
 		/// @brief Prepare multi-device synchronization.
 		/// Get current microframe index, set m_sof_start to be time in the future.
