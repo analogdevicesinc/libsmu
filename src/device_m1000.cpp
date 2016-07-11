@@ -341,7 +341,7 @@ bool M1000_Device::submit_in_transfer(libusb_transfer* t)
 			return false;
 		}
 		m_in_transfers.num_active++;
-		m_requested_sampleno += m_packets_per_transfer*IN_SAMPLES_PER_PACKET;
+		m_requested_sampleno += m_packets_per_transfer * IN_SAMPLES_PER_PACKET;
 		return true;
 	}
 	return false;

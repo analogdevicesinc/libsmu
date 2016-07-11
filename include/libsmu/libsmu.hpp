@@ -10,6 +10,7 @@
 #pragma once
 
 #include <cstdint>
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <mutex>
@@ -201,16 +202,20 @@ namespace smu {
 		/// internal: Called by device detach events on the USB thread.
 		void detached(libusb_device* device);
 
-		/// @brief Block until all devices have completed.
+		/// @brief Block until all devices have are finished streaming in the session.
 		void wait_for_completion();
 
 		/// @brief Block until all devices have completed, then turn off the devices.
 		void end();
 
-		/// @brief Callback called on the USB thread with the sample number as samples are received.
+		/// @brief Callback run via the USB thread as samples are received.
+		/// Called with the current sample number as an argument.
 		std::function<void(uint64_t)> m_progress_callback;
 
-		/// @brief Callback called on the USB thread on completion.
+		/// @brief Callback run via the USB thread on session completion.
+		/// Called with the current value of m_cancellation as an argument,
+		/// i.e. if the parameter is non-zero we are waiting to complete a
+		/// cancelled session.
 		std::function<void(unsigned)> m_completion_callback;
 
 		/// @brief Callback called on the USB thread when a device is plugged into the system.
@@ -228,16 +233,18 @@ namespace smu {
 
 		/// @brief Spawn thread for USB transaction handling.
 		void start_usb_thread();
-		/// @brief Flag for TODO
+		/// @brief Flag for controlling USB event handling.
+		std::atomic<bool> m_usb_thread_loop;
+		/// @brief USB thread handling pending events in blocking mode.
 		std::thread m_usb_thread;
-		/// @brief Flag for TODO
-		bool m_usb_thread_loop;
 
-		/// @brief Flag for TODO
+		/// @brief Lock for session completion.
 		std::mutex m_lock;
-		/// @brief Flag for TODO
+		/// @brief Lock for the available device list.
+		/// All code that references m_available_devices needs to acquire this lock
+		/// before accessing it.
 		std::mutex m_lock_devlist;
-		/// @brief Flag for TODO
+		/// @brief Blocks on m_lock until session completion is finished.
 		std::condition_variable m_completion;
 
 		/// @brief libusb context related with a session.
@@ -247,8 +254,7 @@ namespace smu {
 
 		/// @brief Identify devices supported by libsmu.
 		/// @param device libusb device handle
-		/// @return If the usb device relates
-		/// to a supported device the Device is returned,
+		/// @return If the usb device relates to a supported device the Device is returned,
 		/// otherwise NULL is returned.
 		std::shared_ptr<Device> probe_device(libusb_device* device);
 
@@ -399,20 +405,56 @@ namespace smu {
 		const sl_signal_info* info() const { return m_info; }
 		const sl_signal_info* const m_info;
 
+		/// @brief Enable constant value output.
+		/// @param val The constant value to output.
 		void source_constant(float val);
 
+		/// @brief Enable square wave output.
+		/// @param midpoint Value for the wave's midpoint.
+		/// @param peak Value for the wave's peak.
+		/// @param period Value for the wave's period.
+		/// @param duty Value for the wave's duty cycle.
+		/// @param phase Value for the wave's phase.
 		void source_square(float midpoint, float peak, double period, double duty, double phase);
 
+		/// @brief Enable sawtooth wave output.
+		/// @param midpoint Value for the wave's midpoint.
+		/// @param peak Value for the wave's peak.
+		/// @param period Value for the wave's period.
+		/// @param phase Value for the wave's phase.
 		void source_sawtooth(float midpoint, float peak, double period, double phase);
 
+		/// @brief Enable stairstep wave output.
+		/// @param midpoint Value for the wave's midpoint.
+		/// @param peak Value for the wave's peak.
+		/// @param period Value for the wave's period.
+		/// @param phase Value for the wave's phase.
 		void source_stairstep(float midpoint, float peak, double period, double phase);
 
+		/// @brief Enable sine wave output.
+		/// @param midpoint Value for the wave's midpoint.
+		/// @param peak Value for the wave's peak.
+		/// @param period Value for the wave's period.
+		/// @param phase Value for the wave's phase.
 		void source_sine(float midpoint, float peak, double period, double phase);
 
+		/// @brief Enable triangle wave output.
+		/// @param midpoint Value for the wave's midpoint.
+		/// @param peak Value for the wave's peak.
+		/// @param period Value for the wave's period.
+		/// @param phase Value for the wave's phase.
 		void source_triangle(float midpoint, float peak, double period, double phase);
 
+		/// @brief Enable output using a specified value buffer.
+		/// @param buf Buffer to pull sample values from.
+		/// @param len Length of buffer.
+		/// @param repeat If true, continue sampling from the beginning of the
+		/// buffer after reaching its end. If false, the last value of the
+		/// buffer is continuously returned for any further requests.
 		void source_buffer(float* buf, size_t len, bool repeat);
 
+		/// @brief Enable output using a specified callback function.
+		/// @param callback Callback function used to generate values.
 		void source_callback(std::function<float (uint64_t index)> callback);
 
 		/// Get the last measured sample from this signal.

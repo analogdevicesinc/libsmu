@@ -50,6 +50,7 @@ Session::Session()
 	}
 	start_usb_thread();
 
+	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
 	if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_ctx, 4);
 	}
@@ -397,7 +398,6 @@ void Session::run(uint64_t samples)
 
 void Session::end()
 {
-	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
 	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
@@ -411,7 +411,6 @@ void Session::end()
 
 void Session::wait_for_completion()
 {
-	// completion lock
 	std::unique_lock<std::mutex> lk(m_lock);
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 }
@@ -457,7 +456,7 @@ void Session::completion()
 	std::lock_guard<std::mutex> lock(m_lock);
 	if (m_active_devices == 0) {
 		if (m_completion_callback) {
-			m_completion_callback(m_cancellation != 0);
+			m_completion_callback(m_cancellation);
 		}
 		m_completion.notify_all();
 	}
