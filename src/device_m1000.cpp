@@ -276,23 +276,23 @@ static float constrain(float val, float lo, float hi)
 	return val;
 }
 
-uint16_t M1000_Device::encode_out(unsigned chan)
+uint16_t M1000_Device::encode_out(unsigned channel)
 {
 	int v = 32768 * 4 / 5;
-	if (m_mode[chan] == SVMI) {
-		float val = m_signals[chan][0].get_sample();
-		val = (val - m_cal.offset[chan*4+2]) * m_cal.gain_p[chan*4+2];
-		val = constrain(val, m_signals[chan][0].info()->min, m_signals[chan][0].info()->max);
-		v = val * m_signals[chan][0].info()->resolution;
-	} else if (m_mode[chan] == SIMV) {
-		float val = m_signals[chan][1].get_sample();
+	if (m_mode[channel] == SVMI) {
+		float val = m_signals[channel][0].get_sample();
+		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
+		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
+		v = val * m_signals[channel][0].info()->resolution;
+	} else if (m_mode[channel] == SIMV) {
+		float val = m_signals[channel][1].get_sample();
 		if (val > 0) {
-			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_p[chan*4+3];
+			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
 		}
 		else {
-			val = (val - m_cal.offset[chan*4+3]) * m_cal.gain_n[chan*4+3];
+			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_n[channel*4+3];
 		}
-		val = constrain(val, m_signals[chan][1].info()->min, m_signals[chan][1].info()->max);
+		val = constrain(val, m_signals[channel][1].info()->min, m_signals[channel][1].info()->max);
 		v = 65536*(2./5. + 0.8*0.2*20.*0.5*val);
 	}
 	v = constrain(v, 0, 65535);
@@ -307,17 +307,17 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
 			for (unsigned i = 0; i < chunk_size; i++) {
 				if (strncmp(m_fw_version, "2.", 2) == 0) {
-					uint16_t a = encode_out(0);
+					uint16_t a = encode_out(CHAN_A);
 					buf[i*4+0] = a >> 8;
 					buf[i*4+1] = a & 0xff;
-					uint16_t b = encode_out(1);
+					uint16_t b = encode_out(CHAN_B);
 					buf[i*4+2] = b >> 8;
 					buf[i*4+3] = b & 0xff;
 				} else {
-					uint16_t a = encode_out(0);
+					uint16_t a = encode_out(CHAN_A);
 					buf[(i+chunk_size*0)*2]   = a >> 8;
 					buf[(i+chunk_size*0)*2+1] = a & 0xff;
-					uint16_t b = encode_out(1);
+					uint16_t b = encode_out(CHAN_B);
 					buf[(i+chunk_size*1)*2]   = b >> 8;
 					buf[(i+chunk_size*1)*2+1] = b & 0xff;
 				}
@@ -414,12 +414,12 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 	}
 }
 
-int M1000_Device::set_mode(unsigned chan, unsigned mode)
+int M1000_Device::set_mode(unsigned channel, unsigned mode)
 {
 	int ret = 0;
 
-	if (chan < 2) {
-		m_mode[chan] = mode;
+	if (channel < 2) {
+		m_mode[channel] = mode;
 	}
 	// set feedback potentiometers with mode heuristics
 	unsigned pset;
@@ -430,12 +430,12 @@ int M1000_Device::set_mode(unsigned chan, unsigned mode)
 		default: pset = 0x3000;
 	};
 
-	ret = ctrl_transfer(0x40, 0x59, chan, pset, 0, 0, 100);
+	ret = ctrl_transfer(0x40, 0x59, channel, pset, 0, 0, 100);
 	if (ret < 0)
 		return -libusb_to_errno(ret);
 
 	// set mode
-	ret = ctrl_transfer(0x40, 0x53, chan, mode, 0, 0, 100);
+	ret = ctrl_transfer(0x40, 0x53, channel, mode, 0, 0, 100);
 	if (ret < 0) {
 		ret = -libusb_to_errno(ret);
 	} else {
