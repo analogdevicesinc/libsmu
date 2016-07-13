@@ -34,6 +34,10 @@ Session::Session()
 		abort();
 	}
 
+	// Enable USB hotplugging capabilities. If the platform doesn't support
+	// this (we're currently using a custom-patched version of libusb to
+	// support hotplugging on Windows) we fallback to using all the devices
+	// currently plugged in.
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
 		DEBUG("Using libusb hotplug\n");
 		ret = libusb_hotplug_register_callback(
@@ -49,7 +53,7 @@ Session::Session()
 		if (ret != 0)
 			DEBUG("libusb hotplug callback registration failed: %s\n", libusb_error_name(ret));
 	} else {
-		DEBUG("Libusb hotplug not supported, only currently attached devices will be used.\n");
+		DEBUG("libusb hotplug not supported, only currently attached devices will be used.\n");
 	}
 	start_usb_thread();
 
