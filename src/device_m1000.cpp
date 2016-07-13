@@ -112,7 +112,7 @@ int M1000_Device::write_calibration(const char* cal_file_name)
 
 	// reset calibration to the defaults if NULL is passed
 	if (cal_file_name == NULL) {
-		for(int i = 0; i < 8; i++) {
+		for (int i = 0; i < 8; i++) {
 			m_cal.offset[i] = 0.0f;
 			m_cal.gain_p[i] = 1.0f;
 			m_cal.gain_n[i] = 1.0f;
@@ -122,22 +122,22 @@ int M1000_Device::write_calibration(const char* cal_file_name)
 	}
 
 	fp = fopen(cal_file_name, "r");
-	if(!fp) {
+	if (!fp) {
 		return -1;
 	}
 
-	while(fgets(str, 128, fp) != NULL) {
-		if(strstr(str, "</>")) {
+	while (fgets(str, 128, fp) != NULL) {
+		if (strstr(str, "</>")) {
 			rec_idx = 0;
-			while(fgets(str, 128, fp) != NULL) {
-				if(strstr(str, "<\\>") && rec_idx) {
+			while (fgets(str, 128, fp) != NULL) {
+				if (strstr(str, "<\\>") && rec_idx) {
 					gain_p = 0;
 					gain_n = 0;
 					cnt_n = 0;
 					cnt_p = 0;
 					m_cal.offset[cal_records_no] = val[0] - ref[0];
-					for(int i = 1; i < rec_idx; i++) {
-						if(ref[i] > 0) {
+					for (int i = 1; i < rec_idx; i++) {
+						if (ref[i] > 0) {
 							gain_p += ref[i] / (val[i] - m_cal.offset[cal_records_no]);
 							cnt_p++;
 						}
@@ -163,7 +163,7 @@ int M1000_Device::write_calibration(const char* cal_file_name)
 	fclose(fp);
 
 write_cal:
-	if(cal_records_no != 8) {
+	if (cal_records_no != 8) {
 		// invalid calibration file
 		ret = -EINVAL;
 	} else {
@@ -258,7 +258,7 @@ int M1000_Device::configure(uint64_t sampleRate)
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 
-	ret = m_in_transfers.alloc(transfers, m_usb, EP_IN,LIBUSB_TRANSFER_TYPE_BULK,
+	ret = m_in_transfers.alloc(transfers, m_usb, EP_IN, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer * in_packet_size, 10000, m1000_in_completion, this);
 	if (ret)
 		return ret;
