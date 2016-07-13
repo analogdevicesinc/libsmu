@@ -93,15 +93,14 @@ void Transfers::clear()
 
 int Transfers::cancel()
 {
+	int ret = 0;
 	for (auto i: m_transfers) {
 		if (num_active > 1) {
-			DEBUG("num_active before cancel: %i\n", num_active);
-			// libusb's cancel returns 0 if success, else an error code
-			int ret = libusb_cancel_transfer(i);
+			ret = libusb_cancel_transfer(i);
 			if (ret != 0) {
-				DEBUG("canceled with status: %s\n", libusb_error_name(ret));
-				// abort if a transfer is not successfully canceled
-				return ret;
+				// abort if a transfer is not successfully cancelled
+				DEBUG("usb transfer cancelled with status: %s\n", libusb_error_name(ret));
+				return -libusb_to_errno(ret);
 			}
 		}
 	}
