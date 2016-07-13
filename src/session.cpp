@@ -26,27 +26,30 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 Session::Session()
 {
 	m_active_devices = 0;
+	int ret;
 
-	if (int r = libusb_init(&m_usb_ctx) != 0) {
-		DEBUG("libusb init failed: %i\n", r);
+	ret = libusb_init(&m_usb_ctx);
+	if (ret != 0) {
+		DEBUG("libusb init failed: %s\n", libusb_error_name(ret));
 		abort();
 	}
 
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
 		DEBUG("Using libusb hotplug\n");
-		if (int r = libusb_hotplug_register_callback(NULL,
-				(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-				(libusb_hotplug_flag) 0,
-				LIBUSB_HOTPLUG_MATCH_ANY,
-				LIBUSB_HOTPLUG_MATCH_ANY,
-				LIBUSB_HOTPLUG_MATCH_ANY,
-				hotplug_callback_usbthread,
-				this,
-				NULL) != 0) {
-			DEBUG("libusb hotplug cb reg failed: %i\n", r);
-		}
+		ret = libusb_hotplug_register_callback(
+			NULL,
+			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+			(libusb_hotplug_flag) 0,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			LIBUSB_HOTPLUG_MATCH_ANY,
+			hotplug_callback_usbthread,
+			this,
+			NULL);
+		if (ret != 0)
+			DEBUG("libusb hotplug callback registration failed: %s\n", libusb_error_name(ret));
 	} else {
-		DEBUG("Libusb hotplug not supported. Only devices already attached will be used.\n");
+		DEBUG("Libusb hotplug not supported, only currently attached devices will be used.\n");
 	}
 	start_usb_thread();
 
@@ -76,7 +79,7 @@ void Session::attached(libusb_device *usb_dev)
 	if (dev) {
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
-		DEBUG("Session::attached ser: %s\n", dev->serial());
+		DEBUG("Session::attached device serial: %s\n", dev->serial());
 		if (m_hotplug_attach_callback) {
 			m_hotplug_attach_callback(&*dev);
 		}
@@ -88,7 +91,7 @@ void Session::detached(libusb_device *usb_dev)
 	if (m_hotplug_detach_callback) {
 		shared_ptr<Device> dev = find_existing_device(usb_dev);
 		if (dev) {
-			DEBUG("Session::detached ser: %s\n", dev->serial());
+			DEBUG("Session::detached device serial: %s\n", dev->serial());
 			m_hotplug_detach_callback(&*dev);
 		}
 	}
@@ -272,7 +275,9 @@ void Session::start_usb_thread()
 {
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
-		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_ctx, NULL);
+		while(m_usb_thread_loop) {
+			libusb_handle_events_completed(m_usb_ctx, NULL);
+		}
 	});
 }
 
