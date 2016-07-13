@@ -55,7 +55,14 @@ Session::Session()
 	} else {
 		DEBUG("libusb hotplug not supported, only currently attached devices will be used.\n");
 	}
-	start_usb_thread();
+
+	// Spawn a thread to handle pending USB events.
+	m_usb_thread_loop = true;
+	m_usb_thread = std::thread([=]() {
+		while (m_usb_thread_loop) {
+			libusb_handle_events_completed(m_usb_ctx, NULL);
+		}
+	});
 
 	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
 	if (getenv("LIBUSB_DEBUG")) {
@@ -273,16 +280,6 @@ extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
 		session->detached(usb_dev);
 	}
 	return 0;
-}
-
-void Session::start_usb_thread()
-{
-	m_usb_thread_loop = true;
-	m_usb_thread = std::thread([=]() {
-		while(m_usb_thread_loop) {
-			libusb_handle_events_completed(m_usb_ctx, NULL);
-		}
-	});
 }
 
 int Session::scan()

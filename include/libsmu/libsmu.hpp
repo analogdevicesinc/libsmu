@@ -230,9 +230,8 @@ namespace smu {
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
 
-		/// @brief Spawn thread for USB transaction handling.
-		void start_usb_thread();
 		/// @brief Flag for controlling USB event handling.
+		/// USB event handling loop will be run while m_usb_thread_loop is true.
 		std::atomic<bool> m_usb_thread_loop;
 		/// @brief USB thread handling pending events in blocking mode.
 		std::thread m_usb_thread;
