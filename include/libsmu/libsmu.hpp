@@ -9,9 +9,8 @@
 
 #pragma once
 
-#include "readerwriterqueue.hpp"
-
 #include <cstdint>
+#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -299,11 +298,23 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		virtual int set_mode(unsigned channel, unsigned mode) = 0;
 
-		/// @brief Get data from all channels and signals of a device.
-		/// @param samples Number of samples to return.
+		/// @brief Get all signal samples from a device.
+		/// @param buf Buffer object to store sample values into.
+		/// @param samples Number of samples to read.
 		/// @param timeout Amount of time in milliseconds to wait for samples
 		/// to be available. If 0, return immediately.
-		//virtual std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout) = 0;
+		/// @return On success, the number of samples read.
+		/// @return On error, a negative integer is returned relating to the error status.
+		virtual ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout) = 0;
+
+		/// @brief Write data to a specified channel of the device.
+		/// @param buf Buffer of samples to write to the specified channel.
+		/// @param channel Channel to write samples to.
+		/// @param timeout Amount of time in milliseconds to wait for samples
+		/// to be available. If 0, return immediately.
+		/// @return On success, the number of samples written.
+		/// @return On error, a negative integer is returned relating to the error status.
+		virtual ssize_t write(std::vector<float>& buf, unsigned channel, unsigned timeout) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
@@ -424,7 +435,6 @@ namespace smu {
 			m_src(SRC_CONSTANT),
 			m_src_v1(0),
 			m_dest(DEST_DEFAULT)
-			//m_dest_queue(10000)
 			{}
 
 		~Signal();
@@ -550,11 +560,5 @@ namespace smu {
 	protected:
 		/// The most recent measured sample value from this signal.
 		float m_latest_measurement;
-
-		/// @brief Producer/consumer queue that buffers 100ms worth of sample values at the default rate.
-		/// Sample values are pushed into this queue by default if no other
-		/// destination is selected. Note that the blocking variant provides both
-		/// blocking and nonblocking methods.
-		//moodycamel::BlockingReaderWriterQueue<float> m_dest_queue;
 	};
 }

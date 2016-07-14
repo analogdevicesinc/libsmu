@@ -7,7 +7,11 @@
 #include "device_m1000.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
+#include <array>
+#include <chrono>
+#include <thread>
 #include <vector>
 
 #include <libusb.h>
@@ -354,39 +358,55 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
-//std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout)
-//{
-// Fix to use new queue structure.
-//}
+ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout)
+{
+	std::array<float, 4> sample;
+
+	buf.clear();
+	for (unsigned i = 0; i < samples; i++) {
+		while (!m_samples_q.try_dequeue(sample))
+			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+		buf.push_back(sample);
+	}
+	return samples;
+}
+
+ssize_t M1000_Device::write(std::vector<float>& buf, unsigned channel, unsigned timeout)
+{
+	return 0;
+}
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
 {
-	float val;
+	std::array<float, 4> samples;
+
 	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p * in_packet_size);
 
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
 			if (strncmp(m_fw_version, "2.", 2) == 0) {
-				val = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
-				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
-				val = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
-				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
-				val = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution;
-				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
-				val = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
-				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
+				samples[0] = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
+				samples[0] = (samples[0] - m_cal.offset[0]) * m_cal.gain_p[0];
+				samples[1] = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+				samples[1] = (samples[1] - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+				samples[2] = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution;
+				samples[2] = (samples[2] - m_cal.offset[4]) * m_cal.gain_p[4];
+				samples[3] = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+				samples[3] = (samples[3] - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
 			} else {
-				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) * m_signals[0][0].info()->resolution;
-				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
-				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
-				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
-				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) * m_signals[1][0].info()->resolution;
-				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
-				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
-				m_signals[1][1].put_sample((val - m_cal.offset[5]) * (val > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]));
+				samples[0] = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) * m_signals[0][0].info()->resolution;
+				samples[0] = (samples[0] - m_cal.offset[0]) * m_cal.gain_p[0];
+				samples[1] = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+				samples[1] = (samples[1] - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+				samples[2] = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) * m_signals[1][0].info()->resolution;
+				samples[2] = (samples[2] - m_cal.offset[4]) * m_cal.gain_p[4];
+				samples[3] = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+				samples[3] = (samples[3] - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
 			}
 			m_in_sampleno++;
+			// samples are dropped if the output isn't keeping up
+			m_samples_q.try_enqueue(samples);
 		}
 	}
 }

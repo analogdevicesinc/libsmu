@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <cstdint>
+#include <array>
 #include <mutex>
 #include <vector>
 
@@ -13,6 +15,7 @@
 
 #include "debug.hpp"
 #include "usb.hpp"
+#include "readerwriterqueue.hpp"
 #include <libsmu/libsmu.hpp>
 
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
@@ -46,7 +49,8 @@ namespace smu {
 		const sl_channel_info* channel_info(unsigned channel) const override;
 		Signal* signal(unsigned channel, unsigned signal) override;
 		int set_mode(unsigned channel, unsigned mode) override;
-		//std::vector< std::vector<float> > get_data(unsigned samples, unsigned timeout) override;
+		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout) override;
+		ssize_t write(std::vector<float>& buf, unsigned channel, unsigned timeout) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
@@ -60,13 +64,18 @@ namespace smu {
 		Signal m_signals[2][2];
 		unsigned m_mode[2];
 
+		// Ringbuffer with 100ms worth of sample values at the default rate.
+		//boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_samples_q;
+		moodycamel::BlockingReaderWriterQueue<std::array<float, 4>> m_samples_q;
+
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
 			m_signals {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 			},
-			m_mode{0,0}
+			m_mode{0,0},
+			m_samples_q(10000)
 			{}
 
 		// Submit data transfers to usb thread, from host to device.
