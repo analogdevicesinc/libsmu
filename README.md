@@ -38,8 +38,11 @@ $ sudo make install
 
 ##### Docs
 
-Doxygen-based documentation can be built if enabled via the
-following cmake command before running make:
+Doxygen-based documentation is available at
+https://analogdevicesinc.github.io/libsmu/.
+
+This can also be built locally if enabled using the following cmake option
+before running make:
 
 ```
 cmake -DWITH_DOC=ON ..
