@@ -35,11 +35,16 @@ The session object allows for controlling groups of devices in a near synchronou
 	std::vector<std::array<float, 4>> buf;
 
 	while (true) {
-		// Read 1024 samples at a time from the device.
-		// Note that the timeout (3rd parameter to read() defaults to 0
-		// (nonblocking mode) so the number of samples returned won't
-		// necessarily be 1024.
-		dev->read(buf, 1024);
+		try {
+			// Read 1024 samples at a time from the device.
+			// Note that the timeout (3rd parameter to read() defaults to 0
+			// (nonblocking mode) so the number of samples returned won't
+			// necessarily be 1024.
+			dev->read(buf, 1024);
+		} catch (const std::system_error& e) {
+			// Ignore sample drops which will occur due to the use of printf()
+			// which is slow when attached to a terminal.
+		}
 
 		// Iterate over all returned samples, doesn't have to be 1024).
 		for (auto i: buf) {
@@ -85,8 +90,16 @@ The session object allows for controlling groups of devices in a near synchronou
 		// Write data to channel B of the device.
 		dev->write(buf2, 1);
 
-		// Read 1024 samples at a time from the device.
-		dev->read(buf, 1024);
+		try {
+			// Read 1024 samples at a time from the device.
+			// Note that the timeout (3rd parameter to read() defaults to 0
+			// (nonblocking mode) so the number of samples returned won't
+			// necessarily be 1024.
+			dev->read(buf, 1024);
+		} catch (const std::system_error& e) {
+			// Ignore sample drops which will occur due to the use of printf()
+			// which is slow when attached to a terminal.
+		}
 
 		// Iterate over all returned samples, doesn't have to be 1024).
 		for (auto i: buf) {
