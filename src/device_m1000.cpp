@@ -282,14 +282,16 @@ static float constrain(float val, float lo, float hi)
 
 uint16_t M1000_Device::encode_out(unsigned channel)
 {
+	float val;
 	int v = 32768 * 4 / 5;
+
 	if (m_mode[channel] == SVMI) {
-		float val = m_signals[channel][0].get_sample();
+		val = m_signals[channel][0].get_sample();
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
 		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
 		v = val * m_signals[channel][0].info()->resolution;
 	} else if (m_mode[channel] == SIMV) {
-		float val = m_signals[channel][1].get_sample();
+		val = m_signals[channel][1].get_sample();
 		if (val > 0) {
 			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
 		}
