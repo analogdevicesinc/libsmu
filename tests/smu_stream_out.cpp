@@ -1,8 +1,14 @@
-// Simple test for reading data without dropping samples.
+// Simple test for reading data.
 //
 // When run the test should output summed sample values from all channels to
 // stdout in a continuous fashion. If any sample is dropped the program exits
 // with an error code of 1.
+//
+// Note that slower/older setups and/or slower older terminals can cause sample
+// drops, redirecting stdout should eliminate this for most cases.
+//
+// Sample dropping can be forced by sending the running program SIGQUIT
+// (via Ctrl-\), to quit use SIGINT (Ctrl-C).
 
 #include <csignal>
 #include <array>
@@ -65,12 +71,11 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 
-		// Iterate over all returned samples, doesn't have to be 1024).
+		// Iterate over all returned samples, doesn't have to be 1024.
 		for (auto i: buf) {
-			// Do something random but (probably) fast enough so samples aren't
-			// dropped. This could depend on the terminal it gets run on due to
-			// the printf() if stdout isn't redirected.
 			v = i[0] + i[1] + i[2] + i[3];
+			// Can force samples to drop on slower setups and/or slower
+			// terminals, redirect stdout to alleviate this.
 			printf("%f\n", v);
 		}
 	};
