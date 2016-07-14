@@ -287,12 +287,18 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	int v = 32768 * 4 / 5;
 
 	if (m_mode[channel] == SVMI) {
-		val = m_signals[channel][0].get_sample();
+		if (channel == 0)
+			m_out_samples_a_q.pop(val);
+		else
+			m_out_samples_b_q.pop(val);
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
 		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
 		v = val * m_signals[channel][0].info()->resolution;
 	} else if (m_mode[channel] == SIMV) {
-		val = m_signals[channel][1].get_sample();
+		if (channel == 0)
+			m_out_samples_a_q.pop(val);
+		else
+			m_out_samples_b_q.pop(val);
 		if (val > 0) {
 			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
 		}
@@ -395,6 +401,13 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 
 ssize_t M1000_Device::write(std::vector<float>& buf, unsigned channel, unsigned timeout)
 {
+	for (auto i: buf) {
+		if (channel == 0)
+			m_out_samples_a_q.push(i);
+		else
+			m_out_samples_b_q.push(i);
+	}
+
 	return 0;
 }
 

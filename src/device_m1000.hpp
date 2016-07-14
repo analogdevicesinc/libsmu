@@ -76,6 +76,10 @@ namespace smu {
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
 		boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_in_samples_q;
 
+		// Ringbuffers with ~100ms worth of outgoing sample values for both channels at the default rate.
+		boost::lockfree::spsc_queue<float, boost::lockfree::capacity<10000>> m_out_samples_a_q;
+		boost::lockfree::spsc_queue<float, boost::lockfree::capacity<10000>> m_out_samples_b_q;
+
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
 			m_signals {
