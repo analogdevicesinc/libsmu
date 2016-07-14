@@ -302,10 +302,10 @@ namespace smu {
 		/// @param buf Buffer object to store sample values into.
 		/// @param samples Number of samples to read.
 		/// @param timeout Amount of time in milliseconds to wait for samples
-		/// to be available. If 0, return immediately.
+		/// to be available. If 0 (the default), return immediately.
 		/// @return On success, the number of samples read.
 		/// @return On error, a negative integer is returned relating to the error status.
-		virtual ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout) = 0;
+		virtual ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout = 0) = 0;
 
 		/// @brief Write data to a specified channel of the device.
 		/// @param buf Buffer of samples to write to the specified channel.
