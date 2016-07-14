@@ -14,6 +14,7 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <system_error>
 #include <thread>
 
 #include <libsmu/libsmu.hpp>
@@ -66,7 +67,13 @@ static void stream_samples(Session* session)
 	std::vector<std::array<float, 4>> buf;
 
 	while (true) {
-		dev->read(buf, 1024);
+		try {
+			dev->read(buf, 1024);
+		} catch (const std::system_error& e) {
+			// Ignore sample drops which will occur due to the use of printf()
+			// which is slow when attached to a terminal.
+		}
+
 		for (auto i: buf) {
 			printf("%f %f %f %f\n", i[0], i[1], i[2], i[3]);
 		}

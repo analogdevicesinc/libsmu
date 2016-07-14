@@ -305,6 +305,7 @@ namespace smu {
 		/// to be available. If 0 (the default), return immediately.
 		/// @return On success, the number of samples read.
 		/// @return On error, a negative integer is returned relating to the error status.
+		/// @throws std::system_error of EBUSY if sample overflows have occurred.
 		virtual ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout = 0) = 0;
 
 		/// @brief Write data to a specified channel of the device.
