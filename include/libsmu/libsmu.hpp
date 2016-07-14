@@ -123,6 +123,11 @@ namespace smu {
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
 
+		/// @brief Size of input/output sample queues for every device.
+		/// Alter this if necessary to make continuous data flow work for the
+		/// target usage. The default is approximately 100ms worth of samples.
+		unsigned m_queue_size = 10000;
+
 		/// @brief Scan system for all supported devices.
 		/// Updates the list of available, supported devices for the session
 		/// (m_available_devices).

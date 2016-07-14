@@ -74,11 +74,11 @@ namespace smu {
 		// Ringbuffer with ~100ms worth of incoming sample values at the default rate.
 		// The sample values are formatted in arrays of four values,
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
-		boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_in_samples_q;
+		boost::lockfree::spsc_queue<std::array<float, 4>> m_in_samples_q;
 
 		// Ringbuffers with ~100ms worth of outgoing sample values for both channels at the default rate.
-		boost::lockfree::spsc_queue<float, boost::lockfree::capacity<10000>> m_out_samples_a_q;
-		boost::lockfree::spsc_queue<float, boost::lockfree::capacity<10000>> m_out_samples_b_q;
+		boost::lockfree::spsc_queue<float> m_out_samples_a_q;
+		boost::lockfree::spsc_queue<float> m_out_samples_b_q;
 
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
@@ -86,7 +86,10 @@ namespace smu {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 			},
-			m_mode{0,0}
+			m_mode{0,0},
+			m_in_samples_q{s->m_queue_size},
+			m_out_samples_a_q{s->m_queue_size},
+			m_out_samples_b_q{s->m_queue_size}
 			{}
 
 		// Submit data transfers to usb thread, from host to device.
