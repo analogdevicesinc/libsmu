@@ -368,6 +368,9 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	bool succeeded;
 	buf.clear();
 
+	// Initialize sample acquiring duration check for timeout support.
+	// TODO: At some point this could probably use std::chrono and similar for
+	// C++11 and on.
 	struct timespec ts_current, ts_end;
 	unsigned long long nsecs;
 	clock_gettime(CLOCK_MONOTONIC, &ts_current);
