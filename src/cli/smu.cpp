@@ -60,14 +60,18 @@ static void stream_samples(Session* session)
 	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
 		dev->set_mode(ch_i, DISABLED);
 	}
+
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
 	size_t samples;
+
 	while (true) {
 		samples = dev->read(buf, 1024, 0);
-		for (unsigned i = 0; i < samples; i++)
-			printf("%f %f %f %f\n", buf[i][0], buf[i][1], buf[i][2], buf[i][3]);
+		for (unsigned i = 0; i < samples; i++) {
+			printf("Channel A: Voltage %f Current %f\n", buf[i][0], buf[i][1]);
+			printf("Channel B: Voltage %f Current %f\n", buf[i][2], buf[i][3]);
+		}
 	};
 }
 
