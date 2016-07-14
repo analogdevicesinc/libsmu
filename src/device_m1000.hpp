@@ -11,11 +11,11 @@
 #include <mutex>
 #include <vector>
 
+#include <boost/lockfree/spsc_queue.hpp>
 #include <libusb.h>
 
 #include "debug.hpp"
 #include "usb.hpp"
-#include "readerwriterqueue.hpp"
 #include <libsmu/libsmu.hpp>
 
 #ifndef timespeccmp
@@ -71,9 +71,8 @@ namespace smu {
 		Signal m_signals[2][2];
 		unsigned m_mode[2];
 
-		// Ringbuffer with 100ms worth of sample values at the default rate.
-		//boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_samples_q;
-		moodycamel::BlockingReaderWriterQueue<std::array<float, 4>> m_samples_q;
+		// Ringbuffer with ~100ms worth of sample values at the default rate.
+		boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_samples_q;
 
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
@@ -81,8 +80,7 @@ namespace smu {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 			},
-			m_mode{0,0},
-			m_samples_q(10000)
+			m_mode{0,0}
 			{}
 
 		// Submit data transfers to usb thread, from host to device.

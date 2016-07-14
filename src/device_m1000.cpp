@@ -377,7 +377,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 
 	for (unsigned i = 0; i < samples; i++) {
 		do {
-			succeeded = m_samples_q.try_dequeue(sample);
+			succeeded = m_samples_q.pop(sample);
 			// stop waiting for samples if we've run out of time
 			if (timespeccmp(&ts_current, &ts_end, <) == 0)
 				break;
@@ -428,7 +428,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 			}
 			m_in_sampleno++;
 			// samples are dropped if the output isn't keeping up
-			m_samples_q.try_enqueue(samples);
+			m_samples_q.push(samples);
 		}
 	}
 }
