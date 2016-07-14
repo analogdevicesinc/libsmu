@@ -341,9 +341,9 @@ shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
 shared_ptr<Device> Session::find_existing_device(libusb_device* usb_dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	for (auto d: m_available_devices) {
-		if (d->m_device == usb_dev) {
-			return d;
+	for (auto dev: m_available_devices) {
+		if (dev->m_device == usb_dev) {
+			return dev;
 		}
 	}
 	return NULL;
@@ -351,9 +351,9 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* usb_dev)
 
 Device* Session::get_device(const char* serial)
 {
-	for (auto d: m_devices) {
-		if (strncmp(d->serial(), serial, 31) == 0) {
-			return d;
+	for (auto dev: m_devices) {
+		if (strncmp(dev->serial(), serial, 31) == 0) {
+			return dev;
 		}
 	}
 	return NULL;
