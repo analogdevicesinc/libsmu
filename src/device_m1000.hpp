@@ -71,8 +71,10 @@ namespace smu {
 		Signal m_signals[2][2];
 		unsigned m_mode[2];
 
-		// Ringbuffer with ~100ms worth of sample values at the default rate.
-		boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_samples_q;
+		// Ringbuffer with ~100ms worth of incoming sample values at the default rate.
+		// The sample values are formatted in arrays of four values,
+		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
+		boost::lockfree::spsc_queue<std::array<float, 4>, boost::lockfree::capacity<10000>> m_in_samples_q;
 
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
