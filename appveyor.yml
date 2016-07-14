@@ -13,6 +13,11 @@ branches:
 matrix:
   fast_finish: true
 
+branches:
+  only:
+    - master
+    - appveyor
+
 install:
   - ps: >-
       If ($env:Configuration -Match "Debug") {
