@@ -433,8 +433,7 @@ namespace smu {
 		Signal(const sl_signal_info* info):
 			m_info(info),
 			m_src(SRC_CONSTANT),
-			m_src_v1(0),
-			m_dest(DEST_DEFAULT)
+			m_src_v1(0)
 			{}
 
 		~Signal();
@@ -511,10 +510,6 @@ namespace smu {
 		/// @param callback Callback method to operate on sample stream float values.
 		void measure_callback(std::function<void(float value)> callback);
 
-		/// @brief Handle incoming sample values from device to host.
-		/// Note that this function is for internal use only and is called by Device.
-		void put_sample(float val);
-
 		/// @brief Handle acquiring output sample values from host to device.
 		/// Note that this function is for internal use only and is called by Device.
 		float get_sample();
@@ -544,18 +539,6 @@ namespace smu {
 		/// @brief Callback function to execute to acquire new sample values.
 		/// Note that this is only valid after calling source_callback().
 		std::function<float (uint64_t index)> m_src_callback;
-
-		/// Selected sample destination.
-		Dest m_dest;
-
-		/// Destination buffer to store incoming sample values in (valid when measure_buffer() is called).
-		float* m_dest_buf;
-		/// Length of destination buffer.
-		size_t m_dest_buf_len;
-
-		/// @brief Callback function to execute for each acquired sample value.
-		/// Note that this is only valid after calling measure_callback().
-		std::function<void(float val)> m_dest_callback;
 
 	protected:
 		/// The most recent measured sample value from this signal.

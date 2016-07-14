@@ -91,39 +91,6 @@ void Signal::source_callback(std::function<float (uint64_t index)> callback)
 	m_src_i = 0;
 }
 
-void Signal::measure_buffer(float* buf, size_t len)
-{
-	m_dest = DEST_BUFFER;
-	m_dest_buf = buf;
-	m_dest_buf_len = len;
-}
-
-void Signal::measure_callback(std::function<void(float value)> callback)
-{
-	m_dest = DEST_CALLBACK;
-	m_dest_callback = callback;
-}
-
-void Signal::put_sample(float val)
-{
-	m_latest_measurement = val;
-	if (m_dest == DEST_BUFFER) {
-		if (m_dest_buf_len) {
-			*m_dest_buf++ = val;
-			m_dest_buf_len -= 1;
-		}
-	} else if (m_dest == DEST_CALLBACK) {
-		m_dest_callback(val);
-	} else {
-		// Push samples into FIFO queue by default. Note that this only
-		// succeeds if the queue has an empty slot (i.e. data overflows are
-		// thrown away.)
-		//bool queued = m_dest_queue.try_enqueue(val);
-		// DEBUG
-		//assert(queued);
-	}
-}
-
 float Signal::get_sample()
 {
 	switch (m_src) {
