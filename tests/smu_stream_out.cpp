@@ -43,7 +43,12 @@ int main(int argc, char **argv)
 	session->scan();
 	session->add_all();
 
-	// Grab the first device from the session (we're assuming one exists).
+	if (session->m_devices.size() == 0) {
+		cout << "Plug in a device." << endl;
+		exit(1);
+	}
+
+	// Grab the first device from the session.
 	auto dev = *(session->m_devices.begin());
 
 	// Run session at the default device rate.
