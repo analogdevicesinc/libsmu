@@ -12,6 +12,9 @@
 #include <ctime>
 #include <array>
 #include <chrono>
+#include <exception>
+#include <system_error>
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -42,6 +45,9 @@ const double BUFFER_TIME = 0.050;
 #else
 const double BUFFER_TIME = 0.020;
 #endif
+
+// Exception pointer to help move exceptions between USB and main threads.
+static std::exception_ptr e_ptr = nullptr;
 
 using namespace smu;
 
@@ -200,7 +206,13 @@ void M1000_Device::in_completion(libusb_transfer *t)
 	m_in_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
-		handle_in_transfer(t);
+		// Store exceptions to rethrow them in the main thread in read().
+		try {
+			handle_in_transfer(t);
+		} catch (...) {
+			e_ptr = std::current_exception();
+		}
+
 		if (!m_session->cancelled()) {
 			submit_in_transfer(t);
 		}
@@ -396,6 +408,14 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		if (succeeded)
 			buf.push_back(sample);
 	}
+
+	// If a data overflow occurred in the USB thread, rethrow the exception
+	// here in the main thread. This allows users to just wrap read() in order
+	// to catch and/or act on overflows.
+	if (e_ptr) {
+		std::rethrow_exception(e_ptr);
+	}
+
 	return buf.size();
 }
 
@@ -441,8 +461,9 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 				samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
 			}
 			m_in_sampleno++;
-			// samples are dropped if the output isn't keeping up
-			m_in_samples_q.push(samples);
+			if (!m_in_samples_q.push(samples)) {
+				throw std::system_error(EBUSY, std::system_category(), "dropped input sample");
+			}
 		}
 	}
 }
