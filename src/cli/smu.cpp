@@ -63,10 +63,11 @@ static void stream_samples(Session* session)
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
+	size_t samples;
 	while (true) {
-		dev->read(buf, 1024, 0);
-		for (auto i: buf)
-			printf("%f %f %f %f\n", i[0], i[1], i[2], i[3]);
+		samples = dev->read(buf, 1024, 0);
+		for (unsigned i = 0; i < samples; i++)
+			printf("%f %f %f %f\n", buf[i][0], buf[i][1], buf[i][2], buf[i][3]);
 	};
 }
 

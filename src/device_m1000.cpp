@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <ctime>
 #include <array>
 #include <chrono>
 #include <thread>
@@ -363,14 +364,33 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout)
 {
 	std::array<float, 4> sample;
-
+	ssize_t num_samples = 0;
+	bool succeeded;
 	buf.clear();
+
+	struct timespec ts_current, ts_end;
+	unsigned long long nsecs;
+	clock_gettime(CLOCK_MONOTONIC, &ts_current);
+	nsecs = ts_current.tv_nsec + (timeout * pow(10.0, 6));
+	ts_end.tv_sec = ts_current.tv_sec + (nsecs / pow(10.0, 9));
+	ts_end.tv_nsec = nsecs % (unsigned long long) pow(10.0, 9);
+
 	for (unsigned i = 0; i < samples; i++) {
-		while (!m_samples_q.try_dequeue(sample))
-			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		buf.push_back(sample);
+		do {
+			succeeded = m_samples_q.try_dequeue(sample);
+			// stop waiting for samples if we've run out of time
+			if (timespeccmp(&ts_current, &ts_end, <) == 0)
+				break;
+			std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+			clock_gettime(CLOCK_MONOTONIC, &ts_current);
+		} while (!succeeded);
+
+		if (succeeded) {
+			buf.push_back(sample);
+			num_samples++;
+		}
 	}
-	return samples;
+	return num_samples;
 }
 
 ssize_t M1000_Device::write(std::vector<float>& buf, unsigned channel, unsigned timeout)
