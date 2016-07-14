@@ -21,13 +21,14 @@
 #include <libsmu/libsmu.hpp>
 
 using std::cout;
+using std::cerr;
 using std::endl;
 
 using namespace smu;
 
 void signalHandler(int signum)
 {
-	cout << endl << "sleeping for a bit to cause an overflow exception" << endl;
+	cerr << endl << "sleeping for a bit to cause an overflow exception" << endl;
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
 	session->add_all();
 
 	if (session->m_devices.size() == 0) {
-		cout << "Plug in a device." << endl;
+		cerr << "Plug in a device." << endl;
 		exit(1);
 	}
 
@@ -72,7 +73,7 @@ int main(int argc, char **argv)
 			dev->read(buf, 1024);
 		} catch (const std::system_error& e) {
 			// Exit on dropped samples.
-			fprintf(stderr, "sample(s) dropped!\n");
+			cerr << "sample(s) dropped!" << endl;
 			exit(1);
 		}
 
