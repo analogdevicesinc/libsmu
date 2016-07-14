@@ -402,6 +402,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 
 	for (unsigned i = 0; i < samples; i++) {
 		do {
+			// TODO: move to multi-element pop (assuming this will speed things up a bit).
 			succeeded = m_in_samples_q.pop(sample);
 			// stop waiting for samples if we've run out of time
 			if (timespeccmp(&ts_current, &ts_end, <) == 0)
