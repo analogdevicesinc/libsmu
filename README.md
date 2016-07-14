@@ -12,8 +12,9 @@ This project also includes 'pysmu,' an initial binding of libsmu for Python2.7.
 
 #### Building libsmu
 
-Build dependencies are cmake, pkgconfig, and libusb-1.0. To build and install
-the library and command line application use the following steps:
+Build dependencies are cmake, pkgconfig, boost (headers only), and libusb-1.0.
+To build and install the library and command line application use the following
+steps:
 
 Clone the repo:
 ```
