@@ -100,10 +100,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND INSTALL_UDEV_RULES)
 	install(FILES ${LIBSMU_UDEV_RULES} DESTINATION ${UDEV_RULES_PATH})
 endif()
 
-# only boost headers are needed, no runtime libraries
-find_package(Boost "1.53" REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-
 # generate API docs with doxygen
 if(WITH_DOC)
 	find_package(Doxygen REQUIRED)

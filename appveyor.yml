@@ -39,6 +39,8 @@ build_script:
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DBOOST_ROOT="C:\\Libraries\\boost_1_59_0" \
+    -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_59_0\\lib32-msvc-14.0" \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -50,6 +52,8 @@ build_script:
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DBOOST_ROOT="C:\\Libraries\\boost_1_59_0" \
+    -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_59_0\\lib64-msvc-14.0" \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%

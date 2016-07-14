@@ -27,6 +27,10 @@ endif()
 # e.g. http://www.libusb.org/ticket/2.
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
+# only boost headers are needed, no runtime libraries
+find_package(Boost "1.53" REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
 set(LIBS_TO_LINK ${LIBUSB_LIBRARIES})
 if(CMAKE_COMPILER_IS_GNUCXX)
 	SET(LIBS_TO_LINK ${LIBS_TO_LINK} m)
