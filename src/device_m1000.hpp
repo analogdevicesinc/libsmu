@@ -18,6 +18,13 @@
 #include "readerwriterqueue.hpp"
 #include <libsmu/libsmu.hpp>
 
+#ifndef timespeccmp
+#define timespeccmp(tsp, usp, cmp) \
+	(((tsp)->tv_sec == (usp)->tv_sec) ? \
+		((tsp)->tv_nsec cmp (usp)->tv_nsec) : \
+		((tsp)->tv_sec cmp (usp)->tv_sec))
+#endif
+
 extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
 extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
 
