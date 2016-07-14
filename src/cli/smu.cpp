@@ -58,19 +58,16 @@ static void stream_samples(Session* session)
 	auto dev = *(session->m_devices.begin());
 	auto dev_info = dev->info();
 	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
-		auto ch_info = dev->channel_info(ch_i);
 		dev->set_mode(ch_i, DISABLED);
-		for (unsigned sig_i = 0; sig_i < ch_info->signal_count; sig_i++) {
-			auto sig = dev->signal(ch_i, sig_i);
-			auto sig_info = sig->info();
-			sig->measure_callback([=](float d){
-				printf("Channel %s, %s: %f\n", ch_info->label, sig_info->label, d);
-			});
-		}
 	}
 	session->configure(dev->get_default_rate());
 	session->start(0);
-	while (true) {session->wait_for_completion();};
+	std::vector<std::array<float, 4>> buf;
+	while (true) {
+		dev->read(buf, 1024, 0);
+		for (auto i: buf)
+			printf("%f %f %f %f\n", i[0], i[1], i[2], i[3]);
+	};
 }
 
 int write_calibration(Session* session, const char *file)
