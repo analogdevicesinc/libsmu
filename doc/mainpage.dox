@@ -7,30 +7,94 @@
 
 @section session Using sessions
 
-TODO
-
-@subsection session_creation Session creation
-
-TODO
-
-@subsection session_devices Interacting with devices in a session
-
-TODO
+The session object allows for controlling groups of devices in a near synchronous format.
 
 @section devices Device usage
 
-TODO
-
 @subsection reading_data Reading data from a device
 
-TODO
+~~~{.cpp}
+	// Create session object and scan system for compatible devices then add
+	// them to the session. Note that this currently doesn't handle returned
+	// errors.
+	Session* session = new Session();
+	session->scan();
+	session->add_all();
+
+	// Grab the first device from the session (we're assuming one exists).
+	auto dev = *(session->m_devices.begin());
+
+	// Run session at the default device rate.
+	session->configure(dev->get_default_rate());
+	// Run session in continuous mode.
+	session->start(0);
+
+	// Data to be read from the device is formatted into a vector of four
+	// floats in an array, specifically in the format
+	// <Chan A voltage, Chan A current, Chan B coltage, Chan B current>.
+	std::vector<std::array<float, 4>> buf;
+
+	while (true) {
+		// Read 1024 samples at a time from the device.
+		// Note that the timeout (3rd parameter to read() defaults to 0
+		// (nonblocking mode) so the number of samples returned won't
+		// necessarily be 1024.
+		dev->read(buf, 1024);
+
+		// Iterate over all returned samples, doesn't have to be 1024).
+		for (auto i: buf) {
+			printf("Channel A: Voltage %f Current %f\n", i[0], i[1]);
+			printf("Channel B: Voltage %f Current %f\n", i[2], i[3]);
+		}
+	};
+}
+~~~
 
 @subsection writing_data Writing data to a device
 
-TODO
+~~~{.cpp}
+	// Create session object and scan system for compatible devices then add
+	// them to the session. Note that this currently doesn't handle returned
+	// errors.
+	Session* session = new Session();
+	session->scan();
+	session->add_all();
 
-@section signals Signals
+	// Grab the first device from the session (we're assuming one exists).
+	auto dev = *(session->m_devices.begin());
 
-TODO
+	// Run session at the default device rate.
+	session->configure(dev->get_default_rate());
+	// Run session in continuous mode.
+	session->start(0);
+
+	// Data to be written to the device is formatted into a vector of floats.
+	// Both channels can be written to simultaneously depending on what mode
+	// they're currently in.
+	std::vector<float> buf1;
+	std::vector<float> buf2;
+
+	while (true) {
+		// Generic function to grab new data to write to the device.
+		refill_data(buf1);
+		refill_data(buf2);
+
+		// Write data channel A of the device.
+		// Note that the timeout (3rd parameter to write() defaults to 0 (nonblocking mode).
+		dev->write(buf1, 0);
+		// Write data to channel B of the device.
+		dev->write(buf2, 1);
+
+		// Read 1024 samples at a time from the device.
+		dev->read(buf, 1024);
+
+		// Iterate over all returned samples, doesn't have to be 1024).
+		for (auto i: buf) {
+			printf("Channel A: Voltage %f Current %f\n", i[0], i[1]);
+			printf("Channel B: Voltage %f Current %f\n", i[2], i[3]);
+		}
+	};
+}
+~~~
 
 */
