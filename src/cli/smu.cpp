@@ -67,7 +67,7 @@ static void stream_samples(Session* session)
 	size_t samples;
 
 	while (true) {
-		samples = dev->read(buf, 1024, 0);
+		samples = dev->read(buf, 1024);
 		for (unsigned i = 0; i < samples; i++) {
 			printf("Channel A: Voltage %f Current %f\n", buf[i][0], buf[i][1]);
 			printf("Channel B: Voltage %f Current %f\n", buf[i][2], buf[i][3]);
