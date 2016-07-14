@@ -13,4 +13,6 @@ endif()
 
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 add_executable(smu_stream_out smu_stream_out.cpp ${GETOPT_C_FILE})
+add_executable(smu_stream_multi_out smu_stream_multi_out.cpp ${GETOPT_C_FILE})
 target_link_libraries(smu_stream_out smu)
+target_link_libraries(smu_stream_multi_out smu)
