@@ -64,13 +64,12 @@ static void stream_samples(Session* session)
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
-	size_t samples;
 
 	while (true) {
-		samples = dev->read(buf, 1024);
-		for (unsigned i = 0; i < samples; i++) {
-			printf("Channel A: Voltage %f Current %f\n", buf[i][0], buf[i][1]);
-			printf("Channel B: Voltage %f Current %f\n", buf[i][2], buf[i][3]);
+		dev->read(buf, 1024);
+		for (auto i: buf) {
+			printf("Channel A: Voltage %f Current %f\n", i[0], i[1]);
+			printf("Channel B: Voltage %f Current %f\n", i[2], i[3]);
 		}
 	};
 }

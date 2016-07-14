@@ -364,7 +364,6 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout)
 {
 	std::array<float, 4> sample;
-	ssize_t num_samples = 0;
 	bool succeeded;
 	buf.clear();
 
@@ -388,12 +387,10 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 			clock_gettime(CLOCK_MONOTONIC, &ts_current);
 		} while (!succeeded);
 
-		if (succeeded) {
+		if (succeeded)
 			buf.push_back(sample);
-			num_samples++;
-		}
 	}
-	return num_samples;
+	return buf.size();
 }
 
 ssize_t M1000_Device::write(std::vector<float>& buf, unsigned channel, unsigned timeout)
