@@ -4,17 +4,32 @@
 // stdout in a continuous fashion. If any sample is dropped the program exits
 // with an error code of 1.
 
+#include <csignal>
 #include <array>
+#include <chrono>
 #include <iostream>
 #include <vector>
 #include <system_error>
+#include <thread>
 
 #include <libsmu/libsmu.hpp>
 
+using std::cout;
+using std::endl;
+
 using namespace smu;
+
+void signalHandler(int signum)
+{
+	cout << endl << "sleeping for a bit to cause an overflow exception" << endl;
+	std::this_thread::sleep_for(std::chrono::milliseconds(250));
+}
 
 int main(int argc, char **argv)
 {
+	// Make SIGQUIT force sample drops.
+	signal(SIGQUIT, signalHandler);
+
 	// Create session object and scan system for compatible devices then add
 	// them to the session. Note that this currently doesn't handle returned
 	// errors.
