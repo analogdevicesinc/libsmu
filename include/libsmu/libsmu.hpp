@@ -431,117 +431,13 @@ namespace smu {
 	public:
 		/// internal: Do not call the constructor directly; obtain a Signal from a Device.
 		Signal(const sl_signal_info* info):
-			m_info(info),
-			m_src(SRC_CONSTANT),
-			m_src_v1(0)
+			m_info(info)
 			{}
-
-		~Signal();
 
 		/// @brief Get the descriptor struct of the Signal.
 		/// Pointed-to memory is valid for the lifetime of the Device.
 		const sl_signal_info* info() const { return m_info; }
 		/// Signal information.
 		const sl_signal_info* const m_info;
-
-		/// @brief Enable constant value output.
-		/// @param val The constant value to output.
-		void source_constant(float val);
-
-		/// @brief Enable square wave output.
-		/// @param midpoint Value for the wave's midpoint.
-		/// @param peak Value for the wave's peak.
-		/// @param period Value for the wave's period.
-		/// @param duty Value for the wave's duty cycle.
-		/// @param phase Value for the wave's phase.
-		void source_square(float midpoint, float peak, double period, double duty, double phase);
-
-		/// @brief Enable sawtooth wave output.
-		/// @param midpoint Value for the wave's midpoint.
-		/// @param peak Value for the wave's peak.
-		/// @param period Value for the wave's period.
-		/// @param phase Value for the wave's phase.
-		void source_sawtooth(float midpoint, float peak, double period, double phase);
-
-		/// @brief Enable stairstep wave output.
-		/// @param midpoint Value for the wave's midpoint.
-		/// @param peak Value for the wave's peak.
-		/// @param period Value for the wave's period.
-		/// @param phase Value for the wave's phase.
-		void source_stairstep(float midpoint, float peak, double period, double phase);
-
-		/// @brief Enable sine wave output.
-		/// @param midpoint Value for the wave's midpoint.
-		/// @param peak Value for the wave's peak.
-		/// @param period Value for the wave's period.
-		/// @param phase Value for the wave's phase.
-		void source_sine(float midpoint, float peak, double period, double phase);
-
-		/// @brief Enable triangle wave output.
-		/// @param midpoint Value for the wave's midpoint.
-		/// @param peak Value for the wave's peak.
-		/// @param period Value for the wave's period.
-		/// @param phase Value for the wave's phase.
-		void source_triangle(float midpoint, float peak, double period, double phase);
-
-		/// @brief Enable output using a specified value buffer.
-		/// @param buf Buffer to pull sample values from.
-		/// @param len Length of buffer.
-		/// @param repeat If true, continue sampling from the beginning of the
-		/// buffer after reaching its end. If false, the last value of the
-		/// buffer is continuously returned for any further requests.
-		void source_buffer(float* buf, size_t len, bool repeat);
-
-		/// @brief Enable output using a specified callback function.
-		/// @param callback Callback function used to generate values.
-		void source_callback(std::function<float (uint64_t index)> callback);
-
-		/// Get the last measured sample from this signal.
-		float measure_instantaneous() { return m_latest_measurement; }
-
-		/// @brief Store received samples in a buffer.
-		/// @param buf Buffer to use for sample storage.
-		/// @param len Number of samples to store.
-		/// Samples are dropped once the number of samples received surpasses the
-		/// configured storage length.
-		void measure_buffer(float* buf, size_t len);
-
-		/// @brief Configure received samples to be passed to the provided callback.
-		/// @param callback Callback method to operate on sample stream float values.
-		void measure_callback(std::function<void(float value)> callback);
-
-		/// @brief Handle acquiring output sample values from host to device.
-		/// Note that this function is for internal use only and is called by Device.
-		float get_sample();
-
-		/// Selected signal source waveform.
-		Src m_src;
-		/// Initial signal source waveform value.
-		float m_src_v1;
-		/// End signal source waveform value.
-		float m_src_v2;
-		/// Signal source waveform period.
-		double m_src_period;
-		/// Signal source waveform duty (currently only valid for square waves).
-		double m_src_duty;
-		/// Signal source waveform phase.
-		double m_src_phase;
-
-		/// Source buffer for sample values (valid when source_buffer() is called).
-		float* m_src_buf = NULL;
-		/// Current source buffer sample index.
-		size_t m_src_i;
-		/// Length of the source buffer.
-		size_t m_src_buf_len;
-		/// Wrap back to the beginning of the source buffer on reaching the end when sampling.
-		bool m_src_buf_repeat;
-
-		/// @brief Callback function to execute to acquire new sample values.
-		/// Note that this is only valid after calling source_callback().
-		std::function<float (uint64_t index)> m_src_callback;
-
-	protected:
-		/// The most recent measured sample value from this signal.
-		float m_latest_measurement;
 	};
 }
