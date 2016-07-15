@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <array>
+#include <deque>
 #include <mutex>
 #include <vector>
 
@@ -57,7 +58,7 @@ namespace smu {
 		Signal* signal(unsigned channel, unsigned signal) override;
 		int set_mode(unsigned channel, unsigned mode) override;
 		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout) override;
-		ssize_t write(std::vector<float>& buf, unsigned channel, unsigned timeout) override;
+		ssize_t write(std::deque<float>& buf, unsigned channel, unsigned timeout) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
@@ -100,6 +101,9 @@ namespace smu {
 
 		// Reformat received data, performs integer to float conversion.
 		void handle_in_transfer(libusb_transfer* t);
+
+		// Reformat outgoing data, performs float to integer conversion.
+		void handle_out_transfer(libusb_transfer* t);
 
 		// Encode output samples.
 		// @param chan Target channel index.

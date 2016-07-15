@@ -6,13 +6,17 @@
 
 #include "device_m1000.hpp"
 
+#include <cassert>
+#include <cerrno>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <array>
 #include <chrono>
+#include <deque>
 #include <exception>
+#include <iterator>
 #include <system_error>
 #include <stdexcept>
 #include <thread>
@@ -242,13 +246,15 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	m_out_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
+		// Store exceptions to rethrow them in the main thread in read()/write().
+		try {
+			handle_out_transfer(t);
+		} catch (...) {
+			e_ptr = std::current_exception();
+		}
+
 		if (!m_session->cancelled()) {
-			// Store exceptions to rethrow them in the main thread in read()/write().
-			try {
-				submit_out_transfer(t);
-			} catch (...) {
-				e_ptr = std::current_exception();
-			}
+			submit_out_transfer(t);
 		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		 m_session->handle_error(t->status, "M1000_Device::out_completion");
@@ -300,22 +306,26 @@ static float constrain(float val, float lo, float hi)
 
 uint16_t M1000_Device::encode_out(unsigned channel)
 {
-	float val;
+	bool succeeded;
+	float val = 5;
 	int v = 32768 * 4 / 5;
 
+	if (channel == 0)
+		succeeded = m_out_samples_a_q.pop(val);
+	else
+		succeeded = m_out_samples_b_q.pop(val);
+
+	// Output sample underflow has occurred.
+	if (!succeeded) {
+		// disabled until data flow to device is solidified
+		//throw std::system_error(EBUSY, std::system_category(), "no available output sample");
+	}
+
 	if (m_mode[channel] == SVMI) {
-		if (channel == 0)
-			m_out_samples_a_q.pop(val);
-		else
-			m_out_samples_b_q.pop(val);
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
 		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
 		v = val * m_signals[channel][0].info()->resolution;
 	} else if (m_mode[channel] == SIMV) {
-		if (channel == 0)
-			m_out_samples_a_q.pop(val);
-		else
-			m_out_samples_b_q.pop(val);
 		if (val > 0) {
 			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
 		}
@@ -329,31 +339,35 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	return v;
 }
 
+void M1000_Device::handle_out_transfer(libusb_transfer* t)
+{
+	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
+		uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
+		for (unsigned i = 0; i < chunk_size; i++) {
+			if (strncmp(m_fw_version, "2.", 2) == 0) {
+				uint16_t a = encode_out(CHAN_A);
+				buf[i*4+0] = a >> 8;
+				buf[i*4+1] = a & 0xff;
+				uint16_t b = encode_out(CHAN_B);
+				buf[i*4+2] = b >> 8;
+				buf[i*4+3] = b & 0xff;
+			} else {
+				uint16_t a = encode_out(CHAN_A);
+				buf[(i+chunk_size*0)*2]   = a >> 8;
+				buf[(i+chunk_size*0)*2+1] = a & 0xff;
+				uint16_t b = encode_out(CHAN_B);
+				buf[(i+chunk_size*1)*2]   = b >> 8;
+				buf[(i+chunk_size*1)*2+1] = b & 0xff;
+			}
+			m_out_sampleno++;
+		}
+	}
+}
+
 int M1000_Device::submit_out_transfer(libusb_transfer* t)
 {
 	int ret;
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
-		for (unsigned p = 0; p < m_packets_per_transfer; p++) {
-			uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
-			for (unsigned i = 0; i < chunk_size; i++) {
-				if (strncmp(m_fw_version, "2.", 2) == 0) {
-					uint16_t a = encode_out(CHAN_A);
-					buf[i*4+0] = a >> 8;
-					buf[i*4+1] = a & 0xff;
-					uint16_t b = encode_out(CHAN_B);
-					buf[i*4+2] = b >> 8;
-					buf[i*4+3] = b & 0xff;
-				} else {
-					uint16_t a = encode_out(CHAN_A);
-					buf[(i+chunk_size*0)*2]   = a >> 8;
-					buf[(i+chunk_size*0)*2+1] = a & 0xff;
-					uint16_t b = encode_out(CHAN_B);
-					buf[(i+chunk_size*1)*2]   = b >> 8;
-					buf[(i+chunk_size*1)*2+1] = b & 0xff;
-				}
-				m_out_sampleno++;
-			}
-		}
 		ret = libusb_submit_transfer(t);
 		if (ret != 0) {
 			m_out_transfers.failed(t);
@@ -365,7 +379,6 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 	}
 	return -1;
 }
-
 
 int M1000_Device::submit_in_transfer(libusb_transfer* t)
 {
@@ -391,8 +404,8 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	buf.clear();
 
 	// Initialize sample acquiring duration check for timeout support.
-	// TODO: At some point this could probably use std::chrono and similar for
-	// C++11 and on.
+	// TODO: This needs to be replaced with std::chrono(::duration) and similar
+	// for windows if possible since clock_gettime() isn't available there.
 	struct timespec ts_current, ts_end;
 	unsigned long long nsecs;
 	clock_gettime(CLOCK_MONOTONIC, &ts_current);
@@ -425,16 +438,74 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	return buf.size();
 }
 
-ssize_t M1000_Device::write(std::vector<float>& buf, unsigned channel, unsigned timeout)
+ssize_t M1000_Device::write(std::deque<float>& buf, unsigned channel, unsigned timeout)
 {
-	for (auto i: buf) {
-		if (channel == 0)
-			m_out_samples_a_q.push(i);
-		else
-			m_out_samples_b_q.push(i);
+	//std::deque<float>::iterator i_position = buf.begin();
+
+	unsigned orig_size = buf.size();
+	bool succeeded;
+
+	// bad channel
+	if (channel != 0 && channel != 1)
+		return -ENODEV;
+
+	// Initialize sample acquiring duration check for timeout support.
+	// TODO: This needs to be replaced with std::chrono(::duration) and similar
+	// for windows if possible since clock_gettime() isn't available there.
+	struct timespec ts_current, ts_end;
+	unsigned long long nsecs;
+	clock_gettime(CLOCK_MONOTONIC, &ts_current);
+	nsecs = ts_current.tv_nsec + (timeout * pow(10.0, 6));
+	ts_end.tv_sec = ts_current.tv_sec + (nsecs / pow(10.0, 9));
+	ts_end.tv_nsec = nsecs % (unsigned long long) pow(10.0, 9);
+
+	//while (i_position != buf.end()) {
+		//// push as many values as possible to the queue
+		//if (channel == 0) {
+			//i_position = m_out_samples_a_q.push(i_position, buf.end());
+		//} else {
+			//i_position = m_out_samples_b_q.push(i_position, buf.end());
+	  /*  }*/
+
+	while (!buf.empty()) {
+		///* push as many values as possible to the queue*/
+		//if (channel == 0) {
+			//i_position = m_out_samples_a_q.push(i_position, buf.end());
+		//} else {
+			//i_position = m_out_samples_b_q.push(i_position, buf.end());
+		/*}*/
+
+		// TODO: fix up and use the commented out iterator implementation to
+		// push as many values as possible.
+		if (channel == 0) {
+			succeeded = m_out_samples_a_q.push(buf.front());
+		} else {
+			succeeded = m_out_samples_b_q.push(buf.front());
+		}
+		if (!succeeded) {
+			throw std::system_error(EBUSY, std::system_category(), "dropped output sample");
+		}
+
+		buf.pop_front();
+		// stop waiting for queue space if we've run out of time
+		if (timespeccmp(&ts_current, &ts_end, <) == 0)
+			break;
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+		clock_gettime(CLOCK_MONOTONIC, &ts_current);
 	}
 
-	return 0;
+	// remove all the samples we wrote
+	//buf.erase(buf.begin(), i_position);
+
+	// If a data underflow occurred in the USB thread, rethrow the exception
+	// here in the main thread. This allows users to just wrap write() in order
+	// to catch and/or act on underflows.
+	if (e_ptr) {
+		std::rethrow_exception(e_ptr);
+	}
+
+	//return (i_position - buf.begin());
+	return (orig_size - buf.size());
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
