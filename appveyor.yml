@@ -14,9 +14,8 @@ matrix:
   fast_finish: true
 
 branches:
-  only:
-    - master
-    - appveyor
+  except:
+    - gh-pages
 
 install:
   - ps: >-
