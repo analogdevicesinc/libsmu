@@ -11,7 +11,6 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <ctime>
 #include <array>
 #include <chrono>
 #include <deque>
@@ -404,24 +403,18 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	buf.clear();
 
 	// Initialize sample acquiring duration check for timeout support.
-	// TODO: This needs to be replaced with std::chrono(::duration) and similar
-	// for windows if possible since clock_gettime() isn't available there.
-	struct timespec ts_current, ts_end;
-	unsigned long long nsecs;
-	clock_gettime(CLOCK_MONOTONIC, &ts_current);
-	nsecs = ts_current.tv_nsec + (timeout * pow(10.0, 6));
-	ts_end.tv_sec = ts_current.tv_sec + (nsecs / pow(10.0, 9));
-	ts_end.tv_nsec = nsecs % (unsigned long long) pow(10.0, 9);
+	auto clk_start = std::chrono::high_resolution_clock::now();
 
 	for (unsigned i = 0; i < samples; i++) {
 		do {
 			// TODO: move to multi-element pop (assuming this will speed things up a bit).
 			succeeded = m_in_samples_q.pop(sample);
 			// stop waiting for samples if we've run out of time
-			if (timespeccmp(&ts_current, &ts_end, <) == 0)
+			auto clk_end = std::chrono::high_resolution_clock::now();
+			auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+			if (clk_diff.count() > timeout)
 				break;
 			std::this_thread::sleep_for(std::chrono::nanoseconds(10));
-			clock_gettime(CLOCK_MONOTONIC, &ts_current);
 		} while (!succeeded);
 
 		if (succeeded)
@@ -450,14 +443,7 @@ ssize_t M1000_Device::write(std::deque<float>& buf, unsigned channel, unsigned t
 		return -ENODEV;
 
 	// Initialize sample acquiring duration check for timeout support.
-	// TODO: This needs to be replaced with std::chrono(::duration) and similar
-	// for windows if possible since clock_gettime() isn't available there.
-	struct timespec ts_current, ts_end;
-	unsigned long long nsecs;
-	clock_gettime(CLOCK_MONOTONIC, &ts_current);
-	nsecs = ts_current.tv_nsec + (timeout * pow(10.0, 6));
-	ts_end.tv_sec = ts_current.tv_sec + (nsecs / pow(10.0, 9));
-	ts_end.tv_nsec = nsecs % (unsigned long long) pow(10.0, 9);
+	auto clk_start = std::chrono::high_resolution_clock::now();
 
 	//while (i_position != buf.end()) {
 		//// push as many values as possible to the queue
@@ -488,10 +474,11 @@ ssize_t M1000_Device::write(std::deque<float>& buf, unsigned channel, unsigned t
 
 		buf.pop_front();
 		// stop waiting for queue space if we've run out of time
-		if (timespeccmp(&ts_current, &ts_end, <) == 0)
+		auto clk_end = std::chrono::high_resolution_clock::now();
+		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+		if (clk_diff.count() > timeout)
 			break;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
-		clock_gettime(CLOCK_MONOTONIC, &ts_current);
 	}
 
 	// remove all the samples we wrote
