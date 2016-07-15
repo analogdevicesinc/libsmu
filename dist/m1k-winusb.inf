@@ -6,6 +6,8 @@ Class=USBDevice                                                 ; Use the WinUSB
 ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}                ; Associated GUID
 Provider=%ADI%                                                  ; Driver is provided by Analog Devices, Inc.
 DriverVer=09/04/2012,13.54.20.543                               ; Driver version
+CatalogFile.NTx86=m1k-winusbx86.cat
+CatalogFile.NTAMD64=m1k-winusbx64.cat
 
 [DestinationDirs]                                               ; DestinationDirs section
 DefaultDestDir=12                                               ; Default install directory is \drivers or \IOSubSys
