@@ -13,6 +13,7 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
+#include <deque>
 #include <functional>
 #include <mutex>
 #include <set>
@@ -317,10 +318,11 @@ namespace smu {
 		/// @param buf Buffer of samples to write to the specified channel.
 		/// @param channel Channel to write samples to.
 		/// @param timeout Amount of time in milliseconds to wait for samples
-		/// to be available. If 0, return immediately.
+		/// to be written. If 0 (the default), return immediately.
 		/// @return On success, the number of samples written.
 		/// @return On error, a negative integer is returned relating to the error status.
-		virtual ssize_t write(std::vector<float>& buf, unsigned channel, unsigned timeout) = 0;
+		/// @throws std::system_error of EBUSY if sample underflows have occurred.
+		virtual ssize_t write(std::deque<float>& buf, unsigned channel, unsigned timeout = 0) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
