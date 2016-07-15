@@ -3,15 +3,11 @@
 
 @tableofcontents
 
-@section arch Architecture and design
-
-@section session Using sessions
-
-The session object allows for controlling groups of devices in a near synchronous format.
-
 @section devices Device usage
 
 @subsection reading_data Reading data from a device
+
+![Caption text](reading.svg)
 
 ~~~{.cpp}
 	// Create session object and scan system for compatible devices then add
@@ -56,6 +52,8 @@ The session object allows for controlling groups of devices in a near synchronou
 ~~~
 
 @subsection writing_data Writing data to a device
+
+![Caption text](writing.svg)
 
 ~~~{.cpp}
 	// Create session object and scan system for compatible devices then add
