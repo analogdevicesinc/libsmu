@@ -26,7 +26,7 @@ set(CPACK_SET_DESTDIR ON)
 include(CPack)
 
 # generate version header
-configure_file(${CMAKE_SOURCE_DIR}/include/libsmu/version.hpp.in
+configure_file(${CMAKE_SOURCE_DIR}/dist/version.hpp.in
 	${CMAKE_SOURCE_DIR}/include/libsmu/version.hpp @ONLY)
 include_directories(${CMAKE_SOURCE_DIR}/include/)
 
