@@ -19,9 +19,6 @@
 #include "usb.hpp"
 #include <libsmu/libsmu.hpp>
 
-extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
-extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
-
 #define EEPROM_VALID 0x01ee02dd
 
 static const sl_signal_info m1000_signal_info[2] = {
@@ -38,6 +35,9 @@ struct EEPROM_cal {
 };
 
 namespace smu {
+	extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
+	extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t);
+
 	class M1000_Device: public Device {
 	public:
 		// Handle incoming USB transfers.
