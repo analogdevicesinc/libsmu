@@ -29,8 +29,6 @@ const unsigned in_packet_size = chunk_size * 4 * 2;
 const int m_min_per = 0x18;
 volatile uint16_t m_sof_start = 0;
 int m_sam_per = 0;
-extern "C" void LIBUSB_CALL m1000_in_transfer_callback(libusb_transfer *t);
-extern "C" void LIBUSB_CALL m1000_out_transfer_callback(libusb_transfer *t);
 
 #ifdef _WIN32
 const double BUFFER_TIME = 0.050;
