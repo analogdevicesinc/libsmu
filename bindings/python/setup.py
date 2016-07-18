@@ -41,9 +41,9 @@ def pkgconfig(*packages, **kw):
 
     for token in tokens:
         if token[:2] in flag_map:
-            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+            kw.setdefault(flag_map.get(token[:2].decode()), []).append(token[2:].decode())
         else:
-            kw.setdefault('extra_compile_args', []).append(token)
+            kw.setdefault('extra_compile_args', []).append(token.decode())
     return kw
 
 ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
