@@ -8,7 +8,8 @@ analog interface devices, currently supporting the Analog Devices' ADALM1000.
 Building off of LibUSB for cross-platform operation, it offers the sourcing of
 repeated waveforms, configuration of hardware, and measuring of signals.
 
-This project also includes 'pysmu,' an initial binding of libsmu for Python2.7.
+Python bindings are also provided in the form of the pysmu module. See
+instructions below for how to build them.
 
 #### Building libsmu
 
@@ -60,8 +61,11 @@ the following cmake command:
 $ cmake -DBUILD_PYTHON=ON .
 ```
 
-They can also be built manually via the setup.py script in the regular python
-manner if libsmu has already been built and/or installed on the host machine.
+Note that this will build only one versions of python for the first supported
+implementation it finds installed on the system. To build them for other
+versions it's easiest to build them manually via the setup.py script in the
+regular python manner if libsmu has already been built and/or installed on the
+host machine.
 
 Note that they also require a recent version of cython to be installed when
 building from git.
