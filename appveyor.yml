@@ -97,6 +97,8 @@ build_script:
   - "pip install --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
   - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
 
   # build python dist files
   - ps: pushd C:\projects\libsmu\bindings\python
@@ -122,6 +124,8 @@ build_script:
   - "pip install --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
   - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext %PYTHON_DEBUG% --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
