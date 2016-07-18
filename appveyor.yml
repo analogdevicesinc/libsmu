@@ -18,13 +18,6 @@ branches:
     - gh-pages
 
 install:
-  - ps: >-
-      If ($env:Configuration -Match "Debug") {
-        $env:PYTHON_DEBUG="-g"
-      } Else {
-        $env:PYTHON_DEBUG=""
-      }
-
   # libusb patched for windows hotplug support
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
   # install innosetup for creating installers
@@ -107,8 +100,8 @@ build_script:
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
 
   - "vcvarsall.bat x86"
-  - "python setup.py build_ext %PYTHON_DEBUG% --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build %PYTHON_DEBUG%"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
   - "python setup.py bdist_wheel --skip-build"
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
@@ -128,8 +121,8 @@ build_script:
   - "pip install cython"
 
   - "vcvarsall.bat x64"
-  - "python setup.py build_ext %PYTHON_DEBUG% --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build %PYTHON_DEBUG%"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
   - "python setup.py bdist_wheel --skip-build"
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
