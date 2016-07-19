@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from io import open
 import glob
 import os
+import re
 import subprocess
 import sys
 
@@ -61,9 +63,21 @@ extensions.extend([
         [os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.pyx')], **ext_kwargs),
     ])
 
+version = ''
+with open('pysmu/__init__.py', 'r') as fd:
+    reg = re.compile(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]')
+    for line in fd:
+        m = reg.match(line)
+        if m:
+            version = m.group(1)
+            break
+
+if not version:
+	raise RuntimeError('Cannot find version information')
+
 setup(
     name='pysmu',
-    version='0.88',
+    version=version,
     description='python library for the ADALM1000 device',
     url='https://github.com/analogdevicesinc/libsmu',
     license='BSD',
