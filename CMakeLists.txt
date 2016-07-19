@@ -88,5 +88,8 @@ endif()
 
 # create a package build script for OS X
 if(APPLE)
+	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}.pkg)
+	set(LIBSMU_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION}-temp.pkg)
+	configure_file(dist/distribution.xml.cmakein ${CMAKE_CURRENT_BINARY_DIR}/distribution.xml @ONLY)
 	configure_file(dist/build-osx-pkg.sh.cmakein ${CMAKE_CURRENT_BINARY_DIR}/build-osx-pkg.sh @ONLY)
 endif()
