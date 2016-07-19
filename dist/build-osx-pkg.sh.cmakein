@@ -11,6 +11,6 @@ make DESTDIR=${DESTDIR} install
 pkgbuild \
 	--root ${DESTDIR} \
 	--identifier libsmu --version @LIBSMU_VERSION@ \
-	--install-location /System/Library/Frameworks "@LIBSMU_TEMP_PKG@"
+	--install-location / "@LIBSMU_TEMP_PKG@"
 
 productbuild --distribution distribution.xml "@LIBSMU_PKG@"
