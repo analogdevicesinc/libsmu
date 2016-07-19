@@ -81,67 +81,157 @@ build_script:
   - appveyor PushArtifact c:\libsmu.zip
 
   # build all supported python extension versions
+  # TODO: drop the duplication and loop over supported python versions
   - mkdir c:\libsmu-python
-  - ps: >-
-    $PYTHON_VERSIONS = @("27", "34", "35")
-    ForEach ($PY_VERSION in $PYTHON_VERSIONS) {
-      ## build 32 bit python bindings
-      # add python dirs to PATH
-      set PATH=C:\\Python${PY_VERSION};C:\\Python${PY_VERSION}\\Scripts;%PATH%
-      # check we're using the right python version and arch
-      "python --version"
-      "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-      # update pip to keep it from complaining
-      "pip install --disable-pip-version-check --user --upgrade pip"
-      # wheel needs to be installed in order to build binary wheels for pysmu
-      "pip install wheel"
-      # cython is required for generating the extensions
-      "pip install cython"
+  ## build 32 bit python2.7 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-      # build python dist files
-      ps: pushd C:\projects\libsmu\bindings\python
-      set DISTUTILS_USE_SDK=1
-      set MSSdk=1
-      set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
 
-      "vcvarsall.bat x86"
-      "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-      "python setup.py build"
-      "python setup.py bdist_wheel --skip-build"
-      "python setup.py bdist --skip-build --format zip"
-      "python setup.py bdist --skip-build --format msi"
+  # build python dist files
+  - ps: pushd C:\projects\libsmu\bindings\python
+  - set DISTUTILS_USE_SDK=1
+  - set MSSdk=1
+  - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
 
-      ## build 64 bit python bindings
-      # add python dirs to PATH
-      set PATH=C:\\Python${PY_VERSION}-x64;C:\\Python${PY_VERSION}-x64\\Scripts;%PATH%
-      # check we're using the right python version and arch
-      "python --version"
-      "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - "vcvarsall.bat x86"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
 
-      # update pip to keep it from complaining
-      "pip install --disable-pip-version-check --user --upgrade pip"
-      # wheel needs to be installed in order to build binary wheels for pysmu
-      "pip install wheel"
-      # cython is required for generating the extensions
-      "pip install cython"
+  ## build 32 bit python3.4 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-      "vcvarsall.bat x64"
-      "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-      "python setup.py build"
-      "python setup.py bdist_wheel --skip-build"
-      "python setup.py bdist --skip-build --format zip"
-      "python setup.py bdist --skip-build --format msi"
-      "python setup.py sdist"
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
 
-      # push all dist files as artifacts
-      ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+  - "vcvarsall.bat x86"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
+  - "python setup.py sdist"
 
-      # copy python binding MSIs for installer
-      ps: Copy-Item dist\pysmu-*amd64-py*.msi c:\libsmu-python\pysmu${PY_VERSION}-amd64.msi
-      ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu${PY_VERSION}-win32.msi
-      ps: popd
-    }
+  ## build 32 bit python3.5 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python35;C:\\Python35\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
+
+  - "vcvarsall.bat x86"
+  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
+  - "python setup.py sdist"
+
+  ## build 64 bit python2.7 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python27-x64;C:\\Python27-x64\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
+
+  - "vcvarsall.bat x64"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
+  - "python setup.py sdist"
+
+  ## build 64 bit python3.4 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python34-x64;C:\\Python34-x64\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
+
+  - "vcvarsall.bat x64"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
+  - "python setup.py sdist"
+
+  ## build 64 bit python3.5 bindings
+  # add python dirs to PATH
+  - set PATH=C:\\Python35-x64;C:\\Python35-x64\\Scripts;%PATH%
+  # check we're using the right python version and arch
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # update pip to keep it from complaining
+  - "pip install --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip install wheel"
+  # cython is required for generating the extensions
+  - "pip install cython"
+
+  - "vcvarsall.bat x64"
+  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
+  - "python setup.py build"
+  - "python setup.py bdist_wheel --skip-build"
+  - "python setup.py bdist --skip-build --format zip"
+  - "python setup.py bdist --skip-build --format msi"
+  - "python setup.py sdist"
+
+  # push all dist files as artifacts
+  - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+  # copy python binding MSIs for installer
+  - ps: Copy-Item dist\pysmu-*amd64-py*.msi c:\libsmu-python\pysmu27-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu27-win32.msi
+  - ps: Copy-Item dist\pysmu-*amd64-py*.msi c:\libsmu-python\pysmu34-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu34-win32.msi
+  - ps: Copy-Item dist\pysmu-*amd64-py*.msi c:\libsmu-python\pysmu35-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py*.msi c:\libsmu-python\pysmu35-win32.msi
+  - ps: popd
 
   # create libsmu installers
   - copy C:\projects\libsmu\32\dist\libsmu-x86.iss C:\projects\libsmu\dist\libsmu-x86.iss
