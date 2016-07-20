@@ -9,6 +9,12 @@ matrix:
   allow_failures:
     - os: linux
 
+addons:
+  apt:
+    packages:
+      - libusb-1.0
+      - libboost-all-dev
+
 before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
 
@@ -19,8 +25,7 @@ install:
 
   # for python bindings
   - pip install --disable-pip-version-check --upgrade pip
-  - pip install wheel
-  - pip install cython
+  - pip install wheel cython
 
 script:
   - mkdir build
