@@ -7,7 +7,8 @@ import re
 import subprocess
 import sys
 
-from distutils.command.build_ext import build_ext
+from distutils.command.build_ext import build_ext as dst_build_ext
+from distutils.command.sdist import sdist as dst_sdist
 from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 
@@ -15,19 +16,6 @@ from Cython.Build import cythonize
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
-
-
-class build_ext_compiler_check(build_ext):
-    """Add custom compile flags for compiled extensions."""
-
-    def build_extensions(self):
-        compiler = self.compiler.compiler_type
-        cxxflags = []
-        if compiler != 'msvc':
-            cxxflags.append('-std=c++11')
-        for ext in self.extensions:
-            ext.extra_compile_args.extend(cxxflags)
-        return build_ext.build_extensions(self)
 
 
 def pkgconfig(*packages, **kw):
@@ -48,20 +36,44 @@ def pkgconfig(*packages, **kw):
             kw.setdefault('extra_compile_args', []).append(token.decode())
     return kw
 
-ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
 
+# configure various required compile flags
+ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
 else:
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
 
+# cython/cpp extensions to generate/build
 extensions = []
 extensions.extend([
     Extension(
         'pysmu.libsmu',
         [os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.pyx')], **ext_kwargs),
     ])
+
+
+class sdist(dst_sdist):
+    """Make sure generated cython files are included."""
+
+    def run(self):
+        cythonize(extensions)
+        dst_sdist.run(self)
+
+
+class build_ext(dst_build_ext):
+    """Add custom compile flags for compiled extensions."""
+
+    def build_extensions(self):
+        compiler = self.compiler.compiler_type
+        cxxflags = []
+        if compiler != 'msvc':
+            cxxflags.append('-std=c++11')
+        for ext in self.extensions:
+            ext.extra_compile_args.extend(cxxflags)
+        return dst_build_ext.build_extensions(self)
+
 
 version = ''
 with open('pysmu/__init__.py', 'r') as fd:
@@ -73,7 +85,7 @@ with open('pysmu/__init__.py', 'r') as fd:
             break
 
 if not version:
-	raise RuntimeError('Cannot find version information')
+    raise RuntimeError('Cannot find version information')
 
 setup(
     name='pysmu',
@@ -86,7 +98,10 @@ setup(
     packages=find_packages(),
     ext_modules=cythonize(extensions),
     scripts=glob.glob('bin/*'),
-    cmdclass={'build_ext': build_ext_compiler_check},
+    cmdclass={
+        'build_ext': build_ext,
+        'sdist': sdist,
+    },
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
