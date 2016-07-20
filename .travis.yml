@@ -6,8 +6,6 @@ matrix:
       dist: trusty
     - os: osx
       osx_image: xcode61
-  allow_failures:
-    - os: linux
 
 addons:
   apt:
