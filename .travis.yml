@@ -2,10 +2,24 @@ os: osx
 osx_image: xcode61
 before_install:
   - brew update
+install:
   - brew install libusb --universal
-  - brew install cmake pkg-config boost python cython
+  - brew install cmake pkg-config boost python
+  # for python bindings
+  - pip install --disable-pip-version-check --user --upgrade pip
+  - pip install wheel
+  - pip install cython
 script:
   - mkdir build
   - cd build
   - cmake ..
   - make
+
+  # check python version
+  - python --version
+  - python -c \"import struct; print(struct.calcsize('P') * 8)\"
+  # build python bindings
+  - pushd bindings/python
+  - python setup.py build_ext
+  - python setup.py build
+  - python setup.py bdist_wheel --skip-build
