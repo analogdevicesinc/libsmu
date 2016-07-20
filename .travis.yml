@@ -5,6 +5,7 @@ before_install:
 install:
   - brew install libusb --universal
   - brew install python
+  - brew upgrade cmake
   # for python bindings
   - pip install --disable-pip-version-check --user --upgrade pip
   - pip install wheel
