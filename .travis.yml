@@ -31,6 +31,9 @@ script:
   - cmake ..
   - make
 
+  # create generic binary shell-based installer/tarball
+  - make package
+
   # build OS X installer
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then chmod +x build-osx-pkg.sh; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then ./build-osx-pkg.sh; fi
