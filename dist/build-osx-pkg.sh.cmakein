@@ -1,3 +1,4 @@
+#!/bin/sh
 # Create an installer for OS X.
 #
 # Run this script from within the build directory created by cmake after
