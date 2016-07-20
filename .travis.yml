@@ -14,7 +14,7 @@ install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake; fi
 
   # for python bindings
-  - pip install --disable-pip-version-check --user --upgrade pip
+  - pip install --disable-pip-version-check --upgrade pip
   - pip install wheel
   - pip install cython
 
