@@ -5,6 +5,11 @@ configuration:
   - Release
   - Debug
 
+branches:
+  except:
+    - gh-pages
+    - travis-ci
+
 install:
   - ps: >-
       If ($env:Configuration -Match "Debug") {
