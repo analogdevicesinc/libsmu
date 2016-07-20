@@ -111,14 +111,17 @@ python versions.
 ##### OS X
 
 For systems running OS X, first install [homebrew](http://brew.sh). Then use
-brew to install libusb, cmake, boost, pkg-config, and optionally python and
-cython (to build the python bindings). Note that libusb is built for both 32
-and 64 bit architectures since the current build system for libsmu builds
-universal binaries by default.
+brew to install libusb, cmake, boost, pkg-config, and optionally python to
+build the python bindings. In addition, cython needs to be installed via pip to
+generate the python extension.
+
+Note that libusb is built for both 32 and 64 bit architectures since the
+current build system for libsmu builds universal binaries by default.
 
 ```
 brew install libusb --universal
-brew install cmake boost pkg-config python cython
+brew install cmake boost pkg-config python
+pip install cython
 ```
 
 After the above dependencies are installed, the command line instructions in
