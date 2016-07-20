@@ -2,8 +2,12 @@ matrix:
   include:
     - os: linux
       language: python
+      sudo: required
+      dist: trusty
     - os: osx
       osx_image: xcode61
+  allow_failures:
+    - os: linux
 
 before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
