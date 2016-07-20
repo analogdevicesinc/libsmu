@@ -1,15 +1,22 @@
-os: osx
-osx_image: xcode61
+matrix:
+  include:
+    - os: linux
+    - os: osx
+      osx_image: xcode61
+
 before_install:
-  - brew update
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
+
 install:
-  - brew install libusb --universal
-  - brew install python
-  - brew upgrade cmake
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb --universal; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake; fi
+
   # for python bindings
   - pip install --disable-pip-version-check --user --upgrade pip
   - pip install wheel
   - pip install cython
+
 script:
   - mkdir build
   - pushd build
