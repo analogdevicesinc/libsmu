@@ -1,0 +1,11 @@
+os: osx
+osx_image: xcode61
+before_install:
+  - brew update
+  - brew install libusb --universal
+  - brew install cmake pkg-config boost python cython
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
