@@ -1,4 +1,4 @@
 recursive-include bin *
 recursive-include examples *
-recursive-include src *.cpp *.[ch]
+recursive-include pysmu *
 global-exclude CMakeLists.txt *.pyc *.pyo __pycache__
