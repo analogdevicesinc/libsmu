@@ -4,7 +4,7 @@ before_install:
   - brew update
 install:
   - brew install libusb --universal
-  - brew install cmake pkg-config boost python
+  - brew install python
   # for python bindings
   - pip install --disable-pip-version-check --user --upgrade pip
   - pip install wheel
