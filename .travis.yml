@@ -12,15 +12,16 @@ install:
   - pip install cython
 script:
   - mkdir build
-  - cd build
+  - pushd build
   - cmake ..
   - make
+  - popd
 
   # check python version
   - python --version
-  - python -c \"import struct; print(struct.calcsize('P') * 8)\"
+  - python -c "import struct; print(struct.calcsize('P') * 8)"
   # build python bindings
   - pushd bindings/python
-  - python setup.py build_ext
+  - python setup.py build_ext -L ../../build/src
   - python setup.py build
   - python setup.py bdist_wheel --skip-build
