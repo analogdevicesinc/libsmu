@@ -1,6 +1,7 @@
 matrix:
   include:
     - os: linux
+      language: python
     - os: osx
       osx_image: xcode61
 
