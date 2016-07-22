@@ -30,10 +30,11 @@ def pkgconfig(*packages, **kw):
         sys.exit(1)
 
     for token in tokens:
+        token = token.decode()
         if token[:2] in flag_map:
-            kw.setdefault(flag_map.get(token[:2].decode()), []).append(token[2:].decode())
+            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
         else:
-            kw.setdefault('extra_compile_args', []).append(token.decode())
+            kw.setdefault('extra_compile_args', []).append(token)
     return kw
 
 
