@@ -2,11 +2,29 @@ matrix:
   fast_finish: true
   include:
     - os: linux
-      language: python
       sudo: required
       dist: trusty
+      language: python
+      python: 2.7
+      env: PYTHON=python
+    - os: linux
+      sudo: required
+      dist: trusty
+      language: python
+      python: 3.4
+      env: PYTHON=python
+    - os: linux
+      sudo: required
+      dist: trusty
+      language: python
+      python: 3.5
+      env: PYTHON=python
     - os: osx
       osx_image: xcode61
+      env: PYTHON=python
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python3
 
 cache: pip
 
@@ -22,6 +40,7 @@ before_install:
 install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb --universal; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python || true; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python python3 || true; fi
 
   # for python bindings
   - pip install --disable-pip-version-check --upgrade pip
@@ -42,11 +61,12 @@ script:
 
   - popd
 
-  # check python version
-  - python --version
-  - python -c "import struct; print(struct.calcsize('P') * 8)"
-  # build python bindings
+  # build pkthon bindings
   - pushd bindings/python
-  - python setup.py build_ext -L ../../build/src
-  - python setup.py build
-  - python setup.py bdist_wheel --skip-build
+  # check python version
+  - ${PYTHON} --version
+  - ${PYTHON} -c "import struct; print(struct.calcsize('P') * 8)"
+  # build extension linking to previously built library
+  - ${PYTHON} setup.py build_ext -L ../../build/src
+  - ${PYTHON} setup.py build
+  - ${PYTHON} setup.py bdist_wheel --skip-build
