@@ -39,8 +39,7 @@ before_install:
 
 install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb --universal; fi
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python || true; fi
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python python3 || true; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install ${PYTHON} || true; fi
 
   # for python bindings
   - pip install --disable-pip-version-check --upgrade pip
