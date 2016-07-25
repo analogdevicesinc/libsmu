@@ -13,10 +13,6 @@ branches:
 matrix:
   fast_finish: true
 
-branches:
-  except:
-    - gh-pages
-
 install:
   # libusb patched for windows hotplug support
   - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
