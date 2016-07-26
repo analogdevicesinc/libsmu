@@ -154,12 +154,9 @@ int main(int argc, char **argv)
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
-	if (session->scan()) {
+	if (session->add_all()) {
 		cerr << "error initializing session" << endl;
 		return 1;
-	}
-	for (auto dev: session->m_available_devices) {
-		session->add(&*dev);
 	}
 
 	// map long options to short ones
