@@ -18,11 +18,9 @@ int main(int argc, char **argv)
 {
 	detached = attached = false;
 
-	// Create session object and scan system for compatible devices then add
-	// them to the session. Note that this currently doesn't handle returned
-	// errors.
+	// Create session object and add all compatible devices them to the
+	// session. Note that this currently doesn't handle returned errors.
 	Session* session = new Session();
-	session->scan();
 	session->add_all();
 
 	// Register hotplug detach callback handler.

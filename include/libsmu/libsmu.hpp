@@ -143,7 +143,7 @@ namespace smu {
 		/// @return On error, NULL is returned.
 		Device* add(Device* device);
 
-		/// @brief Shim to add all available devices to a session.
+		/// @brief Shim to scan and add all available devices to a session.
 		/// This method may not be called while the session is active.
 		/// @return On success, 0 is returned.
 		/// @return On error, the number of devices that couldn't be added to

@@ -372,7 +372,12 @@ Device* Session::add(Device* device)
 
 int Session::add_all()
 {
-	int ret = 0;
+	int ret;
+
+	ret = scan();
+	if (ret != 0)
+		return ret;
+
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (auto dev: m_available_devices) {
 		if (!add(&*dev))
