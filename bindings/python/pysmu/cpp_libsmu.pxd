@@ -5,15 +5,12 @@ from libcpp.memory cimport shared_ptr
 from libcpp.set cimport set
 from libcpp.vector cimport vector
 
-
 cdef extern from "libsmu/libsmu.hpp" namespace "smu":
     cdef cppclass Session:
         vector[shared_ptr[Device]] m_available_devices
         set[Device*] m_devices
         int m_active_devices
         int m_queue_size
-        void (*m_hotplug_attach_callback)(Device* dev)
-        void (*m_hotplug_detach_callback)(Device* dev)
 
         int scan()
         Device* add(Device* dev)
@@ -29,6 +26,8 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         void flash_firmware(const char* path, Device* dev) except +
         void wait_for_completion()
         void end()
+        void hotplug_attach(void (Device *dev, void *data) nogil, void *data)
+        void hotplug_detach(void (Device *dev, void *data) nogil, void *data)
 
     cdef cppclass Device:
         const char* serial()
