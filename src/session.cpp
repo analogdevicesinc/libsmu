@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <string.h>
 
 #include <libusb.h>
@@ -18,6 +19,7 @@
 
 using std::shared_ptr;
 
+using namespace std::placeholders;
 using namespace smu;
 
 // Callback for libusb hotplug events, proxies to Session::attached() and Session::detached().
@@ -93,6 +95,16 @@ Session::~Session()
 		m_usb_thread.join();
 	}
 	libusb_exit(m_usb_ctx);
+}
+
+void Session::hotplug_attach(std::function<void(Device* device, void* data)> func, void* data)
+{
+	m_hotplug_attach_callback = std::bind(func, _1, data);
+}
+
+void Session::hotplug_detach(std::function<void(Device* device, void* data)> func, void* data)
+{
+	m_hotplug_detach_callback = std::bind(func, _1, data);
 }
 
 void Session::attached(libusb_device *usb_dev)
