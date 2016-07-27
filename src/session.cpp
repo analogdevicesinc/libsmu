@@ -20,8 +20,19 @@ using std::shared_ptr;
 
 using namespace smu;
 
-extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data);
+// Callback for libusb hotplug events, proxies to Session::attached() and Session::detached().
+extern "C" int LIBUSB_CALL usb_hotplug_callback(
+	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
+{
+	(void) usb_ctx;
+	Session *session = (Session *) user_data;
+	if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+		session->attached(usb_dev);
+	} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+		session->detached(usb_dev);
+	}
+	return 0;
+}
 
 Session::Session()
 {
@@ -47,7 +58,7 @@ Session::Session()
 			LIBUSB_HOTPLUG_MATCH_ANY,
 			LIBUSB_HOTPLUG_MATCH_ANY,
 			LIBUSB_HOTPLUG_MATCH_ANY,
-			hotplug_callback_usbthread,
+			usb_hotplug_callback,
 			this,
 			NULL);
 		if (ret != 0)
@@ -266,20 +277,6 @@ void Session::destroy(Device *dev)
 		for (unsigned i = 0; i < m_available_devices.size(); i++)
 			if (m_available_devices[i]->serial() == dev->serial())
 				m_available_devices.erase(m_available_devices.begin() + i);
-}
-
-// Low-level callback for hotplug events, proxies to session methods.
-extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
-{
-	(void) usb_ctx;
-	Session *session = (Session *) user_data;
-	if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		session->attached(usb_dev);
-	} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		session->detached(usb_dev);
-	}
-	return 0;
 }
 
 int Session::scan()
