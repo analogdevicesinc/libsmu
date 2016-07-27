@@ -4,6 +4,14 @@ from libcpp.vector cimport vector
 
 cimport cpp_libsmu
 
+cdef extern from "Python.h" nogil:
+    void PyEval_InitThreads()
+
+
+cdef object _hotplug_attach_cb = None
+cdef object _hotplug_detach_cb = None
+
+
 cdef class Session:
     # pointer to the underlying C++ smu::Session object
     cdef cpp_libsmu.Session *_session
@@ -13,6 +21,37 @@ cdef class Session:
 
         if self._session is NULL:
             raise MemoryError()
+
+        # initialize/acquire the GIL
+        PyEval_InitThreads()
+
+        # Callbacks for hotplug attach and detach events, default to no-op functions.
+        self._session.m_hotplug_attach_callback = self._hotplug_attach
+        self._session.m_hotplug_detach_callback = self._hotplug_detach
+
+    def hotplug_attach(self, f):
+        global _hotplug_attach_cb
+        _hotplug_attach_cb = f
+
+    def hotplug_detach(self, f):
+        global _hotplug_detach_cb
+        _hotplug_detach_cb = f
+
+    @staticmethod
+    cdef void _hotplug_attach(cpp_libsmu.Device *device) with gil:
+        """Internal method to wrap hotplug attach callbacks."""
+        if _hotplug_attach_cb is not None:
+            d = Device._create(device)
+            global _hotplug_attach_cb
+            _hotplug_attach_cb(d)
+
+    @staticmethod
+    cdef void _hotplug_detach(cpp_libsmu.Device *device) with gil:
+        """Internal method to wrap hotplug detach callbacks."""
+        if _hotplug_detach_cb is not None:
+            d = Device._create(device)
+            global _hotplug_detach_cb
+            _hotplug_detach_cb(d)
 
     property available_devices:
         def __get__(self):
@@ -94,7 +133,7 @@ cdef class Device:
     cdef cpp_libsmu.Device *_device
 
     @staticmethod
-    cdef _create(cpp_libsmu.Device *device):
+    cdef _create(cpp_libsmu.Device *device) with gil:
         """Internal method to wrap C++ smu::Device objects."""
         d = Device()
         d._device = device
