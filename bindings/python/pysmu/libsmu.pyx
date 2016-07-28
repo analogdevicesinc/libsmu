@@ -104,6 +104,8 @@ cdef class Session:
     def __dealloc__(self):
         # make sure the session is completed before deallocation
         self._session.end()
+        # TODO: determine why usb thread joining stalls for ~20-30 seconds on
+        # session destruction.
         del self._session
 
 
