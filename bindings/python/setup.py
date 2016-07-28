@@ -9,36 +9,13 @@ import sys
 
 from distutils.command.build_ext import build_ext as dst_build_ext
 from distutils.command.sdist import sdist as dst_sdist
-from setuptools import setup, find_packages, Extension, Command
+from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 
 # top level bindings directory
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
-
-
-class RunCommand(Command):
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-
-class PyTest(RunCommand):
-    user_options = [('match=', 'k', 'Run only tests that match the provided expressions')]
-
-    def initialize_options(self):
-        self.match = None
-
-    def run(self):
-        cli_options = ['-k', self.match] if self.match else []
-        os.environ['EPYTHON'] = 'python{}.{}'.format(sys.version_info.major, sys.version_info.minor)
-        errno = subprocess.call(['py.test'] + cli_options)
-        raise SystemExit(errno)
 
 
 def pkgconfig(*packages, **kw):
@@ -122,11 +99,10 @@ setup(
     packages=find_packages(),
     ext_modules=cythonize(extensions),
     scripts=glob.glob('bin/*'),
-    tests_require=['pytest'],
+    test_suite='tests',
     cmdclass={
         'build_ext': build_ext,
         'sdist': sdist,
-        'test': PyTest,
     },
     classifiers=[
         'Intended Audience :: Developers',
