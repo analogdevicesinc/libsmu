@@ -116,8 +116,8 @@ namespace smu {
 
 		// Override virtual methods of the base Device class.
 		int get_default_rate() override;
-		int added() override;
-		int removed() override;
+		int claim() override;
+		int release() override;
 		int configure(uint64_t sampleRate) override;
 		int on() override;
 		int off() override;

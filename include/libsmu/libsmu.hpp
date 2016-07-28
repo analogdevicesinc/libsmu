@@ -376,12 +376,12 @@ namespace smu {
 		/// @brief Device claiming and initialization when a session adds this device.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
-		virtual int added() { return 0; }
+		virtual int claim() { return 0; }
 
 		/// @brief Device releasing when a session removes this device.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
-		virtual int removed() { return 0; }
+		virtual int release() { return 0; }
 
 		/// @brief Configurization and initialization for device sampling.
 		/// @param sampleRate The requested sampling rate for the device.

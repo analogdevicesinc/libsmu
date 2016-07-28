@@ -73,7 +73,7 @@ int M1000_Device::get_default_rate()
 	}
 }
 
-int M1000_Device::added()
+int M1000_Device::claim()
 {
 	int ret = 0;
 	ret = libusb_claim_interface(m_usb, 0);
@@ -81,7 +81,7 @@ int M1000_Device::added()
 	return -libusb_to_errno(ret);
 }
 
-int M1000_Device::removed()
+int M1000_Device::release()
 {
 	int ret = 0;
 	ret = libusb_release_interface(m_usb, 0);
