@@ -373,7 +373,7 @@ Device* Session::add(Device* device)
 	if (device) {
 		m_devices.insert(device);
 		DEBUG("device insert: %s\n", device->serial());
-		device->added();
+		device->claim();
 		return device;
 	}
 	return NULL;
@@ -399,7 +399,7 @@ void Session::remove(Device* device)
 {
 	if (device) {
 		m_devices.erase(device);
-		device->removed();
+		device->release();
 	} else {
 		DEBUG("no device removed\n");
 	}
