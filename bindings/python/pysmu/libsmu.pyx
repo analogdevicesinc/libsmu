@@ -149,7 +149,13 @@ cdef class Session:
             dev: The device targeted for updating. If not supplied or None, the
                 first attached device in the session will be used.
         """
-        return self._session.flash_firmware(file.encode(), dev._device)
+        cdef cpp_libsmu.Device *device
+        if dev is None:
+            device = NULL
+        else:
+            device = dev._device
+
+        return self._session.flash_firmware(file.encode(), device)
 
     def __dealloc__(self):
         # make sure the session is completed before deallocation
