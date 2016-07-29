@@ -1,13 +1,12 @@
 # Interface wrapper for the libsmu library.
 # distutils: language = c++
 
-from libcpp.memory cimport shared_ptr
 from libcpp.set cimport set
 from libcpp.vector cimport vector
 
 cdef extern from "libsmu/libsmu.hpp" namespace "smu":
     cdef cppclass Session:
-        vector[shared_ptr[Device]] m_available_devices
+        vector[Device*] m_available_devices
         set[Device*] m_devices
         int m_active_devices
         int m_queue_size

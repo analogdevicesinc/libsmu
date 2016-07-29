@@ -50,7 +50,7 @@ cdef class Session:
         def __get__(self):
             devices = []
             for d in self._session.m_available_devices:
-                devices.append(Device._create(d.get()))
+                devices.append(Device._create(d))
             return devices
 
     property devices:

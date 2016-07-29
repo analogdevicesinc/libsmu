@@ -17,8 +17,6 @@
 #include "usb.hpp"
 #include <libsmu/libsmu.hpp>
 
-using std::shared_ptr;
-
 using namespace std::placeholders;
 using namespace smu;
 
@@ -109,13 +107,13 @@ void Session::hotplug_detach(std::function<void(Device* device, void* data)> fun
 
 void Session::attached(libusb_device *usb_dev)
 {
-	shared_ptr<Device> dev = probe_device(usb_dev);
+	Device* dev = probe_device(usb_dev);
 	if (dev) {
 		std::lock_guard<std::mutex> lock(m_lock_devlist);
 		m_available_devices.push_back(dev);
 		DEBUG("Session::attached device serial: %s\n", dev->serial());
 		if (m_hotplug_attach_callback) {
-			m_hotplug_attach_callback(&*dev);
+			m_hotplug_attach_callback(dev);
 		}
 	}
 }
@@ -123,10 +121,10 @@ void Session::attached(libusb_device *usb_dev)
 void Session::detached(libusb_device *usb_dev)
 {
 	if (m_hotplug_detach_callback) {
-		shared_ptr<Device> dev = find_existing_device(usb_dev);
+		Device* dev = find_existing_device(usb_dev);
 		if (dev) {
 			DEBUG("Session::detached device serial: %s\n", dev->serial());
-			m_hotplug_detach_callback(&*dev);
+			m_hotplug_detach_callback(dev);
 		}
 	}
 }
@@ -306,7 +304,7 @@ int Session::scan()
 	// Iterate over the attached USB devices on the system, adding supported
 	// devices to the available list.
 	for (int i = 0; i < device_count; i++) {
-		shared_ptr<Device> dev = probe_device(usb_devs[i]);
+		Device* dev = probe_device(usb_devs[i]);
 		if (dev) {
 			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
@@ -318,9 +316,9 @@ int Session::scan()
 	return 0;
 }
 
-shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
+Device* Session::probe_device(libusb_device* usb_dev)
 {
-	shared_ptr<Device> dev = find_existing_device(usb_dev);
+	Device* dev = find_existing_device(usb_dev);
 
 	libusb_device_descriptor usb_desc;
 	int r = libusb_get_device_descriptor(usb_dev, &usb_desc);
@@ -332,7 +330,7 @@ shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
 	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
 	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
 			!= SUPPORTED_DEVICES.end()) {
-		dev = shared_ptr<Device>(new M1000_Device(this, usb_dev));
+		dev = new M1000_Device(this, usb_dev);
 	}
 
 	if (dev) {
@@ -347,10 +345,10 @@ shared_ptr<Device> Session::probe_device(libusb_device* usb_dev)
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* usb_dev)
+Device* Session::find_existing_device(libusb_device* usb_dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	for (auto dev: m_available_devices) {
+	for (Device* dev: m_available_devices) {
 		if (dev->m_device == usb_dev) {
 			return dev;
 		}
@@ -360,7 +358,7 @@ shared_ptr<Device> Session::find_existing_device(libusb_device* usb_dev)
 
 Device* Session::get_device(const char* serial)
 {
-	for (auto dev: m_devices) {
+	for (Device* dev: m_devices) {
 		if (strncmp(dev->serial(), serial, 31) == 0) {
 			return dev;
 		}
@@ -388,8 +386,8 @@ int Session::add_all()
 		return ret;
 
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	for (auto dev: m_available_devices) {
-		if (!add(&*dev))
+	for (Device* dev: m_available_devices) {
+		if (!add(dev))
 			ret++;
 	}
 	return ret;
@@ -408,7 +406,7 @@ void Session::remove(Device* device)
 int Session::configure(uint64_t sampleRate)
 {
 	int ret = 0;
-	for (auto dev: m_devices) {
+	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);
 		if (ret != 0)
 			return ret;
@@ -430,7 +428,7 @@ void Session::end()
 	if (!res) {
 		DEBUG("timed out\n");
 	}
-	for (auto dev: m_devices) {
+	for (Device* dev: m_devices) {
 		dev->off();
 	}
 }
@@ -444,7 +442,7 @@ void Session::wait_for_completion()
 void Session::start(uint64_t samples)
 {
 	m_cancellation = 0;
-	for (auto dev: m_devices) {
+	for (Device* dev: m_devices) {
 		dev->on();
 		// make sure all devices are synchronized
 		if (m_devices.size() > 1) {
@@ -458,7 +456,7 @@ void Session::start(uint64_t samples)
 void Session::cancel()
 {
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
-	for (auto dev: m_devices) {
+	for (Device* dev: m_devices) {
 		dev->cancel();
 	}
 }

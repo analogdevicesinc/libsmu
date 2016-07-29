@@ -114,7 +114,7 @@ namespace smu {
 		/// recognized on the system; however, the devices aren't necessarily
 		/// bound to a session. In order to add devices to a session, add()
 		/// must be used.
-		std::vector<std::shared_ptr<Device>> m_available_devices;
+		std::vector<Device*> m_available_devices;
 
 		/// @brief Devices that are part of this session.
 		/// These devices will be started when start() is called.
@@ -263,14 +263,14 @@ namespace smu {
 		/// @param usb_dev libusb device
 		/// @return If the usb device relates to a supported device the Device is returned,
 		/// otherwise NULL is returned.
-		std::shared_ptr<Device> probe_device(libusb_device* usb_dev);
+		Device* probe_device(libusb_device* usb_dev);
 
 		/// @brief Find an existing, available device.
 		/// @param usb_dev libusb device
 		/// @return If the usb device relates to an existing,
 		/// available device the Device is returned,
 		/// otherwise NULL is returned.
-		std::shared_ptr<Device> find_existing_device(libusb_device* usb_dev);
+		Device* find_existing_device(libusb_device* usb_dev);
 	};
 
 	/// @brief Generic device class.
