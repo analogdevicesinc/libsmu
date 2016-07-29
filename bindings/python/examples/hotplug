@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+#
+# Simple script showing how custom functions can be executed during hotplug
+# events, use Ctrl-C to exit.
+
+from __future__ import print_function
+
+from signal import signal, SIG_DFL, SIGINT
+import time
+
+from pysmu import Session
+
+
+def attached(dev):
+    print('device attached: {}'.format(dev.serial))
+
+def detached(dev):
+    print('device detached: {}'.format(dev.serial))
+
+
+if __name__ == '__main__':
+    # don't throw KeyboardInterrupt on Ctrl-C
+    signal(SIGINT, SIG_DFL)
+
+    session = Session()
+    session.hotplug_attach(attached)
+    session.hotplug_detach(detached)
+    session.add_all()
+
+    print('waiting for hotplug events...')
+    while True:
+        time.sleep(1)
