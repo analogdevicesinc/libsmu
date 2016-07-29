@@ -20,40 +20,7 @@ import time
 import pysmu
 
 
-if __name__ == '__main__':
-    signal(SIGINT, SIG_DFL)
-
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    mux = parser.add_mutually_exclusive_group()
-    mux.add_argument(
-        '-d', '--display-calibration', action='store_true', dest='display',
-        help='display calibration data from a device')
-    mux.add_argument(
-        '-r', '--reset-calibration', action='store_true', dest='reset',
-        help='reset calibration data on a device to the defaults')
-    mux.add_argument(
-        '-w', '--write-calibration', metavar='PATH_TO_CAL_FILE', dest='write',
-        help='write calibration data to a device')
-    mux.add_argument(
-        '-f', '--flash', metavar='PATH_TO_FIRMWARE', dest='firmware',
-        help='flash firmware image to a device')
-    mux.add_argument(
-        '-l', '--list-devices', action='store_true',
-        help='list supported devices currently attached to the system')
-    mux.add_argument(
-        '-p', '--hotplug-devices', action='store_true',
-        help='flash firmware image to a device')
-    mux.add_argument(
-        '--version', action='version',
-        version='pysmu {}, (libsmu {})'.format(pysmu.__version__, pysmu.libsmu.__version__))
-
-    options = parser.parse_args()
-    if not any(vars(options).values()):
-        parser.error('at least one argument must be specified')
-
-    session = pysmu.Session()
+def calibration(session, args):
     session.add_all()
     if not session.devices:
         sys.stderr.write("No supported devices are plugged in.\n")
@@ -61,23 +28,23 @@ if __name__ == '__main__':
 
     dev = session.devices[0]
 
-    if options.write is not None:
-        if not os.path.exists(options.write):
-            parser.error("calibration file doesn't exist: {}".format(options.write))
+    if args.write is not None:
+        if not os.path.exists(args.write):
+            parser.error("calibration file doesn't exist: {}".format(args.write))
         try:
-            dev.write_calibration(options.write)
+            dev.write_calibration(args.write)
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
             sys.exit(1)
         print("successfully updated calibration")
-    elif options.reset:
+    elif args.reset:
         try:
             dev.write_calibration(None)
         except (ValueError, RuntimeError) as e:
             print("calibration failed: {}".format(e.message))
             sys.exit(1)
         print("successfully reset calibration")
-    elif options.display:
+    elif args.display:
         cal_str_map = {
             0: 'Channel A, measure V',
             1: 'Channel A, measure I',
@@ -94,21 +61,71 @@ if __name__ == '__main__':
             print("  offset: {:.4f}".format(vals[0]))
             print("  p gain: {:.4f}".format(vals[1]))
             print("  n gain: {:.4f}".format(vals[2]))
-    elif options.firmware:
-        session.flash_firmware(options.firmware)
-    elif options.list_devices:
-        for i, d in enumerate(session.devices):
-            print('device {}: serial {}: fw {}: hw {}'.format(i, dev.serial, dev.fwver, dev.hwver))
-    elif options.hotplug:
-        def attached(dev):
-            print('device attached: serial {}: fw {}'.format(dev.serial, dev.fwver))
 
-        def detached(dev):
-            print('device detached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+def list_devices(session, args):
+    session.add_all()
+    for i, dev in enumerate(session.devices):
+        print('device {}: serial {}: fw {}: hw {}'.format(i, dev.serial, dev.fwver, dev.hwver))
 
-        session.hotplug_attach(attached)
-        session.hotplug_detach(detached)
 
-        print('waiting for hotplug events...')
-        while True:
-            time.sleep(1)
+def hotplug(session, args):
+    def attached(dev):
+        print('device attached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+
+    def detached(dev):
+        print('device detached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+
+    session.add_all()
+    session.hotplug_attach(attached)
+    session.hotplug_detach(detached)
+
+    print('waiting for hotplug events...')
+    while True:
+        time.sleep(1)
+
+def flash(session, args):
+    session.add_all()
+    session.flash_firmware(args.firmware)
+
+
+if __name__ == '__main__':
+    signal(SIGINT, SIG_DFL)
+
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    subparsers = parser.add_subparsers(help='available commands')
+    parser.add_argument(
+        '--version', action='version',
+        version='pysmu {}, (libsmu {})'.format(pysmu.__version__, pysmu.libsmu.__version__))
+
+    parser_cal = subparsers.add_parser('cal', help='display, reset, or write calibration data')
+    parser_cal.set_defaults(func=calibration)
+    parser_cal_mux = parser_cal.add_mutually_exclusive_group()
+    parser_cal_mux.add_argument(
+        '-d', '--display', action='store_true', dest='display', default=True,
+        help='display calibration data from a device')
+    parser_cal_mux.add_argument(
+        '-r', '--reset', action='store_true', dest='reset',
+        help='reset calibration data on a device to the defaults')
+    parser_cal_mux.add_argument(
+        '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='write',
+        help='write calibration data to a device')
+
+    parser_list = subparsers.add_parser('list', help='list devices')
+    parser_list.set_defaults(func=list_devices)
+    parser_list_mux = parser_list.add_mutually_exclusive_group()
+    parser_list_mux.add_argument(
+        '-a', '--available', action='store_true',
+        help='list supported devices currently attached to the system')
+
+    parser_hotplug = subparsers.add_parser('hotplug', help='hotplug devices')
+    parser_hotplug.set_defaults(func=hotplug)
+
+    parser_flash = subparsers.add_parser('flash', help='flash firmware image to a device')
+    parser_flash.add_argument('firmware_path')
+    parser_flash.set_defaults(func=flash)
+
+    args = parser.parse_args()
+    session = pysmu.Session()
+    args.func(session, args)
