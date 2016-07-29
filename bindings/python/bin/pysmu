@@ -43,7 +43,7 @@ if __name__ == '__main__':
         '-l', '--list-devices', action='store_true',
         help='list supported devices currently attached to the system')
     mux.add_argument(
-        '-p', '--hotplug', action='store_true',
+        '-p', '--hotplug-devices', action='store_true',
         help='flash firmware image to a device')
     mux.add_argument(
         '--version', action='version',
