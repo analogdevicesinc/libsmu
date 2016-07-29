@@ -2,8 +2,8 @@
 
 """Utility for managing M1K devices.
 
-This tool provides support for displaying, writing, and resetting the
-calibration data for an M1K device.
+This script provides similar support to the smu command-line utility mostly to
+provide examples for how to leverage the pysmu bindings.
 """
 
 from __future__ import print_function
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter)
     mux = parser.add_mutually_exclusive_group()
     mux.add_argument(
-        '-d', '--display-calibration', action='store_true', default=True, dest='display',
+        '-d', '--display-calibration', action='store_true', dest='display',
         help='display calibration data from a device')
     mux.add_argument(
         '-r', '--reset-calibration', action='store_true', dest='reset',
@@ -35,6 +35,9 @@ if __name__ == '__main__':
     mux.add_argument(
         '-w', '--write-calibration', metavar='PATH_TO_CAL_FILE', dest='write',
         help='write calibration data to a device')
+    mux.add_argument(
+        '-f', '--flash', metavar='PATH_TO_FIRMWARE', dest='firmware',
+        help='flash firmware image to a device')
     options = parser.parse_args()
 
     session = Session()
@@ -83,3 +86,5 @@ if __name__ == '__main__':
             print("  offset: {:.4f}".format(vals[0]))
             print("  p gain: {:.4f}".format(vals[1]))
             print("  n gain: {:.4f}".format(vals[2]))
+    elif options.firmware:
+        session.flash_firmware(options.firmware)
