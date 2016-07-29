@@ -53,23 +53,7 @@ if __name__ == '__main__':
         sys.stderr.write("No supported devices are plugged in.\n")
         sys.exit(1)
 
-    if len(session.devices) > 1:
-        sys.stderr.write("Multiple devices are attached, calibration only works on a single device.\n")
-        sys.stderr.write("Please detach all devices except the one targeted for calibration.\n")
-        sys.exit(1)
-
     dev = session.devices[0]
-
-    cal_str_map = {
-        0: 'Channel A, measure V',
-        1: 'Channel A, measure I',
-        2: 'Channel A, source V',
-        3: 'Channel A, source I',
-        4: 'Channel B, measure V',
-        5: 'Channel B, measure I',
-        6: 'Channel B, source V',
-        7: 'Channel B, source I',
-    }
 
     if options.write is not None:
         if not os.path.exists(options.write):
@@ -88,6 +72,17 @@ if __name__ == '__main__':
             sys.exit(1)
         print("successfully reset calibration")
     elif options.display:
+        cal_str_map = {
+            0: 'Channel A, measure V',
+            1: 'Channel A, measure I',
+            2: 'Channel A, source V',
+            3: 'Channel A, source I',
+            4: 'Channel B, measure V',
+            5: 'Channel B, measure I',
+            6: 'Channel B, source V',
+            7: 'Channel B, source I',
+        }
+
         for i, vals in enumerate(dev.calibration):
             print(cal_str_map[i])
             print("  offset: {:.4f}".format(vals[0]))
