@@ -21,18 +21,32 @@ cdef class Session:
         # initialize/acquire the GIL
         PyEval_InitThreads()
 
-    def hotplug_attach(self, f):
-        self._session.hotplug_attach(self._hotplug_callback, <void*>f)
+    def hotplug_attach(self, func):
+        """Register a function to run on a device attach event.
 
-    def hotplug_detach(self, f):
-        self._session.hotplug_detach(self._hotplug_callback, <void*>f)
+        Attributes:
+            func: Python function to run on device attach events. It should
+                accept a single parameter, the device object being attached.
+        """
+        self._session.hotplug_attach(self._hotplug_callback, <void*>func)
+
+    def hotplug_detach(self, func):
+        """Register a function to run on a device detach event.
+
+        Attributes:
+            func: Python function to run on device detach events. It should
+                accept a single parameter, the device object being detached.
+        """
+        self._session.hotplug_detach(self._hotplug_callback, <void*>func)
 
     @staticmethod
-    cdef void _hotplug_callback(cpp_libsmu.Device *device, void *f) with gil:
-        d = Device._create(device)
-        (<object>f)(d)
+    cdef void _hotplug_callback(cpp_libsmu.Device *device, void *func) with gil:
+        """Internal proxy to run the python hotplug functions from the C++ side."""
+        dev = Device._create(device)
+        (<object>func)(dev)
 
     property available_devices:
+        """Devices that are accessible on the system."""
         def __get__(self):
             devices = []
             for d in self._session.m_available_devices:
@@ -40,6 +54,7 @@ cdef class Session:
             return devices
 
     property devices:
+        """Devices that are included in this session."""
         def __get__(self):
             devices = []
             for d in self._session.m_devices:
@@ -47,26 +62,32 @@ cdef class Session:
             return devices
 
     property active_devices:
+        """Devices that are currently active (streaming data) in this session."""
         def __get__(self):
             return self._session.m_active_devices
 
     property queue_size:
+        """Input/output sample queue size."""
         def __get__(self):
             return self._session.m_queue_size
         def __set__(self, size):
             self._session.m_queue_size = size
 
     property cancelled:
+        """Cancellation status of a session."""
         def __get__(self):
             return self._session.cancelled()
 
     def scan(self):
+        """Scan the system for supported devices."""
         return self._session.scan()
 
     def add_all(self):
+        """Scan the system and add all supported devices to the session."""
         return self._session.add_all()
 
     def add(self, Device dev):
+        """Add a device to the session."""
         cdef cpp_libsmu.Device* device
         device = self._session.add(dev._device)
         if device is NULL:
@@ -75,31 +96,60 @@ cdef class Session:
             return dev
 
     def remove(self, Device dev):
+        """Remove a device from the session."""
         self._session.remove(dev._device)
 
     def destroy(self, Device dev):
+        """Drop a device from the ltest of available devices."""
         self._session.destroy(dev._device)
 
     def configure(self, int sample_rate):
+        """Configure the session's sample rate.
+
+        Attributes:
+            sample_rate (int): Sample rate to run the session at.
+        """
         return self._session.configure(sample_rate)
 
     def run(self, int samples):
+        """Run the configured capture for a certain number of samples.
+
+        Attributes:
+            samples (int): Number of samples to run the session for.
+                If 0, run in continuous mode.
+        """
         self._session.run(samples)
 
     def start(self, int samples):
+        """Start the currently configured capture, but do not wait for it to complete.
+
+        Attributes:
+            samples (int): Number of samples to capture before stopping.
+                If 0, run in continuous mode.
+        """
         return self._session.start(samples)
 
     def cancel(self):
+        """Cancel the current capture and block while waiting for completion."""
         return self._session.cancel()
 
     def wait_for_completion(self):
+        """Block until all devices have are finished streaming in the session."""
         return self._session.wait_for_completion()
 
     def end(self):
+        """Block until all devices have completed, then turn off the devices."""
         return self._session.end()
 
     def flash_firmware(self, file, Device dev=None):
-        return self._session.flash_firmware(file, dev._device)
+        """Update firmware for a given device.
+
+        Attributes:
+            file (str): Path to firmware file.
+            dev: The device targeted for updating. If not supplied or None, the
+                first attached device in the session will be used.
+        """
+        return self._session.flash_firmware(file.encode(), dev._device)
 
     def __dealloc__(self):
         # make sure the session is completed before deallocation
