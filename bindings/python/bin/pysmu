@@ -15,6 +15,7 @@ import os
 import signal
 from signal import signal, SIG_DFL, SIGINT
 import sys
+import time
 
 from pysmu import Session
 
@@ -37,6 +38,9 @@ if __name__ == '__main__':
         help='write calibration data to a device')
     mux.add_argument(
         '-f', '--flash', metavar='PATH_TO_FIRMWARE', dest='firmware',
+        help='flash firmware image to a device')
+    mux.add_argument(
+        '-p', '--hotplug', action='store_true',
         help='flash firmware image to a device')
 
     options = parser.parse_args()
@@ -91,3 +95,16 @@ if __name__ == '__main__':
             print("  n gain: {:.4f}".format(vals[2]))
     elif options.firmware:
         session.flash_firmware(options.firmware)
+    elif options.hotplug:
+        def attached(dev):
+            print('device attached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+
+        def detached(dev):
+            print('device detached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+
+        session.hotplug_attach(attached)
+        session.hotplug_detach(detached)
+
+        print('waiting for hotplug events...')
+        while True:
+            time.sleep(1)
