@@ -43,3 +43,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         void unlock()
         int write_calibration(const char* path)
         void calibration(vector[vector[float]]* cal)
+
+
+cdef extern from "libsmu/version.hpp":
+    const char* libsmu_version_str()
