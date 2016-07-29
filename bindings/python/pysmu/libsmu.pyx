@@ -3,6 +3,7 @@
 from libcpp.vector cimport vector
 
 cimport cpp_libsmu
+__version__ = cpp_libsmu.libsmu_version_str().decode()
 
 cdef extern from "Python.h" nogil:
     void PyEval_InitThreads()
