@@ -45,7 +45,7 @@ static void display_usage(void)
 	printf("smu: utility for managing M1K devices\n"
 		"\n"
 		" -h, --help                   print this help message and exit\n"
-		" -v, --version                show libsmu version\n"
+		" --version                    show libsmu version\n"
 		" -l, --list                   list supported devices currently attached to the system\n"
 		" -p, --hotplug                simple session device hotplug testing\n"
 		" -s, --stream                 stream samples to stdout from a single attached device\n"
