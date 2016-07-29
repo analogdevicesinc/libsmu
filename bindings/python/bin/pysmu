@@ -38,7 +38,10 @@ if __name__ == '__main__':
     mux.add_argument(
         '-f', '--flash', metavar='PATH_TO_FIRMWARE', dest='firmware',
         help='flash firmware image to a device')
+
     options = parser.parse_args()
+    if not any(vars(options).values()):
+        parser.error('at least one argument must be specified')
 
     session = Session()
     session.add_all()
