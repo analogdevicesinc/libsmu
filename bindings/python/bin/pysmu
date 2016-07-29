@@ -17,7 +17,7 @@ from signal import signal, SIG_DFL, SIGINT
 import sys
 import time
 
-from pysmu import Session
+import pysmu
 
 
 if __name__ == '__main__':
@@ -42,12 +42,15 @@ if __name__ == '__main__':
     mux.add_argument(
         '-p', '--hotplug', action='store_true',
         help='flash firmware image to a device')
+    mux.add_argument(
+        '--version', action='version',
+        version='pysmu {}, (libsmu {})'.format(pysmu.__version__, pysmu.libsmu.__version__))
 
     options = parser.parse_args()
     if not any(vars(options).values()):
         parser.error('at least one argument must be specified')
 
-    session = Session()
+    session = pysmu.Session()
     session.add_all()
     if not session.devices:
         sys.stderr.write("No supported devices are plugged in.\n")
