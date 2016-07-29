@@ -195,9 +195,9 @@ namespace smu {
 		/// has been stopped successfully.
 		bool cancelled() { return m_cancellation != 0; }
 
-		/// @brief Update device firmware for a given device.
-		/// @param file Firmware file started for deployment to the device.
-		/// @param device The Device targeted for updating.
+		/// @brief Update firmware for a given device.
+		/// @param file Path to firmware file.
+		/// @param device The device targeted for updating.
 		/// If device is NULL the first attached device in a session will be
 		/// used instead. If no configured devices are found, devices in SAM-BA
 		/// bootloader mode are searched for and the first matching device is used.
