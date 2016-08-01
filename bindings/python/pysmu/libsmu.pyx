@@ -174,6 +174,8 @@ cdef class Session:
             file (str): Path to firmware file.
             dev: The device targeted for updating. If not supplied or None, the
                 first attached device in the session will be used.
+
+        Raises: SessionError on writing failures.
         """
         cdef cpp_libsmu.Device *device
         if dev is None:
@@ -181,7 +183,10 @@ cdef class Session:
         else:
             device = dev._device
 
-        return self._session.flash_firmware(file.encode(), device)
+        try:
+            return self._session.flash_firmware(file.encode(), device)
+        except RuntimeError as e:
+            raise SessionError(str(e))
 
     def __dealloc__(self):
         # make sure the session is completed before deallocation
