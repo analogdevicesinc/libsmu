@@ -25,6 +25,7 @@ def pprint(s, **kwargs):
     print('{}: {}'.format(os.path.basename(__file__), s), **kwargs)
 
 def calibration(session, args):
+    """Read, write, or reset device calibration."""
     session.add_all()
     if not session.devices:
         pprint('no supported devices are plugged in', file=sys.stderr)
@@ -67,12 +68,14 @@ def calibration(session, args):
             print("  n gain: {:.4f}".format(vals[2]))
 
 def list_devices(session, args):
+    """List all devices in a session."""
     session.add_all()
     for i, dev in enumerate(session.devices):
         print('device {}: {}'.format(i, dev))
 
 
 def hotplug(session, args):
+    """Simple hotplug testing method."""
     def attached(dev):
         print('device attached: {}'.format(dev))
 
@@ -88,6 +91,7 @@ def hotplug(session, args):
         time.sleep(1)
 
 def flash(session, args):
+    """Flash a device's firmware."""
     session.add_all()
     try:
         session.flash_firmware(args.firmware_path)
