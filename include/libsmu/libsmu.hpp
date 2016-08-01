@@ -374,7 +374,7 @@ namespace smu {
 		virtual int write_calibration(const char* cal_file_name) { return 0; }
 
 		/// @brief Get the device calibration data from the EEPROM.
-		/// @param cal A vector of float values.
+		/// @param cal A vector of vectors containing calibration values.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;
 
 	protected:
