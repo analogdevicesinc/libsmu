@@ -280,13 +280,18 @@ void Session::flash_firmware(const char *file, Device *dev)
 	libusb_close(usb_handle);
 }
 
-void Session::destroy(Device *dev)
+int Session::destroy(Device *dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	if (dev)
-		for (unsigned i = 0; i < m_available_devices.size(); i++)
-			if (m_available_devices[i]->serial() == dev->serial())
+	if (dev) {
+		for (unsigned i = 0; i < m_available_devices.size(); i++) {
+			if (m_available_devices[i]->serial() == dev->serial()) {
 				m_available_devices.erase(m_available_devices.begin() + i);
+				return 0;
+			}
+		}
+	}
+	return -1;
 }
 
 int Session::scan()

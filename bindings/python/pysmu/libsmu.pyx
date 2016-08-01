@@ -116,7 +116,8 @@ cdef class Session:
 
     def destroy(self, Device dev):
         """Drop a device from the ltest of available devices."""
-        self._session.destroy(dev._device)
+        if self._session.destroy(dev._device):
+            raise SessionError('failed destroying device ({})'.format(dev.serial))
 
     def configure(self, int sample_rate):
         """Configure the session's sample rate.
