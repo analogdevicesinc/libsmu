@@ -65,15 +65,15 @@ def calibration(session, args):
 def list_devices(session, args):
     session.add_all()
     for i, dev in enumerate(session.devices):
-        print('device {}: serial {}: fw {}: hw {}'.format(i, dev.serial, dev.fwver, dev.hwver))
+        print('device {}: {}'.format(i, dev))
 
 
 def hotplug(session, args):
     def attached(dev):
-        print('device attached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+        print('device attached: {}'.format(dev))
 
     def detached(dev):
-        print('device detached: serial {}: fw {}'.format(dev.serial, dev.fwver))
+        print('device detached: {}'.format(dev))
 
     session.add_all()
     session.hotplug_attach(attached)

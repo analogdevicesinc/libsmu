@@ -12,10 +12,10 @@ from pysmu import Session
 
 
 def attached(dev):
-    print('device attached: {}'.format(dev.serial))
+    print('device attached: {}'.format(dev))
 
 def detached(dev):
-    print('device detached: {}'.format(dev.serial))
+    print('device detached: {}'.format(dev))
 
 
 if __name__ == '__main__':
