@@ -4,6 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
+#include <ctime>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -67,11 +68,15 @@ Session::Session()
 		DEBUG("libusb hotplug not supported, only currently attached devices will be used.\n");
 	}
 
+	struct timeval zero_tv;
+	zero_tv.tv_sec = 0;
+	zero_tv.tv_usec = 0;
+
 	// Spawn a thread to handle pending USB events.
 	m_usb_thread_loop = true;
 	m_usb_thread = std::thread([=]() {
 		while (m_usb_thread_loop) {
-			libusb_handle_events_completed(m_usb_ctx, NULL);
+			libusb_handle_events_timeout_completed(m_usb_ctx, const_cast<timeval *>(&zero_tv), NULL);
 		}
 	});
 
