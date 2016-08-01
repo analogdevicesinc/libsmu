@@ -393,14 +393,16 @@ int Session::add_all()
 	return ret;
 }
 
-void Session::remove(Device* device)
+int Session::remove(Device* device)
 {
+	int ret = -1;
+
 	if (device) {
-		m_devices.erase(device);
-		device->release();
-	} else {
-		DEBUG("no device removed\n");
+		ret = device->release();
+		if (!ret)
+			m_devices.erase(device);
 	}
+	return ret;
 }
 
 int Session::configure(uint64_t sampleRate)

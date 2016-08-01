@@ -111,7 +111,8 @@ cdef class Session:
 
     def remove(self, Device dev):
         """Remove a device from the session."""
-        self._session.remove(dev._device)
+        if self._session.remove(dev._device):
+            raise SessionError('failed removing device ({}) from the session'.format(dev.serial))
 
     def destroy(self, Device dev):
         """Drop a device from the ltest of available devices."""
