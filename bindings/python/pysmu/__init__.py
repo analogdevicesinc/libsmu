@@ -3,4 +3,5 @@
 
 __version__ = '0.9.0'
 
-from pysmu.libsmu import Session, Device
+from .libsmu import Session, Device
+from .exceptions import SessionError

@@ -3,7 +3,11 @@
 from libcpp.vector cimport vector
 
 cimport cpp_libsmu
+
+from .exceptions import SessionError
+
 __version__ = cpp_libsmu.libsmu_version_str().decode()
+
 
 cdef extern from "Python.h" nogil:
     void PyEval_InitThreads()
@@ -80,21 +84,30 @@ cdef class Session:
             return self._session.cancelled()
 
     def scan(self):
-        """Scan the system for supported devices."""
-        return self._session.scan()
+        """Scan the system for supported devices.
+
+        Raises: SessionError on failure.
+        """
+        if self._session.scan():
+            raise SessionError('scanning for supported devices failed')
 
     def add_all(self):
-        """Scan the system and add all supported devices to the session."""
-        return self._session.add_all()
+        """Scan the system and add all supported devices to the session.
+
+        Raises: SessionError on failure.
+        """
+        if self._session.add_all():
+            raise SessionError('scanning and/or adding all supported devices failed')
 
     def add(self, Device dev):
-        """Add a device to the session."""
+        """Add a device to the session.
+
+        Raises: SessionError on failure.
+        """
         cdef cpp_libsmu.Device* device
         device = self._session.add(dev._device)
         if device is NULL:
-            return None
-        else:
-            return dev
+            raise SessionError('failed adding device ({}) to the session'.format(dev.serial))
 
     def remove(self, Device dev):
         """Remove a device from the session."""
@@ -109,8 +122,11 @@ cdef class Session:
 
         Attributes:
             sample_rate (int): Sample rate to run the session at.
+
+        Raises: SessionError on failure.
         """
-        return self._session.configure(sample_rate)
+        if self._session.configure(sample_rate):
+            raise SessionError('configuring device failed')
 
     def run(self, int samples):
         """Run the configured capture for a certain number of samples.
@@ -131,16 +147,20 @@ cdef class Session:
         return self._session.start(samples)
 
     def cancel(self):
-        """Cancel the current capture and block while waiting for completion."""
-        return self._session.cancel()
+        """Cancel the current capture and block while waiting for completion.
+
+        Raises: SessionError on failure.
+        """
+        if self._session.cancel():
+            raise SessionError('canceling device transfers failed')
 
     def wait_for_completion(self):
         """Block until all devices have are finished streaming in the session."""
-        return self._session.wait_for_completion()
+        self._session.wait_for_completion()
 
     def end(self):
         """Block until all devices have completed, then turn off the devices."""
-        return self._session.end()
+        self._session.end()
 
     def flash_firmware(self, file, Device dev=None):
         """Update firmware for a given device.
@@ -205,7 +225,7 @@ cdef class Device:
         Args:
             file (str): path to calibration file
                 (use None to reset the calibration to the defaults)
-        Returns: True if writing the calibration settings was successful.
+
         Raises: RuntimeError on writing failures.
         """
         cdef const char* cal_path
@@ -217,8 +237,7 @@ cdef class Device:
 
         r = self._device.write_calibration(cal_path)
         if r < 0:
-            raise RuntimeError()
-        return True
+            raise RuntimeError('writing device calibration data failed')
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
