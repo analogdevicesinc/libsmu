@@ -241,6 +241,9 @@ cdef class Device:
         if r < 0:
             raise RuntimeError('failed writing device calibration data')
 
+    def __str__(self):
+        return 'serial {}: fw {}: hw {}'.format(self.serial, self.fwver, self.hwver)
+
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
         """Perform raw USB control transfers.
