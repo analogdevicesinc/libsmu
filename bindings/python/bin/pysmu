@@ -20,10 +20,14 @@ import time
 import pysmu
 
 
+def pprint(s, **kwargs):
+    """Prefix output with program name."""
+    print('{}: {}'.format(os.path.basename(__file__), s), **kwargs)
+
 def calibration(session, args):
     session.add_all()
     if not session.devices:
-        sys.stderr.write("No supported devices are plugged in.\n")
+        pprint('no supported devices are plugged in', file=sys.stderr)
         sys.exit(1)
 
     dev = session.devices[0]
@@ -34,16 +38,16 @@ def calibration(session, args):
         try:
             dev.write_calibration(args.write)
         except (ValueError, RuntimeError) as e:
-            print("calibration failed: {}".format(e.message))
+            pprint("calibration failed: {}".format(e.message))
             sys.exit(1)
-        print("successfully updated calibration")
+        pprint("successfully updated calibration")
     elif args.reset:
         try:
             dev.write_calibration(None)
         except (ValueError, RuntimeError) as e:
-            print("calibration failed: {}".format(e.message))
+            pprint("calibration failed: {}".format(e.message))
             sys.exit(1)
-        print("successfully reset calibration")
+        pprint("successfully reset calibration")
     elif args.display:
         cal_str_map = {
             0: 'Channel A, measure V',
@@ -79,7 +83,7 @@ def hotplug(session, args):
     session.hotplug_attach(attached)
     session.hotplug_detach(detached)
 
-    print('waiting for hotplug events...')
+    pprint('waiting for hotplug events...')
     while True:
         time.sleep(1)
 
@@ -88,7 +92,7 @@ def flash(session, args):
     try:
         session.flash_firmware(args.firmware_path)
     except pysmu.SessionError as e:
-        print('{}: {}'.format(os.path.basename(__file__), str(e)))
+        pprint(str(e))
 
 
 if __name__ == '__main__':
