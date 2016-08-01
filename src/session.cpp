@@ -453,12 +453,17 @@ void Session::start(uint64_t samples)
 	}
 }
 
-void Session::cancel()
+int Session::cancel()
 {
+	int ret;
+
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (Device* dev: m_devices) {
-		dev->cancel();
+		ret = dev->cancel();
+		if (ret < 0)
+			return ret;
 	}
+	return 0;
 }
 
 void Session::handle_error(int status, const char * tag)
