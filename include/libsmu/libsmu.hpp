@@ -186,7 +186,11 @@ namespace smu {
 		void start(uint64_t samples);
 
 		/// @brief Cancel capture and block waiting for it to complete.
-		void cancel();
+		/// @return On success, 0 is returned.
+		/// @return On error, -1 is returned. Note that the cancellation
+		/// process will stop on the first device that fails to cancel its
+		/// capture.
+		int cancel();
 
 		/// @brief Determine the cancellation status of a session.
 		/// @return True, if the session has been cancelled (usually from

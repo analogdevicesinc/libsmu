@@ -20,7 +20,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         void configure(int sample_rate)
         void run(int samples)
         void start(int samples)
-        void cancel()
+        int cancel()
         bint cancelled()
         void flash_firmware(const char* path, Device* dev) except +
         void wait_for_completion()
