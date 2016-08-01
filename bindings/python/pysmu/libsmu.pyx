@@ -89,7 +89,7 @@ cdef class Session:
         Raises: SessionError on failure.
         """
         if self._session.scan():
-            raise SessionError('scanning for supported devices failed')
+            raise SessionError('failed scanning for supported devices')
 
     def add_all(self):
         """Scan the system and add all supported devices to the session.
@@ -97,7 +97,7 @@ cdef class Session:
         Raises: SessionError on failure.
         """
         if self._session.add_all():
-            raise SessionError('scanning and/or adding all supported devices failed')
+            raise SessionError('failed scanning and/or adding all supported devices')
 
     def add(self, Device dev):
         """Add a device to the session.
@@ -107,12 +107,12 @@ cdef class Session:
         cdef cpp_libsmu.Device* device
         device = self._session.add(dev._device)
         if device is NULL:
-            raise SessionError('failed adding device ({}) to the session'.format(dev.serial))
+            raise SessionError('failed adding device ({})'.format(dev.serial))
 
     def remove(self, Device dev):
         """Remove a device from the session."""
         if self._session.remove(dev._device):
-            raise SessionError('failed removing device ({}) from the session'.format(dev.serial))
+            raise SessionError('failed removing device ({})'.format(dev.serial))
 
     def destroy(self, Device dev):
         """Drop a device from the ltest of available devices."""
@@ -128,7 +128,7 @@ cdef class Session:
         Raises: SessionError on failure.
         """
         if self._session.configure(sample_rate):
-            raise SessionError('configuring device failed')
+            raise SessionError('failed configuring device')
 
     def run(self, int samples):
         """Run the configured capture for a certain number of samples.
@@ -154,7 +154,7 @@ cdef class Session:
         Raises: SessionError on failure.
         """
         if self._session.cancel():
-            raise SessionError('canceling device transfers failed')
+            raise SessionError('failed canceling device transfers')
 
     def wait_for_completion(self):
         """Block until all devices have are finished streaming in the session."""
@@ -239,7 +239,7 @@ cdef class Device:
 
         r = self._device.write_calibration(cal_path)
         if r < 0:
-            raise RuntimeError('writing device calibration data failed')
+            raise RuntimeError('failed writing device calibration data')
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
