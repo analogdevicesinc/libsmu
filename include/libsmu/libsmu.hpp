@@ -181,13 +181,15 @@ namespace smu {
 
 		/// @brief Run the currently configured capture and wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
-		void run(uint64_t samples);
+		int run(uint64_t samples);
 
 		/// @brief Start the currently configured capture, but do not wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
 		/// Once started, the only allowed Session methods are cancel() and end()
 		/// until the session has stopped.
-		void start(uint64_t samples);
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		int start(uint64_t samples);
 
 		/// @brief Cancel capture and block waiting for it to complete.
 		/// @return On success, 0 is returned.
@@ -225,7 +227,9 @@ namespace smu {
 		void wait_for_completion();
 
 		/// @brief Block until all devices have completed, then turn off the devices.
-		void end();
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		int end();
 
 		/// @brief Callback run via the USB thread on session completion.
 		/// Called with the current value of m_cancellation as an argument,

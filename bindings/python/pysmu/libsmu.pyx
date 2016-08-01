@@ -137,7 +137,8 @@ cdef class Session:
             samples (int): Number of samples to run the session for.
                 If 0, run in continuous mode.
         """
-        self._session.run(samples)
+        if self._session.run(samples):
+            raise SessionError('failed running session stream')
 
     def start(self, int samples):
         """Start the currently configured capture, but do not wait for it to complete.
@@ -146,7 +147,8 @@ cdef class Session:
             samples (int): Number of samples to capture before stopping.
                 If 0, run in continuous mode.
         """
-        return self._session.start(samples)
+        if self._session.start(samples):
+            raise SessionError('failed starting session stream')
 
     def cancel(self):
         """Cancel the current capture and block while waiting for completion.
@@ -162,7 +164,8 @@ cdef class Session:
 
     def end(self):
         """Block until all devices have completed, then turn off the devices."""
-        self._session.end()
+        if self._session.end():
+            raise SessionError('failed ending session stream')
 
     def flash_firmware(self, file, Device dev=None):
         """Update firmware for a given device.

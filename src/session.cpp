@@ -387,7 +387,7 @@ int Session::add_all()
 	int ret;
 
 	ret = scan();
-	if (ret != 0)
+	if (ret)
 		return ret;
 
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
@@ -412,32 +412,44 @@ int Session::remove(Device* device)
 
 int Session::configure(uint64_t sampleRate)
 {
-	int ret = 0;
+	int ret;
+
 	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);
-		if (ret != 0)
-			return ret;
+		if (ret)
+			break;
 	}
 	return ret;
 }
 
-void Session::run(uint64_t samples)
+int Session::run(uint64_t samples)
 {
-	start(samples);
-	end();
+	int ret;
+
+	ret = start(samples);
+	if (ret)
+		return ret;
+	ret = end();
+	return ret;
 }
 
-void Session::end()
+int Session::end()
 {
+	int ret;
 	std::unique_lock<std::mutex> lk(m_lock);
+
 	auto now = std::chrono::system_clock::now();
 	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
 	if (!res) {
 		DEBUG("timed out\n");
 	}
+
 	for (Device* dev: m_devices) {
-		dev->off();
+		ret = dev->off();
+		if (ret)
+			break;
 	}
+	return ret;
 }
 
 void Session::wait_for_completion()
@@ -446,18 +458,27 @@ void Session::wait_for_completion()
 	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 }
 
-void Session::start(uint64_t samples)
+int Session::start(uint64_t samples)
 {
+	int ret;
 	m_cancellation = 0;
+
 	for (Device* dev: m_devices) {
-		dev->on();
+		ret = dev->on();
+		if (ret)
+			break;
 		// make sure all devices are synchronized
 		if (m_devices.size() > 1) {
-			dev->sync();
+			ret = dev->sync();
+			if (ret)
+				break;
 		}
-		dev->run(samples);
+		ret = dev->run(samples);
+		if (ret)
+			break;
 		m_active_devices++;
 	}
+	return ret;
 }
 
 int Session::cancel()
@@ -467,10 +488,10 @@ int Session::cancel()
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (Device* dev: m_devices) {
 		ret = dev->cancel();
-		if (ret < 0)
-			return ret;
+		if (ret)
+			break;
 	}
-	return 0;
+	return ret;
 }
 
 void Session::handle_error(int status, const char * tag)
