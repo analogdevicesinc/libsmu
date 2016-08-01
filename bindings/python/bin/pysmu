@@ -85,7 +85,10 @@ def hotplug(session, args):
 
 def flash(session, args):
     session.add_all()
-    session.flash_firmware(args.firmware)
+    try:
+        session.flash_firmware(args.firmware_path)
+    except pysmu.SessionError as e:
+        print('{}: {}'.format(os.path.basename(__file__), str(e)))
 
 
 if __name__ == '__main__':
