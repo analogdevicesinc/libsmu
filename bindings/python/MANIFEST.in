@@ -1,3 +1,4 @@
+include tox.ini
 recursive-include bin *
 recursive-include examples *
 recursive-include pysmu *
