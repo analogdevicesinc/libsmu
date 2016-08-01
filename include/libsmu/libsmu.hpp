@@ -159,7 +159,9 @@ namespace smu {
 		/// @brief Remove a device from the session.
 		/// @param device A device to be removed from the session.
 		/// This method may not be called while the session is active.
-		void remove(Device* device);
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		int remove(Device* device);
 
 		/// @brief Remove a device from the list of available devices.
 		/// @param device A device to be removed from the available list.
