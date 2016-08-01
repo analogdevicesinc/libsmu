@@ -18,13 +18,13 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         int remove(Device* dev)
         int destroy(Device* dev)
         int configure(int sample_rate)
-        void run(int samples)
-        void start(int samples)
+        int run(int samples)
+        int start(int samples)
         int cancel()
         bint cancelled()
         void flash_firmware(const char* path, Device* dev) except +
         void wait_for_completion()
-        void end()
+        int end()
         void hotplug_attach(void (Device *dev, void *data) nogil, void *data)
         void hotplug_detach(void (Device *dev, void *data) nogil, void *data)
 
