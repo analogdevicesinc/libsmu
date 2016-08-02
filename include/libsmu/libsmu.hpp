@@ -271,6 +271,9 @@ namespace smu {
 		/// also use libusb without interfering with internal usage.
 		libusb_context* m_usb_ctx;
 
+		/// @brief libusb hotplug callback handle.
+		libusb_hotplug_callback_handle m_usb_cb;
+
 		/// @brief Identify devices supported by libsmu.
 		/// @param usb_dev libusb device
 		/// @return If the usb device relates to a supported device the Device is returned,
