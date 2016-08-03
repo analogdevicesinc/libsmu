@@ -350,7 +350,13 @@ Device* Session::probe_device(libusb_device* usb_dev)
 			libusb_get_string_descriptor_ascii(dev->m_usb, usb_desc.iSerialNumber, (unsigned char*)&dev->m_serial, 32);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
 			dev->ctrl_transfer(0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
-			return dev;
+			// sanity check, bad USB cables can mangle device handling
+			if ((strncmp(dev->m_fw_version, "", 1) == 0) || (strncmp(dev->m_hw_version, "", 1) == 0)) {
+				DEBUG("device has empty fw/hw version, USB cable probably has issues");
+				delete dev;
+			} else {
+				return dev;
+			}
 		}
 	}
 	return NULL;
