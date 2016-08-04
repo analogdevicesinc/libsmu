@@ -447,7 +447,7 @@ int Session::run(uint64_t samples)
 
 int Session::end()
 {
-	int ret;
+	int ret = 0;
 	std::unique_lock<std::mutex> lk(m_lock);
 
 	auto now = std::chrono::system_clock::now();
