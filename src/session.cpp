@@ -383,15 +383,16 @@ Device* Session::get_device(const char* serial)
 	return NULL;
 }
 
-Device* Session::add(Device* device)
+int Session::add(Device* device)
 {
+	int ret = -1;
 	if (device) {
-		m_devices.insert(device);
 		DEBUG("device insert: %s\n", device->serial());
-		device->claim();
-		return device;
+		ret = device->claim();
+		if (!ret)
+			m_devices.insert(device);
 	}
-	return NULL;
+	return ret;
 }
 
 int Session::add_all()
@@ -404,8 +405,9 @@ int Session::add_all()
 
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (Device* dev: m_available_devices) {
-		if (!add(dev))
-			ret++;
+		ret = add(dev);
+		if (ret)
+			break;
 	}
 	return ret;
 }

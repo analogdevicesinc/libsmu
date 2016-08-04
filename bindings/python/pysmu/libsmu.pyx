@@ -108,10 +108,10 @@ cdef class Session:
 
         Raises: SessionError on failure.
         """
-        cdef cpp_libsmu.Device* device
-        device = self._session.add(dev._device)
-        if device is NULL:
-            raise SessionError('failed adding device ({})'.format(dev.serial))
+        cdef int errcode
+        errcode = self._session.add(dev._device)
+        if errcode:
+            raise SessionError('failed adding device', errcode)
 
     def remove(self, Device dev, detached=False):
         """Remove a device from the session."""

@@ -139,15 +139,14 @@ namespace smu {
 		/// @brief Add a device to the session.
 		/// This method may not be called while the session is active.
 		/// @param device The device to be added to the session.
-		/// @return On success, the added device is returned.
-		/// @return On error, NULL is returned.
-		Device* add(Device* device);
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
+		int add(Device* device);
 
 		/// @brief Shim to scan and add all available devices to a session.
 		/// This method may not be called while the session is active.
 		/// @return On success, 0 is returned.
-		/// @return On error, the number of devices that couldn't be added to
-		/// the session are returned.
+		/// @return On error, a negative errno code is returned.
 		int add_all();
 
 		/// @brief Get the device matching a given serial from the session.
