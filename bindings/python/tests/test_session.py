@@ -2,19 +2,24 @@ from __future__ import print_function
 
 import sys
 import time
+import unittest
 
 try:
     from unittest import mock
 except ImportError:
     import mock
-
 # input = raw_input in py3, copy this for py2
 if sys.hexversion < 0x03000000:
     input = raw_input
 
-import unittest
-
 from pysmu import Session
+
+# XXX: Hack to run tests in defined class order, required due to assumptions on
+# when a device is physically plugged in since we don't want to prompt at the
+# beginning of every function.
+ln = lambda f: getattr(TestSession, f).im_func.func_code.co_firstlineno
+lncmp = lambda _, a, b: cmp(ln(a), ln(b))
+unittest.TestLoader.sortTestMethodsUsing = lncmp
 
 
 def prompt(s):
@@ -24,55 +29,65 @@ def prompt(s):
 
 class TestSession(unittest.TestCase):
 
+    def setUp(self):
+        self.session = Session()
+
+    def tearDown(self):
+        del self.session
+
     def test_empty(self):
-        session = Session()
-        self.assertEqual(session.devices, [])
+        self.assertEqual(self.session.devices, [])
 
     def test_scan(self):
         prompt('make sure at least one device is plugged in')
-        session = Session()
-        session.scan()
+        self.session.scan()
 
         # available devices haven't been added to the session yet
-        self.assertTrue(len(session.available_devices) > 0)
-        self.assertNotEqual(len(session.available_devices), len(session.devices))
+        self.assertTrue(len(self.session.available_devices) > 0)
+        self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_add(self):
-        session = Session()
-        self.assertEqual(len(session.devices), 0)
+        self.assertEqual(len(self.session.devices), 0)
 
-        session.scan()
-        self.assertTrue(len(session.available_devices) > 0)
-        session.add(session.available_devices[0])
-        self.assertEqual(len(session.devices), 1)
-        self.assertEqual(session.devices[0], session.available_devices[0])
+        self.session.scan()
+        self.assertTrue(len(self.session.available_devices) > 0)
+        self.session.add(self.session.available_devices[0])
+        self.assertEqual(len(self.session.devices), 1)
+        self.assertEqual(self.session.devices[0].serial, self.session.available_devices[0].serial)
 
     def test_remove(self):
-        session = Session()
-        session.add_all()
-        self.assertTrue(len(session.devices) > 0)
-        self.assertEqual(len(session.available_devices), len(session.devices))
-        session.remove(session.devices[0])
-        self.assertNotEqual(len(session.available_devices), len(session.devices))
+        self.session.add_all()
+        self.assertTrue(len(self.session.devices) > 0)
+        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
+        serial = self.session.devices[0].serial
+        self.session.remove(self.session.devices[0])
+        self.assertFalse(any(d.serial == serial for d in self.session.devices))
+        self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_add_all(self):
-        session = Session()
-        self.assertEqual(len(session.devices), 0)
-        session.add_all()
+        self.assertEqual(len(self.session.devices), 0)
+        self.session.add_all()
 
         # all available devices should be in the session
-        self.assertTrue(len(session.devices) > 0)
-        self.assertEqual(len(session.available_devices), len(session.devices))
+        self.assertTrue(len(self.session.devices) > 0)
+        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
+
+    def test_destroy(self):
+        self.session.scan()
+        # available devices haven't been added to the session yet
+        self.assertTrue(len(self.session.available_devices) > 0)
+        serial = self.session.available_devices[0].serial
+        self.session.destroy(self.session.available_devices[0])
+        self.assertFalse(any(d.serial == serial for d in self.session.available_devices))
 
     def test_hotplug(self):
         prompt('unplug/plug a device within 10 seconds')
-        session = Session()
-        session.add_all()
+        self.session.add_all()
 
         attach = mock.Mock()
         detach = mock.Mock()
-        session.hotplug_attach(attach)
-        session.hotplug_detach(detach)
+        self.session.hotplug_attach(attach)
+        self.session.hotplug_detach(detach)
 
         start = time.time()
         print('waiting hotplug events...')
@@ -87,23 +102,20 @@ class TestSession(unittest.TestCase):
         self.assertTrue(detach.called)
 
     def test_hotplug_add_remove(self):
-        prompt('make sure all devices are removed, then unplug/plug a device within 10 seconds')
-        session = Session()
+        prompt('unplug/plug a device within 10 seconds')
 
         def attach(dev):
             serial = dev.serial
-            session.add(dev)
-            attached = any(d.serial == serial for d in session.devices)
-            self.assertTrue(attached)
+            self.session.add(dev)
+            self.assertTrue(any(d.serial == serial for d in self.session.devices))
 
         def detach(dev):
             serial = dev.serial
-            session.remove(dev)
-            detached = any(d.serial != serial for d in session.devices)
-            self.assertTrue(detached)
+            self.session.remove(dev, detached=True)
+            self.assertFalse(any(d.serial == serial for d in self.session.devices))
 
-        session.hotplug_attach(attach)
-        session.hotplug_detach(detach)
+        self.session.hotplug_attach(attach)
+        self.session.hotplug_detach(detach)
 
         start = time.time()
         print('waiting hotplug events...')
@@ -111,8 +123,5 @@ class TestSession(unittest.TestCase):
             time.sleep(1)
             end = time.time()
             elapsed = end - start
-            if elapsed > 10 or (attach.called and detach.called):
+            if elapsed > 10:
                 break
-
-        self.assertTrue(attach.called)
-        self.assertTrue(detach.called)
