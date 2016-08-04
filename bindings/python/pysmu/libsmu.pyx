@@ -88,16 +88,20 @@ cdef class Session:
 
         Raises: SessionError on failure.
         """
-        if self._session.scan():
-            raise SessionError('failed scanning for supported devices')
+        cdef int errcode
+        errcode = self._session.scan()
+        if errcode:
+            raise SessionError('failed scanning for supported devices', errcode)
 
     def add_all(self):
         """Scan the system and add all supported devices to the session.
 
         Raises: SessionError on failure.
         """
-        if self._session.add_all():
-            raise SessionError('failed scanning and/or adding all supported devices')
+        cdef int errcode
+        errcode = self._session.add_all()
+        if errcode:
+            raise SessionError('failed scanning and/or adding all supported devices', errcode)
 
     def add(self, Device dev):
         """Add a device to the session.
@@ -111,13 +115,17 @@ cdef class Session:
 
     def remove(self, Device dev):
         """Remove a device from the session."""
-        if self._session.remove(dev._device):
-            raise SessionError('failed removing device ({})'.format(dev.serial))
+        cdef int errcode
+        errcode = self._session.remove(dev._device)
+        if errcode:
+            raise SessionError('failed removing device', errcode)
 
     def destroy(self, Device dev):
-        """Drop a device from the ltest of available devices."""
-        if self._session.destroy(dev._device):
-            raise SessionError('failed destroying device ({})'.format(dev.serial))
+        """Drop a device from the list of available devices."""
+        cdef int errcode
+        errcode = self._session.destroy(dev._device)
+        if errcode:
+            raise SessionError('failed destroying device', errcode)
 
     def configure(self, int sample_rate):
         """Configure the session's sample rate.
@@ -127,8 +135,10 @@ cdef class Session:
 
         Raises: SessionError on failure.
         """
-        if self._session.configure(sample_rate):
-            raise SessionError('failed configuring device')
+        cdef int errcode
+        errcode = self._session.configure(sample_rate)
+        if errcode:
+            raise SessionError('failed configuring device', errcode)
 
     def run(self, int samples):
         """Run the configured capture for a certain number of samples.
@@ -137,8 +147,10 @@ cdef class Session:
             samples (int): Number of samples to run the session for.
                 If 0, run in continuous mode.
         """
-        if self._session.run(samples):
-            raise SessionError('failed running session stream')
+        cdef int errcode
+        errcode = self._session.run(samples)
+        if errcode:
+            raise SessionError('failed running session stream', errcode)
 
     def start(self, int samples):
         """Start the currently configured capture, but do not wait for it to complete.
@@ -147,16 +159,20 @@ cdef class Session:
             samples (int): Number of samples to capture before stopping.
                 If 0, run in continuous mode.
         """
-        if self._session.start(samples):
-            raise SessionError('failed starting session stream')
+        cdef int errcode
+        errcode = self._session.start(samples)
+        if errcode:
+            raise SessionError('failed starting session stream', errcode)
 
     def cancel(self):
         """Cancel the current capture and block while waiting for completion.
 
         Raises: SessionError on failure.
         """
-        if self._session.cancel():
-            raise SessionError('failed canceling device transfers')
+        cdef int errcode
+        errcode = self._session.cancel()
+        if errcode:
+            raise SessionError('failed canceling device transfers', errcode)
 
     def wait_for_completion(self):
         """Block until all devices have are finished streaming in the session."""
@@ -164,8 +180,10 @@ cdef class Session:
 
     def end(self):
         """Block until all devices have completed, then turn off the devices."""
-        if self._session.end():
-            raise SessionError('failed ending session stream')
+        cdef int errcode
+        errcode = self._session.end()
+        if errcode:
+            raise SessionError('failed ending session stream', errcode)
 
     def flash_firmware(self, file, Device dev=None):
         """Update firmware for a given device.
@@ -190,7 +208,11 @@ cdef class Session:
 
     def __dealloc__(self):
         # make sure the session is completed before deallocation
-        self._session.end()
+        cdef int errcode
+        errcode = self._session.end()
+        if errcode:
+            raise SessionError('failed ending session stream', errcode)
+
         del self._session
 
 
