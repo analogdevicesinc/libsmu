@@ -188,8 +188,12 @@ void Session::flash_firmware(const char *file, Device *dev)
 
 	// force attached device into command mode
 	if (dev || !m_devices.empty()) {
-		if (!dev)
+		if (!dev) {
 			dev = *(m_devices.begin());
+		}
+		ret = remove(dev);
+		if (ret < 0)
+			throw std::runtime_error("failed to remove device from current session");
 		ret = dev->samba_mode();
 		if (ret < 0)
 			throw std::runtime_error("failed to enable SAM-BA command mode");
