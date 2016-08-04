@@ -458,8 +458,13 @@ int Session::end()
 
 	for (Device* dev: m_devices) {
 		ret = dev->off();
-		if (ret)
+		if (ret == -19) {
+			// the device has already been detached
+			ret = 0;
+			continue;
+		} else if (ret) {
 			break;
+		}
 	}
 	return ret;
 }
