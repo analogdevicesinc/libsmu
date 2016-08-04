@@ -1,8 +1,8 @@
 import os
 
 
-class SessionError(Exception):
-    """Generic session exception."""
+class LibsmuError(Exception):
+    """Generic libsmu exception."""
 
     def __init__(self, msg=None, errcode=None):
         if msg is not None:
@@ -16,3 +16,11 @@ class SessionError(Exception):
                 msg += ': {}'.format(os.strerror(self.errcode))
             return msg
         return repr(self)
+
+
+class SessionError(LibsmuError):
+    pass
+
+
+class DeviceError(LibsmuError):
+    pass
