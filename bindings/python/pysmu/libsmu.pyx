@@ -113,10 +113,10 @@ cdef class Session:
         if device is NULL:
             raise SessionError('failed adding device ({})'.format(dev.serial))
 
-    def remove(self, Device dev):
+    def remove(self, Device dev, detached=False):
         """Remove a device from the session."""
         cdef int errcode
-        errcode = self._session.remove(dev._device)
+        errcode = self._session.remove(dev._device, detached)
         if errcode:
             raise SessionError('failed removing device', errcode)
 

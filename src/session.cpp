@@ -410,12 +410,17 @@ int Session::add_all()
 	return ret;
 }
 
-int Session::remove(Device* device)
+int Session::remove(Device* device, bool detached)
 {
 	int ret = -1;
 
 	if (device) {
 		ret = device->release();
+
+		// device has already been detached from the system
+		if (detached && (ret == -19))
+			ret = 0;
+
 		if (!ret)
 			m_devices.erase(device);
 	}
