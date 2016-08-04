@@ -89,12 +89,18 @@ Session::Session()
 Session::~Session()
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
+
 	// stop USB thread loop
 	m_usb_thread_loop = false;
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
+
 	// run device destructors before libusb_exit
+	for (Device* dev: m_devices) {
+		delete dev;
+	}
 	m_devices.clear();
 	m_available_devices.clear();
+
 	if (m_usb_thread.joinable()) {
 		m_usb_thread.join();
 	}
