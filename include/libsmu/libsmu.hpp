@@ -158,10 +158,12 @@ namespace smu {
 
 		/// @brief Remove a device from the session.
 		/// @param device A device to be removed from the session.
+		/// @param detached True if the device has already been detached from
+		/// the system (defaults to false).
 		/// This method may not be called while the session is active.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
-		int remove(Device* device);
+		int remove(Device* device, bool detached = false);
 
 		/// @brief Remove a device from the list of available devices.
 		/// @param device A device to be removed from the available list.

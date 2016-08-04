@@ -20,7 +20,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         Device* add(Device* dev)
         int add_all()
         Device* get_device(const char* serial)
-        int remove(Device* dev)
+        int remove(Device* dev, bint detached)
         int destroy(Device* dev)
         int configure(int sample_rate)
         int run(int samples)
