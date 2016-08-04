@@ -93,17 +93,35 @@ class TestSession(unittest.TestCase):
         urlretrieve(old_fw_url, old_fw.name)
         urlretrieve(new_fw_url, new_fw.name)
 
-        # flash old firmware
         self.session.add_all()
+        self.assertEqual(len(self.session.devices), 1)
+        serial = self.session.devices[0].serial
+
+        # flash old firmware
         self.session.flash_firmware(old_fw.name)
         prompt('unplug/replug the device')
         self.session.add_all()
+        self.assertEqual(len(self.session.devices), 1)
+        self.assertEqual(self.session.devices[0].serial, serial)
         self.assertEqual(self.session.devices[0].fwver, '2.02')
 
         # flash new firmware
         self.session.flash_firmware(new_fw.name)
         prompt('unplug/replug the device')
         self.session.add_all()
+        self.assertEqual(len(self.session.devices), 1)
+        self.assertEqual(self.session.devices[0].serial, serial)
+        self.assertEqual(self.session.devices[0].fwver, '2.06')
+
+        # flash device in SAM-BA mode
+        dev = self.session.devices[0]
+        self.session.remove(dev)
+        dev.samba_mode()
+        self.session.flash_firmware(new_fw.name)
+        prompt('unplug/replug the device')
+        self.session.add_all()
+        self.assertEqual(len(self.session.devices), 1)
+        self.assertEqual(self.session.devices[0].serial, serial)
         self.assertEqual(self.session.devices[0].fwver, '2.06')
 
     def test_hotplug(self):
