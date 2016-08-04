@@ -1,8 +1,10 @@
 from __future__ import print_function
 
 import sys
+import tempfile
 import time
 import unittest
+from urllib import urlretrieve
 
 try:
     from unittest import mock
@@ -79,6 +81,30 @@ class TestSession(unittest.TestCase):
         serial = self.session.available_devices[0].serial
         self.session.destroy(self.session.available_devices[0])
         self.assertFalse(any(d.serial == serial for d in self.session.available_devices))
+
+    def test_flash_firmware(self):
+        # assumes an internet connection is available and github is up
+        old_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.02/m1000.bin'
+        new_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
+
+        # fetch old/new firmware files from github
+        old_fw = tempfile.NamedTemporaryFile()
+        new_fw = tempfile.NamedTemporaryFile()
+        urlretrieve(old_fw_url, old_fw.name)
+        urlretrieve(new_fw_url, new_fw.name)
+
+        # flash old firmware
+        self.session.add_all()
+        self.session.flash_firmware(old_fw.name)
+        prompt('unplug/replug the device')
+        self.session.add_all()
+        self.assertEqual(self.session.devices[0].fwver, '2.02')
+
+        # flash new firmware
+        self.session.flash_firmware(new_fw.name)
+        prompt('unplug/replug the device')
+        self.session.add_all()
+        self.assertEqual(self.session.devices[0].fwver, '2.06')
 
     def test_hotplug(self):
         prompt('unplug/plug a device within 10 seconds')
