@@ -4,7 +4,7 @@ from libcpp.vector cimport vector
 
 cimport cpp_libsmu
 
-from .exceptions import SessionError
+from .exceptions import SessionError, DeviceError
 
 __version__ = cpp_libsmu.libsmu_version_str().decode()
 
@@ -271,6 +271,12 @@ cdef class Device:
 
     def __str__(self):
         return 'serial {}: fw {}: hw {}'.format(self.serial, self.fwver, self.hwver)
+
+    def samba_mode(self):
+        cdef int errcode
+        errcode = self._device.samba_mode()
+        if errcode:
+            raise DeviceError('failed to enable SAM-BA mode', errcode)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
