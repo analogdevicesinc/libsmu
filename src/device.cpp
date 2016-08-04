@@ -19,8 +19,10 @@ Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
 
 Device::~Device()
 {
-	if (m_usb)
+	if (m_usb) {
+		libusb_release_interface(m_usb, 0);
 		libusb_close(m_usb);
+	}
 	if (m_device)
 		libusb_unref_device(m_device);
 }
