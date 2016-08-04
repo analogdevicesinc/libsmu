@@ -10,11 +10,9 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-# input = raw_input in py3, copy this for py2
-if sys.hexversion < 0x03000000:
-    input = raw_input
 
 from pysmu import Session
+from .misc import prompt
 
 # XXX: Hack to run tests in defined class order, required due to assumptions on
 # when a device is physically plugged in since we don't want to prompt at the
@@ -22,11 +20,6 @@ from pysmu import Session
 ln = lambda f: getattr(TestSession, f).im_func.func_code.co_firstlineno
 lncmp = lambda _, a, b: cmp(ln(a), ln(b))
 unittest.TestLoader.sortTestMethodsUsing = lncmp
-
-
-def prompt(s):
-    """Prompt the user to verify test setup before continuing."""
-    input('ACTION: {} (hit Enter to continue)'.format(s))
 
 
 class TestSession(unittest.TestCase):
@@ -45,21 +38,21 @@ class TestSession(unittest.TestCase):
         self.session.scan()
 
         # available devices haven't been added to the session yet
-        self.assertTrue(len(self.session.available_devices) > 0)
+        self.assertTrue(len(self.session.available_devices))
         self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_add(self):
         self.assertEqual(len(self.session.devices), 0)
 
         self.session.scan()
-        self.assertTrue(len(self.session.available_devices) > 0)
+        self.assertTrue(len(self.session.available_devices))
         self.session.add(self.session.available_devices[0])
         self.assertEqual(len(self.session.devices), 1)
         self.assertEqual(self.session.devices[0].serial, self.session.available_devices[0].serial)
 
     def test_remove(self):
         self.session.add_all()
-        self.assertTrue(len(self.session.devices) > 0)
+        self.assertTrue(len(self.session.devices))
         self.assertEqual(len(self.session.available_devices), len(self.session.devices))
         serial = self.session.devices[0].serial
         self.session.remove(self.session.devices[0])
@@ -71,13 +64,13 @@ class TestSession(unittest.TestCase):
         self.session.add_all()
 
         # all available devices should be in the session
-        self.assertTrue(len(self.session.devices) > 0)
+        self.assertTrue(len(self.session.devices))
         self.assertEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_destroy(self):
         self.session.scan()
         # available devices haven't been added to the session yet
-        self.assertTrue(len(self.session.available_devices) > 0)
+        self.assertTrue(len(self.session.available_devices))
         serial = self.session.available_devices[0].serial
         self.session.destroy(self.session.available_devices[0])
         self.assertFalse(any(d.serial == serial for d in self.session.available_devices))
@@ -106,17 +99,6 @@ class TestSession(unittest.TestCase):
         self.assertEqual(self.session.devices[0].fwver, '2.02')
 
         # flash new firmware
-        self.session.flash_firmware(new_fw.name)
-        prompt('unplug/replug the device')
-        self.session.add_all()
-        self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, serial)
-        self.assertEqual(self.session.devices[0].fwver, '2.06')
-
-        # flash device in SAM-BA mode
-        dev = self.session.devices[0]
-        self.session.remove(dev)
-        dev.samba_mode()
         self.session.flash_firmware(new_fw.name)
         prompt('unplug/replug the device')
         self.session.add_all()
