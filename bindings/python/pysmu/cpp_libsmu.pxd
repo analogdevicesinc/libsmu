@@ -17,7 +17,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         int m_queue_size
 
         int scan()
-        Device* add(Device* dev)
+        int add(Device* dev)
         int add_all()
         Device* get_device(const char* serial)
         int remove(Device* dev, bint detached)
