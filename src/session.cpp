@@ -475,7 +475,7 @@ int Session::end()
 
 	for (Device* dev: m_devices) {
 		ret = dev->off();
-		if (ret == -19) {
+		if (ret == -ENODEV) {
 			// the device has already been detached
 			ret = 0;
 			continue;
