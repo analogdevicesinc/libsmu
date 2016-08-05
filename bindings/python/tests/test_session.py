@@ -39,14 +39,14 @@ class TestSession(unittest.TestCase):
         self.session.scan()
 
         # available devices haven't been added to the session yet
-        self.assertTrue(len(self.session.available_devices))
+        self.assertTrue(self.session.available_devices)
         self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_add(self):
-        self.assertEqual(len(self.session.devices), 0)
+        self.assertFalse(self.session.devices)
 
         self.session.scan()
-        self.assertTrue(len(self.session.available_devices))
+        self.assertTrue(self.session.available_devices)
         dev = self.session.available_devices[0]
         self.session.add(dev)
         self.assertEqual(len(self.session.devices), 1)
@@ -59,7 +59,7 @@ class TestSession(unittest.TestCase):
 
     def test_remove(self):
         self.session.add_all()
-        self.assertTrue(len(self.session.devices))
+        self.assertTrue(self.session.devices)
         self.assertEqual(len(self.session.available_devices), len(self.session.devices))
         dev = self.session.devices[0]
         self.session.remove(dev)
@@ -73,17 +73,17 @@ class TestSession(unittest.TestCase):
         self.assertEqual(e.errcode, errno.ENXIO)
 
     def test_add_all(self):
-        self.assertEqual(len(self.session.devices), 0)
+        self.assertFalse(self.session.devices)
         self.session.add_all()
 
         # all available devices should be in the session
-        self.assertTrue(len(self.session.devices))
+        self.assertTrue(self.session.devices)
         self.assertEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_destroy(self):
         self.session.scan()
         # available devices haven't been added to the session yet
-        self.assertTrue(len(self.session.available_devices))
+        self.assertTrue(self.session.available_devices)
         serial = self.session.available_devices[0].serial
         self.session.destroy(self.session.available_devices[0])
         self.assertFalse(any(d.serial == serial for d in self.session.available_devices))
