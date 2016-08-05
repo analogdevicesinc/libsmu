@@ -5,7 +5,7 @@
 
 #include <cstdio>
 
-#ifdef DEBUG
+#ifdef DEBUG_BUILD
 #define DEBUG_TEST 1
 #else
 #define DEBUG_TEST 0
