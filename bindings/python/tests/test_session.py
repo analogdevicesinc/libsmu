@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import errno
 import sys
 import tempfile
 import time
@@ -11,7 +12,7 @@ try:
 except ImportError:
     import mock
 
-from pysmu import Session
+from pysmu import Session, SessionError
 from .misc import prompt
 
 # XXX: Hack to run tests in defined class order, required due to assumptions on
@@ -64,6 +65,12 @@ class TestSession(unittest.TestCase):
         self.session.remove(dev)
         self.assertFalse(any(d.serial == dev.serial for d in self.session.devices))
         self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
+
+        # removing already removed devices fails
+        with self.assertRaises(SessionError) as cm:
+            self.session.remove(dev)
+        e = cm.exception
+        self.assertEqual(e.errcode, errno.ENXIO)
 
     def test_add_all(self):
         self.assertEqual(len(self.session.devices), 0)
