@@ -144,7 +144,7 @@ void Session::detached(libusb_device *usb_dev)
 // Internal function to write raw SAM-BA commands to a libusb handle.
 static void samba_usb_write(libusb_device_handle *usb_handle, const char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(usb_handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 100);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to write SAM-BA command: " + libusb_error_str);
@@ -154,7 +154,7 @@ static void samba_usb_write(libusb_device_handle *usb_handle, const char* data) 
 // Internal function to read raw SAM-BA commands to a libusb handle.
 static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(usb_handle, 0x82, data, 512, &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x82, data, 512, &transferred, 100);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to read SAM-BA response: " + libusb_error_str);
