@@ -51,7 +51,6 @@ Session::Session()
 	// support hotplugging on Windows) we fallback to using all the devices
 	// currently plugged in.
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-		DEBUG("Using libusb hotplug\n");
 		ret = libusb_hotplug_register_callback(
 			NULL,
 			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
