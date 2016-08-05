@@ -54,6 +54,7 @@ namespace smu {
 		ssize_t write(std::deque<float>& buf, unsigned channel, unsigned timeout) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
+		int read_calibration() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
 
@@ -106,8 +107,6 @@ namespace smu {
 		Transfers m_in_transfers;
 		Transfers m_out_transfers;
 
-		// Read calibration data from a device's EEPROM.
-		void read_calibration();
 		// Device calibration data.
 		EEPROM_cal m_cal;
 
