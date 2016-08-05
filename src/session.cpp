@@ -365,6 +365,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 				DEBUG("device has empty fw/hw version, USB cable probably has issues");
 				delete dev;
 			} else {
+				dev->read_calibration();
 				return dev;
 			}
 		}

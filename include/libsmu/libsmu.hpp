@@ -381,6 +381,9 @@ namespace smu {
 		/// @return On error, a negative integer is returned relating to the error status.
 		virtual int write_calibration(const char* cal_file_name) { return 0; }
 
+		/// @brief Read device calibration data from the EEPROM.
+		virtual int read_calibration() = 0;
+
 		/// @brief Get the device calibration data from the EEPROM.
 		/// @param cal A vector of vectors containing calibration values.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;

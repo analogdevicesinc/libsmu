@@ -77,7 +77,6 @@ int M1000_Device::claim()
 {
 	int ret = 0;
 	ret = libusb_claim_interface(m_usb, 0);
-	read_calibration();
 	return -libusb_to_errno(ret);
 }
 
@@ -88,7 +87,7 @@ int M1000_Device::release()
 	return -libusb_to_errno(ret);
 }
 
-void M1000_Device::read_calibration()
+int M1000_Device::read_calibration()
 {
 	int ret;
 
@@ -100,6 +99,10 @@ void M1000_Device::read_calibration()
 			m_cal.gain_n[i] = 1.0f;
 		}
 	}
+
+	if (ret > 0)
+		ret = 0;
+	return ret;
 }
 
 void M1000_Device::calibration(std::vector<std::vector<float>>* cal)
