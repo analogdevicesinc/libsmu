@@ -243,10 +243,10 @@ namespace smu {
 		/// @brief Register USB hotplug detach callback.
 		void hotplug_detach(std::function<void(Device* device, void* data)> func, void *data);
 
-		/// @brief Callback called on the USB thread when a device is removed from the system.
-		std::function<void(Device* device)> m_hotplug_attach_callback;
-		/// @brief Callback called on the USB thread when a device is plugged into the system.
-		std::function<void(Device* device)> m_hotplug_detach_callback;
+		/// @brief Callbacks called on the USB thread when a device is removed from the system.
+		std::vector<std::function<void(Device* device)>> m_hotplug_attach_callbacks;
+		/// @brief Callbacks called on the USB thread when a device is plugged into the system.
+		std::vector<std::function<void(Device* device)>> m_hotplug_detach_callbacks;
 
 	protected:
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.

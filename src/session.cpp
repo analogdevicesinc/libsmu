@@ -108,34 +108,38 @@ Session::~Session()
 
 void Session::hotplug_attach(std::function<void(Device* device, void* data)> func, void* data)
 {
-	m_hotplug_attach_callback = std::bind(func, _1, data);
+	m_hotplug_attach_callbacks.push_back(std::bind(func, _1, data));
 }
 
 void Session::hotplug_detach(std::function<void(Device* device, void* data)> func, void* data)
 {
-	m_hotplug_detach_callback = std::bind(func, _1, data);
+	m_hotplug_detach_callbacks.push_back(std::bind(func, _1, data));
 }
 
 void Session::attached(libusb_device *usb_dev)
 {
-	Device* dev = probe_device(usb_dev);
-	if (dev) {
-		std::lock_guard<std::mutex> lock(m_lock_devlist);
-		m_available_devices.push_back(dev);
-		DEBUG("Session::attached device serial: %s\n", dev->serial());
-		if (m_hotplug_attach_callback) {
-			m_hotplug_attach_callback(dev);
+	if (!m_hotplug_attach_callbacks.empty()) {
+		Device* dev = probe_device(usb_dev);
+		if (dev) {
+			std::lock_guard<std::mutex> lock(m_lock_devlist);
+			m_available_devices.push_back(dev);
+			DEBUG("Session::attached device serial: %s\n", dev->serial());
+			for (auto callback: m_hotplug_attach_callbacks) {
+				callback(dev);
+			}
 		}
 	}
 }
 
 void Session::detached(libusb_device *usb_dev)
 {
-	if (m_hotplug_detach_callback) {
+	if (!m_hotplug_detach_callbacks.empty()) {
 		Device* dev = find_existing_device(usb_dev);
 		if (dev) {
 			DEBUG("Session::detached device serial: %s\n", dev->serial());
-			m_hotplug_detach_callback(dev);
+			for (auto callback: m_hotplug_detach_callbacks) {
+				callback(dev);
+			}
 		}
 	}
 }
