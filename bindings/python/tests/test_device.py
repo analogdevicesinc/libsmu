@@ -40,11 +40,24 @@ class TestDevice(unittest.TestCase):
     def test_device_hwver(self):
         self.assertTrue(self.device.hwver)
 
-    def test_write_calibration(self):
-        pass
-
     def test_calibration(self):
-        pass
+        self.assertEqual(len(self.device.calibration), 8)
+
+    def test_write_calibration(self):
+        default_cal = [
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+            [0.0, 1.0, 1.0],
+        ]
+
+        # reset calibration
+        self.device.write_calibration(None)
+        self.assertEqual(self.device.calibration, default_cal)
 
     def test_samba_mode(self):
         # assumes an internet connection is available and github is up
