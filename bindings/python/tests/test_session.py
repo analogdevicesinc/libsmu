@@ -46,17 +46,23 @@ class TestSession(unittest.TestCase):
 
         self.session.scan()
         self.assertTrue(len(self.session.available_devices))
-        self.session.add(self.session.available_devices[0])
+        dev = self.session.available_devices[0]
+        self.session.add(dev)
         self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, self.session.available_devices[0].serial)
+        self.assertEqual(self.session.devices[0].serial, dev.serial)
+
+        # re-adding the same device does nothing
+        self.session.add(dev)
+        self.assertEqual(len(self.session.devices), 1)
+        self.assertEqual(self.session.devices[0].serial, dev.serial)
 
     def test_remove(self):
         self.session.add_all()
         self.assertTrue(len(self.session.devices))
         self.assertEqual(len(self.session.available_devices), len(self.session.devices))
-        serial = self.session.devices[0].serial
-        self.session.remove(self.session.devices[0])
-        self.assertFalse(any(d.serial == serial for d in self.session.devices))
+        dev = self.session.devices[0]
+        self.session.remove(dev)
+        self.assertFalse(any(d.serial == dev.serial for d in self.session.devices))
         self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_add_all(self):
