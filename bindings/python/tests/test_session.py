@@ -123,26 +123,14 @@ class TestSession(unittest.TestCase):
         prompt('unplug/plug a device within 10 seconds')
         self.session.add_all()
 
-        attach = mock.Mock()
-        detach = mock.Mock()
-        self.session.hotplug_attach(attach)
-        self.session.hotplug_detach(detach)
+        # create fake attach/detach callbacks to check basic triggering
+        fake_attach = mock.Mock()
+        fake_detach = mock.Mock()
+        self.session.hotplug_attach(fake_attach)
+        self.session.hotplug_detach(fake_detach)
 
-        start = time.time()
-        print('waiting hotplug events...')
-        while (True):
-            time.sleep(1)
-            end = time.time()
-            elapsed = end - start
-            if elapsed > 10 or (attach.called and detach.called):
-                break
-
-        self.assertTrue(attach.called)
-        self.assertTrue(detach.called)
-
-    def test_hotplug_add_remove(self):
-        prompt('unplug/plug a device within 10 seconds')
-
+        # create more realistic callbacks that try adding/removing the
+        # hotplugged device from a session
         def attach(dev):
             serial = dev.serial
             self.session.add(dev)
@@ -162,5 +150,8 @@ class TestSession(unittest.TestCase):
             time.sleep(1)
             end = time.time()
             elapsed = end - start
-            if elapsed > 10:
+            if elapsed > 10 or (fake_attach.called and fake_detach.called):
                 break
+
+        self.assertTrue(fake_attach.called)
+        self.assertTrue(fake_detach.called)
