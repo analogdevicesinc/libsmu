@@ -57,6 +57,14 @@ class TestSession(unittest.TestCase):
         self.assertEqual(len(self.session.devices), 1)
         self.assertEqual(self.session.devices[0].serial, dev.serial)
 
+    def test_add_all(self):
+        self.assertFalse(self.session.devices)
+        self.session.add_all()
+
+        # all available devices should be in the session
+        self.assertTrue(self.session.devices)
+        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
+
     def test_remove(self):
         self.session.add_all()
         self.assertTrue(self.session.devices)
@@ -71,14 +79,6 @@ class TestSession(unittest.TestCase):
             self.session.remove(dev)
         e = cm.exception
         self.assertEqual(e.errcode, errno.ENXIO)
-
-    def test_add_all(self):
-        self.assertFalse(self.session.devices)
-        self.session.add_all()
-
-        # all available devices should be in the session
-        self.assertTrue(self.session.devices)
-        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
 
     def test_destroy(self):
         self.session.scan()
