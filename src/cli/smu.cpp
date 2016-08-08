@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
-				session->m_hotplug_detach_callbacks.push_back([=](Device* device){
+				session->hotplug_detach([=](Device* device, void* data){
 					session->cancel();
 					if (!session->remove(device, true)) {
 						printf("removed device: %s: serial %s: fw %s: hw %s\n",
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 					}
 				});
 
-				session->m_hotplug_attach_callbacks.push_back([=](Device* device){
+				session->hotplug_attach([=](Device* device, void* data){
 					if (!session->add(device)) {
 						printf("added device: %s: serial %s: fw %s: hw %s\n",
 							device->info()->label, device->serial(),
