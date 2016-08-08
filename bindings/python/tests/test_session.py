@@ -104,6 +104,7 @@ class TestSession(unittest.TestCase):
         serial = self.session.devices[0].serial
 
         # flash old firmware
+        print('flashing firmware 2.02...')
         self.session.flash_firmware(old_fw.name)
         prompt('unplug/replug the device')
         self.session.add_all()
@@ -112,6 +113,7 @@ class TestSession(unittest.TestCase):
         self.assertEqual(self.session.devices[0].fwver, '2.02')
 
         # flash new firmware
+        print('flashing firmware 2.06...')
         self.session.flash_firmware(new_fw.name)
         prompt('unplug/replug the device')
         self.session.add_all()
