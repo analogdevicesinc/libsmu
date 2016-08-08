@@ -38,15 +38,15 @@ def calibration(session, args):
             parser.error("calibration file doesn't exist: {}".format(args.write))
         try:
             dev.write_calibration(args.write)
-        except (ValueError, RuntimeError) as e:
-            pprint("calibration failed: {}".format(e.message))
+        except pysmu.DeviceError as e:
+            pprint(str(e))
             sys.exit(1)
         pprint("successfully updated calibration")
     elif args.reset:
         try:
             dev.write_calibration(None)
-        except (ValueError, RuntimeError) as e:
-            pprint("calibration failed: {}".format(e.message))
+        except pysmu.DeviceError as e:
+            pprint(str(e))
             sys.exit(1)
         pprint("successfully reset calibration")
     elif args.display:

@@ -256,7 +256,7 @@ cdef class Device:
             file (str): path to calibration file
                 (use None to reset the calibration to the defaults)
 
-        Raises: RuntimeError on writing failures.
+        Raises: DeviceError on writing failures.
         """
         cdef const char* cal_path
         if file is None:
@@ -267,7 +267,7 @@ cdef class Device:
 
         r = self._device.write_calibration(cal_path)
         if r < 0:
-            raise RuntimeError('failed writing device calibration data')
+            raise DeviceError('failed writing device calibration data')
 
     def __str__(self):
         return 'serial {}: fw {}: hw {}'.format(self.serial, self.fwver, self.hwver)
