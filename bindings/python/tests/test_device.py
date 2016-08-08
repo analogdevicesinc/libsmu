@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import sys
 import tempfile
+import textwrap
 import time
 import unittest
 from urllib import urlretrieve
@@ -11,7 +12,7 @@ try:
 except ImportError:
     import mock
 
-from pysmu import Device, Session
+from pysmu import Device, Session, DeviceError
 from .misc import prompt
 
 # XXX: Hack to run tests in defined class order, required due to assumptions on
@@ -57,6 +58,77 @@ class TestDevice(unittest.TestCase):
 
         # reset calibration
         self.device.write_calibration(None)
+        self.assertEqual(self.device.calibration, default_cal)
+
+        # writing nonexistent calibration file
+        with self.assertRaises(DeviceError):
+            self.device.write_calibration('nonexistent')
+
+        # writing bad calibration file
+        cal_data = tempfile.NamedTemporaryFile()
+        with open(cal_data.name, 'w') as f:
+            f.write('foo')
+        with self.assertRaises(DeviceError):
+            self.device.write_calibration(cal_data.name)
+
+        # writing good calibration file
+        # TODO: point to repo file instead of duplicating here
+        cal_data = tempfile.NamedTemporaryFile()
+        with open(cal_data.name, 'w') as f:
+            f.write(textwrap.dedent("""\
+                # Channel A, measure V
+                </>
+                <0.0000, 0.0000>
+                <2.5000, 2.5000>
+                <\>
+
+                # Channel A, measure I
+                </>
+                <0.0000, 0.0000>
+                <0.1000, 0.1000>
+                <-0.1000, -0.1000>
+                <\>
+
+                # Channel A, source V
+                </>
+                <0.0000, 0.0000>
+                <2.5000, 2.5000>
+                <\>
+
+                # Channel A, source I
+                </>
+                <0.0000, 0.0000>
+                <0.1000, 0.1000>
+                <-0.1000, -0.1000>
+                <\>
+
+                # Channel B, measure V
+                </>
+                <0.0000, 0.0000>
+                <2.5000, 2.5000>
+                <\>
+
+                # Channel B, measure I
+                </>
+                <0.0000, 0.0000>
+                <0.1000, 0.1000>
+                <-0.1000, -0.1000>
+                <\>
+
+                # Channel B, source V
+                </>
+                <0.0000, 0.0000>
+                <2.5000, 2.5000>
+                <\>
+
+                # Channel B source I
+                </>
+                <0.0000, 0.0000>
+                <0.1000, 0.1000>
+                <-0.1000, -0.1000>
+                <\>
+            """))
+        self.device.write_calibration(cal_data.name)
         self.assertEqual(self.device.calibration, default_cal)
 
     def test_samba_mode(self):
