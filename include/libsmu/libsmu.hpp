@@ -239,14 +239,9 @@ namespace smu {
 		std::function<void(unsigned)> m_completion_callback;
 
 		/// @brief Register USB hotplug attach callback.
-		void hotplug_attach(std::function<void(Device* device, void* data)> func, void *data);
+		void hotplug_attach(std::function<void(Device* device, void* data)> func, void *data = NULL);
 		/// @brief Register USB hotplug detach callback.
-		void hotplug_detach(std::function<void(Device* device, void* data)> func, void *data);
-
-		/// @brief Callbacks called on the USB thread when a device is removed from the system.
-		std::vector<std::function<void(Device* device)>> m_hotplug_attach_callbacks;
-		/// @brief Callbacks called on the USB thread when a device is plugged into the system.
-		std::vector<std::function<void(Device* device)>> m_hotplug_detach_callbacks;
+		void hotplug_detach(std::function<void(Device* device, void* data)> func, void *data = NULL);
 
 	protected:
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
@@ -274,6 +269,11 @@ namespace smu {
 
 		/// @brief libusb hotplug callback handle.
 		libusb_hotplug_callback_handle m_usb_cb;
+
+		/// @brief Callbacks called on the USB thread when a device is removed from the system.
+		std::vector<std::function<void(Device* device)>> m_hotplug_attach_callbacks;
+		/// @brief Callbacks called on the USB thread when a device is plugged into the system.
+		std::vector<std::function<void(Device* device)>> m_hotplug_detach_callbacks;
 
 		/// @brief Identify devices supported by libsmu.
 		/// @param usb_dev libusb device
