@@ -33,23 +33,7 @@ def calibration(session, args):
 
     dev = session.devices[0]
 
-    if args.write is not None:
-        if not os.path.exists(args.write):
-            parser.error("calibration file doesn't exist: {}".format(args.write))
-        try:
-            dev.write_calibration(args.write)
-        except pysmu.DeviceError as e:
-            pprint(str(e))
-            sys.exit(1)
-        pprint("successfully updated calibration")
-    elif args.reset:
-        try:
-            dev.write_calibration(None)
-        except pysmu.DeviceError as e:
-            pprint(str(e))
-            sys.exit(1)
-        pprint("successfully reset calibration")
-    elif args.display:
+    if args.display:
         cal_str_map = {
             0: 'Channel A, measure V',
             1: 'Channel A, measure I',
@@ -66,6 +50,22 @@ def calibration(session, args):
             print("  offset: {:.4f}".format(vals[0]))
             print("  p gain: {:.4f}".format(vals[1]))
             print("  n gain: {:.4f}".format(vals[2]))
+
+    else:
+        cal_path = None
+        if args.write is not None:
+            cal_path = args.write
+            if not os.path.exists(cal_path):
+                pprint("calibration file doesn't exist: {}".format(cal_path))
+                sys.exit(1)
+
+        try:
+            dev.write_calibration(args.write)
+        except pysmu.DeviceError as e:
+            pprint(str(e))
+            sys.exit(1)
+        pprint("successfully updated calibration")
+
 
 def list_devices(session, args):
     """List all devices in a session."""
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     parser_cal.set_defaults(func=calibration)
     parser_cal_mux = parser_cal.add_mutually_exclusive_group()
     parser_cal_mux.add_argument(
-        '-d', '--display', action='store_true', dest='display', default=True,
+        '-d', '--display', action='store_true', dest='display',
         help='display calibration data from a device')
     parser_cal_mux.add_argument(
         '-r', '--reset', action='store_true', dest='reset',
@@ -139,5 +139,10 @@ if __name__ == '__main__':
     parser_flash.set_defaults(func=flash)
 
     args = parser.parse_args()
+    # default to displaying calibration data if no subcommand is selected
+    if args.func.__name__ == 'calibration':
+        if (all(not getattr(args, x) for x in ('display', 'reset', 'write'))):
+            args.display = True
+
     session = pysmu.Session()
     args.func(session, args)
