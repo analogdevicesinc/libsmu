@@ -31,6 +31,9 @@ class TestDevice(unittest.TestCase):
         self.assertTrue(len(self.session.available_devices))
         self.device = self.session.available_devices[0]
 
+    def tearDown(self):
+        del self.session
+
     def test_device_serial(self):
         prompt('make sure at least one device is plugged in')
         self.assertTrue(self.device.serial)
