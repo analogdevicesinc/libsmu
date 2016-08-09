@@ -133,7 +133,6 @@ void Session::attached(libusb_device *usb_dev)
 		if (dev) {
 			std::lock_guard<std::mutex> lock(m_lock_devlist);
 			m_available_devices.push_back(dev);
-			DEBUG("Session::attached device serial: %s\n", dev->serial());
 			for (auto callback: m_hotplug_attach_callbacks) {
 				callback(dev);
 			}
@@ -146,7 +145,6 @@ void Session::detached(libusb_device *usb_dev)
 	if (!m_hotplug_detach_callbacks.empty()) {
 		Device* dev = find_existing_device(usb_dev);
 		if (dev) {
-			DEBUG("Session::detached device serial: %s\n", dev->serial());
 			for (auto callback: m_hotplug_detach_callbacks) {
 				callback(dev);
 			}
@@ -411,7 +409,6 @@ int Session::add(Device* device)
 {
 	int ret = -1;
 	if (device) {
-		DEBUG("device insert: %s\n", device->serial());
 		ret = device->claim();
 		if (!ret)
 			m_devices.insert(device);
