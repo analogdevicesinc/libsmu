@@ -25,12 +25,22 @@ using namespace smu;
 extern "C" int LIBUSB_CALL usb_hotplug_callback(
 	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
 {
-	(void) usb_ctx;
-	Session *session = (Session *) user_data;
-	if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		session->attached(usb_dev);
-	} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		session->detached(usb_dev);
+	int ret;
+
+	libusb_device_descriptor usb_desc;
+	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
+	if (!ret) {
+		// only try to run hotplug callbacks for supported devices
+		std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
+		if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
+				!= SUPPORTED_DEVICES.end()) {
+			Session *session = (Session *) user_data;
+			if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+				session->attached(usb_dev);
+			} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+				session->detached(usb_dev);
+			}
+		}
 	}
 	return 0;
 }
