@@ -48,6 +48,9 @@ class TestDevice(unittest.TestCase):
         self.assertEqual(len(self.device.calibration), 8)
 
     def test_write_calibration(self):
+        if (float(self.device.fwver) < 2.06):
+            self.skipTest('writing calibration is only supported by firmware >= 2.06')
+
         default_cal = [
             [0.0, 1.0, 1.0],
             [0.0, 1.0, 1.0],
