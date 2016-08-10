@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 from io import open
 import glob
 import os
@@ -45,11 +46,6 @@ else:
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
 
-# only regenerate cython extensions if requested or required
-USE_CYTHON = (
-    os.environ.get('USE_CYTHON', False) or
-    not os.path.exists(os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.cpp')))
-
 # cython extensions to generate/build
 extensions = []
 extensions.extend([
@@ -60,6 +56,7 @@ extensions.extend([
 
 
 def no_cythonize(extensions, **_ignore):
+    extensions = copy.deepcopy(extensions)
     for extension in extensions:
         sources = []
         for sfile in extension.sources:
@@ -69,6 +66,12 @@ def no_cythonize(extensions, **_ignore):
             sources.append(sfile)
         extension.sources[:] = sources
     return extensions
+
+
+# only regenerate cython extensions if requested or required
+USE_CYTHON = (
+    os.environ.get('USE_CYTHON', False) or
+    any(not os.path.exists(x) for ext in no_cythonize(extensions) for x in ext.sources))
 
 
 class sdist(dst_sdist):
