@@ -55,46 +55,6 @@ extensions.extend([
     ])
 
 
-def determine_lang(ext):
-    with open(ext) as f:
-        for line in f:
-            line = line.lstrip()
-            if not line:
-                continue
-            elif line[0] != '#':
-                return None
-            line = line[1:].lstrip()
-            if line[:10] == 'distutils:':
-                key, _, value = [s.strip() for s in line[10:].partition('=')]
-                if key == 'language':
-                    return value
-        else:
-            return None
-
-def no_cythonize(extensions, **_ignore):
-    extensions = copy.deepcopy(extensions)
-    for extension in extensions:
-        sources = []
-        for sfile in extension.sources:
-            path, ext = os.path.splitext(sfile)
-            if ext in ('.pyx', '.py'):
-                lang = determine_lang(sfile)
-                if lang == 'c++':
-                    ext = '.cpp'
-                else:
-                    ext = '.c'
-                sfile = path + ext
-            sources.append(sfile)
-        extension.sources[:] = sources
-    return extensions
-
-
-# only regenerate cython extensions if requested or required
-USE_CYTHON = (
-    os.environ.get('USE_CYTHON', False) or
-    any(not os.path.exists(x) for ext in no_cythonize(extensions) for x in ext.sources))
-
-
 class sdist(dst_sdist):
     """Make sure generated cython extensions are included."""
 
@@ -109,6 +69,43 @@ class sdist(dst_sdist):
 class build_ext(dst_build_ext):
     """Add custom compile flags for compiled extensions."""
 
+    @staticmethod
+    def determine_ext_lang(ext_path):
+        """Determine file extensions for generated cython extensions."""
+        with open(ext_path) as f:
+            for line in f:
+                line = line.lstrip()
+                if not line:
+                    continue
+                elif line[0] != '#':
+                    return None
+                line = line[1:].lstrip()
+                if line[:10] == 'distutils:':
+                    key, _, value = [s.strip() for s in line[10:].partition('=')]
+                    if key == 'language':
+                        return value
+            else:
+                return None
+
+    @staticmethod
+    def no_cythonize(extensions, **_ignore):
+        """Determine file paths for generated cython extensions."""
+        extensions = copy.deepcopy(extensions)
+        for extension in extensions:
+            sources = []
+            for sfile in extension.sources:
+                path, ext = os.path.splitext(sfile)
+                if ext in ('.pyx', '.py'):
+                    lang = build_ext.determine_ext_lang(sfile)
+                    if lang == 'c++':
+                        ext = '.cpp'
+                    else:
+                        ext = '.c'
+                    sfile = path + ext
+                sources.append(sfile)
+            extension.sources[:] = sources
+        return extensions
+
     def build_extensions(self):
         compiler = self.compiler.compiler_type
         cxxflags = []
@@ -119,10 +116,15 @@ class build_ext(dst_build_ext):
         return dst_build_ext.build_extensions(self)
 
     def run(self):
+        # only regenerate cython extensions if requested or required
+        USE_CYTHON = (
+            os.environ.get('USE_CYTHON', False) or
+            any(not os.path.exists(x) for ext in self.no_cythonize(self.extensions) for x in ext.sources))
         if USE_CYTHON:
             from Cython.Build import cythonize
             cythonize(self.extensions)
-        self.extensions = no_cythonize(self.extensions)
+
+        self.extensions = self.no_cythonize(self.extensions)
         return dst_build_ext.run(self)
 
 
