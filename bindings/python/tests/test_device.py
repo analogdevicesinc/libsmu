@@ -5,7 +5,11 @@ import tempfile
 import textwrap
 import time
 import unittest
-from urllib import urlretrieve
+
+try:
+    from urllib import urlretrieve
+except ImportError:
+    from urllib.request import urlretrieve
 
 try:
     from unittest import mock
