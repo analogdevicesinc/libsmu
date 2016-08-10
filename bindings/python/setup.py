@@ -55,6 +55,22 @@ extensions.extend([
     ])
 
 
+def determine_lang(ext):
+    with open(ext) as f:
+        for line in f:
+            line = line.lstrip()
+            if not line:
+                continue
+            elif line[0] != '#':
+                return None
+            line = line[1:].lstrip()
+            if line[:10] == 'distutils:':
+                key, _, value = [s.strip() for s in line[10:].partition('=')]
+                if key == 'language':
+                    return value
+        else:
+            return None
+
 def no_cythonize(extensions, **_ignore):
     extensions = copy.deepcopy(extensions)
     for extension in extensions:
@@ -62,7 +78,12 @@ def no_cythonize(extensions, **_ignore):
         for sfile in extension.sources:
             path, ext = os.path.splitext(sfile)
             if ext in ('.pyx', '.py'):
-                sfile = path + '.cpp'
+                lang = determine_lang(sfile)
+                if lang == 'c++':
+                    ext = '.cpp'
+                else:
+                    ext = '.c'
+                sfile = path + ext
             sources.append(sfile)
         extension.sources[:] = sources
     return extensions
