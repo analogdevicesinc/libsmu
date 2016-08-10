@@ -76,7 +76,9 @@ class sdist(dst_sdist):
 
     def run(self):
         from Cython.Build import cythonize
-        cythonize(extensions)
+        build_ext = self.reinitialize_command('build_ext')
+        build_ext.ensure_finalized()
+        cythonize(build_ext.extensions)
         dst_sdist.run(self)
 
 
