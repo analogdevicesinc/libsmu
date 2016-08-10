@@ -17,14 +17,15 @@ except ImportError:
     import mock
 
 from pysmu import Device, Session, DeviceError
-from .misc import prompt
 
-# XXX: Hack to run tests in defined class order, required due to assumptions on
-# when a device is physically plugged in since we don't want to prompt at the
-# beginning of every function.
-ln = lambda f: getattr(TestDevice, f).im_func.func_code.co_firstlineno
-lncmp = lambda _, a, b: cmp(ln(a), ln(b))
-unittest.TestLoader.sortTestMethodsUsing = lncmp
+# input = raw_input in py3, copy this for py2
+if sys.hexversion < 0x03000000:
+    input = raw_input
+
+
+def prompt(s):
+    """Prompt the user to verify test setup before continuing."""
+    input('ACTION: {} (hit Enter to continue)'.format(s))
 
 
 class TestDevice(unittest.TestCase):
