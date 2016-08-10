@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import sys
 import tempfile
 import textwrap
@@ -83,63 +84,9 @@ class TestDevice(unittest.TestCase):
             self.device.write_calibration(cal_data.name)
 
         # writing good calibration file
-        # TODO: point to repo file instead of duplicating here
-        cal_data = tempfile.NamedTemporaryFile()
-        with open(cal_data.name, 'w') as f:
-            f.write(textwrap.dedent("""\
-                # Channel A, measure V
-                </>
-                <0.0000, 0.0000>
-                <2.5000, 2.5000>
-                <\>
-
-                # Channel A, measure I
-                </>
-                <0.0000, 0.0000>
-                <0.1000, 0.1000>
-                <-0.1000, -0.1000>
-                <\>
-
-                # Channel A, source V
-                </>
-                <0.0000, 0.0000>
-                <2.5000, 2.5000>
-                <\>
-
-                # Channel A, source I
-                </>
-                <0.0000, 0.0000>
-                <0.1000, 0.1000>
-                <-0.1000, -0.1000>
-                <\>
-
-                # Channel B, measure V
-                </>
-                <0.0000, 0.0000>
-                <2.5000, 2.5000>
-                <\>
-
-                # Channel B, measure I
-                </>
-                <0.0000, 0.0000>
-                <0.1000, 0.1000>
-                <-0.1000, -0.1000>
-                <\>
-
-                # Channel B, source V
-                </>
-                <0.0000, 0.0000>
-                <2.5000, 2.5000>
-                <\>
-
-                # Channel B source I
-                </>
-                <0.0000, 0.0000>
-                <0.1000, 0.1000>
-                <-0.1000, -0.1000>
-                <\>
-            """))
-        self.device.write_calibration(cal_data.name)
+        dn = os.path.dirname
+        cal_data = os.path.join(dn(dn(dn(dn(__file__)))), 'contrib', 'calib.txt')
+        self.device.write_calibration(cal_data)
         self.assertEqual(self.device.calibration, default_cal)
 
     def test_samba_mode(self):
