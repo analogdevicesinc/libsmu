@@ -10,7 +10,6 @@ import sys
 from distutils.command.build_ext import build_ext as dst_build_ext
 from distutils.command.sdist import sdist as dst_sdist
 from setuptools import setup, find_packages, Extension
-from Cython.Build import cythonize
 
 # top level bindings directory
 BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,7 +45,12 @@ else:
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
 
-# cython/cpp extensions to generate/build
+# only regenerate cython extensions if requested or required
+USE_CYTHON = (
+    os.environ.get('USE_CYTHON', False) or
+    not os.path.exists(os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.cpp')))
+
+# cython extensions to generate/build
 extensions = []
 extensions.extend([
     Extension(
@@ -55,10 +59,23 @@ extensions.extend([
     ])
 
 
+def no_cythonize(extensions, **_ignore):
+    for extension in extensions:
+        sources = []
+        for sfile in extension.sources:
+            path, ext = os.path.splitext(sfile)
+            if ext in ('.pyx', '.py'):
+                sfile = path + '.cpp'
+            sources.append(sfile)
+        extension.sources[:] = sources
+    return extensions
+
+
 class sdist(dst_sdist):
-    """Make sure generated cython files are included."""
+    """Make sure generated cython extensions are included."""
 
     def run(self):
+        from Cython.Build import cythonize
         cythonize(extensions)
         dst_sdist.run(self)
 
@@ -74,6 +91,13 @@ class build_ext(dst_build_ext):
         for ext in self.extensions:
             ext.extra_compile_args.extend(cxxflags)
         return dst_build_ext.build_extensions(self)
+
+    def run(self):
+        if USE_CYTHON:
+            from Cython.Build import cythonize
+            cythonize(self.extensions)
+        self.extensions = no_cythonize(self.extensions)
+        return dst_build_ext.run(self)
 
 
 version = ''
@@ -97,7 +121,7 @@ setup(
     author='Tim Harder',
     author_email='radhermit@gmail.com',
     packages=find_packages(),
-    ext_modules=cythonize(extensions),
+    ext_modules=extensions,
     scripts=glob.glob('bin/*'),
     test_suite='tests',
     cmdclass={
