@@ -65,10 +65,24 @@ def test_write_calibration(device):
     with pytest.raises(DeviceError):
         device.write_calibration(cal_data.name)
 
-    # writing good calibration file
+    # find default calibration file in repo
     dn = os.path.dirname
-    cal_data = os.path.join(dn(dn(dn(dn(__file__)))), 'contrib', 'calib.txt')
-    device.write_calibration(cal_data)
+    default_cal_data = os.path.join(dn(dn(dn(dn(__file__)))), 'contrib', 'calib.txt')
+
+    # writing modified calibration file
+    cal_data = tempfile.NamedTemporaryFile()
+    with open(default_cal_data) as default, open(cal_data.name, 'w') as f:
+        for line in default:
+            # randomly munge cal data
+            if line.strip() == "<0.0000, 0.0000>":
+                f.write("<1.0000, 2.0000>\n")
+            else:
+                f.write(line)
+    device.write_calibration(cal_data.name)
+    assert device.calibration != default_cal
+
+    # writing good calibration file
+    device.write_calibration(default_cal_data)
     assert device.calibration == default_cal
 
 def test_samba_mode(session, device):
