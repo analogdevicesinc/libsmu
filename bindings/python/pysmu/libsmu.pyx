@@ -298,7 +298,7 @@ cdef class Device:
         Returns: the number of bytes actually transferred
         Raises: IOError on USB failures
         """
-        data = data.encode()
+        data = str(data).encode()
 
         if bm_request_type & 0x80 == 0x80:
             if data == '0':
