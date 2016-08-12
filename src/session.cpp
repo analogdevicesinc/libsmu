@@ -210,7 +210,7 @@ void Session::flash_firmware(const char *file, Device *dev)
 			throw std::runtime_error("failed to enable SAM-BA command mode");
 	}
 
-	device_count = libusb_get_device_list(NULL, &usb_devs);
+	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
 	if (device_count <= 0) {
 		throw std::runtime_error("error enumerating USB devices");
 	}
