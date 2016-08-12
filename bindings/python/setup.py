@@ -149,7 +149,7 @@ class PyTest(Command):
         self.report = None
 
     def finalize_options(self):
-        self.test_args = ['-s', self.default_test_dir]
+        self.test_args = ['-s', '-v', self.default_test_dir]
         self.coverage = bool(self.coverage)
         if self.match is not None:
             self.test_args.extend(['-k', self.match])
