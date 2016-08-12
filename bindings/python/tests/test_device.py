@@ -114,3 +114,10 @@ def test_samba_mode(session, device):
     dev = session.available_devices[0]
     assert dev.serial == orig_serial
     assert dev.fwver == '2.06'
+
+def test_ctrl_transfer(device):
+    # set pin input and get pin value
+    val = device.ctrl_transfer(0xc0, 0x91, 0, 0, 0, 1, 100)
+    assert val == [1]
+    val = device.ctrl_transfer(0xc0, 0x91, 2, 0, 0, 1, 100)
+    assert val == [0]
