@@ -1,10 +1,8 @@
 from __future__ import print_function
 
 import errno
-import sys
 import tempfile
 import time
-import unittest
 
 try:
     from urllib import urlretrieve
@@ -16,150 +14,142 @@ try:
 except ImportError:
     import mock
 
+import pytest
+
 from pysmu import Session, SessionError
-
-# input = raw_input in py3, copy this for py2
-if sys.hexversion < 0x03000000:
-    input = raw_input
+from misc import prompt
 
 
-def prompt(s):
-    """Prompt the user to verify test setup before continuing."""
-    input('ACTION: {} (hit Enter to continue)'.format(s))
+@pytest.yield_fixture(scope='function')
+def session():
+    s = Session()
+    yield s
 
+def test_empty(session):
+    assert session.devices == []
 
+def test_scan(session):
+    prompt('make sure at least one device is plugged in')
+    session.scan()
 
-class TestSession(unittest.TestCase):
+    # available devices haven't been added to the session yet
+    assert session.available_devices
+    assert len(session.available_devices) != len(session.devices)
 
-    def setUp(self):
-        self.session = Session()
+def test_add(session):
+    assert not session.devices
 
-    def tearDown(self):
-        del self.session
+    session.scan()
+    assert session.available_devices
+    dev = session.available_devices[0]
+    session.add(dev)
+    assert len(session.devices) == 1
+    assert session.devices[0].serial == dev.serial
 
-    def test_empty(self):
-        self.assertEqual(self.session.devices, [])
+    # re-adding the same device does nothing
+    session.add(dev)
+    assert len(session.devices) == 1
+    assert session.devices[0].serial == dev.serial
 
-    def test_scan(self):
-        prompt('make sure at least one device is plugged in')
-        self.session.scan()
+def test_add_all(session):
+    assert not session.devices
+    session.add_all()
 
-        # available devices haven't been added to the session yet
-        self.assertTrue(self.session.available_devices)
-        self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
+    # all available devices should be in the session
+    assert session.devices
+    assert len(session.available_devices) == len(session.devices)
 
-    def test_add(self):
-        self.assertFalse(self.session.devices)
+def test_remove(session):
+    session.add_all()
+    assert session.devices
+    assert len(session.available_devices) == len(session.devices)
+    dev = session.devices[0]
+    session.remove(dev)
+    assert not any(d.serial == dev.serial for d in session.devices)
+    assert len(session.available_devices) != len(session.devices)
 
-        self.session.scan()
-        self.assertTrue(self.session.available_devices)
-        dev = self.session.available_devices[0]
-        self.session.add(dev)
-        self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, dev.serial)
+    # removing already removed devices fails
+    with pytest.raises(SessionError) as excinfo:
+        session.remove(dev)
+    assert excinfo.value.errcode == errno.ENXIO
 
-        # re-adding the same device does nothing
-        self.session.add(dev)
-        self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, dev.serial)
+def test_destroy(session):
+    session.scan()
+    # available devices haven't been added to the session yet
+    assert session.available_devices
+    serial = session.available_devices[0].serial
+    session.destroy(session.available_devices[0])
+    assert not any(d.serial == serial for d in session.available_devices)
 
-    def test_add_all(self):
-        self.assertFalse(self.session.devices)
-        self.session.add_all()
+def test_flash_firmware(session):
+    # import pdb
+    # pdb.set_trace()
 
-        # all available devices should be in the session
-        self.assertTrue(self.session.devices)
-        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
+    # assumes an internet connection is available and github is up
+    old_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.02/m1000.bin'
+    new_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
 
-    def test_remove(self):
-        self.session.add_all()
-        self.assertTrue(self.session.devices)
-        self.assertEqual(len(self.session.available_devices), len(self.session.devices))
-        dev = self.session.devices[0]
-        self.session.remove(dev)
-        self.assertFalse(any(d.serial == dev.serial for d in self.session.devices))
-        self.assertNotEqual(len(self.session.available_devices), len(self.session.devices))
+    # fetch old/new firmware files from github
+    old_fw = tempfile.NamedTemporaryFile()
+    new_fw = tempfile.NamedTemporaryFile()
+    urlretrieve(old_fw_url, old_fw.name)
+    urlretrieve(new_fw_url, new_fw.name)
 
-        # removing already removed devices fails
-        with self.assertRaises(SessionError) as cm:
-            self.session.remove(dev)
-        e = cm.exception
-        self.assertEqual(e.errcode, errno.ENXIO)
+    session.add_all()
+    assert len(session.devices) == 1
+    serial = session.devices[0].serial
 
-    def test_destroy(self):
-        self.session.scan()
-        # available devices haven't been added to the session yet
-        self.assertTrue(self.session.available_devices)
-        serial = self.session.available_devices[0].serial
-        self.session.destroy(self.session.available_devices[0])
-        self.assertFalse(any(d.serial == serial for d in self.session.available_devices))
+    # flash old firmware
+    print('flashing firmware 2.02...')
+    session.flash_firmware(old_fw.name)
+    prompt('unplug/replug the device')
+    session.add_all()
+    assert len(session.devices) == 1
+    assert session.devices[0].serial == serial
+    assert session.devices[0].fwver == '2.02'
 
-    def test_flash_firmware(self):
-        # assumes an internet connection is available and github is up
-        old_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.02/m1000.bin'
-        new_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
+    # flash new firmware
+    print('flashing firmware 2.06...')
+    session.flash_firmware(new_fw.name)
+    prompt('unplug/replug the device')
+    session.add_all()
+    assert len(session.devices) == 1
+    assert session.devices[0].serial == serial
+    assert session.devices[0].fwver == '2.06'
 
-        # fetch old/new firmware files from github
-        old_fw = tempfile.NamedTemporaryFile()
-        new_fw = tempfile.NamedTemporaryFile()
-        urlretrieve(old_fw_url, old_fw.name)
-        urlretrieve(new_fw_url, new_fw.name)
+def test_hotplug(session):
+    prompt('unplug/plug a device within 10 seconds')
+    session.add_all()
 
-        self.session.add_all()
-        self.assertEqual(len(self.session.devices), 1)
-        serial = self.session.devices[0].serial
+    # create fake attach/detach callbacks to check basic triggering
+    fake_attach = mock.Mock()
+    fake_detach = mock.Mock()
+    session.hotplug_attach(fake_attach)
+    session.hotplug_detach(fake_detach)
 
-        # flash old firmware
-        print('flashing firmware 2.02...')
-        self.session.flash_firmware(old_fw.name)
-        prompt('unplug/replug the device')
-        self.session.add_all()
-        self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, serial)
-        self.assertEqual(self.session.devices[0].fwver, '2.02')
+    # create more realistic callbacks that try adding/removing the
+    # hotplugged device from a session
+    def attach(dev):
+        serial = dev.serial
+        session.add(dev)
+        assert any(d.serial == serial for d in session.devices)
 
-        # flash new firmware
-        print('flashing firmware 2.06...')
-        self.session.flash_firmware(new_fw.name)
-        prompt('unplug/replug the device')
-        self.session.add_all()
-        self.assertEqual(len(self.session.devices), 1)
-        self.assertEqual(self.session.devices[0].serial, serial)
-        self.assertEqual(self.session.devices[0].fwver, '2.06')
+    def detach(dev):
+        serial = dev.serial
+        session.remove(dev, detached=True)
+        assert not any(d.serial == serial for d in session.devices)
 
-    def test_hotplug(self):
-        prompt('unplug/plug a device within 10 seconds')
-        self.session.add_all()
+    session.hotplug_attach(attach)
+    session.hotplug_detach(detach)
 
-        # create fake attach/detach callbacks to check basic triggering
-        fake_attach = mock.Mock()
-        fake_detach = mock.Mock()
-        self.session.hotplug_attach(fake_attach)
-        self.session.hotplug_detach(fake_detach)
+    start = time.time()
+    print('waiting hotplug events...')
+    while (True):
+        time.sleep(1)
+        end = time.time()
+        elapsed = end - start
+        if elapsed > 10 or (fake_attach.called and fake_detach.called):
+            break
 
-        # create more realistic callbacks that try adding/removing the
-        # hotplugged device from a session
-        def attach(dev):
-            serial = dev.serial
-            self.session.add(dev)
-            self.assertTrue(any(d.serial == serial for d in self.session.devices))
-
-        def detach(dev):
-            serial = dev.serial
-            self.session.remove(dev, detached=True)
-            self.assertFalse(any(d.serial == serial for d in self.session.devices))
-
-        self.session.hotplug_attach(attach)
-        self.session.hotplug_detach(detach)
-
-        start = time.time()
-        print('waiting hotplug events...')
-        while (True):
-            time.sleep(1)
-            end = time.time()
-            elapsed = end - start
-            if elapsed > 10 or (fake_attach.called and fake_detach.called):
-                break
-
-        self.assertTrue(fake_attach.called)
-        self.assertTrue(fake_detach.called)
+    assert fake_attach.called, 'attach callback not called'
+    assert fake_detach.called, 'detach callback not called'
