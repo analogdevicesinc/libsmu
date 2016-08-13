@@ -1,9 +1,11 @@
 # distutils: language = c++
 
+from libcpp.deque cimport deque
 from libcpp.vector cimport vector
 
 cimport cpp_libsmu
 
+from .array cimport array
 from .exceptions import SessionError, DeviceError
 
 __version__ = cpp_libsmu.libsmu_version_str().decode()
@@ -248,6 +250,61 @@ cdef class Device:
             cdef vector[vector[float]] cal
             self._device.calibration(&cal)
             return cal;
+
+    def write(self, data, channel, timeout=0):
+        """Write data to a specified channel of the device.
+
+        Args:
+            data: list or tuple of sample values
+            channel (0 or 1): channel to write samples to
+            timeout: amount of time in milliseconds to wait for samples
+                to be available. If 0 (the default), return immediately.
+
+        Raises: DeviceError on writing failures.
+        Returns: The number of samples written.
+        """
+        cdef ssize_t ret
+        cdef deque[float] buf
+
+        for x in data:
+            buf.push_back(x)
+
+        try:
+            ret = self._device.write(buf, channel, timeout)
+        except SystemError as e:
+            raise DeviceError(str(e))
+
+        if ret < 0:
+            raise DeviceError('failed writing to device', ret)
+
+        return ret
+
+    def read(self, num_samples, timeout=0):
+        """Acquire all signal samples from a device.
+
+        Args:
+            num_samples (int): number of samples to read
+            timeout: amount of time in milliseconds to wait for samples
+                to be available. If 0 (the default), return immediately.
+
+        Raises: DeviceError on reading failures.
+        Returns: A list containing the specified number of sample values.
+        """
+        cdef ssize_t ret
+        cdef vector[array[float, cpp_libsmu.four]] buf
+
+        try:
+            ret = self._device.read(buf, num_samples, timeout)
+        except SystemError as e:
+            raise DeviceError(str(e))
+
+        if ret < 0:
+            raise DeviceError('failed writing to device', ret)
+
+        samples = []
+        for x in buf:
+            samples.append((x[0], x[1], x[2], x[3]))
+        return samples
 
     def write_calibration(self, file):
         """Write calibration data to the device's EEPROM.

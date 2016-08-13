@@ -1,8 +1,17 @@
 # Interface wrapper for the libsmu library.
 # distutils: language = c++
 
+from libcpp.deque cimport deque
 from libcpp.set cimport set
 from libcpp.vector cimport vector
+
+from .array cimport array
+
+
+# Hack to allow integer template parameters, unnecessary when
+# https://github.com/cython/cython/pull/426 is merged in some form.
+cdef extern from *:
+    ctypedef int four "4"
 
 
 cdef extern from "libsmu/version.hpp":
@@ -38,6 +47,8 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         const char* fwver()
         const char* hwver()
         int set_mode(int channel, int mode)
+        ssize_t read(vector[array[float, four]]& buf, size_t samples, unsigned timeout)
+        ssize_t write(deque[float]& buf, unsigned channel, unsigned timeout)
         int ctrl_transfer(
             int bmRequestType, int bRequest, int wValue, int wIndex,
             unsigned char* data, int wLength, int timeout)
