@@ -2,7 +2,7 @@ if(MSVC)
 	# needed for CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS support
 	cmake_minimum_required(VERSION 3.4)
 else()
-	cmake_minimum_required(VERSION 3.1)
+	cmake_minimum_required(VERSION 2.8.7)
 endif()
 project(libsmu CXX C)
 
@@ -23,13 +23,9 @@ set(CPACK_BUNDLE_NAME libsmu)
 include(CPack)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++11")
 endif()
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
-
-# C++11 is required
-set(CMAKE_CXX_STANDARD 11)
-set(CXX_STANDARD_REQUIRED ON)
 
 # don't complain about extra format args for g++
 if(CMAKE_COMPILER_IS_GNUCXX)
