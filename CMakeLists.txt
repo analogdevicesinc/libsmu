@@ -41,7 +41,7 @@ set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 # install udev rules
 set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
 
-include("GNUInstallDirs")
+include(GNUInstallDirs)
 
 # handle RPATH issues on OS X
 if(APPLE)
