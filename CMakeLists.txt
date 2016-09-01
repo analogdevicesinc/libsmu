@@ -43,6 +43,11 @@ set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
 
 include(GNUInstallDirs)
 
+# set default install path to /usr
+if (NOT WIN32 AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "default install path" FORCE)
+endif()
+
 # handle RPATH issues on OS X
 if(APPLE)
 	set(CMAKE_MACOSX_RPATH ON)
