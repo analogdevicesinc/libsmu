@@ -47,9 +47,9 @@ manner if libsmu has already been built and/or installed on the host machine.
 
 ##### Linux
 
-By default, libsmu is installed into various directories inside /usr/local. In
-this case, the runtime linker cache often needs to be regenerated otherwise
-runtime linking errors will occur.
+By default, libsmu is installed into various directories inside /usr. However,
+if it's installed somewhere such as /usr/local the runtime linker cache often
+needs to be regenerated otherwise runtime linking errors will occur.
 
 Regenerate runtime linker cache:
 ```
@@ -69,6 +69,19 @@ Reload udev rules files:
 ```
 $ sudo udevadm control --reload-rules
 ```
+
+Finally, for python support on Debian/Ubuntu derived distros users will have to
+export PYTHONPATH or perform a similar method since hand-built modules are
+installed to the site-packages directory (which isn't in the standard search
+list) while distro provided modules are placed in dist-packages.
+
+Add pysmu module directory to python search path:
+```
+$ export PYTHONPATH=/usr/lib/python2.7/site-packages:${PYTHONPATH}
+```
+
+Note the command will have to be altered for targets with different bitness or
+python versions.
 
 ##### OS X
 
