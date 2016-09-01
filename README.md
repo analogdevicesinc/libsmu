@@ -30,9 +30,9 @@ Compile:
 $ make
 ```
 
-Install (needs to be run as root if installing to system locations):
+Install:
 ```
-# make install
+$ sudo make install
 ```
 
 Bindings for python2.7 are also available and are built if enabled via the
@@ -51,9 +51,9 @@ By default, libsmu is installed into various directories inside /usr/local. In
 this case, the runtime linker cache often needs to be regenerated otherwise
 runtime linking errors will occur.
 
-Regenerate runtime linker cache (run as root):
+Regenerate runtime linker cache:
 ```
-# ldconfig
+$ sudo ldconfig
 ```
 
 If the same errors still happen, make sure the directory the libsmu library is
@@ -64,9 +64,9 @@ In addition, a udev rules file is installed to give regular users access to
 devices supported by libsmu. Udev has to be forced to reload its rules files in
 order to use the new file without rebooting the system.
 
-Reload udev rules files (run as root):
+Reload udev rules files:
 ```
-# udevadm control --reload-rules
+$ sudo udevadm control --reload-rules
 ```
 
 ##### OS X
