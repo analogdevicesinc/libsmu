@@ -60,9 +60,10 @@ If the same errors still happen, make sure the directory the libsmu library is
 installed to is in the sourced files for /etc/ld.so.conf before running
 ldconfig.
 
-In addition, a udev rules file is installed to give regular users access to
-devices supported by libsmu. Udev has to be forced to reload its rules files in
-order to use the new file without rebooting the system.
+In addition, the udev rules file (53-adi-m1k-usb.rules) is installed (by
+default to /etc/udev/rules.d) to give regular users access to devices supported
+by libsmu. Udev has to be forced to reload its rules files in order to use the
+new file without rebooting the system.
 
 Reload udev rules files:
 ```
