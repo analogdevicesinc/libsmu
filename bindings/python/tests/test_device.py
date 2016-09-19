@@ -36,7 +36,7 @@ def test_device_hwver(device):
 def test_calibration(device):
     assert len(device.calibration) == 8
 
-def test_write_calibration(device):
+def test_write_calibration(session, device):
     pytest.mark.skipif(float(device.fwver) < 2.06)
 
     default_cal = [
@@ -79,7 +79,21 @@ def test_write_calibration(device):
             else:
                 f.write(line)
     device.write_calibration(cal_data.name)
-    assert device.calibration != default_cal
+    new_cal = device.calibration
+    assert new_cal != default_cal
+
+    # make sure calibration data survives firmware updates
+    fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
+    # fetch old/new firmware files from github
+    fw = tempfile.NamedTemporaryFile()
+    urlretrieve(fw_url, fw.name)
+    session.add_all()
+    session.flash_firmware(fw.name)
+    prompt('unplug/replug the device')
+    session.scan()
+    session.add_all()
+    device = session.devices[0]
+    assert new_cal == device.calibration
 
     # writing good calibration file
     device.write_calibration(default_cal_data)
