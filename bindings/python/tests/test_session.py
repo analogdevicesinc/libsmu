@@ -17,7 +17,7 @@ except ImportError:
 import pytest
 
 from pysmu import Session, SessionError
-from misc import prompt
+from misc import prompt, OLD_FW_URL, NEW_FW_URL
 
 
 @pytest.yield_fixture(scope='function')
@@ -82,18 +82,12 @@ def test_destroy(session):
     assert not any(d.serial == serial for d in session.available_devices)
 
 def test_flash_firmware(session):
-    # import pdb
-    # pdb.set_trace()
-
     # assumes an internet connection is available and github is up
-    old_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.02/m1000.bin'
-    new_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
-
     # fetch old/new firmware files from github
     old_fw = tempfile.NamedTemporaryFile()
     new_fw = tempfile.NamedTemporaryFile()
-    urlretrieve(old_fw_url, old_fw.name)
-    urlretrieve(new_fw_url, new_fw.name)
+    urlretrieve(OLD_FW_URL, old_fw.name)
+    urlretrieve(NEW_FW_URL, new_fw.name)
 
     session.add_all()
     assert len(session.devices) == 1

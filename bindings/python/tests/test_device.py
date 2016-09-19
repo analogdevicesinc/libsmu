@@ -11,7 +11,7 @@ except ImportError:
 import pytest
 
 from pysmu import Device, Session, DeviceError
-from misc import prompt
+from misc import prompt, NEW_FW_URL
 
 @pytest.fixture(scope='module')
 def session(request):
@@ -83,10 +83,8 @@ def test_write_calibration(session, device):
     assert new_cal != default_cal
 
     # make sure calibration data survives firmware updates
-    fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
-    # fetch old/new firmware files from github
     fw = tempfile.NamedTemporaryFile()
-    urlretrieve(fw_url, fw.name)
+    urlretrieve(NEW_FW_URL, fw.name)
     session.add_all()
     session.flash_firmware(fw.name)
     prompt('unplug/replug the device')
