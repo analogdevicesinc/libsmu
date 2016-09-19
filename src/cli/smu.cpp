@@ -86,7 +86,7 @@ int write_calibration(Session* session, const char *file)
 	int ret;
 	auto dev = *(session->m_devices.begin());
 	ret = dev->write_calibration(file);
-	if (ret <= 0) {
+	if (ret < 0) {
 		if (ret == -EINVAL)
 			cerr << "smu: invalid calibration data format" << endl;
 		else if (ret == -EPIPE)
@@ -130,7 +130,7 @@ int reset_calibration(Session* session)
 	int ret;
 	for (auto dev: session->m_devices) {
 		ret = dev->write_calibration(NULL);
-		if (ret <= 0) {
+		if (ret < 0) {
 			if (ret == -EPIPE)
 				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 			else
