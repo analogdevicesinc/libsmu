@@ -39,16 +39,7 @@ def test_calibration(device):
 def test_write_calibration(session, device):
     pytest.mark.skipif(float(device.fwver) < 2.06)
 
-    default_cal = [
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-        [0.0, 1.0, 1.0],
-    ]
+    default_cal = [[0.0, 1.0, 1.0] for x in range(8)]
 
     # reset calibration
     device.write_calibration(None)
