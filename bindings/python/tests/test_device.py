@@ -39,7 +39,7 @@ def test_calibration(device):
 def test_write_calibration(session, device):
     default_cal = [[0.0, 1.0, 1.0] for x in range(8)]
 
-    # old firmware versions don't support calibration
+    # old firmware versions don't support writing calibration data
     fw = tempfile.NamedTemporaryFile()
     urlretrieve(OLD_FW_URL, fw.name)
     session.add_all()
@@ -48,6 +48,8 @@ def test_write_calibration(session, device):
     session.scan()
     session.add_all()
     device = session.devices[0]
+    assert float(device.fwver) < 2.06
+    assert device.calibration == default_cal
     with pytest.raises(DeviceError):
         device.write_calibration(None)
 
