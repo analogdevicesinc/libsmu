@@ -11,7 +11,7 @@ except ImportError:
 import pytest
 
 from pysmu import Device, Session, DeviceError
-from misc import prompt, NEW_FW_URL
+from misc import prompt, NEW_FW_URL, OLD_FW_URL
 
 @pytest.fixture(scope='module')
 def session(request):
@@ -37,13 +37,28 @@ def test_calibration(device):
     assert len(device.calibration) == 8
 
 def test_write_calibration(session, device):
-    pytest.mark.skipif(float(device.fwver) < 2.06)
-
     default_cal = [[0.0, 1.0, 1.0] for x in range(8)]
 
-    # reset calibration
-    device.write_calibration(None)
-    assert device.calibration == default_cal
+    # old firmware versions don't support calibration
+    fw = tempfile.NamedTemporaryFile()
+    urlretrieve(OLD_FW_URL, fw.name)
+    session.add_all()
+    session.flash_firmware(fw.name)
+    prompt('unplug/replug the device')
+    session.scan()
+    session.add_all()
+    device = session.devices[0]
+    with pytest.raises(DeviceError):
+        device.write_calibration(None)
+
+    # update to firmware supporting calibration
+    fw = tempfile.NamedTemporaryFile()
+    urlretrieve(NEW_FW_URL, fw.name)
+    session.flash_firmware(fw.name)
+    prompt('unplug/replug the device')
+    session.scan()
+    session.add_all()
+    device = session.devices[0]
 
     # writing nonexistent calibration file
     with pytest.raises(DeviceError):
@@ -76,13 +91,16 @@ def test_write_calibration(session, device):
     # make sure calibration data survives firmware updates
     fw = tempfile.NamedTemporaryFile()
     urlretrieve(NEW_FW_URL, fw.name)
-    session.add_all()
     session.flash_firmware(fw.name)
     prompt('unplug/replug the device')
     session.scan()
     session.add_all()
     device = session.devices[0]
     assert new_cal == device.calibration
+
+    # reset calibration
+    device.write_calibration(None)
+    assert device.calibration == default_cal
 
     # writing good calibration file
     device.write_calibration(default_cal_data)
