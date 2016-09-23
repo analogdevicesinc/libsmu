@@ -98,6 +98,7 @@ def flash(session, args):
     except pysmu.SessionError as e:
         pprint(str(e))
         sys.exit(1)
+    pprint('successfully updated firmware, please unplug and replug the device')
 
 
 if __name__ == '__main__':
