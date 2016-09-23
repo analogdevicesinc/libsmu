@@ -112,7 +112,10 @@ if __name__ == '__main__':
         '--version', action='version',
         version='pysmu {}, (libsmu {})'.format(pysmu.__version__, pysmu.libsmu.__version__))
 
-    parser_cal = subparsers.add_parser('cal', help='display, reset, or write calibration data')
+    parser_cal = subparsers.add_parser(
+        'cal',
+        description='display, reset, or write calibration data',
+        help='modify calibration data')
     parser_cal.set_defaults(func=calibration)
     parser_cal_mux = parser_cal.add_mutually_exclusive_group()
     parser_cal_mux.add_argument(
@@ -125,17 +128,26 @@ if __name__ == '__main__':
         '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='write',
         help='write calibration data to a device')
 
-    parser_list = subparsers.add_parser('list', help='list devices')
+    parser_list = subparsers.add_parser(
+        'list',
+        description='list supported devices attached to the system',
+        help='list devices')
     parser_list.set_defaults(func=list_devices)
     parser_list_mux = parser_list.add_mutually_exclusive_group()
     parser_list_mux.add_argument(
         '-a', '--available', action='store_true',
         help='list supported devices currently attached to the system')
 
-    parser_hotplug = subparsers.add_parser('hotplug', help='hotplug devices')
+    parser_hotplug = subparsers.add_parser(
+        'hotplug',
+        description='simple session device hotplug testing',
+        help='hotplug devices')
     parser_hotplug.set_defaults(func=hotplug)
 
-    parser_flash = subparsers.add_parser('flash', help='flash firmware image to a device')
+    parser_flash = subparsers.add_parser(
+        'flash',
+        description='flash firmware image to a device',
+        help='flash firmware')
     parser_flash.add_argument('firmware_path')
     parser_flash.set_defaults(func=flash)
 
