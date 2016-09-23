@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import filecmp
 import os
 import tempfile
 
@@ -86,6 +87,8 @@ def test_write_calibration(session, device):
                 f.write("<1.0000, 2.0000>\n")
             else:
                 f.write(line)
+    # verify that the new file differs from the default
+    assert not filecmp.cmp(cal_data.name, default_cal_data)
     device.write_calibration(cal_data.name)
     new_cal = device.calibration
     assert new_cal != default_cal
