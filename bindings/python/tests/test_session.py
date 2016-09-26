@@ -1,13 +1,7 @@
 from __future__ import print_function
 
 import errno
-import tempfile
 import time
-
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
 
 try:
     from unittest import mock
@@ -17,7 +11,7 @@ except ImportError:
 import pytest
 
 from pysmu import Session, SessionError
-from misc import prompt, OLD_FW_URL, NEW_FW_URL
+from misc import prompt, OLD_FW_URL, NEW_FW_URL, OLD_FW, NEW_FW
 
 
 @pytest.yield_fixture(scope='function')
@@ -82,20 +76,13 @@ def test_destroy(session):
     assert not any(d.serial == serial for d in session.available_devices)
 
 def test_flash_firmware(session):
-    # assumes an internet connection is available and github is up
-    # fetch old/new firmware files from github
-    old_fw = tempfile.NamedTemporaryFile()
-    new_fw = tempfile.NamedTemporaryFile()
-    urlretrieve(OLD_FW_URL, old_fw.name)
-    urlretrieve(NEW_FW_URL, new_fw.name)
-
     session.add_all()
     assert len(session.devices) == 1
     serial = session.devices[0].serial
 
     # flash old firmware
     print('flashing firmware 2.02...')
-    session.flash_firmware(old_fw.name)
+    session.flash_firmware(OLD_FW)
     prompt('unplug/replug the device')
     session.add_all()
     assert len(session.devices) == 1
@@ -104,7 +91,7 @@ def test_flash_firmware(session):
 
     # flash new firmware
     print('flashing firmware 2.06...')
-    session.flash_firmware(new_fw.name)
+    session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
     session.add_all()
     assert len(session.devices) == 1
