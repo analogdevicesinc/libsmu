@@ -4,15 +4,10 @@ import filecmp
 import os
 import tempfile
 
-try:
-    from urllib import urlretrieve
-except ImportError:
-    from urllib.request import urlretrieve
-
 import pytest
 
 from pysmu import Device, Session, DeviceError
-from misc import prompt, NEW_FW_URL, OLD_FW_URL
+from misc import prompt, NEW_FW_URL, OLD_FW_URL, OLD_FW, NEW_FW
 
 @pytest.fixture(scope='module')
 def session(request):
@@ -41,10 +36,8 @@ def test_write_calibration(session, device):
     default_cal = [[0.0, 1.0, 1.0] for x in range(8)]
 
     # old firmware versions don't support writing calibration data
-    fw = tempfile.NamedTemporaryFile()
-    urlretrieve(OLD_FW_URL, fw.name)
     session.add_all()
-    session.flash_firmware(fw.name)
+    session.flash_firmware(OLD_FW)
     prompt('unplug/replug the device')
     session.scan()
     session.add_all()
@@ -55,9 +48,7 @@ def test_write_calibration(session, device):
         device.write_calibration(None)
 
     # update to firmware supporting calibration
-    fw = tempfile.NamedTemporaryFile()
-    urlretrieve(NEW_FW_URL, fw.name)
-    session.flash_firmware(fw.name)
+    session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
     session.scan()
     session.add_all()
@@ -94,9 +85,7 @@ def test_write_calibration(session, device):
     assert new_cal != default_cal
 
     # make sure calibration data survives firmware updates
-    fw = tempfile.NamedTemporaryFile()
-    urlretrieve(NEW_FW_URL, fw.name)
-    session.flash_firmware(fw.name)
+    session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
     session.scan()
     session.add_all()
@@ -112,13 +101,6 @@ def test_write_calibration(session, device):
     assert device.calibration == default_cal
 
 def test_samba_mode(session, device):
-    # assumes an internet connection is available and github is up
-    fw_url = 'https://github.com/analogdevicesinc/m1k-fw/releases/download/v2.06/m1000.bin'
-
-    # fetch old/new firmware files from github
-    fw = tempfile.NamedTemporaryFile()
-    urlretrieve(fw_url, fw.name)
-
     # supported devices exist in the session
     num_available_devices = len(session.available_devices)
     assert num_available_devices
@@ -131,7 +113,7 @@ def test_samba_mode(session, device):
     assert not any(d.serial == orig_serial for d in session.available_devices)
 
     # flash device in SAM-BA mode
-    session.flash_firmware(fw.name)
+    session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
     session.scan()
 
