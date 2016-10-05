@@ -54,8 +54,8 @@ html subdir of the build directory.
 
 ##### Python
 
-Bindings for python (2.7, 3.4, and 3.5) are available and can be enabled via
-the following cmake command:
+Bindings for python (2.7, 3.4, and 3.5) are available and can be enabled
+explicitly via the following cmake command (they're enabled by default):
 
 ```
 $ cmake -DBUILD_PYTHON=ON .
