@@ -27,7 +27,7 @@ install:
 script:
   - mkdir build
   - pushd build
-  - cmake ..
+  - cmake -DBUILD_PYTHON=OFF ..
   - make
 
   # create generic binary shell-based installer/tarball
