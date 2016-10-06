@@ -7,26 +7,29 @@ matrix:
       language: python
       python: 2.7
       env: PYTHON=python PIP=pip
+      cache: pip
     - os: linux
       sudo: required
       dist: trusty
       language: python
       python: 3.4
       env: PYTHON=python PIP=pip
+      cache: pip
     - os: linux
       sudo: required
       dist: trusty
       language: python
       python: 3.5
       env: PYTHON=python PIP=pip
+      cache: pip
     - os: osx
       osx_image: xcode61
       env: PYTHON=python PIP=pip
+      cache: $HOME/Library/Caches/pip
     - os: osx
       osx_image: xcode61
       env: PYTHON=python3 PIP=pip3
-
-cache: pip
+      cache: $HOME/Library/Caches/pip
 
 addons:
   apt:
