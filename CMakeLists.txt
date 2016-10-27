@@ -42,7 +42,7 @@ endif()
 
 # build a shared library by default
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
-# don't build python support by default
+# build python support by default
 set(BUILD_PYTHON ON CACHE BOOL "Build python support")
 # build command line smu application by default
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
