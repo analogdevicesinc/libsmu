@@ -39,6 +39,7 @@ build_script:
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
 
@@ -49,6 +50,7 @@ build_script:
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
     -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
 
