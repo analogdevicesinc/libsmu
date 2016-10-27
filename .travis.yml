@@ -30,6 +30,15 @@ matrix:
       osx_image: xcode61
       env: PYTHON=python3 PIP=pip3
       cache: $HOME/Library/Caches/pip
+  allow_failures:
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python PIP=pip
+      cache: $HOME/Library/Caches/pip
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python3 PIP=pip3
+      cache: $HOME/Library/Caches/pip
 
 addons:
   apt:
