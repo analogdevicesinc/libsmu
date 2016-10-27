@@ -72,7 +72,7 @@ script:
 
   - popd
 
-  # build pkthon bindings
+  # build python bindings
   - pushd bindings/python
   # check python version
   - ${PYTHON} --version
