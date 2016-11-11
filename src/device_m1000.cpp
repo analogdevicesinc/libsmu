@@ -50,7 +50,7 @@ const double BUFFER_TIME = 0.020;
 #endif
 
 // Exception pointer to help move exceptions between USB and main threads.
-static std::exception_ptr e_ptr = nullptr;
+std::exception_ptr e_ptr = nullptr;
 
 using namespace smu;
 
