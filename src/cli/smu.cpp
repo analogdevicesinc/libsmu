@@ -63,6 +63,10 @@ static void stream_samples(Session* session)
 		dev->set_mode(ch_i, DISABLED);
 	}
 
+	session->hotplug_detach([=](Device* device, void* data){
+		throw std::runtime_error("device detached");
+	});
+
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
@@ -73,6 +77,9 @@ static void stream_samples(Session* session)
 		} catch (const std::system_error& e) {
 			// Ignore sample drops which will occur due to the use of printf()
 			// which is slow when attached to a terminal.
+		} catch (const std::runtime_error& e) {
+			cout << "smu: stopping stream: " << e.what() << endl;
+			break;
 		}
 
 		for (auto i: buf) {
