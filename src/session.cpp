@@ -18,6 +18,8 @@
 #include "usb.hpp"
 #include <libsmu/libsmu.hpp>
 
+extern std::exception_ptr e_ptr;
+
 using namespace std::placeholders;
 using namespace smu;
 
@@ -134,7 +136,12 @@ void Session::attached(libusb_device *usb_dev)
 			std::lock_guard<std::mutex> lock(m_lock_devlist);
 			m_available_devices.push_back(dev);
 			for (auto callback: m_hotplug_attach_callbacks) {
-				callback(dev);
+				// Store exceptions to rethrow them in the main thread in read()/write().
+				try {
+					callback(dev);
+				} catch (...) {
+					e_ptr = std::current_exception();
+				}
 			}
 		}
 	}
@@ -146,7 +153,12 @@ void Session::detached(libusb_device *usb_dev)
 		Device* dev = find_existing_device(usb_dev);
 		if (dev) {
 			for (auto callback: m_hotplug_detach_callbacks) {
-				callback(dev);
+				// Store exceptions to rethrow them in the main thread in read()/write().
+				try {
+					callback(dev);
+				} catch (...) {
+					e_ptr = std::current_exception();
+				}
 			}
 		}
 	}
