@@ -11,14 +11,19 @@ from __future__ import print_function
 import argparse
 from collections import OrderedDict
 from itertools import chain
+import json
 import os
 import signal
 from signal import signal, SIG_DFL, SIGINT
 import sys
+import tempfile
 import time
+from urllib import urlretrieve
+import urllib2
 
 import pysmu
 
+GITHUB_FW_RELEASES = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
 
 def pprint(s, **kwargs):
     """Prefix output with program name."""
@@ -93,11 +98,31 @@ def hotplug(session, args):
 def flash(session, args):
     """Flash a device's firmware."""
     session.add_all()
-    try:
-        session.flash_firmware(args.firmware_path)
-    except pysmu.SessionError as e:
-        pprint(str(e))
-        sys.exit(1)
+
+    if args.firmware_path is not None:
+        try:
+            session.flash_firmware(args.firmware_path)
+        except pysmu.SessionError as e:
+            pprint(str(e))
+            sys.exit(1)
+    elif args.flash_auto:
+        resp = urllib2.urlopen(GITHUB_FW_RELEASES)
+        releases = json.load(resp)
+        if not releases or not releases[0]['assets']:
+            pprint("no firmware releases available on github")
+            sys.exit(1)
+        else:
+            latest = releases[0]
+            fw_assets = [x for x in latest['assets'] if x['name'] == 'm1000.bin']
+            if not fw_assets:
+                pprint("no firmware file (m1000.bin) for the latest release on github")
+                sys.exit(1)
+            pprint('updating to the latest release on github: {}'.format(latest['tag_name']))
+            temp_fw = tempfile.NamedTemporaryFile().name
+            urlretrieve(fw_assets[0]['browser_download_url'], temp_fw)
+            session.flash_firmware(temp_fw)
+            os.remove(temp_fw)
+
     pprint('successfully updated firmware, please unplug and replug the device')
 
 
@@ -144,10 +169,17 @@ if __name__ == '__main__':
         'flash',
         description='flash firmware image to a device',
         help='flash firmware')
-    parser_flash.add_argument('firmware_path')
     parser_flash.set_defaults(func=flash)
+    parser_flash_mux = parser_flash.add_mutually_exclusive_group()
+    parser_flash_mux.add_argument(
+        '-a', '--auto', action='store_true', dest='flash_auto',
+        help='update to the latest firmware release from github (requires network access)')
+    parser_flash_mux.add_argument(
+        '-f', dest='firmware_path',
+        help='update via a specified firmware file')
 
     args = parser.parse_args()
+
     # default to displaying calibration data if no subcommand is selected
     if args.func.__name__ == 'calibration':
         if (all(not getattr(args, x) for x in ('display', 'reset', 'write'))):
