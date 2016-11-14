@@ -336,6 +336,10 @@ cdef class Device:
         if errcode:
             raise DeviceError('failed to enable SAM-BA mode', errcode)
 
+    def get_default_rate(self):
+        """Get the default sample rate for the device."""
+        return self._device.get_default_rate()
+
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
         """Perform raw USB control transfers.
