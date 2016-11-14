@@ -24,27 +24,29 @@ int main(int argc, char **argv)
 	session->add_all();
 
 	// Register hotplug detach callback handler.
-	session->m_hotplug_detach_callback = [=](Device* dev){
+	session->hotplug_detach([=](Device* device, void* data){
 		session->cancel();
-		session->remove(dev);
-		printf("removed device: %s: serial %s: fw %s: hw %s\n",
-				dev->info()->label, dev->serial(),
-				dev->fwver(), dev->hwver());
-		detached = true;
-	};
+		if (!session->remove(device, true)) {
+			printf("removed device: %s: serial %s: fw %s: hw %s\n",
+				device->info()->label, device->serial(),
+				device->fwver(), device->hwver());
+			detached = true;
+		}
+	});
 
 	// Register hotplug attach callback handler.
-	session->m_hotplug_attach_callback = [=](Device* dev){
-		if (session->add(dev))
+	session->hotplug_attach([=](Device* device, void* data){
+		if (!session->add(device)) {
 			printf("added device: %s: serial %s: fw %s: hw %s\n",
-				dev->info()->label, dev->serial(),
-				dev->fwver(), dev->hwver());
-		attached = true;
-	};
+				device->info()->label, device->serial(),
+				device->fwver(), device->hwver());
+			attached = true;
+		}
+	});
 
 	// Wait around doing nothing until both detach and attach events are fired.
 	// TODO: force all initially attached devices to be detached and reattached
 	// for fixing/testing device ordering within a session on hotplug.
-	while (!detached && !attached)
+	while (!(detached && attached))
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 }
