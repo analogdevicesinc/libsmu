@@ -95,35 +95,53 @@ def hotplug(session, args):
     while True:
         time.sleep(1)
 
+
 def flash(session, args):
     """Flash a device's firmware."""
     session.add_all()
+    flashed = False
 
     if args.firmware_path is not None:
         try:
             session.flash_firmware(args.firmware_path)
+            flashed = True
         except pysmu.SessionError as e:
             pprint(str(e))
             sys.exit(1)
-    elif args.flash_auto:
+    elif args.flash_auto or args.list_releases:
         resp = urllib2.urlopen(GITHUB_FW_RELEASES)
         releases = json.load(resp)
         if not releases or not releases[0]['assets']:
             pprint("no firmware releases available on github")
             sys.exit(1)
         else:
-            latest = releases[0]
-            fw_assets = [x for x in latest['assets'] if x['name'] == 'm1000.bin']
-            if not fw_assets:
-                pprint("no firmware file (m1000.bin) for the latest release on github")
-                sys.exit(1)
-            pprint('updating to the latest release on github: {}'.format(latest['tag_name']))
-            temp_fw = tempfile.NamedTemporaryFile().name
-            urlretrieve(fw_assets[0]['browser_download_url'], temp_fw)
-            session.flash_firmware(temp_fw)
-            os.remove(temp_fw)
+            if args.list_releases:
+                valid_releases = []
+                for release in releases:
+                    for x in release['assets']:
+                        if x['name'] == 'm1000.bin':
+                            valid_releases.append(release)
+                            break
+                if valid_releases:
+                    pprint('available firmware releases: {}'.format(
+                        ', '.join(x['tag_name'] for x in valid_releases)))
+                else:
+                    pprint('no valid firmware file releases (m1000.bin) on github')
+            else:
+                latest = releases[0]
+                fw_assets = [x for x in latest['assets'] if x['name'] == 'm1000.bin']
+                if not fw_assets:
+                    pprint("no firmware file (m1000.bin) for the latest release on github")
+                    sys.exit(1)
+                pprint('updating to the latest release on github: {}'.format(latest['tag_name']))
+                temp_fw = tempfile.NamedTemporaryFile().name
+                urlretrieve(fw_assets[0]['browser_download_url'], temp_fw)
+                session.flash_firmware(temp_fw)
+                flashed = True
+                os.remove(temp_fw)
 
-    pprint('successfully updated firmware, please unplug and replug the device')
+    if flashed:
+        pprint('successfully updated firmware, please unplug and replug the device')
 
 
 if __name__ == '__main__':
@@ -177,6 +195,9 @@ if __name__ == '__main__':
     parser_flash_mux.add_argument(
         '-f', dest='firmware_path',
         help='update via a specified firmware file')
+    parser_flash_mux.add_argument(
+        '-l', action='store_true', dest='list_releases',
+        help='list available firmware releases on github')
 
     args = parser.parse_args()
 
