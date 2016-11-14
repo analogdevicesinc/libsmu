@@ -330,6 +330,7 @@ cdef class Device:
         return 'serial {}: fw {}: hw {}'.format(self.serial, self.fwver, self.hwver)
 
     def samba_mode(self):
+        """Enable SAM-BA bootloader mode on the device."""
         cdef int errcode
         errcode = self._device.samba_mode()
         if errcode:
