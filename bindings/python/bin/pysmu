@@ -32,6 +32,7 @@ def pprint(s, **kwargs):
 def calibration(session, args):
     """Read, write, or reset device calibration."""
     session.add_all()
+
     if not session.devices:
         pprint('no supported devices are plugged in', file=sys.stderr)
         sys.exit(1)
@@ -77,6 +78,28 @@ def list_devices(session, args):
     session.add_all()
     for i, dev in enumerate(session.devices):
         print('device {}: {}'.format(i, dev))
+
+
+def stream_data(session, args):
+    """Stream data from devices."""
+    session.add_all()
+
+    if session.devices:
+        dev = session.devices[0]
+        session.configure(dev.get_default_rate())
+        session.start(0)
+        while True:
+            try:
+                samples = dev.read(1024)
+            except RuntimeError as e:
+                # Ignore sample drops which occur due to slow terminal output.
+                pass
+
+            for x in samples:
+                print("{} {} {} {}".format(*x))
+    else:
+        pprint('no devices attached')
+        sys.exit(1)
 
 
 def hotplug(session, args):
@@ -210,6 +233,12 @@ if __name__ == '__main__':
     parser_flash_mux.add_argument(
         '-v', dest='select_release', metavar='VERSION',
         help='select available firmware release on github to flash')
+
+    parser_stream = subparsers.add_parser(
+        'stream',
+        description='stream data from an attached device',
+        help='stream data')
+    parser_stream.set_defaults(func=stream_data)
 
     args = parser.parse_args()
 
