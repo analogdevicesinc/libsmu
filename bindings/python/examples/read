@@ -1,0 +1,33 @@
+#!/usr/bin/env python
+#
+# Simple script showing how to stream data from a device, use Ctrl-C to exit.
+
+from __future__ import print_function
+
+from signal import signal, SIG_DFL, SIGINT
+import time
+
+from pysmu import Session
+
+
+if __name__ == '__main__':
+    # don't throw KeyboardInterrupt on Ctrl-C
+    signal(SIGINT, SIG_DFL)
+
+    session = Session()
+    session.add_all()
+
+    if session.devices:
+        dev = session.devices[0]
+        session.configure(dev.get_default_rate())
+        session.start(0)
+        while True:
+            try:
+                samples = dev.read(1024)
+            except RuntimeError as e:
+                pass
+
+            for x in samples:
+                print("{} {} {} {}".format(*x))
+    else:
+        print('no devices attached')
