@@ -259,6 +259,20 @@ cdef class Device:
             self._device.calibration(&cal)
             return cal;
 
+    def set_mode(self, channel, mode):
+        """Set the mode of the specified channel.
+
+        Args:
+            channel (0 or 1): the selected channel
+            mode: the requested mode (see the Modes class)
+
+        Raises: DeviceError on failure.
+        """
+        cdef int errcode
+        errcode = self._device.set_mode(channel, mode)
+        if errcode:
+            raise DeviceError('failed setting mode {}: '.format(mode), errcode)
+
     def write(self, data, channel, timeout=0):
         """Write data to a specified channel of the device.
 
