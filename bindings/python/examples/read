@@ -24,6 +24,6 @@ if __name__ == '__main__':
         while True:
             samples = dev.read(1024)
             for x in samples:
-                print("{} {} {} {}".format(*x))
+                print("{:6f} {:6f} {:6f} {:6f}".format(*x))
     else:
         print('no devices attached')
