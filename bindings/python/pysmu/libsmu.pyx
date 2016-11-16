@@ -15,6 +15,14 @@ cdef extern from "Python.h" nogil:
     void PyEval_InitThreads()
 
 
+# workaround only python3.4 and up having native enum support
+class Modes(object):
+    """Available modes for channels."""
+    DISABLED = 0
+    SVMI = 1
+    SIMV = 2
+
+
 cdef class Session:
     # pointer to the underlying C++ smu::Session object
     cdef cpp_libsmu.Session *_session
