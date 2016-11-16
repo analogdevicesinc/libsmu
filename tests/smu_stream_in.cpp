@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 			dev->read(rxbuf, 1024);
 		} catch (const std::system_error& e) {
 			// Exit on dropped samples.
-			cerr << "sample(s) dropped!" << endl;
+			cerr << "sample(s) dropped: " << e.what() << endl;
 			exit(1);
 		}
 
