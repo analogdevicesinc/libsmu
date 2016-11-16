@@ -22,11 +22,7 @@ if __name__ == '__main__':
         session.configure(dev.get_default_rate())
         session.start(0)
         while True:
-            try:
-                samples = dev.read(1024)
-            except RuntimeError as e:
-                pass
-
+            samples = dev.read(1024)
             for x in samples:
                 print("{} {} {} {}".format(*x))
     else:
