@@ -275,7 +275,7 @@ cdef class Device:
             raise DeviceError(str(e))
         except RuntimeError as e:
             # ignore buffer overflow exceptions
-            if not e.message.startswith('dropped output sample'):
+            if not e.message.startswith('dropped '):
                 raise
 
         if ret < 0:
@@ -303,7 +303,7 @@ cdef class Device:
             raise DeviceError(str(e))
         except RuntimeError as e:
             # ignore buffer overflow exceptions
-            if not e.message.startswith('dropped input sample'):
+            if not e.message.startswith('dropped '):
                 raise
 
         if ret < 0:
