@@ -263,7 +263,7 @@ cdef class Device:
         Raises: DeviceError on writing failures.
         Returns: The number of samples written.
         """
-        cdef ssize_t ret
+        cdef ssize_t ret = 0
         cdef deque[float] buf
 
         for x in data:
@@ -273,6 +273,10 @@ cdef class Device:
             ret = self._device.write(buf, channel, timeout)
         except SystemError as e:
             raise DeviceError(str(e))
+        except RuntimeError as e:
+            # ignore buffer overflow exceptions
+            if not e.message.startswith('dropped output sample'):
+                raise
 
         if ret < 0:
             raise DeviceError('failed writing to device', ret)
