@@ -562,9 +562,12 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 {
 	int ret = 0;
 
-	if (channel < 2) {
-		m_mode[channel] = mode;
-	}
+	// bad channel
+	if (channel != 0 && channel != 1)
+		return -ENODEV;
+
+	m_mode[channel] = mode;
+
 	// set feedback potentiometers with mode heuristics
 	unsigned pset;
 	switch (mode) {
