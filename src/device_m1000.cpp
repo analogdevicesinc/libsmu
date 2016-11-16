@@ -308,7 +308,7 @@ static float constrain(float val, float lo, float hi)
 
 uint16_t M1000_Device::encode_out(unsigned channel)
 {
-	bool succeeded;
+	bool succeeded = false;
 	float val = 5;
 	int v = 32768 * 4 / 5;
 
@@ -326,7 +326,7 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	if (m_mode[channel] == SVMI) {
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
 		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
-		v = val * m_signals[channel][0].info()->resolution;
+		v = val * (1/m_signals[channel][0].info()->resolution);
 	} else if (m_mode[channel] == SIMV) {
 		if (val > 0) {
 			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
@@ -336,7 +336,7 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 		}
 		val = constrain(val, m_signals[channel][1].info()->min, m_signals[channel][1].info()->max);
 		// TODO: Where does this scaling factor come from?
-		v = (0.8*0.2*20.*0.5*val) * m_signals[channel][1].info()->resolution;
+		v = (0.8*0.2*20.*0.5*val) * (1/m_signals[channel][1].info()->resolution);
 	}
 	v = constrain(v, 0, 65535);
 	return v;
