@@ -81,22 +81,18 @@ def list_devices(session, args):
 
 
 def stream_data(session, args):
-    """Stream data from devices."""
+    """Stream data from an attached device."""
     session.add_all()
 
     if session.devices:
         dev = session.devices[0]
         session.configure(dev.get_default_rate())
         session.start(0)
-        while True:
-            try:
-                samples = dev.read(1024)
-            except RuntimeError as e:
-                # Ignore sample drops which occur due to slow terminal output.
-                pass
 
+        while True:
+            samples = dev.read(1024)
             for x in samples:
-                print("{} {} {} {}".format(*x))
+                print("{:6f} {:6f} {:6f} {:6f}".format(*x))
     else:
         pprint('no devices attached')
         sys.exit(1)
