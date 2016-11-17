@@ -37,7 +37,7 @@ build_script:
   - cmake -G "Visual Studio 14 2015" \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -47,7 +47,7 @@ build_script:
   - cmake -G "Visual Studio 14 2015 Win64" \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -65,8 +65,6 @@ build_script:
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
   - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64
-  - copy "C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.dll" c:\libsmu\32
-  - copy "C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.dll" c:\libsmu\64
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\64
