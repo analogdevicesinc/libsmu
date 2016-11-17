@@ -41,6 +41,10 @@ int main(int argc, char **argv)
 	// Grab the first device from the session.
 	auto dev = *(session->m_devices.begin());
 
+	// Set device channels to source voltage and measure current.
+	dev->set_mode(0, SVMI);
+	dev->set_mode(1, SVMI);
+
 	// Run session at the default device rate.
 	session->configure(dev->get_default_rate());
 
