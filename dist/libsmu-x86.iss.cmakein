@@ -46,8 +46,6 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 [Files]
 Source: "C:\libsmu-python\pysmu-win32.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
-Source: "C:\libsmu\32\libusb-1.0.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
-
 Source: "C:\libsmu\32\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "C:\libsmu\32\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
