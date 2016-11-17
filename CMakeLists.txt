@@ -6,8 +6,6 @@ else()
 endif()
 project(libsmu CXX C)
 
-option(WITH_DOC "Generate documentation with Doxygen" OFF)
-
 # libsmu versioning
 set(LIBSMU_VERSION_MAJOR 0)
 set(LIBSMU_VERSION_MINOR 9)
@@ -50,6 +48,8 @@ set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 set(BUILD_TESTS OFF CACHE BOOL "Build tests")
 # install udev rules
 set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
+# don't generate docs by default
+set(WITH_DOC OFF CACHE BOOL "Generate documentation with Doxygen")
 
 include(GNUInstallDirs)
 
