@@ -308,19 +308,17 @@ static float constrain(float val, float lo, float hi)
 
 uint16_t M1000_Device::encode_out(unsigned channel)
 {
+	float val;
 	bool succeeded = false;
-	float val = 5;
 	int v = 32768 * 4 / 5;
 
-	if (channel == 0)
-		succeeded = m_out_samples_a_q.pop(val);
-	else
-		succeeded = m_out_samples_b_q.pop(val);
-
-	// Output sample underflow has occurred.
-	if (!succeeded) {
-		// disabled until data flow to device is solidified
-		//throw std::system_error(EBUSY, std::system_category(), "no available output sample");
+	// TODO: replace busy-wait
+	while (!succeeded && m_mode[channel] != DISABLED) {
+		if (channel == 0)
+			succeeded = m_out_samples_a_q.pop(val);
+		else
+			succeeded = m_out_samples_b_q.pop(val);
+		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
 	}
 
 	if (m_mode[channel] == SVMI) {
