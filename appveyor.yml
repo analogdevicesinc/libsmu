@@ -37,6 +37,7 @@ build_script:
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_62_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_62_0\\lib32-msvc-14.0" \
+    -DBUILD_STATIC_LIB=ON \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -50,6 +51,7 @@ build_script:
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_62_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_62_0\\lib64-msvc-14.0" \
+    -DBUILD_STATIC_LIB=ON \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
