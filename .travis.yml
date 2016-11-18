@@ -59,8 +59,7 @@ install:
   - ${PIP} install wheel cython
 
 script:
-  - mkdir build
-  - pushd build
+  - mkdir build && cd build
   - cmake -DBUILD_PYTHON=OFF ..
   - make
 
@@ -71,14 +70,12 @@ script:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then chmod +x build-osx-pkg.sh; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then ./build-osx-pkg.sh; fi
 
-  - popd
-
   # build python bindings
-  - pushd bindings/python
-  # check python version
+  - cd "${TRAVIS_BUILD_DIR}"/bindings/python
+  # check python info
   - ${PYTHON} --version
   - ${PYTHON} -c "import struct; print(struct.calcsize('P') * 8)"
   # build extension linking to previously built library
-  - ${PYTHON} setup.py build_ext -L ../../build/src
+  - ${PYTHON} setup.py build_ext -L "${TRAVIS_BUILD_DIR}"/build/src
   - ${PYTHON} setup.py build
   - ${PYTHON} setup.py bdist_wheel --skip-build
