@@ -15,7 +15,8 @@ cdef extern from "Python.h" nogil:
     void PyEval_InitThreads()
 
 
-# workaround only python3.4 and up having native enum support
+# Workaround only py34 and up having native enum support; switch to cython
+# import methods once sourcing the C++ definition directly is supported.
 class Modes(object):
     """Available modes for channels."""
     DISABLED = 0
