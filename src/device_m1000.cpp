@@ -397,7 +397,7 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
-ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, unsigned timeout)
+ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
 	std::array<float, 4> sample;
 	bool succeeded;
@@ -413,7 +413,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 			// stop waiting for samples if we've run out of time
 			auto clk_end = std::chrono::high_resolution_clock::now();
 			auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-			if (clk_diff.count() > timeout)
+			if (timeout >= 0 && clk_diff.count() > timeout)
 				break;
 			std::this_thread::sleep_for(std::chrono::nanoseconds(10));
 		} while (!succeeded);

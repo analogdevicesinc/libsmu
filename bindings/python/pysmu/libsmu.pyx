@@ -311,8 +311,9 @@ cdef class Device:
 
         Args:
             num_samples (int): number of samples to read
-            timeout: amount of time in milliseconds to wait for samples
-                to be available. If 0 (the default), return immediately.
+            timeout: amount of time in milliseconds to wait for samples to be available.
+                - If 0 (the default), return immediately.
+                - If -1, block indefinitely until the requested number of samples is returned.
 
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
