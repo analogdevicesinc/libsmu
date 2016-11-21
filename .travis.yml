@@ -1,3 +1,8 @@
+env:
+  global:
+    # coverity token
+    - secure: "UP0F0/tspgDnPsxZ4uCdRUcfhBrmHKtdWZ7fhGuTq4rHBeC9CxwqVB//JKEr0XTqzDHhQ2J53S7j7XY90h9P+9kQoTmkuOxLs1FNYXg011/rVkwEwu0427M+Oye2CbENWgaf4OycPgkbZR2USKwKg53oGniAyyz6/xm8IlAZRng="
+
 matrix:
   fast_finish: true
   include:
@@ -45,6 +50,15 @@ addons:
     packages:
       - libusb-1.0
       - libboost-all-dev
+  coverity_scan:
+    project:
+      name: analogdevicesinc/libsmu
+      version: 0.9.0
+      description: "Software abstractions for the analog signal exploration tools (ADALM1000)"
+    notification_email: timothy.harder@analog.com
+    build_command_prepend: "mkdir -p build && cd build && cmake -DBUILD_PYTHON=OFF .."
+    build_command: make
+    branch_pattern: coverity_scan
 
 before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
@@ -59,7 +73,7 @@ install:
   - ${PIP} install wheel cython
 
 script:
-  - mkdir build && cd build
+  - mkdir -p build && cd build
   - cmake -DBUILD_PYTHON=OFF ..
   - make
 
