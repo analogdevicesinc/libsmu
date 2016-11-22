@@ -327,6 +327,21 @@ cdef class Device:
 
         return ret
 
+    def get_samples(self, num_samples):
+        """Acquire all signal samples from a device.
+
+        Stub function to simplify porting efforts from previous versions.
+
+        Blocks until the requested number of samples is available.
+
+        Args:
+            num_samples (int): number of samples to read
+
+        Raises: DeviceError on reading failures.
+        Returns: A list containing the specified number of sample values.
+        """
+        return self.read(num_samples, -1)
+
     def read(self, num_samples, timeout=0):
         """Acquire all signal samples from a device.
 

@@ -22,7 +22,7 @@ if __name__ == '__main__':
     session.run(10)
 
     for dev in session.devices:
-        samples = dev.read(10, -1)
+        samples = dev.get_samples(10)
         print(samples)
 
     session.end()
