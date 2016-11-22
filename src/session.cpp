@@ -321,6 +321,10 @@ void Session::flash_firmware(const char *file, Device *dev)
 
 int Session::destroy(Device *dev)
 {
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	if (dev) {
 		for (unsigned i = 0; i < m_available_devices.size(); i++) {
@@ -330,7 +334,7 @@ int Session::destroy(Device *dev)
 			}
 		}
 	}
-	return -1;
+	return -ENODEV;
 }
 
 int Session::scan()
@@ -423,6 +427,11 @@ Device* Session::get_device(const char* serial)
 int Session::add(Device* device)
 {
 	int ret = -1;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
 	if (device) {
 		ret = device->claim();
 		if (!ret)
@@ -434,6 +443,10 @@ int Session::add(Device* device)
 int Session::add_all()
 {
 	int ret;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
 
 	ret = scan();
 	if (ret)
@@ -452,6 +465,10 @@ int Session::remove(Device* device, bool detached)
 {
 	int ret = -1;
 
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
 	if (device) {
 		ret = device->release();
 
@@ -468,6 +485,10 @@ int Session::remove(Device* device, bool detached)
 int Session::configure(uint64_t sampleRate)
 {
 	int ret = 0;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
 
 	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);

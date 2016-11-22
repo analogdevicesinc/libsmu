@@ -170,7 +170,7 @@ namespace smu {
 		/// Devices must be removed from this list on detach.
 		/// This method may not be called while the session is active.
 		/// @return On success, 0 is returned.
-		/// @return On error, -1 is returned.
+		/// @return On error, a negative errno code is returned.
 		int destroy(Device* device);
 
 		/// @brief Configure the session's sample rate.
