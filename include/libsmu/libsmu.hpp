@@ -175,10 +175,12 @@ namespace smu {
 
 		/// @brief Configure the session's sample rate.
 		/// @param sampleRate The requested sample rate for the session.
+		/// Requesting a sample rate of 0 (the default) causes the session to
+		/// use the devices default sample rate.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		/// This method may not be called while the session is active.
-		int configure(uint64_t sampleRate);
+		int configure(uint64_t sampleRate = 0);
 
 		/// @brief Run the currently configured capture and wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
