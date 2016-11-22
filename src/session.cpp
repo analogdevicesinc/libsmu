@@ -463,7 +463,7 @@ int Session::remove(Device* device, bool detached)
 
 int Session::configure(uint64_t sampleRate)
 {
-	int ret;
+	int ret = 0;
 
 	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);
@@ -516,7 +516,7 @@ void Session::wait_for_completion()
 
 int Session::start(uint64_t samples)
 {
-	int ret;
+	int ret = 0;
 	m_cancellation = 0;
 
 	for (Device* dev: m_devices) {
@@ -539,7 +539,7 @@ int Session::start(uint64_t samples)
 
 int Session::cancel()
 {
-	int ret;
+	int ret = 0;
 
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (Device* dev: m_devices) {
