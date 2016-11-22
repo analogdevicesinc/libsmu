@@ -1,5 +1,6 @@
 [![appveyor status](https://ci.appveyor.com/api/projects/status/p30uj8rqulrxsqvs/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libsmu/branch/master)
 [![travis-ci status](https://travis-ci.org/analogdevicesinc/libsmu.svg?branch=master)](https://travis-ci.org/analogdevicesinc/libsmu)
+[![coverity status](https://scan.coverity.com/projects/analogdevicesinc-libsmu/badge.svg)](https://scan.coverity.com/projects/analogdevicesinc-libsmu)
 
 ### libsmu
 
