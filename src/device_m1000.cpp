@@ -564,10 +564,6 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	// This method may not be called while the session is active.
-	if (m_session->m_active_devices)
-		return -EBUSY;
-
 	m_mode[channel] = mode;
 
 	// set feedback potentiometers with mode heuristics
