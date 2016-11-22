@@ -138,11 +138,13 @@ cdef class Session:
         if errcode:
             raise SessionError('failed destroying device', errcode)
 
-    def configure(self, int sample_rate):
+    def configure(self, int sample_rate=0):
         """Configure the session's sample rate.
 
         Attributes:
             sample_rate (int): Sample rate to run the session at.
+                A sample rate of 0 (the default) causes the session to use the
+                devices default sample rate.
 
         Raises: SessionError on failure.
         """

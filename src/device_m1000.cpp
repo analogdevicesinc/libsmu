@@ -269,6 +269,10 @@ void M1000_Device::out_completion(libusb_transfer *t)
 int M1000_Device::configure(uint64_t sampleRate)
 {
 	int ret;
+
+	if (!sampleRate)
+		sampleRate = get_default_rate();
+
 	double sample_time = 1.0 / sampleRate;
 	double M1K_timer_clock;
 
