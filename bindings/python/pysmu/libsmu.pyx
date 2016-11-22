@@ -146,6 +146,9 @@ cdef class Session:
 
         Raises: SessionError on failure.
         """
+        if sample_rate < 0:
+            raise ValueError('invalid sample rate: {}'.format(sample_rate))
+
         cdef int errcode
         errcode = self._session.configure(sample_rate)
         if errcode:
@@ -158,6 +161,9 @@ cdef class Session:
             samples (int): Number of samples to run the session for.
                 If 0, run in continuous mode.
         """
+        if samples < 0:
+            raise ValueError('invalid number of samples: {}'.format(samples))
+
         cdef int errcode
         errcode = self._session.run(samples)
         if errcode:
@@ -170,6 +176,9 @@ cdef class Session:
             samples (int): Number of samples to capture before stopping.
                 If 0, run in continuous mode.
         """
+        if samples < 0:
+            raise ValueError('invalid number of samples: {}'.format(samples))
+
         cdef int errcode
         errcode = self._session.start(samples)
         if errcode:
