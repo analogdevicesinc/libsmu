@@ -391,6 +391,9 @@ Device* Session::probe_device(libusb_device* usb_dev)
 				dev->read_calibration();
 				return dev;
 			}
+		} else {
+			// probably lacking permission to open the underlying usb device
+			delete dev;
 		}
 	}
 	return NULL;
