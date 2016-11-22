@@ -228,11 +228,11 @@ cdef class Session:
 
     def __dealloc__(self):
         # make sure the session is completed before deallocation
-        cdef int errcode
-        errcode = self._session.end()
-        if errcode:
-            raise SessionError('failed ending session stream', errcode)
-
+        try:
+            self._session.end()
+        except SessionError:
+            # ignore sessions failing to end properly
+            pass
         del self._session
 
 
