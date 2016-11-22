@@ -23,8 +23,6 @@ import urllib2
 
 import pysmu
 
-GITHUB_FW_RELEASES = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
-
 def pprint(s, **kwargs):
     """Prefix output with program name."""
     print('{}: {}'.format(os.path.basename(__file__), s), **kwargs)
@@ -118,7 +116,9 @@ def hotplug(session, args):
 def flash(session, args):
     """Flash a device's firmware."""
     session.add_all()
+
     flashed = False
+    github_fw_releases = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
 
     if args.firmware_path is not None:
         try:
@@ -128,7 +128,7 @@ def flash(session, args):
             pprint(str(e))
             sys.exit(1)
     elif args.flash_auto or args.list_releases or args.select_release is not None:
-        resp = urllib2.urlopen(GITHUB_FW_RELEASES)
+        resp = urllib2.urlopen(github_fw_releases)
         releases = json.load(resp)
         if not releases or not releases[0]['assets']:
             pprint("no firmware releases available on github")
