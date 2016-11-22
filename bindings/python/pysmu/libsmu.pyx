@@ -5,6 +5,13 @@ from libcpp.vector cimport vector
 
 cimport cpp_libsmu
 
+# enum is only in py34 and up, use vendored backport if the system doesn't have
+# it available for py27
+try:
+    from enum import Enum
+except ImportError:
+    from ._vendored.enum import Enum
+
 from .array cimport array
 from .exceptions import SessionError, DeviceError
 
@@ -17,11 +24,11 @@ cdef extern from "Python.h" nogil:
 
 # Workaround only py34 and up having native enum support; switch to cython
 # import methods once sourcing the C++ definition directly is supported.
-class Modes(object):
+class Modes(Enum):
     """Available modes for channels."""
-    DISABLED = 0
-    SVMI = 1
-    SIMV = 2
+    DISABLED = 0 # floating
+    SVMI = 1 # source voltage, measure current
+    SIMV = 2 # source current, measure voltage
 
 
 cdef class Session:
@@ -280,8 +287,11 @@ cdef class Device:
 
         Raises: DeviceError on failure.
         """
+        if mode not in Modes:
+            raise ValueError('invalid mode: {}'.format(mode))
+
         cdef int errcode
-        errcode = self._device.set_mode(channel, mode)
+        errcode = self._device.set_mode(channel, mode.value)
         if errcode:
             raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
