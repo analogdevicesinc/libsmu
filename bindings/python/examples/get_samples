@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+#
+# Simple script showing how to get a set number of samples from all devices
+# connected to a system.
+
+from __future__ import print_function
+
+import sys
+import time
+
+from pysmu import Session
+
+
+if __name__ == '__main__':
+    session = Session()
+    session.add_all()
+
+    if not session.devices:
+        sys.exit()
+
+    session.configure()
+    session.run(10)
+
+    for dev in session.devices:
+        samples = dev.read(10, -1)
+        print(samples)
+
+    session.end()
