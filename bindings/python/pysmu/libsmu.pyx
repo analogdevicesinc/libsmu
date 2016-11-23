@@ -31,6 +31,13 @@ class Modes(Enum):
     SIMV = 2 # source current, measure voltage
 
 
+class LED(Enum):
+    """Available device LEDs to control."""
+    red = 47
+    green = 29
+    blue = 28
+
+
 cdef class Session:
     # pointer to the underlying C++ smu::Session object
     cdef cpp_libsmu.Session *_session
@@ -404,6 +411,28 @@ cdef class Device:
     def get_default_rate(self):
         """Get the default sample rate for the device."""
         return self._device.get_default_rate()
+
+    def set_led(self, led, status):
+        """Set device LEDs on or off.
+
+        Args:
+            led: specific LED (red, green, blue) to control
+            status (bool): on or off
+
+        Raises: ValueError on bad LED value
+        Raises: IOError on USB failures
+        """
+        if led not in LED:
+            raise ValueError('invalid LED: {}'.format(led))
+
+        if status:
+            # on
+            req = 0x50
+        else:
+            # off
+            req = 0x51
+
+        self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
