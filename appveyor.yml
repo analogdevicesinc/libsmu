@@ -115,9 +115,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win32.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
 
   ## build 32 bit python3.4 bindings
   # add python dirs to PATH
@@ -145,9 +142,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp34-*-win32.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
   # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
   - rmdir /q /s bin\__pycache__
@@ -176,9 +170,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win32.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
 
   ## build 64 bit python2.7 bindings
   # add python dirs to PATH
@@ -204,9 +195,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win_amd64.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
 
   ## build 64 bit python3.4 bindings
   # add python dirs to PATH
@@ -234,9 +222,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp34-*-win_amd64.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
   # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
   - rmdir /q /s bin\__pycache__
@@ -265,9 +250,6 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win_amd64.whl | % { pip install "$_" }
-  - ps: pushd C:\projects\libsmu
-  - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
-  - ps: popd
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
