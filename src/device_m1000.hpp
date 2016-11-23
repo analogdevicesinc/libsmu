@@ -50,6 +50,8 @@ namespace smu {
 		const sl_channel_info* channel_info(unsigned channel) const override;
 		Signal* signal(unsigned channel, unsigned signal) override;
 		int set_mode(unsigned channel, unsigned mode) override;
+		int fwver_sem(std::array<unsigned, 3>& components) override;
+		int hwver_sem(std::array<unsigned, 3>& components) override;
 		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout) override;
 		ssize_t write(std::deque<float>& buf, unsigned channel, unsigned timeout) override;
 		int sync() override;
