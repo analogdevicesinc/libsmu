@@ -84,12 +84,10 @@ def stream_data(session, args):
 
     if session.devices:
         dev = session.devices[0]
-        session.configure(dev.get_default_rate())
         session.start(0)
 
         while True:
-            samples = dev.read(1024)
-            for x in samples:
+            for x in dev.samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(*x))
     else:
         pprint('no devices attached')
