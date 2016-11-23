@@ -286,6 +286,11 @@ cdef class Device:
             self._device.calibration(&cal)
             return cal;
 
+    property default_rate:
+        """Get the default sample rate for the device."""
+        def __get__(self):
+            return self._device.get_default_rate()
+
     def set_mode(self, channel, mode):
         """Set the mode of the specified channel.
 
@@ -409,10 +414,6 @@ cdef class Device:
         errcode = self._device.samba_mode()
         if errcode:
             raise DeviceError('failed to enable SAM-BA mode', errcode)
-
-    def get_default_rate(self):
-        """Get the default sample rate for the device."""
-        return self._device.get_default_rate()
 
     def set_led(self, led, status):
         """Set device LEDs on or off.
