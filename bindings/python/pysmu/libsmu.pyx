@@ -381,7 +381,7 @@ cdef class Device:
                 raise
 
         if ret < 0:
-            raise DeviceError('failed writing to device', ret)
+            raise DeviceError('failed reading from device', ret)
 
         return [(x[0], x[1], x[2], x[3]) for x in buf]
 
