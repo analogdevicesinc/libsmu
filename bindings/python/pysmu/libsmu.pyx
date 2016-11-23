@@ -36,6 +36,7 @@ class LED(Enum):
     red = 47
     green = 29
     blue = 28
+    all = 0
 
 
 cdef class Session:
@@ -433,7 +434,12 @@ cdef class Device:
             # off
             req = 0x51
 
-        self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
+        if led == LED.all:
+            # toggle all LEDs together
+            for x in (l for l in LED if l != LED.all):
+                self.ctrl_transfer(0x40, req, x.value, 0, 0, 0, 100)
+        else:
+            self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
