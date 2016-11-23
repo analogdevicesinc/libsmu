@@ -356,6 +356,13 @@ cdef class Device:
         """
         return self.read(num_samples, -1)
 
+    property samples:
+        """Iterable of continuous sampling."""
+        def __get__(self):
+            while True:
+                for x in self.read(10000):
+                    yield (x[0], x[1], x[2], x[3])
+
     def read(self, num_samples, timeout=0):
         """Acquire all signal samples from a device.
 
