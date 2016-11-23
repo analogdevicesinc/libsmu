@@ -249,6 +249,11 @@ namespace smu {
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
 
+		/// @brief Session is configured or not.
+		/// Used to configure the session using the defaults if configure() is
+		/// not called specifically with a custom sample rate.
+		bool m_configured = false;
+
 		/// @brief Flag for controlling USB event handling.
 		/// USB event handling loop will be run while m_usb_thread_loop is true.
 		std::atomic<bool> m_usb_thread_loop;
