@@ -494,6 +494,10 @@ int Session::configure(uint64_t sampleRate)
 		if (ret)
 			break;
 	}
+
+	if (!ret)
+		m_configured = true;
+
 	return ret;
 }
 
@@ -542,6 +546,10 @@ int Session::start(uint64_t samples)
 {
 	int ret = 0;
 	m_cancellation = 0;
+
+	if (!m_configured)
+		// use device default sample rate
+		configure(0);
 
 	for (Device* dev: m_devices) {
 		ret = dev->on();
