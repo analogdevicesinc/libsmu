@@ -122,7 +122,10 @@ def flash(session, args):
         dev = session.devices[0]
 
     flashed = False
+    fw_url = None
+    version = None
     github_fw_releases = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
+    dev_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/raw/master/m1000.bin'
 
     if args.firmware_path is not None:
         try:
@@ -152,22 +155,34 @@ def flash(session, args):
                     pprint('no valid firmware file releases (m1000.bin) on github')
             else:
                 if args.select_release is not None:
-                    selected_version = 'v' + args.select_release.lstrip('v')
-                    try:
-                        selected = next(x for x in releases if x['tag_name'] == selected_version)
-                    except StopIteration:
-                        pprint("no such firmware version available on github: {}".format(selected_version))
-                        sys.exit(1)
+                    if args.select_release == 'dev':
+                        # use the latest fw checked into the repo
+                        fw_url = dev_fw_url
+                        version = 'dev'
+                    else:
+                        selected_version = 'v' + args.select_release.lstrip('v')
+                        try:
+                            selected = next(x for x in releases if x['tag_name'] == selected_version)
+                        except StopIteration:
+                            pprint("no such firmware version available on github: {}".format(selected_version))
+                            sys.exit(1)
                 else:
                     # choose the newest release
                     selected = releases[0]
-                fw_assets = [x for x in selected['assets'] if x['name'] == 'm1000.bin']
-                if not fw_assets:
-                    pprint("no firmware file (m1000.bin) for the release on github")
-                    sys.exit(1)
-                pprint('updating to github release: {}'.format(selected['tag_name']))
+
+                if fw_url is None:
+                    fw_assets = [x for x in selected['assets'] if x['name'] == 'm1000.bin']
+                    if not fw_assets:
+                        pprint("no firmware file (m1000.bin) for the release on github")
+                        sys.exit(1)
+                    fw_url = fw_assets[0]['browser_download_url']
+
+                if version is None:
+                    version = selected['tag_name']
+
+                pprint('updating to github release: {}'.format(version))
                 temp_fw = tempfile.NamedTemporaryFile().name
-                urlretrieve(fw_assets[0]['browser_download_url'], temp_fw)
+                urlretrieve(fw_url, temp_fw)
                 session.flash_firmware(temp_fw, dev)
                 flashed = True
                 os.remove(temp_fw)
