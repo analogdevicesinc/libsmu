@@ -99,6 +99,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   # build python dist files
   - ps: pushd C:\projects\libsmu\bindings\python
@@ -126,6 +128,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -134,6 +138,7 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+  - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 32 bit python3.5 bindings
   # add python dirs to PATH
@@ -148,6 +153,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -156,6 +163,7 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+  - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 64 bit python2.7 bindings
   # add python dirs to PATH
@@ -170,6 +178,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -178,6 +188,7 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+  - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 64 bit python3.4 bindings
   # add python dirs to PATH
@@ -192,6 +203,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -200,6 +213,7 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+  - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 64 bit python3.5 bindings
   # add python dirs to PATH
@@ -214,6 +228,8 @@ build_script:
   - "pip install wheel"
   # cython is required for generating the extensions
   - "pip install cython"
+  # py2exe required to build exe from pysmu script
+  - "pip install py2exe"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -222,6 +238,7 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+  - "python -m py2exe.build_exe bin/pysmu"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
