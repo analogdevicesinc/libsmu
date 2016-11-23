@@ -291,6 +291,13 @@ cdef class Device:
         def __get__(self):
             return self._device.get_default_rate()
 
+    property samples:
+        """Iterable of continuous sampling."""
+        def __get__(self):
+            while True:
+                for x in self.read(10000):
+                    yield (x[0], x[1], x[2], x[3])
+
     def set_mode(self, channel, mode):
         """Set the mode of the specified channel.
 
@@ -298,7 +305,7 @@ cdef class Device:
             channel (0 or 1): the selected channel
             mode: the requested mode (see the Modes class)
 
-        Raises: ValueError on bad mode value
+        Raises: ValueError if an invalid mode is passed.
         Raises: DeviceError on failure.
         """
         if mode not in Mode:
@@ -355,13 +362,6 @@ cdef class Device:
         Returns: A list containing the specified number of sample values.
         """
         return self.read(num_samples, -1)
-
-    property samples:
-        """Iterable of continuous sampling."""
-        def __get__(self):
-            while True:
-                for x in self.read(10000):
-                    yield (x[0], x[1], x[2], x[3])
 
     def read(self, num_samples, timeout=0):
         """Acquire all signal samples from a device.
@@ -429,8 +429,8 @@ cdef class Device:
             led: specific LED (red, green, blue) to control
             status (bool): on or off
 
-        Raises: ValueError on bad LED value
-        Raises: IOError on USB failures
+        Raises: ValueError if an invalid LED is passed.
+        Raises: IOError on USB failures.
         """
         if led not in LED:
             raise ValueError('invalid LED: {}'.format(led))
