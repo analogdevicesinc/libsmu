@@ -3,5 +3,5 @@
 
 __version__ = '0.9.0'
 
-from .libsmu import Session, Device, Modes
+from .libsmu import Session, Device, Mode, LED
 from .exceptions import SessionError, DeviceError
