@@ -115,6 +115,12 @@ def flash(session, args):
     """Flash a device's firmware."""
     session.add_all()
 
+    if not session.devices:
+        pprint('no supported devices are plugged in', file=sys.stderr)
+        sys.exit(1)
+    else:
+        dev = session.devices[0]
+
     flashed = False
     github_fw_releases = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
 
@@ -162,7 +168,7 @@ def flash(session, args):
                 pprint('updating to github release: {}'.format(selected['tag_name']))
                 temp_fw = tempfile.NamedTemporaryFile().name
                 urlretrieve(fw_assets[0]['browser_download_url'], temp_fw)
-                session.flash_firmware(temp_fw)
+                session.flash_firmware(temp_fw, dev)
                 flashed = True
                 os.remove(temp_fw)
 
