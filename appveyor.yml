@@ -113,6 +113,9 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
 
+  # test local install
+  - "pip install dist/*-cp27*-win32.whl"
+
   ## build 32 bit python3.4 bindings
   # add python dirs to PATH
   - set PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%
@@ -136,6 +139,10 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+
+  # test local install
+  - "pip install dist/*-cp34*-win32.whl"
+  # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 32 bit python3.5 bindings
@@ -160,6 +167,9 @@ build_script:
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
 
+  # test local install
+  - "pip install dist/*-cp35*-win32.whl"
+
   ## build 64 bit python2.7 bindings
   # add python dirs to PATH
   - set PATH=C:\\Python27-x64;C:\\Python27-x64\\Scripts;%PATH%
@@ -181,6 +191,9 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+
+  # test local install
+  - "pip install dist/*-cp27*-amd64.whl"
 
   ## build 64 bit python3.4 bindings
   # add python dirs to PATH
@@ -205,6 +218,10 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+
+  # test local install
+  - "pip install dist/*-cp34*-amd64.whl"
+  # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
 
   ## build 64 bit python3.5 bindings
@@ -228,6 +245,9 @@ build_script:
   - "python setup.py bdist --skip-build --format zip"
   - "python setup.py bdist --skip-build --format msi"
   - "python setup.py sdist"
+
+  # test local install
+  - "pip install dist/*-cp35*-amd64.whl"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
