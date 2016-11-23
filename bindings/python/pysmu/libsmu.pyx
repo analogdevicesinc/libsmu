@@ -79,18 +79,12 @@ cdef class Session:
     property available_devices:
         """Devices that are accessible on the system."""
         def __get__(self):
-            devices = []
-            for d in self._session.m_available_devices:
-                devices.append(Device._create(d))
-            return devices
+            return tuple(Device._create(d) for d in self._session.m_available_devices)
 
     property devices:
         """Devices that are included in this session."""
         def __get__(self):
-            devices = []
-            for d in self._session.m_devices:
-                devices.append(Device._create(d))
-            return devices
+            return tuple(Device._create(d) for d in self._session.m_devices)
 
     property active_devices:
         """Devices that are currently active (streaming data) in this session."""
