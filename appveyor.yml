@@ -146,6 +146,7 @@ build_script:
   - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
   # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
+  - rmdir /q /s bin\__pycache__
 
   ## build 32 bit python3.5 bindings
   # add python dirs to PATH
@@ -228,6 +229,7 @@ build_script:
   - "python -c \"import pysmu; print(pysmu.libsmu.__version__)\""
   # build exe from python script
   - "python -m py2exe.build_exe bin/pysmu"
+  - rmdir /q /s bin\__pycache__
 
   ## build 64 bit python3.5 bindings
   # add python dirs to PATH
