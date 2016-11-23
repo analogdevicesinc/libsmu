@@ -21,6 +21,7 @@
 #include <thread>
 #include <vector>
 
+#include <boost/algorithm/string.hpp> // boost::split
 #include <libusb.h>
 
 #include "debug.hpp"
@@ -592,6 +593,40 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 		ret = 0;
 	}
 	return ret;
+}
+
+int M1000_Device::fwver_sem(std::array<unsigned, 3>& components)
+{
+	components = {0, 0, 0};
+	std::vector<std::string> split_version;
+
+	boost::split(split_version, m_fw_version, boost::is_any_of("."), boost::token_compress_on);
+	try {
+		components[0] = atoi(split_version.at(0).c_str());
+		components[1] = atoi(split_version.at(1).c_str());
+		components[2] = atoi(split_version.at(2).c_str());
+	} catch (const std::out_of_range) {
+		// ignore missing version portions
+	}
+
+	return 0;
+}
+
+int M1000_Device::hwver_sem(std::array<unsigned, 3>& components)
+{
+	components = {0, 0, 0};
+	std::vector<std::string> split_version;
+
+	boost::split(split_version, m_hw_version, boost::is_any_of("."), boost::token_compress_on);
+	try {
+		components[0] = atoi(split_version.at(0).c_str());
+		components[1] = atoi(split_version.at(1).c_str());
+		components[2] = atoi(split_version.at(2).c_str());
+	} catch (const std::out_of_range) {
+		// ignore missing version portions
+	}
+
+	return 0;
 }
 
 int M1000_Device::on()
