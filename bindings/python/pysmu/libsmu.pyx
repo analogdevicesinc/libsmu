@@ -10,7 +10,7 @@ cimport cpp_libsmu
 try:
     from enum import Enum
 except ImportError:
-    from ._vendored.enum import Enum
+    from ._vendor.enum import Enum
 
 from .array cimport array
 from .exceptions import SessionError, DeviceError
