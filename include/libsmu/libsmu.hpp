@@ -326,10 +326,6 @@ namespace smu {
 
 		/// @brief Get the hardware version of the device.
 		virtual const char* hwver() const { return m_hw_version; }
-		/// @brief Get the array of hardware version components (major, minor, patch).
-		/// Note that this method assumes semantic versioning so versions such
-		/// as 2.06 will be coerced to 2.6.0, i.e. major=2, minor=6, patch=0.
-		virtual int hwver_sem(std::array<unsigned, 3>& components) = 0;
 
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
