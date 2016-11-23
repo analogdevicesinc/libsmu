@@ -24,7 +24,7 @@ cdef extern from "Python.h" nogil:
 
 # Workaround only py34 and up having native enum support; switch to cython
 # import methods once sourcing the C++ definition directly is supported.
-class Modes(Enum):
+class Mode(Enum):
     """Available modes for channels."""
     DISABLED = 0 # floating
     SVMI = 1 # source voltage, measure current
@@ -292,9 +292,10 @@ cdef class Device:
             channel (0 or 1): the selected channel
             mode: the requested mode (see the Modes class)
 
+        Raises: ValueError on bad mode value
         Raises: DeviceError on failure.
         """
-        if mode not in Modes:
+        if mode not in Mode:
             raise ValueError('invalid mode: {}'.format(mode))
 
         cdef int errcode
