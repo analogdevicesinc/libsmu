@@ -19,7 +19,6 @@ if __name__ == '__main__':
 
     if session.devices:
         dev = session.devices[0]
-        session.configure()
         session.start(0)
         while True:
             samples = dev.read(1024)
