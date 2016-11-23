@@ -18,7 +18,6 @@ if __name__ == '__main__':
     if not session.devices:
         sys.exit()
 
-    session.configure()
     session.run(10)
 
     for dev in session.devices:
