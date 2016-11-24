@@ -143,7 +143,7 @@ build_script:
   # test local install
   - ps: Get-ChildItem dist/*-cp34-*-win32.whl | % { pip install "$_" }
   # build exe from python script
-  - "python -m py2exe.build_exe bin/pysmu"
+  - "build_exe -b 0 -d exe32 bin/pysmu"
   - rmdir /q /s bin\__pycache__
 
   ## build 32 bit python3.5 bindings
@@ -223,7 +223,7 @@ build_script:
   # test local install
   - ps: Get-ChildItem dist/*-cp34-*-win_amd64.whl | % { pip install "$_" }
   # build exe from python script
-  - "python -m py2exe.build_exe bin/pysmu"
+  - "build_exe -b 0 -d exe64 bin/pysmu"
   - rmdir /q /s bin\__pycache__
 
   ## build 64 bit python3.5 bindings
@@ -253,6 +253,11 @@ build_script:
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+  - ren exe32\pysmu.exe pysmu32.exe
+  - ren exe64\pysmu.exe pysmu64.exe
+  - appveyor PushArtifact exe32\pysmu32.exe
+  - appveyor PushArtifact exe64\pysmu64.exe
 
   # copy python binding MSIs for installer
   - ps: Copy-Item dist\pysmu-*amd64-py2.7.msi c:\libsmu-python\pysmu27-amd64.msi
