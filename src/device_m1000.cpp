@@ -430,22 +430,21 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	return buf.size();
 }
 
-// Queue up samples being sent to the device.
-static void push_samples(boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf)
-{
-	for (auto x: buf)
-		while (!q.push(x));
-}
-
 int M1000_Device::write(std::vector<float>& buf, unsigned channel)
 {
 	// bad channel
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	// finish the last write() call
+	// finish the previous write() call if it exists
 	if (m_out_samples_thr[channel].joinable())
 		m_out_samples_thr[channel].join();
+
+	// queue up samples being sent to the device
+	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf) {
+		for (auto x: buf)
+			while (!q.push(x));
+	};
 
 	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf));
 	std::swap(t, m_out_samples_thr[channel]);
