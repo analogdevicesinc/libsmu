@@ -3,7 +3,6 @@
 #include <csignal>
 #include <array>
 #include <chrono>
-#include <deque>
 #include <iostream>
 #include <vector>
 #include <system_error>
@@ -52,24 +51,24 @@ int main(int argc, char **argv)
 	session->start(0);
 
 	std::vector<std::array<float, 4>> rxbuf;
-	std::deque<float> a_txbuf;
-	std::deque<float> b_txbuf;
+	std::vector<float> a_txbuf;
+	std::vector<float> b_txbuf;
 
 	// refill Tx buffers with data
-	std::function<void(std::deque<float>& buf, unsigned size)> refill_data;
-	refill_data = [=](std::deque<float>& buf, unsigned size) {
+	std::function<void(std::vector<float>& buf, unsigned size)> refill_data;
+	refill_data = [=](std::vector<float>& buf, unsigned size) {
 		for (auto i = buf.size(); i < size; i++) {
 			buf.push_back(3);
 		}
 	};
 
 	while (true) {
-		refill_data(a_txbuf, 1024);
-		refill_data(b_txbuf, 1024);
+		refill_data(a_txbuf, 10000);
+		refill_data(b_txbuf, 10000);
 		try {
 			dev->write(a_txbuf, 0);
 			dev->write(b_txbuf, 1);
-			dev->read(rxbuf, 1024);
+			dev->read(rxbuf, 10000);
 		} catch (const std::system_error& e) {
 			// Exit on dropped samples.
 			cerr << "sample(s) dropped: " << e.what() << endl;
