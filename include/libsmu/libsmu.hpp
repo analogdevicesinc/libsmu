@@ -338,7 +338,7 @@ namespace smu {
 		/// @brief Get all signal samples from a device.
 		/// @param buf Buffer object to store sample values into.
 		/// @param samples Number of samples to read.
-		/// @param timeout Amount of time in milliseconds to wait for samples
+		/// @param timeout Amount of time in milliseconds to wait for samples.
 		/// to be available. If 0 (the default), return immediately. If -1,
 		/// block indefinitely until the requested number of samples is available.
 		/// @return On success, the number of samples read.
@@ -349,7 +349,7 @@ namespace smu {
 		/// @brief Write data to a specified channel of the device.
 		/// @param buf Buffer of samples to write to the specified channel.
 		/// @param channel Channel to write samples to.
-		/// @param timeout Amount of time in milliseconds to wait for samples
+		/// @param timeout Amount of time in milliseconds to wait while writing.
 		/// to be written. If 0 (the default), return immediately.
 		/// @return On success, the number of samples written.
 		/// @return On error, a negative integer is returned relating to the error status.
