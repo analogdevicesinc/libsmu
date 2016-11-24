@@ -315,16 +315,10 @@ static float constrain(float val, float lo, float hi)
 uint16_t M1000_Device::encode_out(unsigned channel)
 {
 	float val;
-	bool succeeded = false;
 	int v = 32768 * 4 / 5;
 
-	// TODO: replace busy-wait
-	while (!succeeded && m_mode[channel] != DISABLED) {
-		if (channel == 0)
-			succeeded = m_out_samples_a_q.pop(val);
-		else
-			succeeded = m_out_samples_b_q.pop(val);
-	}
+	if (m_mode[channel] != DISABLED)
+		while (!m_out_samples_q[channel]->pop(val));
 
 	if (m_mode[channel] == SVMI) {
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
@@ -413,7 +407,6 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 
 	for (unsigned i = 0; i < samples; i++) {
 		do {
-			// TODO: move to multi-element pop (assuming this will speed things up a bit).
 			succeeded = m_in_samples_q.pop(sample);
 			// stop waiting for samples if we've run out of time
 			auto clk_end = std::chrono::high_resolution_clock::now();
@@ -450,21 +443,12 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	if (channel == 0) {
-		// finish the last write() call
-		if (m_out_samples_a_thr.joinable())
-			m_out_samples_a_thr.join();
+	// finish the last write() call
+	if (m_out_samples_thr[channel].joinable())
+		m_out_samples_thr[channel].join();
 
-		std::thread t(push_samples, std::ref(m_out_samples_a_q), std::ref(buf));
-		std::swap(t, m_out_samples_a_thr);
-	} else {
-		// finish the last write() call
-		if (m_out_samples_b_thr.joinable())
-			m_out_samples_b_thr.join();
-
-		std::thread t(push_samples, std::ref(m_out_samples_b_q), std::ref(buf));
-		std::swap(t, m_out_samples_b_thr);
-	}
+	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf));
+	std::swap(t, m_out_samples_thr[channel]);
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap write() in order
