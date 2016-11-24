@@ -1,7 +1,6 @@
 # Interface wrapper for the libsmu library.
 # distutils: language = c++
 
-from libcpp.deque cimport deque
 from libcpp.set cimport set
 from libcpp.vector cimport vector
 
@@ -50,7 +49,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         int set_mode(int channel, int mode)
         int fwver_sem(array[unsigned, three]& components)
         ssize_t read(vector[array[float, four]]& buf, size_t samples, int timeout) except +
-        ssize_t write(deque[float]& buf, unsigned channel, unsigned timeout) except +
+        int write(vector[float]& buf, unsigned channel) except +
         int ctrl_transfer(
             int bmRequestType, int bRequest, int wValue, int wIndex,
             unsigned char* data, int wLength, int timeout)

@@ -13,8 +13,8 @@
 #include <cstring>
 #include <array>
 #include <chrono>
-#include <deque>
 #include <exception>
+#include <functional>
 #include <iterator>
 #include <system_error>
 #include <stdexcept>
@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp> // boost::split
+#include <boost/lockfree/spsc_queue.hpp>
 #include <libusb.h>
 
 #include "debug.hpp"
@@ -323,7 +324,6 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 			succeeded = m_out_samples_a_q.pop(val);
 		else
 			succeeded = m_out_samples_b_q.pop(val);
-		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
 	}
 
 	if (m_mode[channel] == SVMI) {
@@ -437,58 +437,34 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	return buf.size();
 }
 
-ssize_t M1000_Device::write(std::deque<float>& buf, unsigned channel, unsigned timeout)
+// Queue up samples being sent to the device.
+static void push_samples(boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf)
 {
-	//std::deque<float>::iterator i_position = buf.begin();
+	for (auto x: buf)
+		while (!q.push(x));
+}
 
-	unsigned orig_size = buf.size();
-	bool succeeded;
-
+int M1000_Device::write(std::vector<float>& buf, unsigned channel)
+{
 	// bad channel
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	// Initialize sample acquiring duration check for timeout support.
-	auto clk_start = std::chrono::high_resolution_clock::now();
+	if (channel == 0) {
+		// finish the last write() call
+		if (m_out_samples_a_thr.joinable())
+			m_out_samples_a_thr.join();
 
-	//while (i_position != buf.end()) {
-		//// push as many values as possible to the queue
-		//if (channel == 0) {
-			//i_position = m_out_samples_a_q.push(i_position, buf.end());
-		//} else {
-			//i_position = m_out_samples_b_q.push(i_position, buf.end());
-	  /*  }*/
+		std::thread t(push_samples, std::ref(m_out_samples_a_q), std::ref(buf));
+		std::swap(t, m_out_samples_a_thr);
+	} else {
+		// finish the last write() call
+		if (m_out_samples_b_thr.joinable())
+			m_out_samples_b_thr.join();
 
-	while (!buf.empty()) {
-		///* push as many values as possible to the queue*/
-		//if (channel == 0) {
-			//i_position = m_out_samples_a_q.push(i_position, buf.end());
-		//} else {
-			//i_position = m_out_samples_b_q.push(i_position, buf.end());
-		/*}*/
-
-		// TODO: fix up and use the commented out iterator implementation to
-		// push as many values as possible.
-		if (channel == 0) {
-			succeeded = m_out_samples_a_q.push(buf.front());
-		} else {
-			succeeded = m_out_samples_b_q.push(buf.front());
-		}
-		if (!succeeded) {
-			throw std::system_error(EBUSY, std::system_category(), "dropped output sample");
-		}
-
-		buf.pop_front();
-		// stop waiting for queue space if we've run out of time
-		auto clk_end = std::chrono::high_resolution_clock::now();
-		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-		if (clk_diff.count() > timeout)
-			break;
-		std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+		std::thread t(push_samples, std::ref(m_out_samples_b_q), std::ref(buf));
+		std::swap(t, m_out_samples_b_thr);
 	}
-
-	// remove all the samples we wrote
-	//buf.erase(buf.begin(), i_position);
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap write() in order
@@ -497,8 +473,7 @@ ssize_t M1000_Device::write(std::deque<float>& buf, unsigned channel, unsigned t
 		std::rethrow_exception(e_ptr);
 	}
 
-	//return (i_position - buf.begin());
-	return (orig_size - buf.size());
+	return 0;
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
@@ -531,9 +506,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 				samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
 			}
 			m_in_sampleno++;
-			if (!m_in_samples_q.push(samples)) {
-				throw std::system_error(EBUSY, std::system_category(), "dropped input sample");
-			}
+			while (!m_in_samples_q.push(samples));
 		}
 	}
 }

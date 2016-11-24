@@ -1,6 +1,5 @@
 # distutils: language = c++
 
-from libcpp.deque cimport deque
 from libcpp.vector cimport vector
 
 cimport cpp_libsmu
@@ -310,26 +309,24 @@ cdef class Device:
         if errcode:
             raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
-    def write(self, data, channel, timeout=0):
+    def write(self, data, channel):
         """Write data to a specified channel of the device.
 
         Args:
             data: list or tuple of sample values
             channel (0 or 1): channel to write samples to
-            timeout: amount of time in milliseconds to wait for samples
-                to be available. If 0 (the default), return immediately.
 
         Raises: DeviceError on writing failures.
         Returns: The number of samples written.
         """
-        cdef ssize_t ret = 0
-        cdef deque[float] buf
+        cdef int errcode
+        cdef vector[float] buf
 
         for x in data:
             buf.push_back(x)
 
         try:
-            ret = self._device.write(buf, channel, timeout)
+            ret = self._device.write(buf, channel)
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
@@ -337,7 +334,7 @@ cdef class Device:
             if not e.message.startswith('dropped '):
                 raise
 
-        if ret < 0:
+        if errcode < 0:
             raise DeviceError('failed writing to device', ret)
 
         return ret

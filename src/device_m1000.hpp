@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <array>
-#include <deque>
 #include <mutex>
 #include <vector>
 
@@ -52,7 +51,7 @@ namespace smu {
 		int set_mode(unsigned channel, unsigned mode) override;
 		int fwver_sem(std::array<unsigned, 3>& components) override;
 		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout) override;
-		ssize_t write(std::deque<float>& buf, unsigned channel, unsigned timeout) override;
+		int write(std::vector<float>& buf, unsigned channel) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		int read_calibration() override;
@@ -75,6 +74,10 @@ namespace smu {
 		// Ringbuffers with ~100ms worth of outgoing sample values for both channels at the default rate.
 		boost::lockfree::spsc_queue<float> m_out_samples_a_q;
 		boost::lockfree::spsc_queue<float> m_out_samples_b_q;
+
+		// Threads used to write outgoing samples values to the queues above.
+		std::thread m_out_samples_a_thr;
+		std::thread m_out_samples_b_thr;
 
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
