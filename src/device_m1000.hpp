@@ -80,6 +80,7 @@ namespace smu {
 
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];
+		std::atomic<bool> m_stop_write[2];
 
 		M1000_Device(Session* s, libusb_device* usb_dev):
 			Device(s, usb_dev),
