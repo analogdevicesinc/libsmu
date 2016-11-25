@@ -249,6 +249,13 @@ cdef class Session:
 cdef class Device:
     # pointer to the underlying C++ smu::Device object
     cdef cpp_libsmu.Device *_device
+    cdef readonly dict channels
+
+    def __init__(self):
+        self.channels = {
+            'A': Channel(self, 0),
+            'B': Channel(self, 1),
+        }
 
     @staticmethod
     cdef _create(cpp_libsmu.Device *device) with gil:
@@ -473,3 +480,35 @@ cdef class Device:
                 return map(ord, data)
             else:
                 return r
+
+
+cdef class Channel:
+    cdef Device dev
+    cdef int chan
+
+    def __init__(self, Device device, int channel):
+        self.dev = device
+        self.chan = channel
+
+    def set_mode(self, mode):
+        """Set the mode of the channel."""
+        self.dev.set_mode(self.chan, mode)
+
+    def read(self, num_samples, timeout=0):
+        """Acquire samples from a channel."""
+        return [x[self.chan] for x in self.dev.read(num_samples, timeout)]
+
+    def write(self, data, cyclic=False):
+        """Write data to the channel."""
+        self.dev.write(data, self.chan, cyclic)
+
+    def get_samples(self, num_samples):
+        """Acquire samples from a channel."""
+        return [x[self.chan] for x in self.dev.get_samples(num_samples)]
+
+    property samples:
+        """Iterable of continuous sampling."""
+        def __get__(self):
+            while True:
+                for x in self.read(10000):
+                    yield x
