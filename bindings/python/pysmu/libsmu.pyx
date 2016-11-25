@@ -512,3 +512,18 @@ cdef class Channel:
             while True:
                 for x in self.read(10000):
                     yield x
+
+    def arbitrary(self, waveform, repeat=False):
+        """Output an arbitrary waveform.
+
+        Args:
+            waveform: sequence of raw waveform values (floats or ints)
+            repeat (boolean): repeat the waveform when arriving at the end of
+                its available samples
+        """
+        self.write(waveform, repeat)
+
+    def constant(self, value):
+        """Set output to a constant waveform."""
+        data = [value] * 10000
+        self.write(data, True)
