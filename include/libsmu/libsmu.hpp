@@ -348,10 +348,11 @@ namespace smu {
 		/// @brief Write data to a specified channel of the device.
 		/// @param buf Buffer of samples to write to the specified channel.
 		/// @param channel Channel to write samples to.
+		/// @param cyclic Enable cyclic mode (passed buffer is looped over continuously).
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative integer is returned relating to the error status.
 		/// @throws std::system_error of EBUSY if sample underflows have occurred.
-		virtual int write(std::vector<float>& buf, unsigned channel) = 0;
+		virtual int write(std::vector<float>& buf, unsigned channel, bool cyclic = false) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.

@@ -309,15 +309,15 @@ cdef class Device:
         if errcode:
             raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
-    def write(self, data, channel):
+    def write(self, data, channel, cyclic=False):
         """Write data to a specified channel of the device.
 
         Args:
             data: list or tuple of sample values
             channel (0 or 1): channel to write samples to
+            cyclic (bool): continuously iterate over the same buffer
 
         Raises: DeviceError on writing failures.
-        Returns: The number of samples written.
         """
         cdef int errcode
         cdef vector[float] buf
@@ -326,7 +326,7 @@ cdef class Device:
             buf.push_back(x)
 
         try:
-            ret = self._device.write(buf, channel)
+            ret = self._device.write(buf, channel, cyclic)
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
@@ -336,8 +336,6 @@ cdef class Device:
 
         if errcode < 0:
             raise DeviceError('failed writing to device', ret)
-
-        return ret
 
     def get_samples(self, num_samples):
         """Acquire all signal samples from a device.
