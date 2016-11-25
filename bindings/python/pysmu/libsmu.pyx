@@ -313,7 +313,7 @@ cdef class Device:
         """Write data to a specified channel of the device.
 
         Args:
-            data: list or tuple of sample values
+            data: iterable of sample values
             channel (0 or 1): channel to write samples to
             cyclic (bool): continuously iterate over the same buffer
 
