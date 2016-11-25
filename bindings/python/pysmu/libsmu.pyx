@@ -303,7 +303,7 @@ cdef class Device:
 
         Args:
             channel (0 or 1): the selected channel
-            mode: the requested mode (see the Modes class)
+            mode: the requested mode (see the Mode enum)
 
         Raises: ValueError if an invalid mode is passed.
         Raises: DeviceError on failure.
