@@ -437,20 +437,29 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		return -ENODEV;
 
 	// finish the previous write() call if it exists
-	if (m_out_samples_thr[channel].joinable())
+	if (m_out_samples_thr[channel].joinable()) {
+		// signal cyclic buffer writes to end
+		m_stop_write[channel] = true;
 		m_out_samples_thr[channel].join();
+	}
+
+	m_stop_write[channel] = false;
 
 	// queue up samples being sent to the device
-	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf, bool cyclic) {
+	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf, bool cyclic, std::atomic<bool>& stop) {
 		while (true) {
-			for (auto x: buf)
-				while (!q.push(x));
-			if (!cyclic)
-				break;
+			for (auto x: buf) {
+				while (!q.push(x)) {
+					if (stop.load())
+						return;
+				}
+			}
+			if (!cyclic || stop.load())
+				return;
 		}
 	};
 
-	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf), cyclic);
+	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf), cyclic, std::ref(m_stop_write[channel]));
 	std::swap(t, m_out_samples_thr[channel]);
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
