@@ -340,8 +340,6 @@ cdef class Device:
     def get_samples(self, num_samples):
         """Acquire all signal samples from a device.
 
-        Stub function to simplify porting efforts from previous versions.
-
         Blocks until the requested number of samples is available.
 
         Args:
