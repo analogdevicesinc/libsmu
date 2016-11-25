@@ -289,7 +289,7 @@ cdef class Device:
         def __get__(self):
             while True:
                 for x in self.read(10000):
-                    yield (x[0], x[1], x[2], x[3])
+                    yield x
 
     def set_mode(self, channel, mode):
         """Set the mode of the specified channel.
@@ -379,7 +379,7 @@ cdef class Device:
         if ret < 0:
             raise DeviceError('failed reading from device', ret)
 
-        return [(x[0], x[1], x[2], x[3]) for x in buf]
+        return [((x[0], x[1]), (x[2], x[3])) for x in buf]
 
     def write_calibration(self, file):
         """Write calibration data to the device's EEPROM.
