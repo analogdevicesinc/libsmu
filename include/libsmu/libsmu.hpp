@@ -92,7 +92,7 @@ enum Dest {
 };
 
 /// @brief Supported channel modes.
-enum Modes {
+enum Mode {
 	DISABLED, ///< Channel is disabled.
 	SVMI, ///< Source voltage, measure current.
 	SIMV, ///< Source current, measure voltage.
