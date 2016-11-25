@@ -51,7 +51,7 @@ namespace smu {
 		int set_mode(unsigned channel, unsigned mode) override;
 		int fwver_sem(std::array<unsigned, 3>& components) override;
 		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout) override;
-		int write(std::vector<float>& buf, unsigned channel) override;
+		int write(std::vector<float>& buf, unsigned channel, bool cyclic) override;
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		int read_calibration() override;

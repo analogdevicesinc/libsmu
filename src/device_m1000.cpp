@@ -430,7 +430,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	return buf.size();
 }
 
-int M1000_Device::write(std::vector<float>& buf, unsigned channel)
+int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 {
 	// bad channel
 	if (channel != 0 && channel != 1)
@@ -441,12 +441,16 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel)
 		m_out_samples_thr[channel].join();
 
 	// queue up samples being sent to the device
-	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf) {
-		for (auto x: buf)
-			while (!q.push(x));
+	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf, bool cyclic) {
+		while (true) {
+			for (auto x: buf)
+				while (!q.push(x));
+			if (!cyclic)
+				break;
+		}
 	};
 
-	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf));
+	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf), cyclic);
 	std::swap(t, m_out_samples_thr[channel]);
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
