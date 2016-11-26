@@ -57,7 +57,8 @@ int main(int argc, char **argv)
 	// refill Tx buffers with data
 	std::function<void(std::vector<float>& buf, unsigned size)> refill_data;
 	refill_data = [=](std::vector<float>& buf, unsigned size) {
-		for (auto i = buf.size(); i < size; i++) {
+		buf.clear();
+		for (unsigned i = 0; i < size; i++) {
 			buf.push_back(3);
 		}
 	};
