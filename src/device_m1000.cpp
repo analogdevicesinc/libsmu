@@ -436,7 +436,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	// finish the previous write() call if it exists
+	// finish the previous write() call if it's running
 	if (m_out_samples_thr[channel].joinable()) {
 		// signal cyclic buffer writes to end
 		m_stop_write[channel] = true;
@@ -450,7 +450,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		while (true) {
 			for (auto x: buf) {
 				while (!q.push(x)) {
-					if (stop.load())
+					if (cyclic && stop.load())
 						return;
 				}
 			}
@@ -459,7 +459,9 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		}
 	};
 
+	// push samples onto the output queue from another thread
 	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf), cyclic, std::ref(m_stop_write[channel]));
+	// store spawned thread ID in order to wait for its completion later
 	std::swap(t, m_out_samples_thr[channel]);
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
