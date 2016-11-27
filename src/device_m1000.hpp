@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <array>
 #include <mutex>
+#include <queue>
 #include <vector>
 
 #include <boost/lockfree/spsc_queue.hpp>
@@ -71,12 +72,23 @@ namespace smu {
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
 		boost::lockfree::spsc_queue<std::array<float, 4>> m_in_samples_q;
 
+		// Read buffer.
+		std::queue<std::array<float, 4>> m_in_samples_buf;
+		std::mutex m_in_samples_mtx;
+
+		// Threads used to read incoming samples values;
+		std::thread m_in_samples_thr;
+
 		// Queues with ~100ms worth of outgoing sample values for both channels at the default rate.
 		boost::lockfree::spsc_queue<float> _out_samples_a_q;
 		boost::lockfree::spsc_queue<float> _out_samples_b_q;
 
 		// Reference the queues above via an array.
 		boost::lockfree::spsc_queue<float>* m_out_samples_q[2] = {&_out_samples_a_q, &_out_samples_b_q};
+
+		// Write buffers, one for each channel.
+		std::vector<float> m_out_samples_buf[2];
+		std::mutex m_out_samples_mtx[2];
 
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];

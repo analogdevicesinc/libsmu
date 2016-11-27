@@ -16,6 +16,8 @@
 #include <exception>
 #include <functional>
 #include <iterator>
+#include <mutex>
+#include <queue>
 #include <system_error>
 #include <stdexcept>
 #include <thread>
@@ -398,34 +400,59 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
-	std::array<float, 4> sample;
-	bool succeeded;
 	buf.clear();
 
-	// Initialize sample acquiring duration check for timeout support.
+	// stop waiting for samples if we've run out of time
 	auto clk_start = std::chrono::high_resolution_clock::now();
+	while (timeout && m_in_samples_buf.size() < samples) {
+		auto clk_end = std::chrono::high_resolution_clock::now();
+		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+		if (clk_diff.count() > timeout)
+			break;
+		std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+	}
 
-	for (unsigned i = 0; i < samples; i++) {
-		do {
-			succeeded = m_in_samples_q.pop(sample);
-			// stop waiting for samples if we've run out of time
-			auto clk_end = std::chrono::high_resolution_clock::now();
-			auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-			if (timeout >= 0 && clk_diff.count() > timeout)
-				break;
-			std::this_thread::sleep_for(std::chrono::nanoseconds(10));
-		} while (!succeeded);
+	std::lock_guard<std::mutex> lock(m_in_samples_mtx);
+	for (unsigned int i = 0; i < samples && i < m_in_samples_buf.size(); i++) {
+		buf.push_back(m_in_samples_buf.front());
+		m_in_samples_buf.pop();
+	}
 
-		if (succeeded)
-			buf.push_back(sample);
+	// read samples from device into buffer.
+	auto read_samples = [=](
+			boost::lockfree::spsc_queue<std::array<float, 4>>& q,
+			std::queue<std::array<float, 4>>& buf,
+			std::mutex& mtx) {
+		std::array<float, 4> sample;
+		std::unique_lock<std::mutex> lk(mtx);
+		while (true) {
+			while (!q.pop(sample)) {
+				// wait for samples to be available
+				lk.unlock();
+				std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+				lk.lock();
+			}
+			buf.push(sample);
+		}
+	};
+
+	// start one thread per channel to push samples onto the output queue
+	if (!m_in_samples_thr.joinable()) {
+		std::thread t(
+			read_samples,
+			std::ref(m_in_samples_q),
+			std::ref(m_in_samples_buf),
+			std::ref(m_in_samples_mtx));
+
+		// store spawned thread ID
+		std::swap(t, m_in_samples_thr);
 	}
 
 	// If a data overflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap read() in order
 	// to catch and/or act on overflows.
-	if (e_ptr) {
+	if (e_ptr)
 		std::rethrow_exception(e_ptr);
-	}
 
 	return buf.size();
 }
@@ -436,40 +463,60 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	// finish the previous write() call if it's running
-	if (m_out_samples_thr[channel].joinable()) {
-		// signal cyclic buffer writes to end
+	if (cyclic)
 		m_stop_write[channel] = true;
-		m_out_samples_thr[channel].join();
-	}
 
-	m_stop_write[channel] = false;
+	std::lock_guard<std::mutex> lock(m_out_samples_mtx[channel]);
+	m_out_samples_buf[channel] = buf;
 
 	// queue up samples being sent to the device
-	auto push_samples = [=](boost::lockfree::spsc_queue<float>& q, std::vector<float>& buf, bool cyclic, std::atomic<bool>& stop) {
+	auto push_samples = [=](
+			unsigned channel,
+			boost::lockfree::spsc_queue<float>& q,
+			std::vector<float>& buf,
+			std::mutex& mtx,
+			bool cyclic,
+			std::atomic<bool>& stop) {
+		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
 		while (true) {
+startloop:
+			lk.lock();
 			for (auto x: buf) {
 				while (!q.push(x)) {
-					if (cyclic && stop.load())
-						return;
+					if (stop.load()) {
+						lk.unlock();
+						// wait to allow the signaling thread to grab the lock
+						std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+						goto startloop;
+					}
 				}
 			}
-			if (!cyclic || stop.load())
-				return;
+			if (!cyclic)
+				buf.clear();
+			lk.unlock();
 		}
 	};
 
-	// push samples onto the output queue from another thread
-	std::thread t(push_samples, std::ref(*m_out_samples_q[channel]), std::ref(buf), cyclic, std::ref(m_stop_write[channel]));
-	// store spawned thread ID in order to wait for its completion later
-	std::swap(t, m_out_samples_thr[channel]);
+	// start one thread per channel to push samples onto the output queue
+	if (!m_out_samples_thr[channel].joinable()) {
+		std::thread t(
+			push_samples,
+			channel,
+			std::ref(*m_out_samples_q[channel]),
+			std::ref(m_out_samples_buf[channel]),
+			std::ref(m_out_samples_mtx[channel]),
+			cyclic,
+			std::ref(m_stop_write[channel]));
+
+		// store spawned thread ID
+		std::swap(t, m_out_samples_thr[channel]);
+	}
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap write() in order
 	// to catch and/or act on underflows.
-	if (e_ptr) {
+	if (e_ptr)
 		std::rethrow_exception(e_ptr);
-	}
 
 	return 0;
 }
