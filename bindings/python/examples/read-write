@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+#
+# Simple script showing how to read and write data to a device, use Ctrl-C to exit.
+
+from __future__ import print_function
+
+from signal import signal, SIG_DFL, SIGINT
+import random
+import time
+
+from pysmu import Session, Mode
+
+
+def refill_data():
+    # fill channels with a static, random integer between 0 and 5
+    return [random.randint(0,5)] * 10000
+    # fill channels with a static, random float between -0.2 and 0.2
+    #return [random.uniform(-0.2,0.2)] * 10000
+
+
+if __name__ == '__main__':
+    # don't throw KeyboardInterrupt on Ctrl-C
+    signal(SIGINT, SIG_DFL)
+
+    session = Session()
+    session.add_all()
+
+    if session.devices:
+        dev = session.devices[0]
+        dev.set_mode(0, Mode.SVMI)
+        dev.set_mode(1, Mode.SVMI)
+        #dev.set_mode(0, Mode.SIMV)
+        #dev.set_mode(1, Mode.SIMV)
+        session.start(0)
+        while True:
+            dev.write(refill_data(), 0)
+            dev.write(refill_data(), 1)
+            samples = dev.read(10000)
+            for x in samples:
+                print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+    else:
+        print('no devices attached')
