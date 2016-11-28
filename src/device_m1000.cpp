@@ -402,7 +402,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 {
 	buf.clear();
 
-	// stop waiting for samples if we've run out of time
+	// Stop waiting for samples if we've run out of time.
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (timeout && m_in_samples_buf.size() < samples) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
@@ -418,7 +418,8 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		m_in_samples_buf.pop();
 	}
 
-	// read samples from device into buffer.
+	// Function run in the read thread to read samples from the device into the
+	// requested buffer.
 	auto read_samples = [=](
 			boost::lockfree::spsc_queue<std::array<float, 4>>& q,
 			std::queue<std::array<float, 4>>& buf,
@@ -436,7 +437,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		}
 	};
 
-	// start one thread per channel to push samples onto the output queue
+	// Start a singular read thread to push acquired samples to the user.
 	if (!m_in_samples_thr.joinable()) {
 		std::thread t(
 			read_samples,
@@ -466,7 +467,8 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	std::lock_guard<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
 
-	// queue up samples being sent to the device
+	// Function run in the channel's write thread to queue up samples being
+	// sent to the device.
 	auto push_samples = [=](
 			unsigned channel,
 			boost::lockfree::spsc_queue<float>& q,
@@ -489,7 +491,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		}
 	};
 
-	// start one thread per channel to push samples onto the output queue
+	// Start one thread per channel to push samples onto the output queue.
 	if (!m_out_samples_thr[channel].joinable()) {
 		std::thread t(
 			push_samples,
