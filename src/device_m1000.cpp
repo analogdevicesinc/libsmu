@@ -398,9 +398,41 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
+// Function run in the read thread to pull samples from the device into the
+// requested buffer.
+static void read_samples(
+		boost::lockfree::spsc_queue<std::array<float, 4>>& q,
+		std::queue<std::array<float, 4>>& buf,
+		std::mutex& mtx)
+{
+	std::array<float, 4> sample;
+	std::unique_lock<std::mutex> lk(mtx);
+	while (true) {
+		while (!q.pop(sample)) {
+			// wait for samples to be available
+			lk.unlock();
+			std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+			lk.lock();
+		}
+		buf.push(sample);
+	}
+}
+
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
 	buf.clear();
+
+	// Start a singular read thread to push acquired samples to the user.
+	if (!m_in_samples_thr.joinable()) {
+		std::thread t(
+			read_samples,
+			std::ref(m_in_samples_q),
+			std::ref(m_in_samples_buf),
+			std::ref(m_in_samples_mtx));
+
+		// store spawned thread ID
+		std::swap(t, m_in_samples_thr);
+	}
 
 	// Stop waiting for samples if we've run out of time.
 	auto clk_start = std::chrono::high_resolution_clock::now();
@@ -418,37 +450,6 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		m_in_samples_buf.pop();
 	}
 
-	// Function run in the read thread to read samples from the device into the
-	// requested buffer.
-	auto read_samples = [=](
-			boost::lockfree::spsc_queue<std::array<float, 4>>& q,
-			std::queue<std::array<float, 4>>& buf,
-			std::mutex& mtx) {
-		std::array<float, 4> sample;
-		std::unique_lock<std::mutex> lk(mtx);
-		while (true) {
-			while (!q.pop(sample)) {
-				// wait for samples to be available
-				lk.unlock();
-				std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-				lk.lock();
-			}
-			buf.push(sample);
-		}
-	};
-
-	// Start a singular read thread to push acquired samples to the user.
-	if (!m_in_samples_thr.joinable()) {
-		std::thread t(
-			read_samples,
-			std::ref(m_in_samples_q),
-			std::ref(m_in_samples_buf),
-			std::ref(m_in_samples_mtx));
-
-		// store spawned thread ID
-		std::swap(t, m_in_samples_thr);
-	}
-
 	// If a data overflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap read() in order
 	// to catch and/or act on overflows.
@@ -456,6 +457,27 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		std::rethrow_exception(e_ptr);
 
 	return buf.size();
+}
+
+// Function run in the channel's write thread to queue up samples being sent to
+// the device.
+static void write_samples(
+		unsigned channel,
+		boost::lockfree::spsc_queue<float>& q,
+		std::vector<float>& buf,
+		std::mutex& mtx,
+		bool cyclic)
+{
+	std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
+	while (true) {
+		lk.lock();
+		for (auto x: buf)
+			while (!q.push(x));
+		if (!cyclic)
+			buf.clear();
+		lk.unlock();
+		std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+	}
 }
 
 int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
@@ -467,30 +489,10 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	std::lock_guard<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
 
-	// Function run in the channel's write thread to queue up samples being
-	// sent to the device.
-	auto push_samples = [=](
-			unsigned channel,
-			boost::lockfree::spsc_queue<float>& q,
-			std::vector<float>& buf,
-			std::mutex& mtx,
-			bool cyclic) {
-		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
-		while (true) {
-			lk.lock();
-			for (auto x: buf)
-				while (!q.push(x));
-			if (!cyclic)
-				buf.clear();
-			lk.unlock();
-			std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-		}
-	};
-
 	// Start one thread per channel to push samples onto the output queue.
 	if (!m_out_samples_thr[channel].joinable()) {
 		std::thread t(
-			push_samples,
+			write_samples,
 			channel,
 			std::ref(*m_out_samples_q[channel]),
 			std::ref(m_out_samples_buf[channel]),
