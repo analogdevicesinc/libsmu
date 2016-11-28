@@ -478,12 +478,8 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
 		while (true) {
 			lk.lock();
-			for (auto x: buf) {
-				while (!q.push(x)) {
-					// wait for queue space to be available
-					std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-				}
-			}
+			for (auto x: buf)
+				while (!q.push(x));
 			if (!cyclic)
 				buf.clear();
 			lk.unlock();
