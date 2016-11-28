@@ -9,6 +9,7 @@ branches:
   except:
     - gh-pages
     - travis-ci
+    - coverity_scan
 
 matrix:
   fast_finish: true
