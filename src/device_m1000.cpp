@@ -463,9 +463,6 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	if (cyclic)
-		m_stop_write[channel] = true;
-
 	std::lock_guard<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
 
@@ -475,25 +472,20 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 			boost::lockfree::spsc_queue<float>& q,
 			std::vector<float>& buf,
 			std::mutex& mtx,
-			bool cyclic,
-			std::atomic<bool>& stop) {
+			bool cyclic) {
 		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
 		while (true) {
-startloop:
 			lk.lock();
 			for (auto x: buf) {
 				while (!q.push(x)) {
-					if (stop.load()) {
-						lk.unlock();
-						// wait to allow the signaling thread to grab the lock
-						std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-						goto startloop;
-					}
+					// wait for queue space to be available
+					std::this_thread::sleep_for(std::chrono::nanoseconds(100));
 				}
 			}
 			if (!cyclic)
 				buf.clear();
 			lk.unlock();
+			std::this_thread::sleep_for(std::chrono::nanoseconds(100));
 		}
 	};
 
@@ -505,8 +497,7 @@ startloop:
 			std::ref(*m_out_samples_q[channel]),
 			std::ref(m_out_samples_buf[channel]),
 			std::ref(m_out_samples_mtx[channel]),
-			cyclic,
-			std::ref(m_stop_write[channel]));
+			cyclic);
 
 		// store spawned thread ID
 		std::swap(t, m_out_samples_thr[channel]);
