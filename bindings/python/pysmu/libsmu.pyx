@@ -303,7 +303,18 @@ cdef class Device:
 
         Args:
             channel (0 or 1): the selected channel
-            mode: the requested mode (see the Mode enum)
+            mode: the requested mode (this must be one of the options from the
+                Mode enum)
+
+        Example usage: Set source voltage, measure current for the first
+            channel and source current, measure voltage for the second.
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> session.add_all()
+        >>> dev = session.devices[0]
+        >>> dev.set_mode(0, Mode.SVMI)
+        >>> dev.set_mode(1, Mode.SIMV)
 
         Raises: ValueError if an invalid mode is passed.
         Raises: DeviceError on failure.
@@ -491,7 +502,24 @@ cdef class Channel:
         self.chan = channel
 
     def set_mode(self, mode):
-        """Set the mode of the channel."""
+        """Set the mode of the channel.
+
+        Args:
+            mode: the requested mode (this must be one of the options from the
+                Mode enum)
+
+        Example usage: Set source voltage, measure current for the channel.
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> session.add_all()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.set_mode(Mode.SIMV)
+
+        Raises: ValueError if an invalid mode is passed.
+        Raises: DeviceError on failure.
+        """
         self.dev.set_mode(self.chan, mode)
 
     def read(self, num_samples, timeout=0):
