@@ -407,7 +407,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	while (timeout && m_in_samples_buf.size() < samples) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-		if (clk_diff.count() > timeout)
+		if (timeout >= 0 && clk_diff.count() > timeout)
 			break;
 		std::this_thread::sleep_for(std::chrono::nanoseconds(100));
 	}
