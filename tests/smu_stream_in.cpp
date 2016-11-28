@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <vector>
+#include <random>
 #include <system_error>
 #include <thread>
 
@@ -54,18 +55,23 @@ int main(int argc, char **argv)
 	std::vector<float> a_txbuf;
 	std::vector<float> b_txbuf;
 
+	// Write static, random integers between 0 and 5 to voltage channels.
+	std::random_device r;
+	std::default_random_engine rand_eng(r());
+	std::uniform_int_distribution<int> rand_v(0, 5);
+
 	// refill Tx buffers with data
-	std::function<void(std::vector<float>& buf, unsigned size)> refill_data;
-	refill_data = [=](std::vector<float>& buf, unsigned size) {
+	std::function<void(std::vector<float>& buf, unsigned size, int voltage)> refill_data;
+	refill_data = [=](std::vector<float>& buf, unsigned size, int voltage) {
 		buf.clear();
 		for (unsigned i = 0; i < size; i++) {
-			buf.push_back(3);
+			buf.push_back(voltage);
 		}
 	};
 
 	while (true) {
-		refill_data(a_txbuf, 10000);
-		refill_data(b_txbuf, 10000);
+		refill_data(a_txbuf, 10000, rand_v(rand_eng));
+		refill_data(b_txbuf, 10000, rand_v(rand_eng));
 		try {
 			dev->write(a_txbuf, 0);
 			dev->write(b_txbuf, 1);
