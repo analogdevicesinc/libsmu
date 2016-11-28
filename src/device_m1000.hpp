@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <array>
+#include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <vector>
@@ -75,6 +76,7 @@ namespace smu {
 		// Read buffer.
 		std::queue<std::array<float, 4>> m_in_samples_buf;
 		std::mutex m_in_samples_mtx;
+		std::condition_variable m_in_samples_avail;
 
 		// Threads used to read incoming samples values;
 		std::thread m_in_samples_thr;

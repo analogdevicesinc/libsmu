@@ -13,6 +13,7 @@
 #include <cstring>
 #include <array>
 #include <chrono>
+#include <condition_variable>
 #include <exception>
 #include <functional>
 #include <iterator>
@@ -403,17 +404,14 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 static void read_samples(
 		boost::lockfree::spsc_queue<std::array<float, 4>>& q,
 		std::queue<std::array<float, 4>>& buf,
-		std::mutex& mtx)
+		std::mutex& mtx,
+		std::condition_variable& cv)
 {
 	std::array<float, 4> sample;
 	std::unique_lock<std::mutex> lk(mtx);
 	while (true) {
-		while (!q.pop(sample)) {
-			// wait for samples to be available
-			lk.unlock();
-			std::this_thread::sleep_for(std::chrono::nanoseconds(100));
-			lk.lock();
-		}
+		while (!q.pop(sample))
+			cv.wait(lk, [&q]{return q.read_available();});
 		buf.push(sample);
 	}
 }
@@ -428,7 +426,8 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 			read_samples,
 			std::ref(m_in_samples_q),
 			std::ref(m_in_samples_buf),
-			std::ref(m_in_samples_mtx));
+			std::ref(m_in_samples_mtx),
+			std::ref(m_in_samples_avail));
 
 		// store spawned thread ID
 		std::swap(t, m_in_samples_thr);
@@ -444,11 +443,12 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		std::this_thread::sleep_for(std::chrono::nanoseconds(100));
 	}
 
-	std::lock_guard<std::mutex> lock(m_in_samples_mtx);
+	std::unique_lock<std::mutex> lock(m_in_samples_mtx);
 	for (unsigned int i = 0; i < samples && i < m_in_samples_buf.size(); i++) {
 		buf.push_back(m_in_samples_buf.front());
 		m_in_samples_buf.pop();
 	}
+	lock.unlock();
 
 	// If a data overflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap read() in order
@@ -486,8 +486,9 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != 0 && channel != 1)
 		return -ENODEV;
 
-	std::lock_guard<std::mutex> lock(m_out_samples_mtx[channel]);
+	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
+	lock.unlock();
 
 	// Start one thread per channel to push samples onto the output queue.
 	if (!m_out_samples_thr[channel].joinable()) {
@@ -544,6 +545,8 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 			m_in_sampleno++;
 			while (!m_in_samples_q.push(samples));
 		}
+		// notify read thread of available samples per chunk
+		m_in_samples_avail.notify_one();
 	}
 }
 
