@@ -411,7 +411,7 @@ static void read_samples(
 	std::unique_lock<std::mutex> lk(mtx);
 	while (true) {
 		while (!q.pop(sample))
-			cv.wait(lk, [&q]{return q.read_available();});
+			cv.wait(lk);
 		buf.push(sample);
 	}
 }
