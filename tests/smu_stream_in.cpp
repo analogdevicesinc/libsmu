@@ -45,9 +45,6 @@ int main(int argc, char **argv)
 	dev->set_mode(0, SVMI);
 	dev->set_mode(1, SVMI);
 
-	// Run session at the default device rate.
-	session->configure(dev->get_default_rate());
-
 	// Run session in continuous mode.
 	session->start(0);
 
