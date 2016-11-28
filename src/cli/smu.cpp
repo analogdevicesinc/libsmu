@@ -70,20 +70,22 @@ static void stream_samples(Session* session)
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
+	unsigned dev_index;
 
 	while (true) {
-		try {
-			dev->read(buf, 1024);
-		} catch (const std::system_error& e) {
-			// Ignore sample drops which will occur due to the use of printf()
-			// which is slow when attached to a terminal.
-		} catch (const std::runtime_error& e) {
-			cout << "smu: stopping stream: " << e.what() << endl;
-			break;
-		}
+		dev_index = 0;
+		for (auto dev: session->m_devices) {
+			try {
+				dev->read(buf, 1024);
+			} catch (const std::runtime_error& e) {
+				cerr << "smu: stopping stream: " << e.what() << endl;
+				return;
+			}
 
-		for (auto i: buf) {
-			printf("%f %f %f %f\n", i[0], i[1], i[2], i[3]);
+			for (auto x: buf) {
+				printf("dev %u: %f %f %f %f\n", dev_index, x[0], x[1], x[2], x[3]);
+			}
+			dev_index++;
 		}
 	};
 }
