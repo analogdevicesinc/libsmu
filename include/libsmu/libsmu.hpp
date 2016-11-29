@@ -93,7 +93,7 @@ enum Dest {
 
 /// @brief Supported channel modes.
 enum Mode {
-	DISABLED, ///< Channel is disabled.
+	HI_Z, ///< Channel is floating.
 	SVMI, ///< Source voltage, measure current.
 	SIMV, ///< Source current, measure voltage.
 };

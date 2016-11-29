@@ -321,7 +321,7 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	float val;
 	int v = 32768 * 4 / 5;
 
-	if (m_mode[channel] != DISABLED)
+	if (m_mode[channel] != HI_Z)
 		while (!m_out_samples_q[channel]->pop(val));
 
 	if (m_mode[channel] == SVMI) {
@@ -593,7 +593,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	switch (mode) {
 		case SIMV: pset = 0x7f7f; break;
 		case SVMI: pset = 0x0000; break;
-		case DISABLED:
+		case HI_Z:
 		default: pset = 0x3000;
 	};
 
@@ -701,10 +701,10 @@ int M1000_Device::cancel()
 int M1000_Device::off()
 {
 	int ret = 0;
-	ret = set_mode(CHAN_A, DISABLED);
+	ret = set_mode(CHAN_A, HI_Z);
 	if (ret < 0)
 		return ret;
-	ret = set_mode(CHAN_B, DISABLED);
+	ret = set_mode(CHAN_B, HI_Z);
 	if (ret < 0)
 		return ret;
 

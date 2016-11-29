@@ -26,7 +26,7 @@ cdef extern from "Python.h" nogil:
 # import methods once sourcing the C++ definition directly is supported.
 class Mode(Enum):
     """Available modes for channels."""
-    DISABLED = 0 # floating
+    HI_Z = 0 # floating
     SVMI = 1 # source voltage, measure current
     SIMV = 2 # source current, measure voltage
 
@@ -483,7 +483,7 @@ cdef class Channel:
         >>> session.add_all()
         >>> dev = session.devices[0]
         >>> print(dev.channels['A'].mode)
-        Mode.DISABLED
+        Mode.HI_Z
         >>> dev.channels['A'].mode = Mode.SVMI
         >>> print(dev.channels['A'].mode)
         Mode.SVMI

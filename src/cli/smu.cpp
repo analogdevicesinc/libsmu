@@ -60,7 +60,7 @@ static void stream_samples(Session* session)
 	auto dev = *(session->m_devices.begin());
 	auto dev_info = dev->info();
 	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
-		dev->set_mode(ch_i, DISABLED);
+		dev->set_mode(ch_i, HI_Z);
 	}
 
 	session->hotplug_detach([=](Device* device, void* data){

@@ -84,8 +84,8 @@ def stream_data(session, args):
 
     if session.devices:
         dev = session.devices[0]
-        dev.channels['A'].mode = pysmu.Mode.DISABLED
-        dev.channels['B'].mode = pysmu.Mode.DISABLED
+        dev.channels['A'].mode = pysmu.Mode.HI_Z
+        dev.channels['B'].mode = pysmu.Mode.HI_Z
         session.start(0)
 
         while True:
