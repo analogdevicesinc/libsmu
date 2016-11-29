@@ -298,35 +298,6 @@ cdef class Device:
                 for x in self.read(10000):
                     yield x
 
-    def set_mode(self, channel, mode):
-        """Set the mode of the specified channel.
-
-        Args:
-            channel (0 or 1): the selected channel
-            mode: the requested mode (this must be one of the options from the
-                Mode enum)
-
-        Example usage: Set source voltage, measure current for the first
-            channel and source current, measure voltage for the second.
-
-        >>> from pysmu import Session, Mode
-        >>> session = Session()
-        >>> session.add_all()
-        >>> dev = session.devices[0]
-        >>> dev.set_mode(0, Mode.SVMI)
-        >>> dev.set_mode(1, Mode.SIMV)
-
-        Raises: ValueError if an invalid mode is passed.
-        Raises: DeviceError on failure.
-        """
-        if mode not in Mode:
-            raise ValueError('invalid mode: {}'.format(mode))
-
-        cdef int errcode
-        errcode = self._device.set_mode(channel, mode.value)
-        if errcode:
-            raise DeviceError('failed setting mode {}: '.format(mode), errcode)
-
     def write(self, data, channel, cyclic=False):
         """Write data to a specified channel of the device.
 
@@ -520,9 +491,18 @@ cdef class Channel:
         Raises: DeviceError on failure.
         """
         def __get__(self):
-            return Mode(self.dev.get_mode())
+            cdef int mode
+            mode = self.dev._device.get_mode(self.chan)
+            return Mode(mode)
+
         def __set__(self, mode):
-            self.dev.set_mode(self.chan, mode)
+            if mode not in Mode:
+                raise ValueError('invalid mode: {}'.format(mode))
+
+            cdef int errcode
+            errcode = self.dev._device.set_mode(self.chan, mode.value)
+            if errcode:
+                raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
     def read(self, num_samples, timeout=0):
         """Acquire samples from a channel."""
