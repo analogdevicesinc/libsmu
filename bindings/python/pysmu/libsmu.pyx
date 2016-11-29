@@ -1,8 +1,8 @@
 # distutils: language = c++
 
-from libcpp.vector cimport vector
+from collections import OrderedDict
 
-cimport cpp_libsmu
+from libcpp.vector cimport vector
 
 # enum is only in py34 and up, use vendored backport if the system doesn't have
 # it available for py27
@@ -11,6 +11,7 @@ try:
 except ImportError:
     from ._vendor.enum import Enum
 
+cimport cpp_libsmu
 from .array cimport array
 from .exceptions import SessionError, DeviceError
 
@@ -249,13 +250,13 @@ cdef class Session:
 cdef class Device:
     # pointer to the underlying C++ smu::Device object
     cdef cpp_libsmu.Device *_device
-    cdef readonly dict channels
+    cdef readonly object channels
 
     def __init__(self):
-        self.channels = {
-            'A': Channel(self, 0),
-            'B': Channel(self, 1),
-        }
+        self.channels = OrderedDict([
+            ('A', Channel(self, 0)),
+            ('B', Channel(self, 1)),
+        ])
 
     @staticmethod
     cdef _create(cpp_libsmu.Device *device) with gil:
