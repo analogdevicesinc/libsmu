@@ -334,6 +334,11 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		virtual int set_mode(unsigned channel, unsigned mode) = 0;
 
+		/// @brief Get the mode of the specified channel.
+		/// @param channel An unsigned integer relating to the requested channel.
+		/// @return The mode of the specified channel.
+		virtual int get_mode(unsigned channel) = 0;
+
 		/// @brief Get all signal samples from a device.
 		/// @param buf Buffer object to store sample values into.
 		/// @param samples Number of samples to read.

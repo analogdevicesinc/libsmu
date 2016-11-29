@@ -612,6 +612,11 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	return ret;
 }
 
+int M1000_Device::get_mode(unsigned channel)
+{
+	return m_mode[channel];
+}
+
 int M1000_Device::fwver_sem(std::array<unsigned, 3>& components)
 {
 	components = {0, 0, 0};
