@@ -27,14 +27,16 @@ if __name__ == '__main__':
 
     if session.devices:
         dev = session.devices[0]
-        dev.set_mode(0, Mode.SVMI)
-        dev.set_mode(1, Mode.SVMI)
-        #dev.set_mode(0, Mode.SIMV)
-        #dev.set_mode(1, Mode.SIMV)
+        chan_a = dev.channels['A']
+        chan_b = dev.channels['B']
+        chan_a.mode = Mode.SVMI
+        chan_b.mode = Mode.SVMI
+        #chan_a.mode = Mode.SIMV
+        #chan_b.mode = Mode.SIMV
         session.start(0)
         while True:
-            dev.write(refill_data(), 0)
-            dev.write(refill_data(), 1)
+            chan_a.write(refill_data())
+            chan_b.write(refill_data())
             samples = dev.read(10000)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))

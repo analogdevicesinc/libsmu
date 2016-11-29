@@ -84,13 +84,13 @@ def stream_data(session, args):
 
     if session.devices:
         dev = session.devices[0]
-        dev.set_mode(0, pysmu.Mode.DISABLED)
-        dev.set_mode(1, pysmu.Mode.DISABLED)
+        dev.channels['A'].mode = pysmu.Mode.DISABLED
+        dev.channels['B'].mode = pysmu.Mode.DISABLED
         session.start(0)
 
         while True:
             for x in dev.samples:
-                print("{:6f} {:6f} {:6f} {:6f}".format(*x))
+                print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         pprint('no devices attached')
         sys.exit(1)
