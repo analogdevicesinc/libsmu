@@ -47,6 +47,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         const char* fwver()
         const char* hwver()
         int set_mode(int channel, int mode)
+        int get_mode(int channel)
         int fwver_sem(array[unsigned, three]& components)
         ssize_t read(vector[array[float, four]]& buf, size_t samples, int timeout) except +
         int write(vector[float]& buf, unsigned channel, bint cyclic) except +

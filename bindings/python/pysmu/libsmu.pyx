@@ -501,26 +501,28 @@ cdef class Channel:
         self.dev = device
         self.chan = channel
 
-    def set_mode(self, mode):
-        """Set the mode of the channel.
+    property mode:
+        """Get/set the mode of the channel.
 
-        Args:
-            mode: the requested mode (this must be one of the options from the
-                Mode enum)
-
-        Example usage: Set source voltage, measure current for the channel.
+        Example usage:
 
         >>> from pysmu import Session, Mode
         >>> session = Session()
         >>> session.add_all()
         >>> dev = session.devices[0]
-        >>> chan_a = dev.channels['A']
-        >>> chan_a.set_mode(Mode.SIMV)
+        >>> print(dev.channels['A'].mode)
+        Mode.DISABLED
+        >>> dev.channels['A'].mode = Mode.SVMI
+        >>> print(dev.channels['A'].mode)
+        Mode.SVMI
 
         Raises: ValueError if an invalid mode is passed.
         Raises: DeviceError on failure.
         """
-        self.dev.set_mode(self.chan, mode)
+        def __get__(self):
+            return Mode(self.dev.get_mode())
+        def __set__(self, mode):
+            self.dev.set_mode(self.chan, mode)
 
     def read(self, num_samples, timeout=0):
         """Acquire samples from a channel."""
