@@ -255,14 +255,12 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
 		// Store exceptions to rethrow them in the main thread in read()/write().
 		try {
-			handle_out_transfer(t);
+			if (!m_session->cancelled())
+				submit_out_transfer(t);
 		} catch (...) {
 			e_ptr = std::current_exception();
 		}
 
-		if (!m_session->cancelled()) {
-			submit_out_transfer(t);
-		}
 	} else if (t->status != LIBUSB_TRANSFER_CANCELLED) {
 		 m_session->handle_error(t->status, "M1000_Device::out_completion");
 	}
@@ -371,6 +369,7 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 {
 	int ret;
 	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
+		handle_out_transfer(t);
 		ret = libusb_submit_transfer(t);
 		if (ret != 0) {
 			m_out_transfers.failed(t);
