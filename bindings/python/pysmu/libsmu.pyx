@@ -310,10 +310,7 @@ cdef class Device:
         Raises: DeviceError on writing failures.
         """
         cdef int errcode
-        cdef vector[float] buf
-
-        for x in data:
-            buf.push_back(x)
+        cdef vector[float] buf = data
 
         try:
             errcode = self._device.write(buf, channel, cyclic)
