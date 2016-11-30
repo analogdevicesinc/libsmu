@@ -117,12 +117,6 @@ def flash(session, args):
     """Flash a device's firmware."""
     session.add_all()
 
-    if not session.devices:
-        pprint('no supported devices are plugged in', file=sys.stderr)
-        sys.exit(1)
-    else:
-        dev = session.devices[0]
-
     flashed = False
     fw_url = None
     version = None
@@ -185,9 +179,14 @@ def flash(session, args):
                 pprint('updating to github release: {}'.format(version))
                 temp_fw = tempfile.NamedTemporaryFile().name
                 urlretrieve(fw_url, temp_fw)
-                session.flash_firmware(temp_fw, dev)
+                try:
+                    session.flash_firmware(temp_fw)
+                except pysmu.SessionError as e:
+                    pprint(str(e))
+                    sys.exit(1)
+                finally:
+                    os.remove(temp_fw)
                 flashed = True
-                os.remove(temp_fw)
 
     if flashed:
         pprint('successfully updated firmware, please unplug and replug the device')
