@@ -296,7 +296,7 @@ cdef class Device:
         """Iterable of continuous sampling."""
         def __get__(self):
             while True:
-                for x in self.read(10000):
+                for x in self.read(1000):
                     yield x
 
     def write(self, data, channel, cyclic=False):
@@ -518,7 +518,7 @@ cdef class Channel:
         """Iterable of continuous sampling."""
         def __get__(self):
             while True:
-                for x in self.read(10000):
+                for x in self.read(1000):
                     yield x
 
     def arbitrary(self, waveform, repeat=False):
@@ -533,5 +533,5 @@ cdef class Channel:
 
     def constant(self, value):
         """Set output to a constant waveform."""
-        data = [value] * 10000
+        data = [value] * 1000
         self.write(data, True)
