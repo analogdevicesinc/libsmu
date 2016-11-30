@@ -85,7 +85,6 @@ getDevInfo(PyObject* self, PyObject* args)
 		PyObject* dev_data = PyDict_New();
 		for (unsigned chan=0; chan < dev_info->channel_count; chan++) {
 			auto chan_info = dev->channel_info(chan);
-			dev->set_mode(chan, 1);
 			PyObject* sigs = PyList_New(0);
 
 			for (unsigned sig=0; sig < chan_info->signal_count; sig++) {
