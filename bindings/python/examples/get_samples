@@ -8,7 +8,7 @@ from __future__ import print_function
 import sys
 import time
 
-from pysmu import Session
+from pysmu import Session, Mode
 
 
 if __name__ == '__main__':
@@ -17,6 +17,12 @@ if __name__ == '__main__':
 
     if not session.devices:
         sys.exit()
+
+    for dev in session.devices:
+        dev.channels['A'].mode = Mode.SVMI
+        dev.channels['A'].constant(4)
+        dev.channels['B'].mode = Mode.SIMV
+        dev.channels['B'].constant(-.2)
 
     session.run(10)
 
