@@ -87,7 +87,7 @@ cdef class Session:
             return tuple(Device._create(d) for d in self._session.m_devices)
 
     property active_devices:
-        """Devices that are currently active (streaming data) in this session."""
+        """Number of devices that are currently active (streaming data) in this session."""
         def __get__(self):
             return self._session.m_active_devices
 

@@ -12,9 +12,11 @@ from pysmu import Session
 
 
 def attached(dev):
+    """Run when a device is plugged in."""
     print('device attached: {}'.format(dev))
 
 def detached(dev):
+    """Run when a device is unplugged."""
     print('device detached: {}'.format(dev))
 
 
