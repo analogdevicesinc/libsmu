@@ -183,12 +183,25 @@ namespace smu {
 
 		/// @brief Run the currently configured capture and wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
+		///
+		/// Note that the number of samples actually captured will be the
+		/// nearest multiple of the amount of samples per USB packet larger than
+		/// the request amount of samples.
+		///
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative errno code is returned.
 		int run(uint64_t samples);
 
 		/// @brief Start the currently configured capture, but do not wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
+		///
+		/// Note that the number of samples actually captured will be the
+		/// nearest multiple of the amount of samples per USB packet larger than
+		/// the request amount of samples.
+		///
 		/// Once started, the only allowed Session methods are cancel() and end()
 		/// until the session has stopped.
+		///
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		int start(uint64_t samples);
