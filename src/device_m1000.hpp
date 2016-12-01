@@ -124,6 +124,11 @@ namespace smu {
 		// @param chan Target channel index.
 		uint16_t encode_out(unsigned chan);
 
+		// samples per clock
+		int m_sam_per = 0;
+		// minimum samples per clock
+		const int m_min_per = 0x18;
+
 		unsigned m_packets_per_transfer;
 		Transfers m_in_transfers;
 		Transfers m_out_transfers;
