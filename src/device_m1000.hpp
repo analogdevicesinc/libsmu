@@ -73,10 +73,10 @@ namespace smu {
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
 		boost::lockfree::spsc_queue<std::array<float, 4>> m_in_samples_q;
 
-		// Read buffer.
-		std::vector<std::array<float, 4>> m_in_samples_buf;
-		std::mutex m_in_samples_mtx;
-		std::condition_variable m_in_samples_avail;
+		// Number of samples available for reading.
+		// TODO: Drop this when stable distros contain >= boost-1.57 with
+		// read_available() and write_available() calls for the spsc queue.
+		std::atomic<uint32_t> m_in_samples_avail;
 
 		// Threads used to read incoming samples values;
 		std::thread m_in_samples_thr;
@@ -103,6 +103,7 @@ namespace smu {
 			},
 			m_mode{0,0},
 			m_in_samples_q{s->m_queue_size},
+			m_in_samples_avail{0},
 			_out_samples_a_q{s->m_queue_size},
 			_out_samples_b_q{s->m_queue_size}
 			{}

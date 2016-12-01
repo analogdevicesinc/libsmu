@@ -397,42 +397,10 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
-// Function run in the read thread to pull samples from the device into the
-// requested buffer.
-static void read_samples(
-		boost::lockfree::spsc_queue<std::array<float, 4>>& q,
-		std::vector<std::array<float, 4>>& buf,
-		std::mutex& mtx,
-		std::condition_variable& cv)
-{
-	std::array<float, 4> sample;
-	std::unique_lock<std::mutex> lk(mtx);
-	while (true) {
-		while (!q.pop(sample)) {
-			// wait for samples to be available
-			cv.wait(lk);
-		}
-		buf.push_back(sample);
-	}
-}
-
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
-	// Start a singular read thread to push acquired samples to the user.
-	if (!m_in_samples_thr.joinable()) {
-		std::thread t(
-			read_samples,
-			std::ref(m_in_samples_q),
-			std::ref(m_in_samples_buf),
-			std::ref(m_in_samples_mtx),
-			std::ref(m_in_samples_avail));
-
-		// store spawned thread ID
-		std::swap(t, m_in_samples_thr);
-	}
-
 	auto clk_start = std::chrono::high_resolution_clock::now();
-	while (timeout && m_in_samples_buf.size() < samples) {
+	while (timeout && m_in_samples_avail < samples) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
 		// Stop waiting for samples if we've run out of time.
@@ -441,15 +409,25 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	std::unique_lock<std::mutex> lock(m_in_samples_mtx);
-	if (m_in_samples_buf.size()) {
-		buf.clear();
-		auto available = (samples < m_in_samples_buf.size()) ? samples : m_in_samples_buf.size();
-		auto it = std::next(m_in_samples_buf.begin(), available);
-		std::move(m_in_samples_buf.begin(), it, std::back_inserter(buf));
-		m_in_samples_buf.erase(m_in_samples_buf.begin(), it);
+	buf.clear();
+
+	// no samples are available
+	if (!m_in_samples_avail)
+		return 0;
+
+	uint64_t available;
+	std::array<float, 4> sample;
+
+	if (samples < m_in_samples_avail)
+		available = samples;
+	else
+		available = m_in_samples_avail;
+
+	for (uint32_t i = 0; i < available; i++) {
+		m_in_samples_q.pop(sample);
+		m_in_samples_avail--;
+		buf.push_back(sample);
 	}
-	lock.unlock();
 
 	// If a data overflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap read() in order
@@ -547,7 +525,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 			if (!m_in_samples_q.push(samples)) {
 				throw std::system_error(EBUSY, std::system_category(), "dropped input sample");
 			} else {
-				m_in_samples_avail.notify_one();
+				m_in_samples_avail++;
 			}
 		}
 	}
