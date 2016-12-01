@@ -293,6 +293,7 @@ int M1000_Device::configure(uint64_t sampleRate)
 
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
+	m_samples_per_transfer = m_packets_per_transfer * IN_SAMPLES_PER_PACKET;
 
 	ret = m_in_transfers.alloc(transfers, m_usb, EP_IN, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer * in_packet_size, 10000, m1000_in_completion, this);
@@ -366,7 +367,7 @@ void M1000_Device::handle_out_transfer(libusb_transfer* t)
 int M1000_Device::submit_out_transfer(libusb_transfer* t)
 {
 	int ret;
-	if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
+	if (m_sample_count == 0 || m_out_sampleno < m_required_sample_count) {
 		handle_out_transfer(t);
 		ret = libusb_submit_transfer(t);
 		if (ret != 0) {
@@ -383,7 +384,7 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 int M1000_Device::submit_in_transfer(libusb_transfer* t)
 {
 	int ret;
-	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
+	if (m_sample_count == 0 || m_requested_sampleno < m_required_sample_count) {
 		ret = libusb_submit_transfer(t);
 		if (ret != 0) {
 			m_in_transfers.failed(t);
@@ -391,7 +392,7 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 			return ret;
 		}
 		m_in_transfers.num_active++;
-		m_requested_sampleno += m_packets_per_transfer * IN_SAMPLES_PER_PACKET;
+		m_requested_sampleno += m_samples_per_transfer;
 		return 0;
 	}
 	return -1;
@@ -674,6 +675,8 @@ int M1000_Device::run(uint64_t samples)
 	}
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
+	m_required_sample_count = (uint64_t)(
+		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
 	for (auto i: m_in_transfers) {

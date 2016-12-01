@@ -129,6 +129,7 @@ namespace smu {
 		// minimum samples per clock
 		const int m_min_per = 0x18;
 
+		unsigned m_samples_per_transfer;
 		unsigned m_packets_per_transfer;
 		Transfers m_in_transfers;
 		Transfers m_out_transfers;
@@ -138,6 +139,10 @@ namespace smu {
 
 		// Number of requested samples.
 		uint64_t m_sample_count = 0;
+		// Number of required samples to be able to return the requested
+		// samples. This will be a multiple of the number of samples that are
+		// transferred in a USB packet.
+		uint64_t m_required_sample_count = 0;
 
 		// Override virtual methods of the base Device class.
 		int get_default_rate() override;
