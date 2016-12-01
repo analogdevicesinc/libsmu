@@ -18,7 +18,6 @@
 #include <functional>
 #include <iterator>
 #include <mutex>
-#include <queue>
 #include <system_error>
 #include <stdexcept>
 #include <thread>
@@ -402,7 +401,7 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 // requested buffer.
 static void read_samples(
 		boost::lockfree::spsc_queue<std::array<float, 4>>& q,
-		std::queue<std::array<float, 4>>& buf,
+		std::vector<std::array<float, 4>>& buf,
 		std::mutex& mtx,
 		std::condition_variable& cv)
 {
@@ -413,14 +412,12 @@ static void read_samples(
 			// wait for samples to be available
 			cv.wait(lk);
 		}
-		buf.push(sample);
+		buf.push_back(sample);
 	}
 }
 
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
-	buf.clear();
-
 	// Start a singular read thread to push acquired samples to the user.
 	if (!m_in_samples_thr.joinable()) {
 		std::thread t(
@@ -445,9 +442,12 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	}
 
 	std::unique_lock<std::mutex> lock(m_in_samples_mtx);
-	for (unsigned int i = 0; i < samples && i < m_in_samples_buf.size(); i++) {
-		buf.push_back(m_in_samples_buf.front());
-		m_in_samples_buf.pop();
+	if (m_in_samples_buf.size()) {
+		buf.clear();
+		auto available = (samples < m_in_samples_buf.size()) ? samples : m_in_samples_buf.size();
+		auto it = std::next(m_in_samples_buf.begin(), available);
+		std::move(m_in_samples_buf.begin(), it, std::back_inserter(buf));
+		m_in_samples_buf.erase(m_in_samples_buf.begin(), it);
 	}
 	lock.unlock();
 

@@ -10,7 +10,6 @@
 #include <array>
 #include <condition_variable>
 #include <mutex>
-#include <queue>
 #include <vector>
 
 #include <boost/lockfree/spsc_queue.hpp>
@@ -75,7 +74,7 @@ namespace smu {
 		boost::lockfree::spsc_queue<std::array<float, 4>> m_in_samples_q;
 
 		// Read buffer.
-		std::queue<std::array<float, 4>> m_in_samples_buf;
+		std::vector<std::array<float, 4>> m_in_samples_buf;
 		std::mutex m_in_samples_mtx;
 		std::condition_variable m_in_samples_avail;
 
