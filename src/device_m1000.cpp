@@ -431,14 +431,14 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		std::swap(t, m_in_samples_thr);
 	}
 
-	// Stop waiting for samples if we've run out of time.
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (timeout && m_in_samples_buf.size() < samples) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+		// Stop waiting for samples if we've run out of time.
 		if (timeout >= 0 && clk_diff.count() > timeout)
 			break;
-		std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
 	std::unique_lock<std::mutex> lock(m_in_samples_mtx);
