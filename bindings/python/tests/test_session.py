@@ -16,7 +16,7 @@ from misc import prompt, OLD_FW_URL, NEW_FW_URL, OLD_FW, NEW_FW
 
 @pytest.yield_fixture(scope='function')
 def session():
-    s = Session()
+    s = Session(add_all=False)
     yield s
 
 def test_empty(session):

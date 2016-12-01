@@ -15,7 +15,6 @@ if __name__ == '__main__':
     signal(SIGINT, SIG_DFL)
 
     session = Session()
-    session.add_all()
 
     if not session.devices:
         sys.exit()

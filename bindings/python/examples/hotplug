@@ -27,7 +27,6 @@ if __name__ == '__main__':
     session = Session()
     session.hotplug_attach(attached)
     session.hotplug_detach(detached)
-    session.add_all()
 
     print('waiting for hotplug events...')
     while True:

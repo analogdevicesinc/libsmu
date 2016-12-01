@@ -13,7 +13,6 @@ from pysmu import Session, Mode
 
 if __name__ == '__main__':
     session = Session()
-    session.add_all()
 
     if not session.devices:
         sys.exit()

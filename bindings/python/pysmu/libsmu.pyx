@@ -52,6 +52,15 @@ cdef class Session:
         # initialize/acquire the GIL
         PyEval_InitThreads()
 
+    def __init__(self, add_all=True):
+        """Initialize a session.
+
+        Attributes:
+            add_all (bool): Add all attached devices to the session on initialization.
+        """
+        if add_all:
+            self.add_all()
+
     def hotplug_attach(self, func):
         """Register a function to run on a device attach event.
 
@@ -473,11 +482,10 @@ cdef class Channel:
     property mode:
         """Get/set the mode of the channel.
 
-        Example usage:
+        Example usage with at least one device plugged in:
 
         >>> from pysmu import Session, Mode
         >>> session = Session()
-        >>> session.add_all()
         >>> dev = session.devices[0]
         >>> print(dev.channels['A'].mode)
         Mode.HI_Z

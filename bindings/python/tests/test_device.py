@@ -11,7 +11,7 @@ from misc import prompt, NEW_FW_URL, OLD_FW_URL, OLD_FW, NEW_FW
 
 @pytest.fixture(scope='module')
 def session(request):
-    session = Session()
+    session = Session(add_all=False)
     session.scan()
     return session
 

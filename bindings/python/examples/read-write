@@ -23,7 +23,6 @@ if __name__ == '__main__':
     signal(SIGINT, SIG_DFL)
 
     session = Session()
-    session.add_all()
 
     if session.devices:
         dev = session.devices[0]
