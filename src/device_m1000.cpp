@@ -318,7 +318,9 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	int v = 32768 * 4 / 5;
 
 	if (m_mode[channel] != HI_Z)
-		while (!m_out_samples_q[channel]->pop(val));
+		while (!m_out_samples_q[channel]->pop(val)) {
+			std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+		};
 
 	if (m_mode[channel] == SVMI) {
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
@@ -450,8 +452,11 @@ static void write_samples(
 	std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
 	while (true) {
 		lk.lock();
-		for (auto x: buf)
-			while (!q.push(x));
+		for (auto x: buf) {
+			while (!q.push(x)) {
+				std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+			}
+		}
 		if (!cyclic)
 			buf.clear();
 		lk.unlock();
