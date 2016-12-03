@@ -85,13 +85,6 @@ enum Src {
 	SRC_CALLBACK, ///< Use samples from a specified callback function.
 };
 
-/// @brief Supported signal destinations.
-enum Dest {
-	DEST_DEFAULT, ///< Samples are pushed into a FIFO buffer.
-	DEST_BUFFER, ///< Samples are buffered into a specified location.
-	DEST_CALLBACK, ///< Samples are passed to a specified callback function.
-};
-
 /// @brief Supported channel modes.
 enum Mode {
 	HI_Z, ///< Channel is floating.
