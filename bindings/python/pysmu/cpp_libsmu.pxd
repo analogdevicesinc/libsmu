@@ -2,6 +2,7 @@
 # distutils: language = c++
 
 from libcpp.set cimport set
+from libcpp.string cimport string
 from libcpp.vector cimport vector
 
 from .array cimport array
@@ -43,9 +44,10 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         void hotplug_detach(void (Device *dev, void *data) nogil, void *data)
 
     cdef cppclass Device:
-        const char* serial()
-        const char* fwver()
-        const char* hwver()
+        string m_serial
+        string m_fwver
+        string m_hwver
+
         int set_mode(int channel, int mode)
         int get_mode(int channel)
         int fwver_sem(array[unsigned, three]& components)

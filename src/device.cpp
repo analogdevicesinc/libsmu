@@ -12,7 +12,9 @@
 
 using namespace smu;
 
-Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d)
+Device::Device(Session* s, libusb_device* d, libusb_device_handle *h,
+	const char* hwver, const char* fwver, const char* serial):
+	m_hwver(hwver), m_fwver(fwver), m_serial(serial), m_session(s), m_device(d), m_usb(h)
 {
 	libusb_ref_device(m_device);
 }

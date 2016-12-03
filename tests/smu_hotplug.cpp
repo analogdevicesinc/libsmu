@@ -28,8 +28,8 @@ int main(int argc, char **argv)
 		session->cancel();
 		if (!session->remove(device, true)) {
 			printf("removed device: %s: serial %s: fw %s: hw %s\n",
-				device->info()->label, device->serial(),
-				device->fwver(), device->hwver());
+				device->info()->label, device->m_serial.c_str(),
+				device->m_fwver.c_str(), device->m_hwver.c_str());
 			detached = true;
 		}
 	});
@@ -38,8 +38,8 @@ int main(int argc, char **argv)
 	session->hotplug_attach([=](Device* device, void* data){
 		if (!session->add(device)) {
 			printf("added device: %s: serial %s: fw %s: hw %s\n",
-				device->info()->label, device->serial(),
-				device->fwver(), device->hwver());
+				device->info()->label, device->m_serial.c_str(),
+				device->m_fwver.c_str(), device->m_hwver.c_str());
 			attached = true;
 		}
 	});

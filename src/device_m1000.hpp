@@ -101,8 +101,9 @@ namespace smu {
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];
 
-		M1000_Device(Session* s, libusb_device* usb_dev):
-			Device(s, usb_dev),
+		M1000_Device(Session* s, libusb_device* d, libusb_device_handle* h,
+				const char* hw_version, const char* fw_version, const char* serial):
+			Device(s, d, h, hw_version, fw_version, serial),
 			m_signals {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},

@@ -34,8 +34,8 @@ static void list_devices(Session* session)
 	} else {
 		for (auto dev: session->m_devices) {
 			printf("%s: serial %s: fw %s: hw %s\n",
-					dev->info()->label, dev->serial(),
-					dev->fwver(), dev->hwver());
+					dev->info()->label, dev->m_serial.c_str(),
+					dev->m_fwver.c_str(), dev->m_hwver.c_str());
 		}
 	}
 }
@@ -112,8 +112,8 @@ void display_calibration(Session* session)
 	std::vector<std::vector<float>> cal;
 	for (auto dev: session->m_devices) {
 		printf("%s: serial %s: fw %s: hw %s\n",
-			dev->info()->label, dev->serial(),
-			dev->fwver(), dev->hwver());
+			dev->info()->label, dev->m_serial.c_str(),
+			dev->m_fwver.c_str(), dev->m_hwver.c_str());
 		dev->calibration(&cal);
 		for (int i = 0; i < 8; i++) {
 			switch (i) {
@@ -190,16 +190,16 @@ int main(int argc, char **argv)
 					session->cancel();
 					if (!session->remove(device, true)) {
 						printf("removed device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->serial(),
-							device->fwver(), device->hwver());
+							device->info()->label, device->m_serial.c_str(),
+							device->m_fwver.c_str(), device->m_hwver.c_str());
 					}
 				});
 
 				session->hotplug_attach([=](Device* device, void* data){
 					if (!session->add(device)) {
 						printf("added device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->serial(),
-							device->fwver(), device->hwver());
+							device->info()->label, device->m_serial.c_str(),
+							device->m_fwver.c_str(), device->m_hwver.c_str());
 					}
 				});
 

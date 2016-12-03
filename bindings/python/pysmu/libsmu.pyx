@@ -277,17 +277,17 @@ cdef class Device:
     property serial:
         """Return device's serial number."""
         def __get__(self):
-            return self._device.serial().decode()
+            return self._device.m_serial.decode()
 
     property fwver:
         """Return device's firmware revision."""
         def __get__(self):
-            return self._device.fwver().decode()
+            return self._device.m_fwver.decode()
 
     property hwver:
         """Return device's hardware revision."""
         def __get__(self):
-            return self._device.hwver().decode()
+            return self._device.m_hwver.decode()
 
     property calibration:
         """Read calibration data from the device's EEPROM."""

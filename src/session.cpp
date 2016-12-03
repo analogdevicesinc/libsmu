@@ -328,7 +328,7 @@ int Session::destroy(Device *dev)
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	if (dev) {
 		for (unsigned i = 0; i < m_available_devices.size(); i++) {
-			if (m_available_devices[i]->serial() == dev->serial()) {
+			if (m_available_devices[i]->m_serial.compare(dev->m_serial) == 0) {
 				m_available_devices.erase(m_available_devices.begin() + i);
 				return 0;
 			}
@@ -366,39 +366,44 @@ int Session::scan()
 
 Device* Session::probe_device(libusb_device* usb_dev)
 {
+	int ret;
 	Device* dev = find_existing_device(usb_dev);
 
 	libusb_device_descriptor usb_desc;
-	int r = libusb_get_device_descriptor(usb_dev, &usb_desc);
-	if (r != 0) {
-		DEBUG("Error %i in get_device_descriptor\n", r);
+	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
+	if (ret != 0) {
+		DEBUG("Error %i in get_device_descriptor\n", ret);
 		return NULL;
 	}
 
+	// check if device is supported
 	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
 	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
 			!= SUPPORTED_DEVICES.end()) {
-		dev = new M1000_Device(this, usb_dev);
-	}
+		struct libusb_device_handle *usb_handle = NULL;
 
-	if (dev) {
-		if (libusb_open(dev->m_device, &dev->m_usb) == 0) {
-			// read serial number, hardware/firmware versions from device
-			libusb_get_string_descriptor_ascii(dev->m_usb, usb_desc.iSerialNumber, (unsigned char*)&dev->m_serial, 32);
-			dev->ctrl_transfer(0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
-			dev->ctrl_transfer(0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
-			// sanity check, bad USB cables can mangle device handling
-			if ((strncmp(dev->m_fw_version, "", 1) == 0) || (strncmp(dev->m_hw_version, "", 1) == 0)) {
-				DEBUG("device has empty fw/hw version, USB cable probably has issues");
-				delete dev;
-			} else {
-				dev->read_calibration();
-				return dev;
-			}
-		} else {
-			// probably lacking permission to open the underlying usb device
-			delete dev;
-		}
+		// probably lacking permission to open the underlying usb device
+		if (libusb_open(usb_dev, &usb_handle) != 0)
+			return NULL;
+
+		char serial[32] = "";
+		char fwver[32] = "";
+		char hwver[32] = "";
+
+		// read serial number, hardware/firmware versions from device
+		libusb_get_string_descriptor_ascii(usb_handle, usb_desc.iSerialNumber, (unsigned char*)&serial, 32);
+
+		// hw/fw versions should exist otherwise the USB cable probably has issues
+		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 0, (unsigned char*)&hwver, 64, 100);
+		if (ret <= 0 || (strncmp(hwver, "", 1) == 0))
+			return NULL;
+		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 1, (unsigned char*)&fwver, 64, 100);
+		if (ret <= 0 || (strncmp(fwver, "", 1) == 0))
+			return NULL;
+
+		dev = new M1000_Device(this, usb_dev, usb_handle, hwver, fwver, serial);
+		dev->read_calibration();
+		return dev;
 	}
 	return NULL;
 }

@@ -66,7 +66,7 @@ static const sl_channel_info m1000_channel_info[2] = {
 int M1000_Device::get_default_rate()
 {
 	// rev0 firmware
-	if (strcmp(m_fw_version, "023314a*") == 0) {
+	if (m_fwver.compare("023314a*") == 0) {
 		return 62500;
 	}
 	// modern fw
@@ -279,7 +279,7 @@ int M1000_Device::configure(uint64_t sampleRate)
 
 	// If firmware version is 023314a, initial production, use 3e6 for timer clock
 	// otherwise, assume a more recent firmware, and use a faster clock.
-	if (strcmp(m_fw_version, "023314a*") == 0) {
+	if (m_fwver.compare("023314a*") == 0) {
 		M1K_timer_clock = 3e6;
 	} else {
 		M1K_timer_clock = 48e6;
@@ -345,7 +345,7 @@ void M1000_Device::handle_out_transfer(libusb_transfer* t)
 	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
 		for (unsigned i = 0; i < chunk_size; i++) {
-			if (strncmp(m_fw_version, "2.", 2) == 0) {
+			if (m_fwver.compare(0, 2, "2.") == 0) {
 				uint16_t a = encode_out(CHAN_A);
 				buf[i*4+0] = a >> 8;
 				buf[i*4+1] = a & 0xff;
@@ -507,7 +507,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
-			if (strncmp(m_fw_version, "2.", 2) == 0) {
+			if (m_fwver.compare(0, 2, "2.") == 0) {
 				v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
 				samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
 				v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
@@ -603,7 +603,7 @@ int M1000_Device::fwver_sem(std::array<unsigned, 3>& components)
 	components = {0, 0, 0};
 	std::vector<std::string> split_version;
 
-	boost::split(split_version, m_fw_version, boost::is_any_of("."), boost::token_compress_on);
+	boost::split(split_version, m_fwver, boost::is_any_of("."), boost::token_compress_on);
 	try {
 		components[0] = atoi(split_version.at(0).c_str());
 		components[1] = atoi(split_version.at(1).c_str());

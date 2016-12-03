@@ -16,6 +16,7 @@
 #include <functional>
 #include <mutex>
 #include <set>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -326,18 +327,17 @@ namespace smu {
 		/// @return The related Signal.
 		virtual Signal* signal(unsigned channel, unsigned signal) = 0;
 
-		/// @brief Get the serial number of the device.
-		virtual const char* serial() const { return m_serial; }
+		/// hardware version
+		const std::string m_hwver;
+		/// firmware version
+		const std::string m_fwver;
+		/// serial number
+		const std::string m_serial;
 
-		/// @brief Get the firmware version of the device.
-		virtual const char* fwver() const { return m_fw_version; }
 		/// @brief Get the array of firmware version components (major, minor, patch).
 		/// Note that this method assumes semantic versioning so versions such
 		/// as 2.06 will be coerced to 2.6.0, i.e. major=2, minor=6, patch=0.
 		virtual int fwver_sem(std::array<unsigned, 3>& components) = 0;
-
-		/// @brief Get the hardware version of the device.
-		virtual const char* hwver() const { return m_hw_version; }
 
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
@@ -418,7 +418,8 @@ namespace smu {
 
 	protected:
 		/// @brief Device constructor.
-		Device(Session* s, libusb_device* usb_dev);
+		Device(Session* s, libusb_device* usb_dev, libusb_device_handle* usb_handle,
+			const char* hw_version, const char* fw_version, const char* serial);
 
 		/// @brief Device claiming and initialization when a session adds this device.
 		/// @return On success, 0 is returned.
@@ -474,13 +475,6 @@ namespace smu {
 
 		/// Lock for transfer state.
 		std::mutex m_state;
-
-		/// firmware version
-		char m_fw_version[32];
-		/// hardware version
-		char m_hw_version[32];
-		/// serial number
-		char m_serial[32];
 
 		friend class Session;
 	};
