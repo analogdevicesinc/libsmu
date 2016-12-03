@@ -390,10 +390,10 @@ Device* Session::probe_device(libusb_device* usb_dev)
 		char fwver[32] = "";
 		char hwver[32] = "";
 
-		// read serial number, hardware/firmware versions from device
-		libusb_get_string_descriptor_ascii(usb_handle, usb_desc.iSerialNumber, (unsigned char*)&serial, 32);
-
-		// hw/fw versions should exist otherwise the USB cable probably has issues
+		// serial/hw/fw versions should exist otherwise the USB cable probably has issues
+		ret = libusb_get_string_descriptor_ascii(usb_handle, usb_desc.iSerialNumber, (unsigned char*)&serial, 32);
+		if (ret <= 0 || (strncmp(serial, "", 1) == 0))
+			return NULL;
 		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 0, (unsigned char*)&hwver, 64, 100);
 		if (ret <= 0 || (strncmp(hwver, "", 1) == 0))
 			return NULL;
