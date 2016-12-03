@@ -337,6 +337,7 @@ namespace smu {
 		/// @brief Get the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
 		/// @return The mode of the specified channel.
+		/// @return On error, a negative integer is returned relating to the error status.
 		virtual int get_mode(unsigned channel) = 0;
 
 		/// @brief Get all signal samples from a device.

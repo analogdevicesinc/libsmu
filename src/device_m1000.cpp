@@ -467,7 +467,7 @@ static void write_samples(
 int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 {
 	// bad channel
-	if (channel != 0 && channel != 1)
+	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
 	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
@@ -564,7 +564,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	int ret = 0;
 
 	// bad channel
-	if (channel != 0 && channel != 1)
+	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
 	m_mode[channel] = mode;
@@ -595,6 +595,10 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 
 int M1000_Device::get_mode(unsigned channel)
 {
+	// bad channel
+	if (channel != CHAN_A && channel != CHAN_B)
+		return -ENODEV;
+
 	return m_mode[channel];
 }
 
