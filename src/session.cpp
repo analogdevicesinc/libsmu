@@ -419,16 +419,6 @@ Device* Session::find_existing_device(libusb_device* usb_dev)
 	return NULL;
 }
 
-Device* Session::get_device(const char* serial)
-{
-	for (Device* dev: m_devices) {
-		if (strncmp(dev->serial(), serial, 31) == 0) {
-			return dev;
-		}
-	}
-	return NULL;
-}
-
 int Session::add(Device* device)
 {
 	int ret = -1;

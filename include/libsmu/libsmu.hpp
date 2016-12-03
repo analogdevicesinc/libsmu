@@ -149,12 +149,6 @@ namespace smu {
 		/// @return On error, a negative errno code is returned.
 		int add_all();
 
-		/// @brief Get the device matching a given serial from the session.
-		/// @param serial A string of a device's serial number.
-		/// @return On success, the matching device is returned.
-		/// @return If no match is found, NULL is returned.
-		Device* get_device(const char* serial);
-
 		/// @brief Remove a device from the session.
 		/// @param device A device to be removed from the session.
 		/// @param detached True if the device has already been detached from
