@@ -650,25 +650,38 @@ int M1000_Device::sync()
 	return ret;
 }
 
+static void run_device(M1000_Device* dev, Transfers& m_in_transfers, Transfers& m_out_transfers)
+{
+	for (auto i: m_in_transfers) {
+		if (dev->submit_in_transfer(i)) break;
+	}
+
+	for (auto i: m_out_transfers) {
+		if (dev->submit_out_transfer(i)) break;
+	}
+}
+
 int M1000_Device::run(uint64_t samples)
 {
 	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
-	if (ret < 0) {
+	if (ret < 0)
 		return -libusb_to_errno(ret);
-	}
+
 	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_required_sample_count = (uint64_t)(
 		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
-	for (auto i: m_in_transfers) {
-		if (submit_in_transfer(i)) break;
-	}
+	// Run the initial USB transfers within their own thread.
+	std::thread t(
+		run_device,
+		this,
+		std::ref(m_in_transfers),
+		std::ref(m_out_transfers));
 
-	for (auto i: m_out_transfers) {
-		if (submit_out_transfer(i)) break;
-	}
+	t.detach();
+
 	return 0;
 }
 

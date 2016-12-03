@@ -60,6 +60,12 @@ namespace smu {
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
 
+		// Submit data transfers to usb thread, from host to device.
+		int submit_out_transfer(libusb_transfer* t);
+
+		// Submit data transfers to usb thread, from device to host.
+		int submit_in_transfer(libusb_transfer* t);
+
 	protected:
 		friend class Session;
 		friend void LIBUSB_CALL m1000_in_completion(libusb_transfer *t);
@@ -107,12 +113,6 @@ namespace smu {
 			_out_samples_a_q{s->m_queue_size},
 			_out_samples_b_q{s->m_queue_size}
 			{}
-
-		// Submit data transfers to usb thread, from host to device.
-		int submit_out_transfer(libusb_transfer* t);
-
-		// Submit data transfers to usb thread, from device to host.
-		int submit_in_transfer(libusb_transfer* t);
 
 		// Reformat received data, performs integer to float conversion.
 		void handle_in_transfer(libusb_transfer* t);
