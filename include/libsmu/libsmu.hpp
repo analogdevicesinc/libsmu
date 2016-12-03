@@ -222,7 +222,7 @@ namespace smu {
 		/// used instead. If no configured devices are found, devices in SAM-BA
 		/// bootloader mode are searched for and the first matching device is used.
 		/// @throws std::runtime_error for various USB failures causing aborted flashes.
-		void flash_firmware(const char *file, Device* device = NULL);
+		void flash_firmware(std::string file, Device* device = NULL);
 
 		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();

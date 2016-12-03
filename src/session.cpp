@@ -184,7 +184,7 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 	}
 }
 
-void Session::flash_firmware(const char *file, Device *dev)
+void Session::flash_firmware(std::string file, Device *dev)
 {
 	struct libusb_device *usb_dev = NULL;
 	struct libusb_device_handle *usb_handle = NULL;
