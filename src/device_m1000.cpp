@@ -447,8 +447,14 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
+	// send signal to stop cyclic writes
+	if (m_out_samples_buf_cyclic[channel])
+		m_out_samples_stop[channel] = true;
+
 	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
+	m_out_samples_buf_cyclic[channel] = cyclic;
+	m_out_samples_stop[channel] = false;
 	lock.unlock();
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
@@ -629,6 +635,9 @@ int M1000_Device::run(uint64_t samples)
 		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
+	m_out_samples_stop[CHAN_A] = false;
+	m_out_samples_stop[CHAN_B] = false;
+
 	// Kick off USB transfers.
 	auto start_usb_transfers = [=](M1000_Device* dev) {
 		for (auto t: dev->m_in_transfers) {
@@ -647,13 +656,14 @@ int M1000_Device::run(uint64_t samples)
 		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
 		std::vector<float>& buf = dev->m_out_samples_buf[channel];
 		std::mutex& mtx = dev->m_out_samples_mtx[channel];
-		bool cyclic = false;
+		std::atomic<bool>& stop = dev->m_out_samples_stop[channel];
+		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
 		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
 		while (true) {
 			lk.lock();
 			for (auto x: buf) {
-				while (!q.push(x)) {
+				while (!stop && !q.push(x)) {
 					std::this_thread::sleep_for(std::chrono::microseconds(1));
 				}
 			}
