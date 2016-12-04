@@ -3,6 +3,7 @@
 #include <csignal>
 #include <array>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <vector>
 #include <random>
@@ -55,11 +56,11 @@ int main(int argc, char **argv)
 	// Write static, random integers between 0 and 5 to voltage channels.
 	std::random_device r;
 	std::default_random_engine rand_eng(r());
-	std::uniform_int_distribution<int> rand_v(0, 5);
+	std::uniform_int_distribution<int> rand_dist(0, 5);
+	auto rand_voltage = std::bind(rand_dist, rand_eng);
 
 	// refill Tx buffers with data
-	std::function<void(std::vector<float>& buf, unsigned size, int voltage)> refill_data;
-	refill_data = [=](std::vector<float>& buf, unsigned size, int voltage) {
+	auto refill_data = [=](std::vector<float>& buf, unsigned size, int voltage) {
 		buf.clear();
 		for (unsigned i = 0; i < size; i++) {
 			buf.push_back(voltage);
@@ -67,12 +68,12 @@ int main(int argc, char **argv)
 	};
 
 	while (true) {
-		refill_data(a_txbuf, 10000, rand_v(rand_eng));
-		refill_data(b_txbuf, 10000, rand_v(rand_eng));
+		refill_data(a_txbuf, 1000, rand_voltage());
+		refill_data(b_txbuf, 1000, rand_voltage());
 		try {
 			dev->write(a_txbuf, 0);
 			dev->write(b_txbuf, 1);
-			dev->read(rxbuf, 10000);
+			dev->read(rxbuf, 1000);
 		} catch (const std::system_error& e) {
 			// Exit on dropped samples.
 			cerr << "sample(s) dropped: " << e.what() << endl;
