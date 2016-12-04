@@ -370,6 +370,21 @@ cdef class Device:
         Args:
             num_samples (int): number of samples to read
 
+        Example usage with at least one device plugged in:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> session.run(10)
+        >>> samples = dev.get_samples(10))
+        >>> assert len(samples) == 10
+
+        Two channels worth of data.
+        >>> assert len(samples[0]) == 2
+
+        Each channel's sample contains a voltage and current value.
+        >>> assert len(samples[0][0]) == 2
+
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
         """
@@ -519,7 +534,21 @@ cdef class Channel:
         self.dev.write(data, channel=self.chan, cyclic=cyclic)
 
     def get_samples(self, num_samples):
-        """Acquire samples from a channel."""
+        """Acquire samples from a channel.
+
+        Example usage with at least one device plugged in:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> session.run(10)
+        >>> samples = chan_a.get_samples(10))
+        >>> assert len(samples) == 10
+
+        Each sample contains a voltage and current value.
+        >>> assert len(samples[0]) == 2
+        """
         return [x[self.chan] for x in self.dev.get_samples(num_samples)]
 
     property samples:
