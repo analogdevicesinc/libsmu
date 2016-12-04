@@ -308,6 +308,35 @@ cdef class Device:
                 for x in self.read(1000):
                     yield x
 
+    def read(self, num_samples, timeout=0):
+        """Acquire all signal samples from a device.
+
+        Args:
+            num_samples (int): number of samples to read
+            timeout: amount of time in milliseconds to wait for samples to be available.
+                - If 0 (the default), return immediately.
+                - If -1, block indefinitely until the requested number of samples is returned.
+
+        Raises: DeviceError on reading failures.
+        Returns: A list containing the specified number of sample values.
+        """
+        cdef ssize_t ret = 0
+        cdef vector[array[float, cpp_libsmu.four]] buf
+
+        try:
+            ret = self._device.read(buf, num_samples, timeout)
+        except SystemError as e:
+            raise DeviceError(str(e))
+        except RuntimeError as e:
+            # ignore buffer overflow exceptions
+            if not e.message.startswith('dropped '):
+                raise
+
+        if ret < 0:
+            raise DeviceError('failed reading from device', ret)
+
+        return [((x[0], x[1]), (x[2], x[3])) for x in buf]
+
     def write(self, data, channel, cyclic=False):
         """Write data to a specified channel of the device.
 
@@ -345,35 +374,6 @@ cdef class Device:
         Returns: A list containing the specified number of sample values.
         """
         return self.read(num_samples, -1)
-
-    def read(self, num_samples, timeout=0):
-        """Acquire all signal samples from a device.
-
-        Args:
-            num_samples (int): number of samples to read
-            timeout: amount of time in milliseconds to wait for samples to be available.
-                - If 0 (the default), return immediately.
-                - If -1, block indefinitely until the requested number of samples is returned.
-
-        Raises: DeviceError on reading failures.
-        Returns: A list containing the specified number of sample values.
-        """
-        cdef ssize_t ret = 0
-        cdef vector[array[float, cpp_libsmu.four]] buf
-
-        try:
-            ret = self._device.read(buf, num_samples, timeout)
-        except SystemError as e:
-            raise DeviceError(str(e))
-        except RuntimeError as e:
-            # ignore buffer overflow exceptions
-            if not e.message.startswith('dropped '):
-                raise
-
-        if ret < 0:
-            raise DeviceError('failed reading from device', ret)
-
-        return [((x[0], x[1]), (x[2], x[3])) for x in buf]
 
     def write_calibration(self, file):
         """Write calibration data to the device's EEPROM.
