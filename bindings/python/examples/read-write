@@ -6,16 +6,15 @@ from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
 import random
-import time
 
 from pysmu import Session, Mode
 
 
 def refill_data():
     # fill channels with a static, random integer between 0 and 5
-    return [random.randint(0,5)] * 10000
+    return [random.randint(0, 5)] * 1000
     # fill channels with a static, random float between -0.2 and 0.2
-    #return [random.uniform(-0.2,0.2)] * 10000
+    #return [random.uniform(-0.2,0.2)] * 1000
 
 
 if __name__ == '__main__':
@@ -36,7 +35,7 @@ if __name__ == '__main__':
         while True:
             chan_a.write(refill_data())
             chan_b.write(refill_data())
-            samples = dev.read(10000)
+            samples = dev.read(1000)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
