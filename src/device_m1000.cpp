@@ -654,17 +654,6 @@ int M1000_Device::sync()
 	return ret;
 }
 
-static void run_device(M1000_Device* dev, Transfers& m_in_transfers, Transfers& m_out_transfers)
-{
-	for (auto i: m_in_transfers) {
-		if (dev->submit_in_transfer(i)) break;
-	}
-
-	for (auto i: m_out_transfers) {
-		if (dev->submit_out_transfer(i)) break;
-	}
-}
-
 int M1000_Device::run(uint64_t samples)
 {
 	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
@@ -677,9 +666,19 @@ int M1000_Device::run(uint64_t samples)
 		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
-	// Run the initial USB transfers within their own thread.
+	// Kick off USB transfers.
+	auto start_usb_transfers = [=](M1000_Device* dev, Transfers& in_transfers, Transfers& out_transfers) {
+		for (auto t: in_transfers) {
+			if (dev->submit_in_transfer(t)) break;
+		}
+		for (auto t: out_transfers) {
+			if (dev->submit_out_transfer(t)) break;
+		}
+	};
+
+	// Run the USB transfers within their own thread.
 	std::thread t(
-		run_device,
+		start_usb_transfers,
 		this,
 		std::ref(m_in_transfers),
 		std::ref(m_out_transfers));
