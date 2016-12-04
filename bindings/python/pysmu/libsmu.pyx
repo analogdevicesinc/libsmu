@@ -160,7 +160,7 @@ cdef class Session:
         """Configure the session's sample rate.
 
         Attributes:
-            sample_rate (int): Sample rate to run the session at.
+            sample_rate (int, optional): Sample rate to run the session at.
                 A sample rate of 0 (the default) causes the session to use the
                 devices default sample rate.
 
@@ -230,7 +230,7 @@ cdef class Session:
 
         Attributes:
             file (str): Path to firmware file.
-            dev: The device targeted for updating. If not supplied or None, the
+            dev (obj:`Device`, optional): The device targeted for updating. If not supplied or None, the
                 first attached device in the session will be used.
 
         Raises: SessionError on writing failures.
@@ -313,7 +313,7 @@ cdef class Device:
 
         Args:
             num_samples (int): number of samples to read
-            timeout: amount of time in milliseconds to wait for samples to be available.
+            timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
                 - If 0 (the default), return immediately.
                 - If -1, block indefinitely until the requested number of samples is returned.
 
@@ -343,7 +343,7 @@ cdef class Device:
         Args:
             data: iterable of sample values
             channel (0 or 1): channel to write samples to
-            cyclic (bool): continuously iterate over the same buffer
+            cyclic (bool, optional): continuously iterate over the same buffer
 
         Raises: DeviceError on writing failures.
         """
@@ -563,7 +563,7 @@ cdef class Channel:
 
         Args:
             waveform: sequence of raw waveform values (floats or ints)
-            cyclic (boolean): repeat the waveform when arriving at its end
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
         """
         self.write(waveform, cyclic=cyclic)
 
