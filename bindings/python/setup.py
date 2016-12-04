@@ -215,7 +215,7 @@ if sys.hexversion < 0x03030000:
 setup(
     name='pysmu',
     version=version,
-    description='python library for the ADALM1000 device',
+    description='python library and utility for the ADALM1000 device',
     url='https://github.com/analogdevicesinc/libsmu',
     license='BSD',
     maintainer='Analog Devices, Inc.',
