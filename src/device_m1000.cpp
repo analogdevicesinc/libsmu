@@ -440,30 +440,6 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	return buf.size();
 }
 
-// Function run in the channel's write thread to queue up samples being sent to
-// the device.
-static void write_samples(
-		unsigned channel,
-		boost::lockfree::spsc_queue<float>& q,
-		std::vector<float>& buf,
-		std::mutex& mtx,
-		bool cyclic)
-{
-	std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
-	while (true) {
-		lk.lock();
-		for (auto x: buf) {
-			while (!q.push(x)) {
-				std::this_thread::sleep_for(std::chrono::microseconds(1));
-			}
-		}
-		if (!cyclic)
-			buf.clear();
-		lk.unlock();
-		std::this_thread::sleep_for(std::chrono::microseconds(1));
-	}
-}
-
 int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 {
 	// bad channel
@@ -473,20 +449,6 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
 	lock.unlock();
-
-	// Start one thread per channel to push samples onto the output queue.
-	if (!m_out_samples_thr[channel].joinable()) {
-		std::thread t(
-			write_samples,
-			channel,
-			std::ref(*m_out_samples_q[channel]),
-			std::ref(m_out_samples_buf[channel]),
-			std::ref(m_out_samples_mtx[channel]),
-			cyclic);
-
-		// store spawned thread ID
-		std::swap(t, m_out_samples_thr[channel]);
-	}
 
 	// If a data underflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap write() in order
@@ -678,6 +640,32 @@ int M1000_Device::run(uint64_t samples)
 
 	// Run the USB transfers within their own thread.
 	std::thread(start_usb_transfers, this).detach();
+
+	// Queue up samples being sent to the device.
+	auto write_samples = [=](M1000_Device* dev, unsigned channel) {
+		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
+		std::vector<float>& buf = dev->m_out_samples_buf[channel];
+		std::mutex& mtx = dev->m_out_samples_mtx[channel];
+		bool cyclic = false;
+
+		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
+		while (true) {
+			lk.lock();
+			for (auto x: buf) {
+				while (!q.push(x)) {
+					std::this_thread::sleep_for(std::chrono::microseconds(1));
+				}
+			}
+			if (!cyclic)
+				buf.clear();
+			lk.unlock();
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	};
+
+	// Kick off channel write threads.
+	std::thread(write_samples, this, CHAN_A).detach();
+	std::thread(write_samples, this, CHAN_B).detach();
 
 	return 0;
 }
