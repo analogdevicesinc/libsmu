@@ -318,7 +318,7 @@ cdef class Device:
                 - If -1, block indefinitely until the requested number of samples is returned.
 
         Raises: DeviceError on reading failures.
-        Returns: A list containing the specified number of sample values.
+        Returns: A list containing sample values.
         """
         cdef ssize_t ret = 0
         cdef vector[array[float, cpp_libsmu.four]] buf
@@ -526,11 +526,28 @@ cdef class Channel:
                 raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
     def read(self, num_samples, timeout=0):
-        """Acquire samples from a channel."""
+        """Acquire samples from a channel.
+
+        Args:
+            num_samples (int): number of samples to read
+            timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
+                - If 0 (the default), return immediately.
+                - If -1, block indefinitely until the requested number of samples is returned.
+
+        Raises: DeviceError on reading failures.
+        Returns: A list containing sample values from the channel.
+        """
         return [x[self.chan] for x in self.dev.read(num_samples, timeout=timeout)]
 
     def write(self, data, cyclic=False):
-        """Write data to the channel."""
+        """Write data to the channel.
+
+        Args:
+            data: iterable of sample values
+            cyclic (bool, optional): continuously iterate over the same buffer
+
+        Raises: DeviceError on writing failures.
+        """
         self.dev.write(data, channel=self.chan, cyclic=cyclic)
 
     def get_samples(self, num_samples):
