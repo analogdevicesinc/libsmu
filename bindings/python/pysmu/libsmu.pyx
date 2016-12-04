@@ -142,7 +142,7 @@ cdef class Session:
         if errcode:
             raise SessionError('failed adding device', errcode)
 
-    def remove(self, Device dev, detached=False):
+    def remove(self, Device dev, bint detached=False):
         """Remove a device from the session."""
         cdef int errcode
         errcode = self._session.remove(dev._device, detached)
@@ -308,7 +308,7 @@ cdef class Device:
                 for x in self.read(1000):
                     yield x
 
-    def read(self, num_samples, timeout=0):
+    def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
 
         Args:
