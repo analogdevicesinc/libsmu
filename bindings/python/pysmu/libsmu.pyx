@@ -539,6 +539,19 @@ cdef class Channel:
         self.write(waveform, cyclic=cyclic)
 
     def constant(self, value):
-        """Set output to a constant waveform."""
+        """Set output to a constant waveform.
+
+        Example usage with at least one device plugged in:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.constant(5)
+        >>> session.run(10)
+        >>> print(chan_a.get_samples(2))
+        [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
+        """
         data = [value] * 1000
         self.write(data, cyclic=True)
