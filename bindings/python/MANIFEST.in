@@ -1,5 +1,6 @@
 include tox.ini
 recursive-include bin *
+recursive-include doc *
 recursive-include examples *
 recursive-include pysmu *
 global-exclude CMakeLists.txt *.pyc *.pyo __pycache__
