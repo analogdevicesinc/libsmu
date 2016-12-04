@@ -663,11 +663,14 @@ int M1000_Device::run(uint64_t samples)
 		while (true) {
 			lk.lock();
 			for (auto x: buf) {
-				while (!stop && !q.push(x)) {
+				while (!q.push(x)) {
+					if (stop)
+						goto stop_write;
 					std::this_thread::sleep_for(std::chrono::microseconds(1));
 				}
 			}
-			if (!cyclic)
+stop_write:
+			if (stop || !cyclic)
 				buf.clear();
 			lk.unlock();
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
