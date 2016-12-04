@@ -75,7 +75,7 @@ static void stream_samples(Session* session)
 		dev_index = 0;
 		for (auto dev: session->m_devices) {
 			try {
-				dev->read(buf, 1024);
+				dev->read(buf, 1000, -1);
 			} catch (const std::runtime_error& e) {
 				cerr << "smu: stopping stream: " << e.what() << endl;
 				return;
