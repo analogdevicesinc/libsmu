@@ -81,7 +81,7 @@ Session::Session()
 
 	struct timeval zero_tv;
 	zero_tv.tv_sec = 0;
-	zero_tv.tv_usec = 0;
+	zero_tv.tv_usec = 1;
 
 	// Spawn a thread to handle pending USB events.
 	m_usb_thread_loop = true;
