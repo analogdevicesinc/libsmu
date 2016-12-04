@@ -512,11 +512,11 @@ cdef class Channel:
 
     def read(self, num_samples, timeout=0):
         """Acquire samples from a channel."""
-        return [x[self.chan] for x in self.dev.read(num_samples, timeout)]
+        return [x[self.chan] for x in self.dev.read(num_samples, timeout=timeout)]
 
     def write(self, data, cyclic=False):
         """Write data to the channel."""
-        self.dev.write(data, self.chan, cyclic)
+        self.dev.write(data, channel=self.chan, cyclic=cyclic)
 
     def get_samples(self, num_samples):
         """Acquire samples from a channel."""
@@ -529,17 +529,16 @@ cdef class Channel:
                 for x in self.read(1000):
                     yield x
 
-    def arbitrary(self, waveform, repeat=False):
+    def arbitrary(self, waveform, cyclic=False):
         """Output an arbitrary waveform.
 
         Args:
             waveform: sequence of raw waveform values (floats or ints)
-            repeat (boolean): repeat the waveform when arriving at the end of
-                its available samples
+            cyclic (boolean): repeat the waveform when arriving at its end
         """
-        self.write(waveform, repeat)
+        self.write(waveform, cyclic=cyclic)
 
     def constant(self, value):
         """Set output to a constant waveform."""
         data = [value] * 1000
-        self.write(data, True)
+        self.write(data, cyclic=True)
