@@ -317,10 +317,11 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	float val;
 	int v = 32768 * 4 / 5;
 
-	if (m_mode[channel] != HI_Z)
+	if (m_mode[channel] != HI_Z) {
 		while (!m_out_samples_q[channel]->pop(val)) {
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
 		};
+	}
 
 	if (m_mode[channel] == SVMI) {
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
