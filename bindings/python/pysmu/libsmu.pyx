@@ -214,6 +214,10 @@ cdef class Session:
         if errcode:
             raise SessionError('failed canceling device transfers', errcode)
 
+    def flush(self):
+        """Flush the read and write queues for all devices in a session."""
+        self._session.flush()
+
     def wait_for_completion(self):
         """Block until all devices have are finished streaming in the session."""
         self._session.wait_for_completion()
@@ -361,6 +365,10 @@ cdef class Device:
 
         if errcode < 0:
             raise DeviceError('failed writing to device', errcode)
+
+    def flush(self):
+        """Flush the read and write queues for the device."""
+        self._device.flush()
 
     def get_samples(self, num_samples):
         """Acquire all signal samples from a device.

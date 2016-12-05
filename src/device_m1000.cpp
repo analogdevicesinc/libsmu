@@ -465,6 +465,22 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	return 0;
 }
 
+void M1000_Device::flush()
+{
+	auto flush_read_queue = [=](std::array<float, 4>) { return; };
+	auto flush_write_queue = [=](float sample) { return; };
+
+	// flush read queue
+	m_in_samples_avail = 0;
+	m_in_samples_q.consume_all(flush_read_queue);
+
+	// flush write queues
+	m_out_samples_stop[CHAN_A] = true;
+	m_out_samples_stop[CHAN_B] = true;
+	m_out_samples_q[CHAN_A]->consume_all(flush_write_queue);
+	m_out_samples_q[CHAN_B]->consume_all(flush_write_queue);
+}
+
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
 {
 	float v;

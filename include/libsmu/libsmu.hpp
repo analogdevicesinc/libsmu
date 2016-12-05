@@ -208,6 +208,9 @@ namespace smu {
 		/// has been stopped successfully.
 		bool cancelled() { return m_cancellation != 0; }
 
+		/// @brief Flush the read and write queues for all devices in a session.
+		void flush();
+
 		/// @brief Update firmware for a given device.
 		/// @param file Path to firmware file.
 		/// @param device The device targeted for updating.
@@ -359,6 +362,9 @@ namespace smu {
 		/// @return On error, a negative integer is returned relating to the error status.
 		/// @throws std::system_error of EBUSY if sample underflows have occurred.
 		virtual int write(std::vector<float>& buf, unsigned channel, bool cyclic = false) = 0;
+
+		/// @brief Flush the read and write queues for a device.
+		virtual void flush() = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.

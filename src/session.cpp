@@ -532,6 +532,13 @@ int Session::end()
 	return ret;
 }
 
+void Session::flush()
+{
+	for (Device* dev: m_devices) {
+		dev->flush();
+	}
+}
+
 void Session::wait_for_completion()
 {
 	std::unique_lock<std::mutex> lk(m_lock);
