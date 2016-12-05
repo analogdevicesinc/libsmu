@@ -659,17 +659,18 @@ int M1000_Device::run(uint64_t samples)
 		std::atomic<bool>& stop = dev->m_out_samples_stop[channel];
 		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
+		std::vector<float>::iterator it;
 		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
+
 		while (true) {
 			lk.lock();
-			for (auto x: buf) {
-				while (!q.push(x)) {
-					if (stop)
-						goto stop_write;
-					std::this_thread::sleep_for(std::chrono::microseconds(1));
-				}
+			it = buf.begin();
+			while (it != buf.end()) {
+				it = q.push(it, buf.end());
+				if (stop)
+					break;
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
-stop_write:
 			if (stop || !cyclic)
 				buf.clear();
 			lk.unlock();
