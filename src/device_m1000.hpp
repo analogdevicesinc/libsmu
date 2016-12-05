@@ -79,9 +79,6 @@ namespace smu {
 		// read_available() and write_available() calls for the spsc queue.
 		std::atomic<uint32_t> m_in_samples_avail;
 
-		// Threads used to read incoming samples values;
-		std::thread m_in_samples_thr;
-
 		// Queues with ~100ms worth of outgoing sample values for both channels at the default rate.
 		boost::lockfree::spsc_queue<float> _out_samples_a_q;
 		boost::lockfree::spsc_queue<float> _out_samples_b_q;
