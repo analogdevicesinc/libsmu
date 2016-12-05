@@ -88,9 +88,10 @@ namespace smu {
 
 		// Write buffers, one for each channel.
 		std::vector<float> m_out_samples_buf[2];
+		bool m_out_samples_buf_cyclic[2]{false,false};
 		std::mutex m_out_samples_mtx[2];
-		std::atomic<bool> m_out_samples_stop[2];
-		bool m_out_samples_buf_cyclic[2];
+		// initialize to zero
+		std::atomic<bool> m_out_samples_stop[2] = {};
 
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];
@@ -106,8 +107,7 @@ namespace smu {
 			m_in_samples_q{s->m_queue_size},
 			m_in_samples_avail{0},
 			_out_samples_a_q{s->m_queue_size},
-			_out_samples_b_q{s->m_queue_size},
-			m_out_samples_buf_cyclic{false,false}
+			_out_samples_b_q{s->m_queue_size}
 			{}
 
 		// Reformat received data, performs integer to float conversion.
