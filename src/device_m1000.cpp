@@ -659,8 +659,13 @@ int M1000_Device::run(uint64_t samples)
 	};
 
 	// Kick off channel write threads.
-	std::thread(write_samples, this, CHAN_A).detach();
-	std::thread(write_samples, this, CHAN_B).detach();
+	for (unsigned ch_i = 0; ch_i < info()->channel_count; ch_i++) {
+		// Don't restart threads on multiple run() calls.
+		if (!m_out_samples_thr[ch_i].joinable()) {
+			std::thread t(write_samples, this, ch_i);
+			std::swap(t, m_out_samples_thr[ch_i]);
+		}
+	}
 
 	return 0;
 }
