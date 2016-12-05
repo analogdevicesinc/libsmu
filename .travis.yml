@@ -60,6 +60,11 @@ addons:
     build_command: make
     branch_pattern: coverity_scan
 
+# build from all branches except appveyor (windows builds)
+branches:
+  except:
+    - appveyor
+
 before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
 
