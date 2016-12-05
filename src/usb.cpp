@@ -47,6 +47,14 @@ unsigned int libusb_to_errno(int libusb_err)
 		return EIO;
 }
 
+int libusb_errno_or_zero(int ret)
+{
+	if (ret < 0)
+		return -libusb_to_errno(ret);
+	else
+		return 0;
+}
+
 int Transfers::alloc(unsigned count, libusb_device_handle* handle,
 			unsigned char endpoint, unsigned char type, size_t buf_size,
 			unsigned timeout, libusb_transfer_cb_fn callback, void* user_data) {

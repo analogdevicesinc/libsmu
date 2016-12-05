@@ -553,13 +553,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 
 	// set mode
 	ret = ctrl_transfer(0x40, 0x53, channel, mode, 0, 0, 100);
-	if (ret < 0) {
-		ret = -libusb_to_errno(ret);
-	} else {
-		// We don't care about the number of bytes transferred so reset to 0 if successful.
-		ret = 0;
-	}
-	return ret;
+	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::get_mode(unsigned channel)
@@ -598,14 +592,9 @@ int M1000_Device::on()
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 	if (ret < 0)
 		return -libusb_to_errno(ret);
+
 	ret = ctrl_transfer(0x40, 0xCC, 0, 0, 0, 0, 100);
-	if (ret < 0) {
-		ret = -libusb_to_errno(ret);
-	} else {
-		// We don't care about the number of bytes transferred so reset to 0 if successful.
-		ret = 0;
-	}
-	return ret;
+	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::sync()
@@ -613,14 +602,7 @@ int M1000_Device::sync()
 	int ret = 0;
 	ret = ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start + 0xff) & 0x3c00;
-
-	if (ret < 0) {
-		ret = -libusb_to_errno(ret);
-	} else {
-		// We don't care about the number of bytes transferred so reset to 0 if successful.
-		ret = 0;
-	}
-	return ret;
+	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::run(uint64_t samples)
@@ -705,13 +687,7 @@ int M1000_Device::off()
 		return ret;
 
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
-	if (ret < 0) {
-		ret = -libusb_to_errno(ret);
-	} else {
-		// We don't care about the number of bytes transferred so reset to 0 if successful.
-		ret = 0;
-	}
-	return ret;
+	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::samba_mode()

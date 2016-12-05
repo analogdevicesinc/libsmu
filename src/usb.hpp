@@ -17,6 +17,10 @@
 // If there is no match, EIO is returned.
 unsigned int libusb_to_errno(int libusb_err);
 
+// Map libusb error codes to negative system errnos and positive return values
+// (relating to the byte count of successful calls) to zero.
+int libusb_errno_or_zero(int libusb_err);
+
 // Wrapper for a collection of libusb transfers.
 class Transfers {
 	public:
