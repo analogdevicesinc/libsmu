@@ -63,6 +63,15 @@ static const sl_channel_info m1000_channel_info[2] = {
 	{"B", 3, 2},
 };
 
+M1000_Device::~M1000_Device()
+{
+	// Stop channel write threads.
+	for (unsigned ch_i = 0; ch_i < info()->channel_count; ch_i++) {
+		m_out_samples_stop[ch_i] = -1;
+		m_out_samples_thr[ch_i].join();
+	}
+}
+
 int M1000_Device::get_default_rate()
 {
 	// rev0 firmware
@@ -449,7 +458,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 
 	// send signal to stop cyclic writes
 	if (m_out_samples_buf_cyclic[channel])
-		m_out_samples_stop[channel] = true;
+		m_out_samples_stop[channel] = 1;
 
 	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
 	m_out_samples_buf[channel] = buf;
@@ -475,8 +484,8 @@ void M1000_Device::flush()
 	m_in_samples_q.consume_all(flush_read_queue);
 
 	// flush write queues
-	m_out_samples_stop[CHAN_A] = true;
-	m_out_samples_stop[CHAN_B] = true;
+	m_out_samples_stop[CHAN_A] = 1;
+	m_out_samples_stop[CHAN_B] = 1;
 	m_out_samples_q[CHAN_A]->consume_all(flush_write_queue);
 	m_out_samples_q[CHAN_B]->consume_all(flush_write_queue);
 }
@@ -650,7 +659,7 @@ int M1000_Device::run(uint64_t samples)
 		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
 		std::vector<float>& buf = dev->m_out_samples_buf[channel];
 		std::mutex& mtx = dev->m_out_samples_mtx[channel];
-		std::atomic<bool>& stop = dev->m_out_samples_stop[channel];
+		std::atomic<int>& stop = dev->m_out_samples_stop[channel];
 		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
 		std::vector<float>::iterator it;
@@ -668,7 +677,10 @@ int M1000_Device::run(uint64_t samples)
 			if (stop || !cyclic)
 				buf.clear();
 			if (stop)
-				stop = false;
+				// signaled to exit
+				if (stop < 0)
+					return;
+				stop = 0;
 			lk.unlock();
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
 		}
@@ -700,8 +712,8 @@ int M1000_Device::off()
 	int ret = 0;
 
 	// stop writing samples
-	m_out_samples_stop[CHAN_A] = true;
-	m_out_samples_stop[CHAN_B] = true;
+	m_out_samples_stop[CHAN_A] = 1;
+	m_out_samples_stop[CHAN_B] = 1;
 
 	ret = set_mode(CHAN_A, HI_Z);
 	if (ret < 0)

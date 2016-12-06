@@ -70,6 +70,8 @@ namespace smu {
 		Signal m_signals[2][2];
 		unsigned m_mode[2];
 
+		~M1000_Device();
+
 		// Queue with ~100ms worth of incoming sample values at the default rate.
 		// The sample values are formatted in arrays of four values,
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
@@ -91,8 +93,12 @@ namespace smu {
 		std::vector<float> m_out_samples_buf[2];
 		bool m_out_samples_buf_cyclic[2]{false,false};
 		std::mutex m_out_samples_mtx[2];
-		// initialize to zero
-		std::atomic<bool> m_out_samples_stop[2] = {};
+
+		// Used for write thread signaling, initialized to zero. If greater
+		// than zero the related write thread will stop using its current
+		// buffer and wait for another to be submitted. If less than zero, the
+		// write thread will return -- used to signal the thread to exit.
+		std::atomic<int> m_out_samples_stop[2] = {};
 
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];
