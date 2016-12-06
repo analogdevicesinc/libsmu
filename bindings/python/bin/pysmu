@@ -256,5 +256,12 @@ if __name__ == '__main__':
         if (all(not getattr(args, x) for x in ('display', 'reset', 'write'))):
             args.display = True
 
+    # default to auto-flashing if no option is selected
+    if args.func.__name__ == 'flash':
+        if (all(not getattr(args, x) for x in (
+                'firmware_path', 'flash_auto',
+                'list_releases', 'select_release'))):
+            args.flash_auto = True
+
     session = pysmu.Session()
     args.func(session, args)
