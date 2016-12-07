@@ -434,15 +434,13 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	if (!m_in_samples_avail)
 		return 0;
 
-	uint64_t available;
-	std::array<float, 4> sample;
+	std::array<float, 4> sample = {};
 
-	if (samples < m_in_samples_avail)
-		available = samples;
-	else
-		available = m_in_samples_avail;
+	// we can only grab up to the amount of samples that are available
+	if (samples > m_in_samples_avail)
+		samples = m_in_samples_avail;
 
-	for (uint32_t i = 0; i < available; i++) {
+	for (uint32_t i = 0; i < samples; i++) {
 		m_in_samples_q.pop(sample);
 		m_in_samples_avail--;
 		buf.push_back(sample);
@@ -454,7 +452,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	if (e_ptr)
 		std::rethrow_exception(e_ptr);
 
-	return buf.size();
+	return samples;
 }
 
 int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
