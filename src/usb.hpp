@@ -61,5 +61,5 @@ class Transfers {
 		const_iterator end() const { return m_transfers.end(); }
 
 		// Current number of pending transfers.
-		int32_t num_active;
+		int32_t num_active = 0;
 };
