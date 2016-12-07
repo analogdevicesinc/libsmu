@@ -24,3 +24,8 @@ class SessionError(LibsmuError):
 
 class DeviceError(LibsmuError):
     pass
+
+
+class BufferOverflow(LibsmuError):
+    """The incoming read buffer has overflowed."""
+    pass

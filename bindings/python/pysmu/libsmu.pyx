@@ -13,7 +13,7 @@ except ImportError:
 
 cimport cpp_libsmu
 from .array cimport array
-from .exceptions import SessionError, DeviceError
+from .exceptions import SessionError, DeviceError, BufferOverflow
 
 __version__ = cpp_libsmu.libsmu_version_str().decode()
 
@@ -332,8 +332,9 @@ cdef class Device:
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
-            # ignore buffer overflow exceptions
-            if not e.message.startswith('dropped '):
+            if e.message.startswith('dropped '):
+                raise BufferOverflow(str(e))
+            else:
                 raise
 
         if ret < 0:
@@ -359,8 +360,9 @@ cdef class Device:
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
-            # ignore buffer overflow exceptions
-            if not e.message.startswith('dropped '):
+            if e.message.startswith('dropped '):
+                raise BufferOverflow(str(e))
+            else:
                 raise
 
         if errcode < 0:
