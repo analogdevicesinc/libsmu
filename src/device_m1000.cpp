@@ -67,8 +67,15 @@ M1000_Device::~M1000_Device()
 {
 	// Stop channel write threads.
 	for (unsigned ch_i = 0; ch_i < info()->channel_count; ch_i++) {
-		m_out_samples_stop[ch_i] = -1;
-		m_out_samples_thr[ch_i].join();
+		if (m_out_samples_thr[ch_i].joinable()) {
+			m_out_samples_stop[ch_i] = -1;
+			m_out_samples_thr[ch_i].join();
+		}
+	}
+
+	if (m_usb) {
+		libusb_release_interface(m_usb, 0);
+		libusb_close(m_usb);
 	}
 }
 

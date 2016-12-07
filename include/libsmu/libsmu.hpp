@@ -302,7 +302,7 @@ namespace smu {
 	/// @brief Generic device class.
 	class Device {
 	public:
-		virtual ~Device();
+		virtual ~Device() {};
 
 		/// @brief Get the descriptor for the device.
 		virtual const sl_device_info* info() const = 0;
