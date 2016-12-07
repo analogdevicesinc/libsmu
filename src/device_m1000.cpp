@@ -500,7 +500,7 @@ void M1000_Device::flush()
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
 {
 	float v;
-	std::array<float, 4> samples;
+	std::array<float, 4> samples = {};
 
 	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p * in_packet_size);
