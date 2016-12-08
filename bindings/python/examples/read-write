@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
+import sys
 import random
 
 from pysmu import Session, Mode, BufferOverflow
@@ -34,14 +35,15 @@ if __name__ == '__main__':
         #chan_a.mode = Mode.SIMV
         #chan_b.mode = Mode.SIMV
         session.start(0)
+        ignore_overflow = sys.stdout.isatty()
         v = 0
         while True:
             chan_a.write(refill_data(v % 6))
             chan_b.write(refill_data(v % 6))
             v += 1
-            # Ignore read buffer overflows since we often can't keep up due
-            # to printing to stdout.
-            samples = dev.read(1000, ignore_overflow=True)
+
+            # Ignore read buffer overflows when printing to stdout.
+            samples = dev.read(1000, ignore_overflow=ignore_overflow)
 
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
