@@ -7,7 +7,7 @@ from __future__ import print_function
 from signal import signal, SIG_DFL, SIGINT
 import random
 
-from pysmu import Session, Mode
+from pysmu import Session, Mode, BufferOverflow
 
 
 def refill_data():
@@ -33,9 +33,14 @@ if __name__ == '__main__':
         #chan_b.mode = Mode.SIMV
         session.start(0)
         while True:
-            chan_a.write(refill_data())
-            chan_b.write(refill_data())
-            samples = dev.read(1000)
+            try:
+                chan_a.write(refill_data())
+                chan_b.write(refill_data())
+                samples = dev.read(1000)
+            except BufferOverflow:
+                # Ignore read buffer overflows since we often can't keep up due
+                # to printing to stdout.
+                pass
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

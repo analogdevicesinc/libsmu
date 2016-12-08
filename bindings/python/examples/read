@@ -6,7 +6,7 @@ from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
 
-from pysmu import Session
+from pysmu import Session, BufferOverflow
 
 
 if __name__ == '__main__':
@@ -19,7 +19,12 @@ if __name__ == '__main__':
         dev = session.devices[0]
         session.start(0)
         while True:
-            samples = dev.read(1000, -1)
+            try:
+                samples = dev.read(1000, -1)
+            except BufferOverflow:
+                # Ignore read buffer overflows since we often can't keep up due
+                # to printing to stdout.
+                pass
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
