@@ -69,6 +69,7 @@ M1000_Device::~M1000_Device()
 	for (unsigned ch_i = 0; ch_i < info()->channel_count; ch_i++) {
 		if (m_out_samples_thr[ch_i].joinable()) {
 			m_out_samples_stop[ch_i] = -1;
+			m_out_samples_cv[ch_i].notify_one();
 			m_out_samples_thr[ch_i].join();
 		}
 	}
@@ -468,16 +469,23 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (m_out_samples_buf_cyclic[channel])
 		m_out_samples_stop[channel] = 1;
 
-	std::unique_lock<std::mutex> lock(m_out_samples_mtx[channel]);
+	// only wait up to 100ms for queue space
+	// TODO: make the period dependent on the input buffer size
+	auto clk_start = std::chrono::high_resolution_clock::now();
+	while (m_out_samples_buf[channel].size()) {
+		auto clk_end = std::chrono::high_resolution_clock::now();
+		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+		if (clk_diff.count() > 100)
+			throw std::system_error(EBUSY, std::system_category(), "data write timeout");
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+
+	std::unique_lock<std::mutex> lk(m_out_samples_mtx[channel]);
+	std::condition_variable& cv = m_out_samples_cv[channel];
 	m_out_samples_buf[channel] = buf;
 	m_out_samples_buf_cyclic[channel] = cyclic;
-	lock.unlock();
-
-	// If a data underflow occurred in the USB thread, rethrow the exception
-	// here in the main thread. This allows users to just wrap write() in order
-	// to catch and/or act on underflows.
-	if (e_ptr)
-		std::rethrow_exception(e_ptr);
+	lk.unlock();
+	cv.notify_one();
 
 	return 0;
 }
@@ -667,6 +675,7 @@ int M1000_Device::run(uint64_t samples)
 		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
 		std::vector<float>& buf = dev->m_out_samples_buf[channel];
 		std::mutex& mtx = dev->m_out_samples_mtx[channel];
+		std::condition_variable& cv = dev->m_out_samples_cv[channel];
 		std::atomic<int>& stop = dev->m_out_samples_stop[channel];
 		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
@@ -675,22 +684,30 @@ int M1000_Device::run(uint64_t samples)
 
 		while (true) {
 			lk.lock();
-			it = buf.begin();
+			// only wake up if we have a new buffer or were signaled to exit
+			cv.wait(lk, [&buf,&stop]{ return (buf.size() || stop < 0); });
+
+			// signaled to exit
+			if (stop < 0)
+				return;
+			stop = 0;
+
+start:		it = buf.begin();
 			while (it != buf.end()) {
 				it = q.push(it, buf.end());
 				if (stop)
-					break;
+					goto end;
 				std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
-			if (stop || !cyclic)
+
+			if (cyclic)
+				goto start;
+
+end:		if (stop || !cyclic)
 				buf.clear();
-			if (stop)
-				// signaled to exit
-				if (stop < 0)
-					return;
-				stop = 0;
+
 			lk.unlock();
-			std::this_thread::sleep_for(std::chrono::microseconds(1));
+			cv.notify_one();
 		}
 	};
 
