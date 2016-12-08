@@ -33,14 +33,12 @@ if __name__ == '__main__':
         #chan_b.mode = Mode.SIMV
         session.start(0)
         while True:
-            try:
-                chan_a.write(refill_data())
-                chan_b.write(refill_data())
-                samples = dev.read(1000)
-            except BufferOverflow:
-                # Ignore read buffer overflows since we often can't keep up due
-                # to printing to stdout.
-                pass
+            # Ignore read buffer overflows since we often can't keep up due
+            # to printing to stdout.
+            chan_a.write(refill_data(), ignore_timeout=True)
+            chan_b.write(refill_data(), ignore_timeout=True)
+            samples = dev.read(1000, ignore_overflow=True)
+
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

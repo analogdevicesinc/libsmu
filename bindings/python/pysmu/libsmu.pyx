@@ -312,7 +312,7 @@ cdef class Device:
                 for x in self.read(1000):
                     yield x
 
-    def read(self, size_t num_samples, int timeout=0):
+    def read(self, size_t num_samples, int timeout=0, ignore_overflow=False):
         """Acquire all signal samples from a device.
 
         Args:
@@ -320,6 +320,7 @@ cdef class Device:
             timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
                 - If 0 (the default), return immediately.
                 - If -1, block indefinitely until the requested number of samples is returned.
+            ignore_overflow (bool, optional): whether to ignore input queue overflows (lost samples)
 
         Raises: DeviceError on reading failures.
         Returns: A list containing sample values.
@@ -332,23 +333,23 @@ cdef class Device:
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
-            if e.message.startswith('dropped '):
-                raise BufferOverflow(str(e))
-            else:
-                raise
+            err = 'data sample dropped'
+            if not ignore_overflow and e.message[:len(err)] == err:
+                raise BufferOverflow(err)
 
         if ret < 0:
             raise DeviceError('failed reading from device', ret)
 
         return [((x[0], x[1]), (x[2], x[3])) for x in buf]
 
-    def write(self, data, channel, cyclic=False):
+    def write(self, data, channel, cyclic=False, ignore_timeout=False):
         """Write data to a specified channel of the device.
 
         Args:
             data: iterable of sample values
             channel (0 or 1): channel to write samples to
             cyclic (bool, optional): continuously iterate over the same buffer
+            ignore_timeout (bool, optional): whether to ignore long write delays
 
         Raises: DeviceError on writing failures.
         """
@@ -360,10 +361,9 @@ cdef class Device:
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
-            if e.message.startswith('dropped '):
-                raise BufferOverflow(str(e))
-            else:
-                raise
+            err = 'data write timeout'
+            if not ignore_timeout and e.message[:len(err)] == err:
+                raise BufferOverflow(err)
 
         if errcode < 0:
             raise DeviceError('failed writing to device', errcode)
@@ -549,16 +549,17 @@ cdef class Channel:
         """
         return [x[self.chan] for x in self.dev.read(num_samples, timeout=timeout)]
 
-    def write(self, data, cyclic=False):
+    def write(self, data, cyclic=False, ignore_timeout=False):
         """Write data to the channel.
 
         Args:
             data: iterable of sample values
             cyclic (bool, optional): continuously iterate over the same buffer
+            ignore_timeout (bool, optional): whether to ignore long write delays
 
         Raises: DeviceError on writing failures.
         """
-        self.dev.write(data, channel=self.chan, cyclic=cyclic)
+        self.dev.write(data, channel=self.chan, cyclic=cyclic, ignore_timeout=ignore_timeout)
 
     def get_samples(self, num_samples):
         """Acquire samples from a channel.

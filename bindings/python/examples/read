@@ -21,12 +21,9 @@ if __name__ == '__main__':
         dev.channels['B'].mode = Mode.HI_Z
         session.start(0)
         while True:
-            try:
-                samples = dev.read(1000, -1)
-            except BufferOverflow:
-                # Ignore read buffer overflows since we often can't keep up due
-                # to printing to stdout.
-                pass
+            # Ignore read buffer overflows since we often can't keep up due
+            # to printing to stdout.
+            samples = dev.read(1000, -1, ignore_overflow=True)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

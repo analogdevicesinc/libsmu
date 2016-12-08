@@ -6,7 +6,7 @@ class LibsmuError(Exception):
 
     def __init__(self, msg=None, errcode=None):
         if msg is not None:
-            self.msg = msg.split(':')[0]
+            self.msg = msg
         self.errcode = abs(errcode) if errcode is not None else None
 
     def __str__(self):
