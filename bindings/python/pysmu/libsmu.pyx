@@ -529,7 +529,7 @@ cdef class Channel:
             if errcode:
                 raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
-    def read(self, num_samples, timeout=0):
+    def read(self, num_samples, timeout=0, ignore_overflow=False):
         """Acquire samples from a channel.
 
         Args:
@@ -537,11 +537,13 @@ cdef class Channel:
             timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
                 - If 0 (the default), return immediately.
                 - If -1, block indefinitely until the requested number of samples is returned.
+            ignore_overflow (bool, optional): whether to ignore input queue overflows (lost samples)
 
         Raises: DeviceError on reading failures.
         Returns: A list containing sample values from the channel.
         """
-        return [x[self.chan] for x in self.dev.read(num_samples, timeout=timeout)]
+        return [x[self.chan] for x in self.dev.read(
+            num_samples, timeout=timeout, ignore_overflow=ignore_overflow)]
 
     def write(self, data, cyclic=False, ignore_timeout=False):
         """Write data to the channel.
