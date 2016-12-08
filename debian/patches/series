@@ -1,3 +1,1 @@
-0002-regress-cmake-version-depends.patch
-0003-use-explicit-cxx-std-on-older-cmake.patch
-0004-remove-absolute-lib-include-paths.patch
+0001-remove-absolute-lib-include-paths.patch
