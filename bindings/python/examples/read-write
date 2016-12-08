@@ -10,9 +10,11 @@ import random
 from pysmu import Session, Mode, BufferOverflow
 
 
-def refill_data():
-    # fill channels with a static, random integer between 0 and 5
-    return [random.randint(0, 5)] * 1000
+def refill_data(v=None):
+    if v is None:
+        # fill channels with a static, random integer between 0 and 5
+        v = random.randint(0, 5)
+    return [v] * 1000
     # fill channels with a static, random float between -0.2 and 0.2
     #return [random.uniform(-0.2,0.2)] * 1000
 
@@ -32,11 +34,13 @@ if __name__ == '__main__':
         #chan_a.mode = Mode.SIMV
         #chan_b.mode = Mode.SIMV
         session.start(0)
+        v = 0
         while True:
+            chan_a.write(refill_data(v % 6))
+            chan_b.write(refill_data(v % 6))
+            v += 1
             # Ignore read buffer overflows since we often can't keep up due
             # to printing to stdout.
-            chan_a.write(refill_data(), ignore_timeout=True)
-            chan_b.write(refill_data(), ignore_timeout=True)
             samples = dev.read(1000, ignore_overflow=True)
 
             for x in samples:
