@@ -251,12 +251,6 @@ cdef class Session:
             raise SessionError(str(e))
 
     def __dealloc__(self):
-        # make sure the session is completed before deallocation
-        try:
-            self._session.end()
-        except SessionError:
-            # ignore sessions failing to end properly
-            pass
         del self._session
 
 
