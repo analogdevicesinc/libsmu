@@ -6,7 +6,7 @@ from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
 
-from pysmu import Session, BufferOverflow
+from pysmu import Session, Mode, BufferOverflow
 
 
 if __name__ == '__main__':
@@ -17,6 +17,8 @@ if __name__ == '__main__':
 
     if session.devices:
         dev = session.devices[0]
+        dev.channels['A'].mode = Mode.HI_Z
+        dev.channels['B'].mode = Mode.HI_Z
         session.start(0)
         while True:
             try:
