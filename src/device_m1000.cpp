@@ -529,7 +529,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 			}
 			m_in_sampleno++;
 			if (!m_in_samples_q.push(samples)) {
-				throw std::system_error(EBUSY, std::system_category(), "dropped input sample");
+				throw std::system_error(EBUSY, std::system_category(), "data sample dropped");
 			} else {
 				m_in_samples_avail++;
 			}
