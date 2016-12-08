@@ -19,13 +19,25 @@ class LibsmuError(Exception):
 
 
 class SessionError(LibsmuError):
+    """Generic libsmu session error."""
     pass
 
 
 class DeviceError(LibsmuError):
+    """Generic libsmu device error."""
     pass
 
 
-class BufferOverflow(LibsmuError):
+class DataflowError(LibsmuError):
+    """Generic data flow error."""
+    pass
+
+
+class BufferOverflow(DataflowError):
     """The incoming read buffer has overflowed."""
+    pass
+
+
+class BufferTimeout(DataflowError):
+    """An outgoing write buffer has timed out."""
     pass

@@ -13,7 +13,7 @@ except ImportError:
 
 cimport cpp_libsmu
 from .array cimport array
-from .exceptions import SessionError, DeviceError, BufferOverflow
+from .exceptions import *
 
 __version__ = cpp_libsmu.libsmu_version_str().decode()
 
@@ -369,7 +369,7 @@ cdef class Device:
         except RuntimeError as e:
             err = 'data write timeout'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise BufferOverflow(err)
+                raise BufferTimeout(err)
 
         if errcode < 0:
             raise DeviceError('failed writing to device', errcode)
