@@ -42,6 +42,7 @@ class LED(Enum):
 cdef class Session:
     # pointer to the underlying C++ smu::Session object
     cdef cpp_libsmu.Session *_session
+    cdef public bint ignore_dataflow
 
     def __cinit__(self):
         self._session = new cpp_libsmu.Session()
@@ -52,14 +53,18 @@ cdef class Session:
         # initialize/acquire the GIL
         PyEval_InitThreads()
 
-    def __init__(self, add_all=True):
+    def __init__(self, add_all=True, ignore_dataflow=False):
         """Initialize a session.
 
         Attributes:
             add_all (bool): Add all attached devices to the session on initialization.
+            ignore_dataflow (bool): Ignore buffer overflows or timeouts for all
+                devices in the session.
         """
         if add_all:
             self.add_all()
+
+        self.ignore_dataflow = ignore_dataflow
 
     def hotplug_attach(self, func):
         """Register a function to run on a device attach event.
@@ -88,12 +93,14 @@ cdef class Session:
     property available_devices:
         """Devices that are accessible on the system."""
         def __get__(self):
-            return tuple(Device._create(d) for d in self._session.m_available_devices)
+            return tuple(Device._create(d, self.ignore_dataflow) for d
+                         in self._session.m_available_devices)
 
     property devices:
         """Devices that are included in this session."""
         def __get__(self):
-            return tuple(Device._create(d) for d in self._session.m_devices)
+            return tuple(Device._create(d, self.ignore_dataflow) for d
+                         in self._session.m_devices)
 
     property active_devices:
         """Number of devices that are currently active (streaming data) in this session."""
@@ -257,18 +264,25 @@ cdef class Session:
 cdef class Device:
     # pointer to the underlying C++ smu::Device object
     cdef cpp_libsmu.Device *_device
+    cdef public bint ignore_dataflow
     cdef readonly object channels
 
-    def __init__(self):
+    def __init__(self, ignore_dataflow=False):
+        """Initialize a device.
+
+        Attributes:
+            ignore_dataflow (bool): Ignore buffer overflows or timeouts for the device.
+        """
+        self.ignore_dataflow = ignore_dataflow
         self.channels = OrderedDict([
             ('A', Channel(self, 0)),
             ('B', Channel(self, 1)),
         ])
 
     @staticmethod
-    cdef _create(cpp_libsmu.Device *device) with gil:
+    cdef _create(cpp_libsmu.Device *device, ignore_dataflow=False) with gil:
         """Internal method to wrap C++ smu::Device objects."""
-        d = Device()
+        d = Device(ignore_dataflow=ignore_dataflow)
         d._device = device
         return d
 
@@ -306,7 +320,7 @@ cdef class Device:
                 for x in self.read(1000):
                     yield x
 
-    def read(self, size_t num_samples, int timeout=0, ignore_overflow=False):
+    def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
 
         Args:
@@ -314,7 +328,6 @@ cdef class Device:
             timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
                 - If 0 (the default), return immediately.
                 - If -1, block indefinitely until the requested number of samples is returned.
-            ignore_overflow (bool, optional): whether to ignore input queue overflows (lost samples)
 
         Raises: DeviceError on reading failures.
         Returns: A list containing sample values.
@@ -328,7 +341,7 @@ cdef class Device:
             raise DeviceError(str(e))
         except RuntimeError as e:
             err = 'data sample dropped'
-            if not ignore_overflow and e.message[:len(err)] == err:
+            if not self.ignore_dataflow and e.message[:len(err)] == err:
                 raise BufferOverflow(err)
 
         if ret < 0:
@@ -336,14 +349,13 @@ cdef class Device:
 
         return [((x[0], x[1]), (x[2], x[3])) for x in buf]
 
-    def write(self, data, unsigned channel, bint cyclic=False, ignore_timeout=False):
+    def write(self, data, unsigned channel, bint cyclic=False):
         """Write data to a specified channel of the device.
 
         Args:
             data: iterable of sample values
             channel (0 or 1): channel to write samples to
             cyclic (bool, optional): continuously iterate over the same buffer
-            ignore_timeout (bool, optional): whether to ignore long write delays
 
         Raises: DeviceError on writing failures.
         """
@@ -356,7 +368,7 @@ cdef class Device:
             raise DeviceError(str(e))
         except RuntimeError as e:
             err = 'data write timeout'
-            if not ignore_timeout and e.message[:len(err)] == err:
+            if not self.ignore_dataflow and e.message[:len(err)] == err:
                 raise BufferOverflow(err)
 
         if errcode < 0:
@@ -529,7 +541,7 @@ cdef class Channel:
             if errcode:
                 raise DeviceError('failed setting mode {}: '.format(mode), errcode)
 
-    def read(self, num_samples, timeout=0, ignore_overflow=False):
+    def read(self, num_samples, timeout=0):
         """Acquire samples from a channel.
 
         Args:
@@ -537,25 +549,22 @@ cdef class Channel:
             timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
                 - If 0 (the default), return immediately.
                 - If -1, block indefinitely until the requested number of samples is returned.
-            ignore_overflow (bool, optional): whether to ignore input queue overflows (lost samples)
 
         Raises: DeviceError on reading failures.
         Returns: A list containing sample values from the channel.
         """
-        return [x[self.chan] for x in self.dev.read(
-            num_samples, timeout=timeout, ignore_overflow=ignore_overflow)]
+        return [x[self.chan] for x in self.dev.read(num_samples, timeout=timeout)]
 
-    def write(self, data, cyclic=False, ignore_timeout=False):
+    def write(self, data, cyclic=False):
         """Write data to the channel.
 
         Args:
             data: iterable of sample values
             cyclic (bool, optional): continuously iterate over the same buffer
-            ignore_timeout (bool, optional): whether to ignore long write delays
 
         Raises: DeviceError on writing failures.
         """
-        self.dev.write(data, channel=self.chan, cyclic=cyclic, ignore_timeout=ignore_timeout)
+        self.dev.write(data, channel=self.chan, cyclic=cyclic)
 
     def get_samples(self, num_samples):
         """Acquire samples from a channel.
