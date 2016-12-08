@@ -101,11 +101,11 @@ Session::~Session()
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
-	// stop USB thread loop
-	m_usb_thread_loop = false;
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
 
+	// stop USB thread loop
 	if (m_usb_thread.joinable()) {
+		m_usb_thread_loop = false;
 		m_usb_thread.join();
 	}
 
