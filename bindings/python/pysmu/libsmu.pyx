@@ -560,6 +560,11 @@ cdef class Channel:
     def get_samples(self, num_samples):
         """Acquire samples from a channel.
 
+        Blocks until the requested number of samples is available.
+
+        Args:
+            num_samples (int): number of samples to read
+
         Example usage with at least one device plugged in:
 
         >>> from pysmu import Session, Mode
@@ -601,7 +606,7 @@ cdef class Channel:
         >>> dev = session.devices[0]
         >>> chan_a = dev.channels['A']
         >>> chan_a.mode = Mode.SVMI
-        >>> chan_a.constant(5)
+        >>> chan_a.constant(4)
         >>> session.run(10)
         >>> print(chan_a.get_samples(2))
         [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
