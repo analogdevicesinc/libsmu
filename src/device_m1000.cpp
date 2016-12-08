@@ -77,6 +77,9 @@ M1000_Device::~M1000_Device()
 		libusb_release_interface(m_usb, 0);
 		libusb_close(m_usb);
 	}
+
+	m_in_transfers.clear();
+	m_out_transfers.clear();
 }
 
 int M1000_Device::get_default_rate()
