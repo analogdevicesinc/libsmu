@@ -336,7 +336,7 @@ cdef class Device:
 
         return [((x[0], x[1]), (x[2], x[3])) for x in buf]
 
-    def write(self, data, channel, cyclic=False, ignore_timeout=False):
+    def write(self, data, unsigned channel, bint cyclic=False, ignore_timeout=False):
         """Write data to a specified channel of the device.
 
         Args:
