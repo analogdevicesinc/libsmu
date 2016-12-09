@@ -17,6 +17,10 @@ if __name__ == '__main__':
         sys.exit()
 
     for x in range(10):
+        # Flush the read/write queues for all the devices in the session.
+        # Without doing this the values won't change between iterations due to
+        # the queues being entirely filled with values from the initial
+        # constant waveforms.
         session.flush()
 
         for dev in session.devices:

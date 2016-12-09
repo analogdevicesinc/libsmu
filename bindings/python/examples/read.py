@@ -17,14 +17,22 @@ if __name__ == '__main__':
     session = Session()
 
     if session.devices:
+        # Grab the first device from the session.
         dev = session.devices[0]
+
+        # Ignore read buffer overflows when printing to stdout.
+        dev.ignore_dataflow = sys.stdout.isatty()
+
+        # Set both channels to HI-Z mode.
         dev.channels['A'].mode = Mode.HI_Z
         dev.channels['B'].mode = Mode.HI_Z
+
+        # Start a continuous session.
         session.start(0)
-        ignore_overflow = sys.stdout.isatty()
+
         while True:
-            # Ignore read buffer overflows when printing to stdout.
-            samples = dev.read(1000, -1, ignore_overflow=ignore_overflow)
+            # Read incoming samples in a blocking fashion.
+            samples = dev.read(1000, -1)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

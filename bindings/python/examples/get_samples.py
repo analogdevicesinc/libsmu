@@ -17,11 +17,18 @@ if __name__ == '__main__':
         sys.exit()
 
     for dev in session.devices:
+        # Set all devices in the session to use source voltage, measure current
+        # mode for channel A with a constant value of 4.
         dev.channels['A'].mode = Mode.SVMI
         dev.channels['A'].constant(4)
+        # Set all devices in the session to use source current, measure voltage
+        # mode for channel B with a constant value of -0.2.
         dev.channels['B'].mode = Mode.SIMV
-        dev.channels['B'].constant(-.2)
+        dev.channels['B'].constant(-0.2)
 
+    # Run the session for 10 incoming samples in noncontinuous mode. This means
+    # that after the requested number of samples is collected, all the devices
+    # in the session are turned off and reset into HI-Z mode.
     session.run(10)
 
     for idx, dev in enumerate(session.devices):

@@ -25,6 +25,10 @@ if __name__ == '__main__':
     signal(SIGINT, SIG_DFL)
 
     session = Session()
+
+    # Register the functions above to get triggered during physical attach or
+    # detach events. Multiple functions can be registered for either trigger if
+    # required.
     session.hotplug_attach(attached)
     session.hotplug_detach(detached)
 

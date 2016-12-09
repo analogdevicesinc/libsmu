@@ -27,24 +27,32 @@ if __name__ == '__main__':
     session = Session()
 
     if session.devices:
+        # Grab the first device from the session.
         dev = session.devices[0]
+
+        # Ignore read buffer overflows when printing to stdout.
+        dev.ignore_dataflow = sys.stdout.isatty()
+
+        # Set both channels to source voltage, measure current mode.
         chan_a = dev.channels['A']
         chan_b = dev.channels['B']
         chan_a.mode = Mode.SVMI
         chan_b.mode = Mode.SVMI
         #chan_a.mode = Mode.SIMV
         #chan_b.mode = Mode.SIMV
+
+        # Start a continuous session.
         session.start(0)
-        ignore_overflow = sys.stdout.isatty()
         v = 0
+
         while True:
+            # Write iterating voltage values to both channels.
             chan_a.write(refill_data(v % 6))
             chan_b.write(refill_data(v % 6))
             v += 1
 
-            # Ignore read buffer overflows when printing to stdout.
-            samples = dev.read(1000, ignore_overflow=ignore_overflow)
-
+            # Read incoming samples in a non-blocking fashion.
+            samples = dev.read(1000)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
