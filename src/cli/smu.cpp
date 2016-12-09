@@ -6,8 +6,10 @@
 
 #ifdef WIN32
 #include "getopt.h"
+#include <io.h>
 #else
 #include <getopt.h>
+#include <unistd.h>
 #endif
 
 #include <cstdint>
@@ -19,6 +21,10 @@
 #include <thread>
 
 #include <libsmu/libsmu.hpp>
+
+#ifndef WIN32
+int (*_isatty)(int) = &isatty;
+#endif
 
 using std::cout;
 using std::cerr;
@@ -77,8 +83,12 @@ static void stream_samples(Session* session)
 			try {
 				dev->read(buf, 1000, -1);
 			} catch (const std::runtime_error& e) {
-				cerr << "smu: stopping stream: " << e.what() << endl;
-				return;
+				// Only error out if stdout isn't a tty, otherwise it usually
+				// can't keep up anyway.
+				if (!_isatty(1)) {
+					cerr << "smu: stopping stream: " << e.what() << endl;
+					return;
+				}
 			}
 
 			for (auto x: buf) {
