@@ -95,11 +95,11 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
 
   # build python dist files
   - ps: pushd C:\projects\libsmu\bindings\python
@@ -125,13 +125,13 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
   # py2exe required to build exe from pysmu script
-  - "pip install py2exe"
+  - "pip install --only-binary :all: py2exe"
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -155,11 +155,11 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -180,11 +180,11 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -205,13 +205,13 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
   # py2exe required to build exe from pysmu script
-  - "pip install py2exe"
+  - "pip install --only-binary :all: py2exe"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -235,11 +235,11 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "pip install wheel"
+  - "pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "pip install cython"
+  - "pip install --only-binary :all: cython"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
