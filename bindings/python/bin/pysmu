@@ -80,6 +80,8 @@ def stream_data(session, args):
     """Stream data from an attached device."""
     if session.devices:
         dev = session.devices[0]
+        # Ignore read buffer overflows when printing to stdout.
+        dev.ignore_dataflow = sys.stdout.isatty()
         dev.channels['A'].mode = pysmu.Mode.HI_Z
         dev.channels['B'].mode = pysmu.Mode.HI_Z
         session.start(0)
