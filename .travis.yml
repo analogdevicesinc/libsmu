@@ -74,8 +74,8 @@ install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake || true; fi
 
   # for python bindings
-  - ${PIP} install --disable-pip-version-check --upgrade pip
-  - ${PIP} install wheel cython
+  - ${PIP} install --only-binary :all: --disable-pip-version-check --upgrade pip
+  - ${PIP} install --only-binary :all: wheel cython
 
 script:
   - mkdir -p build && cd build
