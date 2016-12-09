@@ -67,6 +67,7 @@ build_script:
   - mkdir c:\libsmu\include
   - mkdir c:\libsmu\include\libsmu
   - copy ..\include\libsmu\*.hpp c:\libsmu\include\libsmu
+  - copy "C:\\libusb\\libusb\libusb.h" c:\libsmu\include\libsmu
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx64.cat c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx86.cat c:\libsmu\drivers
