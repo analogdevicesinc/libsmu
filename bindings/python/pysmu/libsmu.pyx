@@ -66,23 +66,27 @@ cdef class Session:
 
         self.ignore_dataflow = ignore_dataflow
 
-    def hotplug_attach(self, func):
+    def hotplug_attach(self, *funcs):
         """Register a function to run on a device attach event.
 
         Attributes:
-            func: Python function to run on device attach events. It should
-                accept a single parameter, the device object being attached.
+            funcs: Python function(s) to run on device attach events. The
+                function should accept a single parameter, the device object
+                being attached.
         """
-        self._session.hotplug_attach(self._hotplug_callback, <void*>func)
+        for f in funcs:
+            self._session.hotplug_attach(self._hotplug_callback, <void*>f)
 
-    def hotplug_detach(self, func):
+    def hotplug_detach(self, *funcs):
         """Register a function to run on a device detach event.
 
         Attributes:
-            func: Python function to run on device detach events. It should
-                accept a single parameter, the device object being detached.
+            funcs: Python function(s) to run on device detach events. The
+                function should accept a single parameter, the device object
+                being detached.
         """
-        self._session.hotplug_detach(self._hotplug_callback, <void*>func)
+        for f in funcs:
+            self._session.hotplug_detach(self._hotplug_callback, <void*>f)
 
     @staticmethod
     cdef void _hotplug_callback(cpp_libsmu.Device *device, void *func) with gil:
