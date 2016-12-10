@@ -133,6 +133,7 @@ build_script:
   - "pip install --only-binary :all: cython"
   # py2exe required to build exe from pysmu script
   - "pip install --only-binary :all: py2exe"
+  - "pip install pyreadline"
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
@@ -213,6 +214,7 @@ build_script:
   - "pip install --only-binary :all: cython"
   # py2exe required to build exe from pysmu script
   - "pip install --only-binary :all: py2exe"
+  - "pip install pyreadline"
 
   - "vcvarsall.bat x64"
   - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
