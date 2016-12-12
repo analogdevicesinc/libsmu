@@ -23,15 +23,12 @@ if __name__ == '__main__':
         # Ignore read buffer overflows when printing to stdout.
         dev.ignore_dataflow = sys.stdout.isatty()
 
-        # Set both channels to HI-Z mode.
-        dev.channels['A'].mode = Mode.HI_Z
-        dev.channels['B'].mode = Mode.HI_Z
-
         # Start a continuous session.
         session.start(0)
 
         while True:
-            # Read incoming samples in a blocking fashion.
+            # Read incoming samples from both channels which are in HI-Z mode
+            # by default in a blocking fashion.
             samples = dev.read(1000, -1)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
