@@ -436,7 +436,7 @@ namespace smu {
 		/// @return On error, a negative errno code is returned.
 		virtual int on() = 0;
 
-		/// @brief Stop sampling and put outputs into high impedance mode.
+		/// @brief Stop any current sample writes and stop capturing samples.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		virtual int off() = 0;

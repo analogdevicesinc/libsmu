@@ -740,13 +740,6 @@ int M1000_Device::off()
 	m_out_samples_stop[CHAN_A] = 1;
 	m_out_samples_stop[CHAN_B] = 1;
 
-	ret = set_mode(CHAN_A, HI_Z);
-	if (ret < 0)
-		return ret;
-	ret = set_mode(CHAN_B, HI_Z);
-	if (ret < 0)
-		return ret;
-
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 	return libusb_errno_or_zero(ret);
 }
