@@ -705,9 +705,14 @@ int M1000_Device::run(uint64_t samples)
 start:		it = buf.begin();
 			while (it != buf.end()) {
 				it = q.push(it, buf.end());
+
+				// signaled to stop writing
 				if (stop)
 					goto end;
-				std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+				// wait a bit for space if unable to queue the entire buffer
+				if (it != buf.end())
+					std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
 
 			if (cyclic)
