@@ -16,6 +16,10 @@ if __name__ == '__main__':
     if not session.devices:
         sys.exit()
 
+    for dev in session.devices:
+        dev.channels['A'].mode = Mode.SVMI
+        dev.channels['B'].mode = Mode.SIMV
+
     for x in range(10):
         # Flush the read/write queues for all the devices in the session.
         # Without doing this the values won't change between iterations due to
@@ -25,11 +29,7 @@ if __name__ == '__main__':
 
         for dev in session.devices:
             v = x % 6
-            # modes have to be reset on each loop since they're currently reset
-            # to HI_Z at the end of each run.
-            dev.channels['A'].mode = Mode.SVMI
             dev.channels['A'].constant(v)
-            dev.channels['B'].mode = Mode.SIMV
             dev.channels['B'].constant(-.2)
 
         session.run(10)
