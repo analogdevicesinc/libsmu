@@ -363,7 +363,7 @@ cdef class Device:
 
         Raises: DeviceError on writing failures.
         """
-        cdef int errcode
+        cdef int errcode = 0
         cdef vector[float] buf = data
 
         try:
