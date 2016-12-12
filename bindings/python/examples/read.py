@@ -25,12 +25,12 @@ if __name__ == '__main__':
         dev.ignore_dataflow = sys.stdout.isatty()
 
         while True:
-            # Run the session for 1000 samples.
-            session.run(1000)
+            # Run the session for 1024 samples.
+            session.run(1024)
 
             # Read incoming samples from both channels which are in HI-Z mode
             # by default in a blocking fashion.
-            samples = dev.read(1000, -1)
+            samples = dev.read(1024, -1)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

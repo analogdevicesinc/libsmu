@@ -45,7 +45,7 @@ if __name__ == '__main__':
         # Start a continuous session.
         session.start(0)
         v = 0
-        num_samples = 1000
+        num_samples = 1024
 
         while True:
             # Write iterating voltage values to both channels.
