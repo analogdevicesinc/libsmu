@@ -11,13 +11,13 @@ import random
 from pysmu import Session, Mode, BufferOverflow
 
 
-def refill_data(v=None):
+def refill_data(num_samples, v=None):
     if v is None:
         # fill channels with a static, random integer between 0 and 5
         v = random.randint(0, 5)
-    return [v] * 1000
+    return [v] * num_samples
     # fill channels with a static, random float between -0.2 and 0.2
-    #return [random.uniform(-0.2,0.2)] * 1000
+    #return [random.uniform(-0.2,0.2)] * num_samples
 
 
 if __name__ == '__main__':
@@ -44,15 +44,16 @@ if __name__ == '__main__':
         # Start a continuous session.
         session.start(0)
         v = 0
+        num_samples = 1000
 
         while True:
             # Write iterating voltage values to both channels.
-            chan_a.write(refill_data(v % 6))
-            chan_b.write(refill_data(v % 6))
+            chan_a.write(refill_data(num_samples, v % 6))
+            chan_b.write(refill_data(num_samples, v % 6))
             v += 1
 
             # Read incoming samples in a non-blocking fashion.
-            samples = dev.read(1000)
+            samples = dev.read(num_samples)
             for x in samples:
                 print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
