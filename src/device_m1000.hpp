@@ -112,7 +112,7 @@ namespace smu {
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 				{Signal(&m1000_signal_info[0]), Signal(&m1000_signal_info[1])},
 			},
-			m_mode{0,0},
+			m_mode{HI_Z,HI_Z},
 			m_in_samples_q{s->m_queue_size},
 			m_in_samples_avail{0},
 			_out_samples_a_q{s->m_queue_size},
