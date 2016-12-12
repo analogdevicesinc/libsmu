@@ -661,7 +661,6 @@ int M1000_Device::run(uint64_t samples)
 	if (ret < 0)
 		return -libusb_to_errno(ret);
 
-	std::lock_guard<std::mutex> lock(m_state);
 	m_sample_count = samples;
 	m_required_sample_count = (uint64_t)(
 		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
@@ -669,6 +668,7 @@ int M1000_Device::run(uint64_t samples)
 
 	// Kick off USB transfers.
 	auto start_usb_transfers = [=](M1000_Device* dev) {
+		std::lock_guard<std::mutex> lock(dev->m_state);
 		for (auto t: dev->m_in_transfers) {
 			if (dev->submit_in_transfer(t)) break;
 		}
