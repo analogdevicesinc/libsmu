@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-# Simple script showing how to stream data from a device, use Ctrl-C to exit.
+# Simple script showing how to stream data from a device in continuous mode,
+# use Ctrl-C to exit.
 
 from __future__ import print_function
 
