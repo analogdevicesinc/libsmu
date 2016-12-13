@@ -105,6 +105,10 @@ namespace smu {
 		// Threads used to write outgoing samples values to the queues above.
 		std::thread m_out_samples_thr[2];
 
+		// Used to keep initial USB transfer kickoff thread alive on Windows
+		// until off() is called.
+		std::condition_variable m_usb_cv;
+
 		M1000_Device(Session* s, libusb_device* d, libusb_device_handle* h,
 				const char* hw_version, const char* fw_version, const char* serial):
 			Device(s, d, h, hw_version, fw_version, serial),

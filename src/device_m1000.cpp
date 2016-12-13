@@ -675,13 +675,13 @@ int M1000_Device::run(uint64_t samples)
 		for (auto t: dev->m_out_transfers) {
 			if (dev->submit_out_transfer(t)) break;
 		}
-		lk.unlock();
 #ifdef _WIN32
-		// Keep the thread alive a little longer on Windows otherwise the
-		// libusb event callbacks return 995 (ERROR_OPERATION_ABORTED) due to this thread
-		// exiting before the completion callbacks are finished for the transfers that
-		// were kicked off.
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		// Keep the thread alive on Windows otherwise the libusb event
+		// callbacks return 995 (ERROR_OPERATION_ABORTED) due to this thread
+		// exiting before the completion callbacks are finished for the
+		// transfers that were kicked off.
+		dev->m_usb_cv.wait(lk, [=]{ return (
+			dev->m_in_transfers.num_active == 0 && dev->m_out_transfers.num_active == 0 ); });
 #endif
 	};
 
@@ -762,6 +762,9 @@ int M1000_Device::off()
 	// stop writing samples
 	m_out_samples_stop[CHAN_A] = 1;
 	m_out_samples_stop[CHAN_B] = 1;
+
+	// signal usb transfer thread to exit
+	m_usb_cv.notify_one();
 
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 	return libusb_errno_or_zero(ret);
