@@ -668,13 +668,21 @@ int M1000_Device::run(uint64_t samples)
 
 	// Kick off USB transfers.
 	auto start_usb_transfers = [=](M1000_Device* dev) {
-		std::lock_guard<std::mutex> lock(dev->m_state);
+		std::unique_lock<std::mutex> lk(dev->m_state);
 		for (auto t: dev->m_in_transfers) {
 			if (dev->submit_in_transfer(t)) break;
 		}
 		for (auto t: dev->m_out_transfers) {
 			if (dev->submit_out_transfer(t)) break;
 		}
+		lk.unlock();
+#ifdef WIN32
+		// Keep the thread alive a little longer on Windows otherwise the
+		// libusb event callbacks return 995 (ERROR_OPERATION_ABORTED) due to this thread
+		// exiting before the completion callbacks are finished for the transfers that
+		// were kicked off.
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
 	};
 
 	// Run the USB transfers within their own thread.
