@@ -30,7 +30,7 @@ if __name__ == '__main__':
         for dev in session.devices:
             v = x % 6
             dev.channels['A'].constant(v)
-            dev.channels['B'].constant(-.2)
+            dev.channels['B'].constant(.05)
 
         session.run(10)
 

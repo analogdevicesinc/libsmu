@@ -22,9 +22,9 @@ if __name__ == '__main__':
         dev.channels['A'].mode = Mode.SVMI
         dev.channels['A'].constant(4)
         # Set all devices in the session to use source current, measure voltage
-        # mode for channel B with a constant value of -0.2.
+        # mode for channel B with a constant value of 0.05.
         dev.channels['B'].mode = Mode.SIMV
-        dev.channels['B'].constant(-0.2)
+        dev.channels['B'].constant(0.05)
 
     # Run the session for 10 incoming samples in noncontinuous mode. This means
     # that after the requested number of samples is collected, all the devices
