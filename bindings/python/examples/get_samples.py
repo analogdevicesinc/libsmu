@@ -34,4 +34,4 @@ if __name__ == '__main__':
     for idx, dev in enumerate(session.devices):
         print('dev: {}'.format(idx + 1))
         for x in dev.get_samples(10):
-            print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+            print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))

@@ -32,6 +32,6 @@ if __name__ == '__main__':
             # by default in a blocking fashion.
             samples = dev.read(1024, -1)
             for x in samples:
-                print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+                print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         print('no devices attached')

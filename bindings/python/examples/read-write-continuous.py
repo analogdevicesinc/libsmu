@@ -56,6 +56,6 @@ if __name__ == '__main__':
             # Read incoming samples in a non-blocking fashion.
             samples = dev.read(num_samples)
             for x in samples:
-                print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+                print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         print('no devices attached')
