@@ -9,7 +9,7 @@ from signal import signal, SIG_DFL, SIGINT
 import sys
 import random
 
-from pysmu import Session, Mode, BufferOverflow
+from pysmu import Session, Mode
 
 
 def refill_data(num_samples, v=None):

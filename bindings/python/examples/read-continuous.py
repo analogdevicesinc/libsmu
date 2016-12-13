@@ -8,7 +8,7 @@ from __future__ import print_function
 from signal import signal, SIG_DFL, SIGINT
 import sys
 
-from pysmu import Session, Mode, BufferOverflow
+from pysmu import Session, Mode
 
 
 if __name__ == '__main__':
