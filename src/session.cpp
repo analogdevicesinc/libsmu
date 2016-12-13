@@ -252,7 +252,7 @@ void Session::flash_firmware(std::string file, Device *dev)
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed opening USB device: " + libusb_error_str);
 	}
-#ifndef WIN32
+#ifndef _WIN32
 	libusb_detach_kernel_driver(usb_handle, 0);
 	libusb_detach_kernel_driver(usb_handle, 1);
 #endif

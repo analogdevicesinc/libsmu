@@ -676,7 +676,7 @@ int M1000_Device::run(uint64_t samples)
 			if (dev->submit_out_transfer(t)) break;
 		}
 		lk.unlock();
-#ifdef WIN32
+#ifdef _WIN32
 		// Keep the thread alive a little longer on Windows otherwise the
 		// libusb event callbacks return 995 (ERROR_OPERATION_ABORTED) due to this thread
 		// exiting before the completion callbacks are finished for the transfers that

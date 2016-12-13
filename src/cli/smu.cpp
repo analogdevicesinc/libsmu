@@ -4,7 +4,7 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "getopt.h"
 #include <io.h>
 #else
@@ -22,7 +22,7 @@
 
 #include <libsmu/libsmu.hpp>
 
-#ifndef WIN32
+#ifndef _WIN32
 int (*_isatty)(int) = &isatty;
 #endif
 
