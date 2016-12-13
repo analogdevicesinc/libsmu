@@ -71,6 +71,8 @@ build_script:
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx64.cat c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx86.cat c:\libsmu\drivers
+  - copy C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\32
+  - copy C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\64
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
