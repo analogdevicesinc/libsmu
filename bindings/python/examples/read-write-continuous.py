@@ -52,14 +52,21 @@ if __name__ == '__main__':
 
         # Start a continuous session.
         session.start(0)
-        v = 0
+        i = 0
         num_samples = 1024
 
         while True:
+            # If stdout is a terminal change the written value approximately
+            # every second, otherwise change it on every iteration.
+            if sys.stdout.isatty():
+                v = i / 100
+            else:
+                v = i
+
             # Write iterating voltage values to both channels.
             chan_a.write(refill_data(num_samples, v % 6))
             chan_b.write(refill_data(num_samples, v % 6))
-            v += 1
+            i += 1
 
             # Read incoming samples in a non-blocking fashion.
             samples = dev.read(num_samples)
