@@ -12,6 +12,14 @@ import random
 from pysmu import Session, Mode
 
 
+# If stdout is a terminal continuously overwrite a single line, otherwise
+# output each line individually.
+if sys.stdout.isatty():
+    output = lambda s: sys.stdout.write("\r" + s)
+else:
+    output = print
+
+
 def refill_data(num_samples, v=None):
     if v is None:
         # fill channels with a static, random integer between 0 and 5
@@ -56,6 +64,6 @@ if __name__ == '__main__':
             # Read incoming samples in a non-blocking fashion.
             samples = dev.read(num_samples)
             for x in samples:
-                print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+                output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         print('no devices attached')
