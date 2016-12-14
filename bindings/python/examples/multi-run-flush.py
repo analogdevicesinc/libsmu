@@ -23,13 +23,13 @@ if __name__ == '__main__':
     for x in range(21):
         # Flush the read/write queues for all the devices in the session.
         # Without doing this the values won't change between iterations due to
-        # the queues being entirely filled with values from the initial
-        # constant waveforms.
+        # the queues being entirely filled with values from the previous
+        # constant waveform.
         session.flush()
 
         for dev in session.devices:
-            v = x * 5/20.0
-            i = ((x * 4/20.0) / 10.0) - 0.2
+            v = x * (5 / 20.0)
+            i = ((x * (4 / 20.0)) / 10.0) - 0.2
             dev.channels['A'].constant(v)
             dev.channels['B'].constant(i)
 
