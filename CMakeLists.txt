@@ -44,8 +44,8 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 set(BUILD_PYTHON ON CACHE BOOL "Build python support")
 # build command line smu application by default
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
-# don't build tests by default
-set(BUILD_TESTS OFF CACHE BOOL "Build tests")
+# don't build examples by default
+set(BUILD_EXAMPLES OFF CACHE BOOL "Build examples")
 # install udev rules
 set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
 # don't generate docs by default
@@ -78,8 +78,8 @@ endif()
 if(BUILD_CLI)
 	add_subdirectory(src/cli)
 endif()
-if(BUILD_TESTS)
-	add_subdirectory(tests)
+if(BUILD_EXAMPLES)
+	add_subdirectory(examples)
 endif()
 
 # windows installer file
