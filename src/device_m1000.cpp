@@ -337,6 +337,7 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 
 	if (m_mode[channel] != HI_Z) {
 		while (!m_out_samples_q[channel]->pop(val)) {
+			DEBUG("%s: channel %u: waiting for samples from write queue\n", __func__, channel);
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
 		};
 	}
@@ -427,6 +428,8 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		// Stop waiting for samples if we've run out of time.
 		if (timeout >= 0 && clk_diff.count() > timeout)
 			break;
+		DEBUG("%s: waiting for incoming samples: requested: %lu, available: %u\n",
+				__func__, samples, m_in_samples_avail.load());
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
