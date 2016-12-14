@@ -139,6 +139,9 @@ namespace smu {
 		// @param chan Target channel index.
 		uint16_t encode_out(unsigned chan);
 
+		// USB start of frame packet number.
+		uint16_t m_sof_start = 0;
+
 		// samples per clock
 		int m_sam_per = 0;
 		// minimum samples per clock
