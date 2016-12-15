@@ -302,6 +302,10 @@ int M1000_Device::configure(uint64_t sampleRate)
 	m_sam_per = round(sample_time * M1K_timer_clock) / 2;
 	if (m_sam_per < m_min_per)
 		m_sam_per = m_min_per;
+	else if (m_sam_per > m_max_per)
+		m_sam_per = m_max_per;
+
+	// convert back to the actual sample time;
 	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
 
 	unsigned transfers = 8;

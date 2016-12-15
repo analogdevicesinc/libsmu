@@ -142,10 +142,12 @@ namespace smu {
 		// USB start of frame packet number.
 		uint16_t m_sof_start = 0;
 
-		// samples per clock
+		// clock cycles per sample
 		int m_sam_per = 0;
-		// minimum samples per clock
+		// minimum clock cycles per sample (100ksps)
 		const int m_min_per = 240;
+		// maximum clock cycles per sample (~1024 samples/s)
+		const int m_max_per = 24000;
 
 		unsigned m_samples_per_transfer;
 		unsigned m_packets_per_transfer;
