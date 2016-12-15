@@ -35,8 +35,10 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
+#ifndef _WIN32
 	// Make SIGQUIT force sample drops.
 	signal(SIGQUIT, signalHandler);
+#endif
 
 	// Create session object and add all compatible devices them to the
 	// session. Note that this currently doesn't handle returned errors.
