@@ -6,7 +6,6 @@
 #include <unistd.h>
 #endif
 
-#include <csignal>
 #include <array>
 #include <chrono>
 #include <iostream>
@@ -26,17 +25,8 @@ using std::endl;
 
 using namespace smu;
 
-void signalHandler(int signum)
-{
-	cerr << endl << "sleeping for a bit to cause an overflow exception in continuous mode" << endl;
-	std::this_thread::sleep_for(std::chrono::milliseconds(250));
-}
-
 int main(int argc, char **argv)
 {
-	// Make SIGQUIT force sample drops.
-	signal(SIGQUIT, signalHandler);
-
 	// Create session object and add all compatible devices them to the
 	// session. Note that this currently doesn't handle returned errors.
 	Session* session = new Session();
