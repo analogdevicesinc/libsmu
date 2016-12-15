@@ -1,4 +1,10 @@
-// Simple test for writing data.
+// Simple example for reading/writing data in a continuous fashion.
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <csignal>
 #include <array>
@@ -6,11 +12,14 @@
 #include <functional>
 #include <iostream>
 #include <vector>
-#include <random>
 #include <system_error>
 #include <thread>
 
 #include <libsmu/libsmu.hpp>
+
+#ifndef _WIN32
+int (*_isatty)(int) = &isatty;
+#endif
 
 using std::cout;
 using std::cerr;
@@ -53,12 +62,6 @@ int main(int argc, char **argv)
 	std::vector<float> a_txbuf;
 	std::vector<float> b_txbuf;
 
-	// Write static, random integers between 0 and 5 to voltage channels.
-	std::random_device r;
-	std::default_random_engine rand_eng(r());
-	std::uniform_int_distribution<int> rand_dist(0, 5);
-	auto rand_voltage = std::bind(rand_dist, rand_eng);
-
 	// refill Tx buffers with data
 	auto refill_data = [=](std::vector<float>& buf, unsigned size, int voltage) {
 		buf.clear();
@@ -67,21 +70,43 @@ int main(int argc, char **argv)
 		}
 	};
 
+	uint64_t i = 0;
+	uint64_t v = 0;
+
 	while (true) {
-		refill_data(a_txbuf, 1000, rand_voltage());
-		refill_data(b_txbuf, 1000, rand_voltage());
+		// If stdout is a terminal change the written value approximately
+		// every second, otherwise change it on every iteration.
+		if (_isatty(1))
+			v = i / 100;
+		else
+			v = i;
+
+		// Refill outgoing data buffers.
+		refill_data(a_txbuf, 1000, v % 6);
+		refill_data(b_txbuf, 1000, v % 6);
+		i++;
+
 		try {
+			// Write iterating voltage values to both channels.
 			dev->write(a_txbuf, 0);
 			dev->write(b_txbuf, 1);
+			// Read incoming samples in a non-blocking fashion.
 			dev->read(rxbuf, 1000);
 		} catch (const std::system_error& e) {
-			// Exit on dropped samples.
-			cerr << "sample(s) dropped: " << e.what() << endl;
-			exit(1);
+			if (!_isatty(1)) {
+				// Exit on dropped samples when stdout isn't a terminal.
+				cerr << "sample(s) dropped: " << e.what() << endl;
+				exit(1);
+			}
 		}
 
 		for (auto i: rxbuf) {
-			printf("%f %f %f %f\n", i[0], i[1], i[2], i[3]);
+			// Overwrite a singular line if stdout is a terminal, otherwise
+			// output line by line.
+			if (_isatty(1))
+				printf("\r% 6f % 6f % 6f % 6f", i[0], i[1], i[2], i[3]);
+			else
+				printf("% 6f % 6f % 6f % 6f\n", i[0], i[1], i[2], i[3]);
 		}
 	};
 }
