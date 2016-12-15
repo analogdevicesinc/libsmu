@@ -38,7 +38,7 @@ using namespace smu;
 
 void signalHandler(int signum)
 {
-	cerr << endl << "sleeping for a bit to cause an overflow exception" << endl;
+	cerr << endl << "sleeping for a bit to cause an overflow exception in continuous mode" << endl;
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 }
 
