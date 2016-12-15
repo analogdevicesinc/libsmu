@@ -284,12 +284,13 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	}
 }
 
-int M1000_Device::configure(uint64_t sampleRate)
+int M1000_Device::configure(uint32_t sampleRate)
 {
 	int ret;
 
 	double sample_time = 1.0 / sampleRate;
 	double M1K_timer_clock;
+	int set_sample_rate;
 
 	// If firmware version is 023314a, initial production, use 3e6 for timer clock
 	// otherwise, assume a more recent firmware, and use a faster clock.
@@ -307,6 +308,8 @@ int M1000_Device::configure(uint64_t sampleRate)
 
 	// convert back to the actual sample time;
 	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
+	// convert back to the actual sample rate
+	set_sample_rate = round((1.0 / sample_time) / 2.0);
 
 	unsigned transfers = 8;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
@@ -319,7 +322,11 @@ int M1000_Device::configure(uint64_t sampleRate)
 	ret = m_out_transfers.alloc(transfers, m_usb, EP_OUT, LIBUSB_TRANSFER_TYPE_BULK,
 		m_packets_per_transfer * out_packet_size, 10000, m1000_out_completion, this);
 	m_in_transfers.num_active = m_out_transfers.num_active = 0;
-	return ret;
+
+	if (ret < 0)
+		return ret;
+	else
+		return set_sample_rate;
 }
 
 // Constrain a given value by low and high bounds.

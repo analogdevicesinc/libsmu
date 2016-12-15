@@ -1,6 +1,7 @@
 # Interface wrapper for the libsmu library.
 # distutils: language = c++
 
+from libc.stdint cimport uint32_t
 from libcpp.set cimport set
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -32,7 +33,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         int add_all()
         int remove(Device* dev, bint detached)
         int destroy(Device* dev)
-        int configure(int sample_rate)
+        int configure(uint32_t sample_rate)
         int run(int samples)
         int start(int samples)
         int cancel()

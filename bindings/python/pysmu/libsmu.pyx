@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 
+from libc.stdint cimport uint32_t
 from libcpp.vector cimport vector
 
 # enum is only in py34 and up, use vendored backport if the system doesn't have
@@ -178,7 +179,7 @@ cdef class Session:
         if errcode:
             raise SessionError('failed destroying device', errcode)
 
-    def configure(self, int sample_rate=0):
+    def configure(self, uint32_t sample_rate=0):
         """Configure the session's sample rate.
 
         Attributes:
@@ -193,7 +194,7 @@ cdef class Session:
 
         cdef int errcode
         errcode = self._session.configure(sample_rate)
-        if errcode:
+        if errcode < 0:
             raise SessionError('failed configuring device', errcode)
 
     def run(self, int samples):

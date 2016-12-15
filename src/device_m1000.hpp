@@ -168,7 +168,7 @@ namespace smu {
 		int get_default_rate() override;
 		int claim() override;
 		int release() override;
-		int configure(uint64_t sampleRate) override;
+		int configure(unsigned sampleRate) override;
 		int on() override;
 		int off() override;
 		int cancel() override;

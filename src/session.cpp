@@ -479,7 +479,7 @@ int Session::remove(Device* device, bool detached)
 	return ret;
 }
 
-int Session::configure(uint64_t sampleRate)
+int Session::configure(uint32_t sampleRate)
 {
 	int ret = 0;
 
@@ -500,12 +500,12 @@ int Session::configure(uint64_t sampleRate)
 
 	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);
-		if (ret)
+		if (ret < 0)
 			break;
 	}
 
-	if (!ret)
-		m_sample_rate = sampleRate;
+	if (ret > 0)
+		m_sample_rate = ret;
 
 	return ret;
 }
