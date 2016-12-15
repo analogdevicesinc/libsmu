@@ -145,7 +145,7 @@ namespace smu {
 		// samples per clock
 		int m_sam_per = 0;
 		// minimum samples per clock
-		const int m_min_per = 0x18;
+		const int m_min_per = 240;
 
 		unsigned m_samples_per_transfer;
 		unsigned m_packets_per_transfer;
