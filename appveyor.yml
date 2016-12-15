@@ -43,6 +43,7 @@ build_script:
     -DBoost_USE_STATIC_LIBS=ON \
     -DBUILD_STATIC_LIB=ON \
     -DBUILD_EXAMPLES=ON \
+    -DBUILD_TESTS=ON \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -60,6 +61,7 @@ build_script:
     -DBoost_USE_STATIC_LIBS=ON \
     -DBUILD_STATIC_LIB=ON \
     -DBUILD_EXAMPLES=ON \
+    -DBUILD_TESTS=ON \
     -DBUILD_PYTHON=OFF \
     ..
   - cmake --build . --config %CONFIGURATION%
@@ -71,6 +73,8 @@ build_script:
   - mkdir c:\libsmu\64
   - mkdir c:\libsmu\32\examples
   - mkdir c:\libsmu\64\examples
+  - mkdir c:\libsmu\32\tests
+  - mkdir c:\libsmu\64\tests
   - mkdir c:\libsmu\src
   - mkdir c:\libsmu\include
   - mkdir c:\libsmu\include\libsmu
@@ -90,6 +94,8 @@ build_script:
   - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64
   - copy ..\32\examples\%CONFIGURATION%\*.exe c:\libsmu\32\examples
   - copy ..\64\examples\%CONFIGURATION%\*.exe c:\libsmu\64\examples
+  - copy ..\32\tests\%CONFIGURATION%\*.exe c:\libsmu\32\tests
+  - copy ..\64\tests\%CONFIGURATION%\*.exe c:\libsmu\64\tests
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\64
