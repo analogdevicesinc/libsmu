@@ -46,8 +46,8 @@ set(BUILD_PYTHON ON CACHE BOOL "Build python support")
 set(BUILD_CLI ON CACHE BOOL "Build command line smu application")
 # don't build examples by default
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build examples")
-# don't build/run tests by default
-set(BUILD_TESTS OFF CACHE BOOL "Build/run unit tests")
+# don't build tests by default
+set(BUILD_TESTS OFF CACHE BOOL "Build unit tests")
 # install udev rules
 set(INSTALL_UDEV_RULES ON CACHE BOOL "Install udev rules for the M1K")
 # don't generate docs by default
