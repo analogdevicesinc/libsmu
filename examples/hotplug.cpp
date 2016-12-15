@@ -1,4 +1,4 @@
-// Simple test for hotplug support.
+// Simple example demonstrating hotplug support.
 
 #include <chrono>
 #include <iostream>
@@ -12,12 +12,8 @@ using std::endl;
 
 using namespace smu;
 
-static bool detached, attached;
-
 int main(int argc, char **argv)
 {
-	detached = attached = false;
-
 	// Create session object and add all compatible devices them to the
 	// session. Note that this currently doesn't handle returned errors.
 	Session* session = new Session();
@@ -27,26 +23,22 @@ int main(int argc, char **argv)
 	session->hotplug_detach([=](Device* device, void* data){
 		session->cancel();
 		if (!session->remove(device, true)) {
-			printf("removed device: %s: serial %s: fw %s: hw %s\n",
+			printf("device detached: %s: serial %s: fw %s: hw %s\n",
 				device->info()->label, device->m_serial.c_str(),
 				device->m_fwver.c_str(), device->m_hwver.c_str());
-			detached = true;
 		}
 	});
 
 	// Register hotplug attach callback handler.
 	session->hotplug_attach([=](Device* device, void* data){
 		if (!session->add(device)) {
-			printf("added device: %s: serial %s: fw %s: hw %s\n",
+			printf("device attached: %s: serial %s: fw %s: hw %s\n",
 				device->info()->label, device->m_serial.c_str(),
 				device->m_fwver.c_str(), device->m_hwver.c_str());
-			attached = true;
 		}
 	});
 
-	// Wait around doing nothing until both detach and attach events are fired.
-	// TODO: force all initially attached devices to be detached and reattached
-	// for fixing/testing device ordering within a session on hotplug.
-	while (!(detached && attached))
+	cout << "waiting for hotplug events..." << endl;
+	while (true)
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 }
