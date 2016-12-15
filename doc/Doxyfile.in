@@ -1,6 +1,6 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = libsmu
-PROJECT_NUMBER         = @LIBSMU_VERSION@
+PROJECT_NUMBER         = @LIBSMU_VERSION_STR@
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a

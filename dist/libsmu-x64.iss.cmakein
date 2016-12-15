@@ -1,7 +1,7 @@
 [Setup]
 AppId={{351792B2-1445-4489-945F-DD0649DD403F}
 AppName="libsmu (x64)"
-AppVersion="@LIBSMU_VERSION@"
+AppVersion="@LIBSMU_VERSION_STR@"
 AppPublisher="Analog Devices, Inc."
 AppPublisherURL="http://www.analog.com"
 AppSupportURL="http://www.analog.com"

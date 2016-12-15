@@ -6,7 +6,7 @@
 		<os-version min="10.6.6" />
 	</allowed-os-versions>
 	<license file="@CMAKE_CURRENT_SOURCE_DIR@/LICENSE" mime-type="text/plain" />
-	<product id="libsmu" version="@LIBSMU_VERSION@" />
+	<product id="libsmu" version="@LIBSMU_VERSION_STR@" />
 	<choices-outline>
 		<line choice="default" >
 			<line choice="libsmu" />
@@ -16,5 +16,5 @@
 	<choice id="libsmu" visible="false" >
 		<pkg-ref id="libsmu" />
 	</choice>
-	<pkg-ref id="libsmu" version="@LIBSMU_VERSION@" onConclusion="none" >@LIBSMU_TEMP_PKG@</pkg-ref>
+	<pkg-ref id="libsmu" version="@LIBSMU_VERSION_STR@" onConclusion="none" >@LIBSMU_TEMP_PKG@</pkg-ref>
 </installer-gui-script>
