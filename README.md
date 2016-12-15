@@ -12,7 +12,7 @@ repeated waveforms, configuration of hardware, and measuring of signals.
 Python bindings are also provided in the form of the pysmu module. See
 instructions below for how to build them.
 
-#### Building libsmu
+#### Building
 
 Build dependencies are cmake, pkgconfig, boost (headers only), and libusb-1.0.
 To build and install the library and command line application use the following
@@ -47,11 +47,25 @@ This can also be built locally if enabled using the following cmake option
 before running make:
 
 ```
-cmake -DWITH_DOC=ON ..
+cmake -DWITH_DOC=ON .
 ```
 
 After make is run, the generated documentation files can then be found in the
 html subdir of the build directory.
+
+##### Testing
+
+The [Google Test framework](https://github.com/google/googletest) is used to
+run various streaming tests. Make sure it's installed on the host system and then use the
+following to build and run tests:
+
+```
+cmake -DBUILD_TESTS=ON .
+make check
+```
+
+Note that at least one device should be inserted to the system for the checks
+to run properly.
 
 ##### Python
 
