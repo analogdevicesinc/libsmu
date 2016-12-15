@@ -288,10 +288,6 @@ int M1000_Device::configure(uint64_t sampleRate)
 {
 	int ret;
 
-	// Passing a sample rate of 0 defaults to the device's default sample rate.
-	if (!sampleRate)
-		sampleRate = get_default_rate();
-
 	double sample_time = 1.0 / sampleRate;
 	double M1K_timer_clock;
 

@@ -487,6 +487,17 @@ int Session::configure(uint64_t sampleRate)
 	if (m_active_devices)
 		return -EBUSY;
 
+	// Nothing to configure if the session has no devices.
+	if (m_devices.size() == 0)
+		return ret;
+
+	// Passing a sample rate of 0 defaults to the initial device's default
+	// sample rate.
+	if (sampleRate == 0) {
+		Device* dev = *(m_devices.begin());
+		sampleRate = dev->get_default_rate();
+	}
+
 	for (Device* dev: m_devices) {
 		ret = dev->configure(sampleRate);
 		if (ret)

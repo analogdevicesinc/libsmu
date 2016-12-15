@@ -163,7 +163,7 @@ namespace smu {
 		/// @brief Configure the session's sample rate.
 		/// @param sampleRate The requested sample rate for the session.
 		/// Requesting a sample rate of 0 (the default) causes the session to
-		/// use the devices default sample rate.
+		/// use the first device's default sample rate.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		/// This method may not be called while the session is active.
