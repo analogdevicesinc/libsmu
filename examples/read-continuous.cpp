@@ -1,6 +1,6 @@
-// Simple test for reading data.
+// Simple example for reading data in a continuous fashion.
 //
-// When run the test should output summed sample values from all channels to
+// When run the example should output from all channels to
 // stdout in a continuous fashion. If any sample is dropped the program exits
 // with an error code of 1.
 //
@@ -9,6 +9,12 @@
 //
 // Sample dropping can be forced by sending the running program SIGQUIT
 // (via Ctrl-\), to quit use SIGINT (Ctrl-C).
+
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <csignal>
 #include <array>
@@ -19,6 +25,10 @@
 #include <thread>
 
 #include <libsmu/libsmu.hpp>
+
+#ifndef _WIN32
+int (*_isatty)(int) = &isatty;
+#endif
 
 using std::cout;
 using std::cerr;
@@ -50,17 +60,13 @@ int main(int argc, char **argv)
 	// Grab the first device from the session.
 	auto dev = *(session->m_devices.begin());
 
-	// Run session at the default device rate.
-	session->configure(dev->get_default_rate());
-
 	// Run session in continuous mode.
 	session->start(0);
 
 	// Data to be read from the device is formatted into a vector of four
 	// floats in an array, specifically in the format
 	// <Chan A voltage, Chan A current, Chan B coltage, Chan B current>.
-	std::vector<std::array<float, 4>> buf;
-	float v;
+	std::vector<std::array<float, 4>> rxbuf;
 
 	while (true) {
 		try {
@@ -68,19 +74,22 @@ int main(int argc, char **argv)
 			// Note that the timeout (3rd parameter to read() defaults to 0
 			// (nonblocking mode) so the number of samples returned won't
 			// necessarily be 1024.
-			dev->read(buf, 1024);
+			dev->read(rxbuf, 1024);
 		} catch (const std::system_error& e) {
-			// Exit on dropped samples.
-			cerr << "sample(s) dropped!" << endl;
-			exit(1);
+			if (!_isatty(1)) {
+				// Exit on dropped samples when stdout isn't a terminal.
+				cerr << "sample(s) dropped: " << e.what() << endl;
+				exit(1);
+			}
 		}
 
-		// Iterate over all returned samples, doesn't have to be 1024.
-		for (auto i: buf) {
-			v = i[0] + i[1] + i[2] + i[3];
-			// Can force samples to drop on slower setups and/or slower
-			// terminals, redirect stdout to alleviate this.
-			printf("%f\n", v);
+		for (auto i: rxbuf) {
+			// Overwrite a singular line if stdout is a terminal, otherwise
+			// output line by line.
+			if (_isatty(1))
+				printf("\r% 6f % 6f % 6f % 6f", i[0], i[1], i[2], i[3]);
+			else
+				printf("% 6f % 6f % 6f % 6f\n", i[0], i[1], i[2], i[3]);
 		}
 	};
 }
