@@ -107,7 +107,7 @@ build_script:
   - 7z a "c:\libsmu.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu.zip
 
-  # build all supported python extension versions
+  # build 32 and 64 bit pysmu modules for all supported python versions, currently 2.7, 3.4, and 3.5
   # TODO: drop the duplication and loop over supported python versions
   - mkdir c:\libsmu-python
 
