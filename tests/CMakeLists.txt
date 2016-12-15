@@ -1,13 +1,9 @@
 enable_testing()
 include(CTest)
 
-if(NOT WIN32)
-	find_package(GTest REQUIRED)
-	include_directories(${GTEST_INCLUDE_DIRS})
-	set(GTEST_LIBS ${GTEST_BOTH_LIBRARIES})
-else()
+if(WIN32 OR APPLE)
+	# download and build gtest on Windows and OS X
 	set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
-	# Download and unpack googletest at configure time
 	include(DownloadProject)
 	download_project(
 		PROJ                googletest
@@ -16,7 +12,7 @@ else()
 		${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 
-	# Prevent GoogleTest from overriding our compiler/linker options
+	# Prevent gtest from overriding our compiler/linker options
 	# when building with Visual Studio
 	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
@@ -33,6 +29,10 @@ else()
 	endif()
 
 	set(GTEST_LIBS gtest gtest_main)
+else()
+	find_package(GTest REQUIRED)
+	include_directories(${GTEST_INCLUDE_DIRS})
+	set(GTEST_LIBS ${GTEST_BOTH_LIBRARIES})
 endif()
 
 if(NOT WIN32)
@@ -44,5 +44,6 @@ add_executable(read-test read-test.cpp)
 target_link_libraries(read-test smu ${GTEST_LIBS})
 add_test(NAME read-test COMMAND read-test)
 
+# add support for `make check` to build/run tests
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V
                   DEPENDS read-test)
