@@ -30,7 +30,7 @@ build_script:
   - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
-  # build 32-bit version of libsmu
+  # build 32-bit version of libsmu -- python bindings are built separately
   - mkdir c:\projects\libsmu\32
   - cd c:\projects\libsmu\32
   - cmake -G "Visual Studio 14 2015" \
@@ -48,7 +48,7 @@ build_script:
     ..
   - cmake --build . --config %CONFIGURATION%
 
-  # build 64-bit version of libsmu
+  # build 64-bit version of libsmu -- python bindings are built separately
   - mkdir c:\projects\libsmu\64
   - cd c:\projects\libsmu\64
   - cmake -G "Visual Studio 14 2015 Win64" \
@@ -66,36 +66,38 @@ build_script:
     ..
   - cmake --build . --config %CONFIGURATION%
 
-  # create libsmu zipfile
+  ### create libsmu zipfile
   - mkdir c:\libsmu
   - mkdir c:\libsmu\drivers
   - mkdir c:\libsmu\32
   - mkdir c:\libsmu\64
-  - mkdir c:\libsmu\32\examples
-  - mkdir c:\libsmu\64\examples
-  - mkdir c:\libsmu\32\tests
-  - mkdir c:\libsmu\64\tests
   - mkdir c:\libsmu\src
   - mkdir c:\libsmu\include
   - mkdir c:\libsmu\include\libsmu
+  # bundle a copy of the sources for debugging/traceback purposes
   - xcopy c:\projects\libsmu\src c:\libsmu\src /E /H /K
+  # headers
   - copy ..\include\libsmu\*.hpp c:\libsmu\include\libsmu
   - copy "C:\\libusb\\libusb\libusb.h" c:\libsmu\include\libsmu
+  # drivers
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx64.cat c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx86.cat c:\libsmu\drivers
+  # libraries
   - copy C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\32
   - copy C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.* c:\libsmu\32
   - copy C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\64
   - copy C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.* c:\libsmu\64
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
+  # executables including examples and tests
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
   - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64
-  - copy ..\32\examples\%CONFIGURATION%\*.exe c:\libsmu\32\examples
-  - copy ..\64\examples\%CONFIGURATION%\*.exe c:\libsmu\64\examples
-  - copy ..\32\tests\%CONFIGURATION%\*.exe c:\libsmu\32\tests
-  - copy ..\64\tests\%CONFIGURATION%\*.exe c:\libsmu\64\tests
+  - copy ..\32\examples\%CONFIGURATION%\*.exe c:\libsmu\32
+  - copy ..\64\examples\%CONFIGURATION%\*.exe c:\libsmu\64
+  - copy ..\32\tests\%CONFIGURATION%\*.exe c:\libsmu\32
+  - copy ..\64\tests\%CONFIGURATION%\*.exe c:\libsmu\64
+  # windows specific redistributable libraries
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\64
