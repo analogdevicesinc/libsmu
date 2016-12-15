@@ -48,6 +48,9 @@ build_script:
     ..
   - cmake --build . --config %CONFIGURATION%
 
+  # set LIBSMU_VERSION to current project version determined by cmake
+  - ps: Set-AppveyorBuildVariable -Name LIBSMU_VERSION -Value (get-content .version)
+
   # build 64-bit version of libsmu -- python bindings are built separately
   - mkdir c:\projects\libsmu\64
   - cd c:\projects\libsmu\64
@@ -104,8 +107,8 @@ build_script:
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\64
   - copy "C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\DLLs\\x86\\*" c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\DLLs\\x64\\*" c:\libsmu\64
-  - 7z a "c:\libsmu.zip" c:\libsmu
-  - appveyor PushArtifact c:\libsmu.zip
+  - 7z a "c:\libsmu-%LIBSMU_VERSION%.zip" c:\libsmu
+  - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%.zip
 
   # build 32 and 64 bit pysmu modules for all supported python versions, currently 2.7, 3.4, and 3.5
   # TODO: drop the duplication and loop over supported python versions
@@ -301,8 +304,10 @@ build_script:
   - copy C:\projects\libsmu\32\dist\libsmu-x64.iss C:\projects\libsmu\dist\libsmu-x64.iss
   - iscc C:\projects\libsmu\dist\libsmu-x86.iss
   - iscc C:\projects\libsmu\dist\libsmu-x64.iss
-  - appveyor PushArtifact C:\libsmu-setup-x86.exe
-  - appveyor PushArtifact C:\libsmu-setup-x64.exe
+  - ren C:\libsmu-setup-x86.exe libsmu-%LIBSMU_VERSION%-setup-x86.exe
+  - ren C:\libsmu-setup-x64.exe libsmu-%LIBSMU_VERSION%-setup-x64.exe
+  - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x86.exe
+  - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x64.exe
 
 cache:
   # cache innosetup download
