@@ -23,12 +23,14 @@ install:
 
 build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
+  # see https://github.com/libusb/libusb/issues/86
   - ps: pushd "C:\libusb"
   - git checkout hotplug
   - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
+  # build 32-bit version of libsmu
   - mkdir c:\projects\libsmu\32
   - cd c:\projects\libsmu\32
   - cmake -G "Visual Studio 14 2015" \
@@ -45,6 +47,7 @@ build_script:
     ..
   - cmake --build . --config %CONFIGURATION%
 
+  # build 64-bit version of libsmu
   - mkdir c:\projects\libsmu\64
   - cd c:\projects\libsmu\64
   - cmake -G "Visual Studio 14 2015 Win64" \
@@ -270,6 +273,7 @@ build_script:
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
+  # push pysmu binaries as artifacts
   - ren exe32\pysmu.exe pysmu32.exe
   - ren exe64\pysmu.exe pysmu64.exe
   - appveyor PushArtifact exe32\pysmu32.exe
