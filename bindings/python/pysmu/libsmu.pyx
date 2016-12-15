@@ -53,18 +53,22 @@ cdef class Session:
         # initialize/acquire the GIL
         PyEval_InitThreads()
 
-    def __init__(self, add_all=True, ignore_dataflow=False):
+    def __init__(self, add_all=True, ignore_dataflow=False, sample_rate=0):
         """Initialize a session.
 
         Attributes:
-            add_all (bool): Add all attached devices to the session on initialization.
-            ignore_dataflow (bool): Ignore buffer overflows or timeouts for all
+            add_all (bool, optional): Add all attached devices to the session on initialization.
+            ignore_dataflow (bool, optional): Ignore buffer overflows or timeouts for all
                 devices in the session.
+            sample_rate (int, optional): Sample rate to run the session at.
+                A sample rate of 0 (the default) causes the session to use the
+                default sample rate.
         """
         if add_all:
             self.add_all()
 
         self.ignore_dataflow = ignore_dataflow
+        self.configure(sample_rate)
 
     def hotplug_attach(self, *funcs):
         """Register a function to run on a device attach event.
@@ -173,7 +177,7 @@ cdef class Session:
         Attributes:
             sample_rate (int, optional): Sample rate to run the session at.
                 A sample rate of 0 (the default) causes the session to use the
-                devices default sample rate.
+                default sample rate.
 
         Raises: SessionError on failure.
         """
