@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <array>
 #include <vector>
 
@@ -33,7 +34,7 @@ class ReadTest : public SessionTest {
   // Therefore the body is empty.
 };
 
-TEST_F(ReadTest, Read) {
+TEST_F(ReadTest, non_continuous) {
 	// Grab the first device from the session.
 	auto dev = *(m_session->m_devices.begin());
 
@@ -42,8 +43,19 @@ TEST_F(ReadTest, Read) {
 	// Run session in non-continuous mode.
 	m_session->run(1000);
 
+	// Grab 1000 samples in a blocking fashion in HI-Z mode.
 	dev->read(rxbuf, 1000, -1);
+
+	// We should have gotten 1000 samples.
 	EXPECT_EQ(1000, rxbuf.size());
+
+	// Which all should be near 0.
+	for (auto x: rxbuf) {
+		EXPECT_EQ(0, fabs(round(x[0])));
+		EXPECT_EQ(0, fabs(round(x[1])));
+		EXPECT_EQ(0, fabs(round(x[2])));
+		EXPECT_EQ(0, fabs(round(x[3])));
+	}
 }
 
 int main(int argc, char **argv) {
