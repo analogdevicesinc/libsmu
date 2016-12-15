@@ -248,14 +248,12 @@ namespace smu {
 		/// @brief Register USB hotplug detach callback.
 		void hotplug_detach(std::function<void(Device* device, void* data)> func, void *data = NULL);
 
+		/// @brief Session sample rate.
+		uint64_t m_sample_rate = 0;
+
 	protected:
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
-
-		/// @brief Session is configured or not.
-		/// Used to configure the session using the defaults if configure() is
-		/// not called specifically with a custom sample rate.
-		bool m_configured = false;
 
 		/// @brief Flag for controlling USB event handling.
 		/// USB event handling loop will be run while m_usb_thread_loop is true.
