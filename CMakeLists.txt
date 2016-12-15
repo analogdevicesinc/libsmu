@@ -12,8 +12,7 @@ set(LIBSMU_VERSION_MINOR 9)
 set(LIBSMU_VERSION_PATCH 0)
 set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERSION_PATCH})
 
-# output the current project version information to .version file,
-# used for CI artifact versioning
+# determine a more descriptive project version using git info if available
 set(LIBSMU_VERSION_STR ${LIBSMU_VERSION})
 if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
 	# determine if the current revision is a tag
@@ -34,6 +33,7 @@ if(IS_DIRECTORY ${CMAKE_SOURCE_DIR}/.git)
 		set(LIBSMU_VERSION_STR ${LIBSMU_VERSION_STR}-g${LIBSMU_GIT_REV})
 	endif()
 endif()
+# write version info to file -- used for CI artifact versioning
 file(WRITE ${CMAKE_BINARY_DIR}/.version ${LIBSMU_VERSION_STR})
 
 # support creating some basic binpkgs via `make package`
