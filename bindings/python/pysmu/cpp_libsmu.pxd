@@ -25,6 +25,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu":
         set[Device*] m_devices
         int m_active_devices
         int m_queue_size
+        int m_sample_rate
 
         int scan()
         int add(Device* dev)

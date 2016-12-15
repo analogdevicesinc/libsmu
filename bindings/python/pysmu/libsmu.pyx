@@ -127,6 +127,13 @@ cdef class Session:
         def __get__(self):
             return self._session.cancelled()
 
+    property sample_rate:
+        """Session sample rate."""
+        def __get__(self):
+            return self._session.m_sample_rate
+        def __set__(self, rate):
+            self.configure(rate)
+
     def scan(self):
         """Scan the system for supported devices.
 
