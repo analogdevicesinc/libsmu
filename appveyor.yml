@@ -93,6 +93,9 @@ build_script:
   - copy C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.* c:\libsmu\64
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
+  # gtest libraries for test executables
+  - copy ..\32\googletest-build\googlemock\gtest\%CONFIGURATION%\gtest.* c:\libsmu\32
+  - copy ..\64\googletest-build\googlemock\gtest\%CONFIGURATION%\gtest.* c:\libsmu\64
   # executables including examples and tests
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
   - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64

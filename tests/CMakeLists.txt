@@ -28,10 +28,6 @@ if(WIN32 OR APPLE)
 			"${gmock_SOURCE_DIR}/include")
 	endif()
 
-	# statically link against gtest
-	set(BUILD_SHARED_LIBRARIES OFF)
-	set(CMAKE_EXE_LINKER_FLAGS "-static")
-
 	set(GTEST_LIBS gtest gtest_main)
 else()
 	find_package(GTest REQUIRED)
