@@ -52,10 +52,16 @@ add_executable(read-test read-test.cpp)
 target_link_libraries(read-test smu ${GTEST_LIBS})
 add_test(NAME read-test COMMAND read-test)
 
+add_executable(multi-read-test multi-read-test.cpp)
+target_link_libraries(multi-read-test smu ${GTEST_LIBS})
+add_test(NAME multi-read-test COMMAND multi-read-test)
+
 add_executable(read-write-test read-write-test.cpp)
 target_link_libraries(read-write-test smu ${GTEST_LIBS})
 add_test(NAME read-write-test COMMAND read-write-test)
 
 # add support for `make check` to build/run tests
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V
-                  DEPENDS session-test device-test read-test read-write-test)
+add_custom_target(
+	check COMMAND ${CMAKE_CTEST_COMMAND} -V
+	DEPENDS session-test device-test read-test multi-read-test read-write-test
+)
