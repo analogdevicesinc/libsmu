@@ -104,8 +104,8 @@ build_script:
   - copy ..\32\tests\%CONFIGURATION%\*.exe c:\libsmu\32
   - copy ..\64\tests\%CONFIGURATION%\*.exe c:\libsmu\64
   # batch file to run test suite
-  - copy ..\dist\run-tests.bat c:\libsmu\32
-  - copy ..\dist\run-tests.bat c:\libsmu\64
+  - copy ..\tests\run-tests.bat c:\libsmu\32
+  - copy ..\tests\run-tests.bat c:\libsmu\64
   # windows specific redistributable libraries
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\msvcp140.dll"; c:\libsmu\32
   - copy "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT\\vcruntime140.dll"; c:\libsmu\32
