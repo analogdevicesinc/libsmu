@@ -1,4 +1,4 @@
-// Test for reading data.
+// Tests for reading data.
 
 #include <gtest/gtest.h>
 
@@ -7,32 +7,21 @@
 #include <thread>
 #include <vector>
 
+#include "fixtures.hpp"
 #include <libsmu/libsmu.hpp>
 
 using namespace smu;
 
-class SessionTest : public testing::Test {
-	protected:
-	// Remember that SetUp() is run immediately before a test starts.
-	// This is a good place to record the start time.
-	virtual void SetUp() {
-		m_session = new Session();
-		m_session->add_all();
-	}
-
-	// TearDown() is invoked immediately after a test finishes.  Here we
-	// check if the test was too slow.
-	virtual void TearDown() {
-		delete m_session;
-	}
-
-	Session* m_session;
-};
-
 // Derive a fixture named ReadTest from the Session fixture.
 class ReadTest : public SessionTest {
-  // We don't need any more logic than already in the Session fixture.
-  // Therefore the body is empty.
+	virtual void SetUp() {
+		SessionTest::SetUp();
+		m_session->add_all();
+
+		// requires at least one device plugged in
+		if (m_session->m_devices.size() == 0)
+			FAIL() << "no devices plugged in";
+	}
 };
 
 TEST_F(ReadTest, non_continuous) {
