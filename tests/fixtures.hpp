@@ -26,7 +26,7 @@ class SessionFixture : public testing::Test {
 // Require at least one device to exist.
 class SingleDeviceFixture : public SessionFixture {
 	protected:
-		Device* m_device;
+		Device* m_dev;
 
 		virtual void SetUp() {
 			SessionFixture::SetUp();
@@ -36,6 +36,6 @@ class SingleDeviceFixture : public SessionFixture {
 			if (m_session->m_devices.size() == 0)
 				FAIL() << "no devices plugged in";
 
-			m_device = *(m_session->m_devices.begin());
+			m_dev = *(m_session->m_devices.begin());
 		}
 };

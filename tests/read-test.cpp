@@ -1,4 +1,4 @@
-// Tests for reading data.
+// Tests for read functionality.
 
 #include <gtest/gtest.h>
 
@@ -21,7 +21,7 @@ TEST_F(ReadTest, non_continuous) {
 	m_session->run(1000);
 
 	// Grab 1000 samples in a blocking fashion in HI-Z mode.
-	m_device->read(rxbuf, 1000, -1);
+	m_dev->read(rxbuf, 1000, -1);
 
 	// We should have gotten 1000 samples.
 	EXPECT_EQ(rxbuf.size(), 1000);
@@ -39,7 +39,7 @@ TEST_F(ReadTest, continuous) {
 	std::vector<std::array<float, 4>> rxbuf;
 
 	// Try to get samples in a nonblocking fashion before a session is started.
-	m_device->read(rxbuf, 1000);
+	m_dev->read(rxbuf, 1000);
 	// Shouldn't be an issue as long as you always expect 0 samples back.
 	EXPECT_EQ(rxbuf.size(), 0);
 
@@ -47,7 +47,7 @@ TEST_F(ReadTest, continuous) {
 	m_session->start(0);
 
 	// Grab 1000 samples in a nonblocking fashion in HI-Z mode.
-	m_device->read(rxbuf, 1000);
+	m_dev->read(rxbuf, 1000);
 
 	// We should have gotten between 0 and 1000 samples.
 	EXPECT_LE(rxbuf.size(), 1000);
@@ -55,13 +55,13 @@ TEST_F(ReadTest, continuous) {
 	rxbuf.clear();
 
 	// Grab 1000 samples with a timeout of 150ms.
-	m_device->read(rxbuf, 1000, 150);
+	m_dev->read(rxbuf, 1000, 150);
 	// Which should be long enough to get all 1000 samples.
 	EXPECT_EQ(rxbuf.size(), 1000);
 	rxbuf.clear();
 
 	// Grab 1000 more samples in a blocking fashion.
-	m_device->read(rxbuf, 1000, -1);
+	m_dev->read(rxbuf, 1000, -1);
 	EXPECT_EQ(rxbuf.size(), 1000);
 	rxbuf.clear();
 
@@ -69,7 +69,7 @@ TEST_F(ReadTest, continuous) {
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
 	// Trying to read should now throw a buffer overflow exception.
-	ASSERT_THROW(m_device->read(rxbuf, 1000), std::system_error);
+	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
 }
 
 

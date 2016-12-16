@@ -11,15 +11,15 @@ class DeviceTest : public SingleDeviceFixture {};
 
 
 TEST_F(DeviceTest, serial) {
-	ASSERT_NE(m_device->m_serial, "");
+	ASSERT_NE(m_dev->m_serial, "");
 }
 
 TEST_F(DeviceTest, fwver) {
-	ASSERT_NE(m_device->m_fwver, "");
+	ASSERT_NE(m_dev->m_fwver, "");
 }
 
 TEST_F(DeviceTest, hwver) {
-	ASSERT_NE(m_device->m_hwver, "");
+	ASSERT_NE(m_dev->m_hwver, "");
 }
 
 int main(int argc, char **argv) {
