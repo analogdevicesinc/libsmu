@@ -125,7 +125,7 @@ namespace smu {
 		/// @brief Scan system for all supported devices.
 		/// Updates the list of available, supported devices for the session
 		/// (m_available_devices).
-		/// @return On success, 0 is returned.
+		/// @return On success, the number of devices found is returned.
 		/// @return On error, a negative errno code is returned.
 		int scan();
 

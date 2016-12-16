@@ -342,6 +342,7 @@ int Session::destroy(Device *dev)
 int Session::scan()
 {
 	int device_count = 0;
+	int devices_found = 0;
 
 	m_lock_devlist.lock();
 	m_available_devices.clear();
@@ -359,11 +360,12 @@ int Session::scan()
 			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
 			m_lock_devlist.unlock();
+			devices_found++;
 		}
 	}
 
 	libusb_free_device_list(usb_devs, 1);
-	return 0;
+	return devices_found;
 }
 
 Device* Session::probe_device(libusb_device* usb_dev)
@@ -447,7 +449,7 @@ int Session::add_all()
 		return -EBUSY;
 
 	ret = scan();
-	if (ret)
+	if (ret < 0)
 		return ret;
 
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
