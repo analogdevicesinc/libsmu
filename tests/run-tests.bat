@@ -6,3 +6,4 @@ rem Note that all test executables must be named "testname-test.exe" in order
 rem to be run.
 
 for /r "." %%a in (*-test.exe) do start /b "" "%%~fa"
+pause
