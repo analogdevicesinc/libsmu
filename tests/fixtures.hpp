@@ -31,12 +31,13 @@ class SingleDeviceFixture : public SessionFixture {
 
 		virtual void SetUp() {
 			SessionFixture::SetUp();
-			m_session->add_all();
+			m_session->scan();
 
 			// requires at least one device plugged in
-			if (m_session->m_devices.size() == 0)
+			if (m_session->m_available_devices.size() == 0)
 				FAIL() << "no devices plugged in";
 
+			m_session->add(m_session->m_available_devices[0]);
 			m_dev = *(m_session->m_devices.begin());
 		}
 };
