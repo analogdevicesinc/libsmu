@@ -48,6 +48,10 @@ add_executable(session-test session-test.cpp)
 target_link_libraries(session-test smu ${GTEST_LIBS})
 add_test(NAME session-test COMMAND session-test)
 
+add_executable(device-test device-test.cpp)
+target_link_libraries(device-test smu ${GTEST_LIBS})
+add_test(NAME device-test COMMAND device-test)
+
 # add support for `make check` to build/run tests
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V
-                  DEPENDS read-test session-test)
+                  DEPENDS read-test session-test device-test)
