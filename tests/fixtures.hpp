@@ -6,17 +6,36 @@
 
 using namespace smu;
 
+// Create a session.
 class SessionFixture : public testing::Test {
 	protected:
-	// SetUp() is run immediately before a test starts.
-	virtual void SetUp() {
-		m_session = new Session();
-	}
+		Session* m_session;
 
-	// TearDown() is invoked immediately after a test finishes.
-	virtual void TearDown() {
-		delete m_session;
-	}
+		// SetUp() is run immediately before a test starts.
+		virtual void SetUp() {
+			m_session = new Session();
+		}
 
-	Session* m_session;
+		// TearDown() is invoked immediately after a test finishes.
+		virtual void TearDown() {
+			delete m_session;
+		}
+};
+
+
+// Require at least one device to exist.
+class SingleDeviceFixture : public SessionFixture {
+	protected:
+		Device* m_device;
+
+		virtual void SetUp() {
+			SessionFixture::SetUp();
+			m_session->add_all();
+
+			// requires at least one device plugged in
+			if (m_session->m_devices.size() == 0)
+				FAIL() << "no devices plugged in";
+
+			m_device = *(m_session->m_devices.begin());
+		}
 };
