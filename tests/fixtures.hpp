@@ -6,7 +6,7 @@
 
 using namespace smu;
 
-class SessionTest : public testing::Test {
+class SessionFixture : public testing::Test {
 	protected:
 	// SetUp() is run immediately before a test starts.
 	virtual void SetUp() {

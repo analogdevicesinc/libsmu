@@ -44,6 +44,10 @@ add_executable(read-test read-test.cpp)
 target_link_libraries(read-test smu ${GTEST_LIBS})
 add_test(NAME read-test COMMAND read-test)
 
+add_executable(session-test session-test.cpp)
+target_link_libraries(session-test smu ${GTEST_LIBS})
+add_test(NAME session-test COMMAND session-test)
+
 # add support for `make check` to build/run tests
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V
-                  DEPENDS read-test)
+                  DEPENDS read-test session-test)

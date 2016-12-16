@@ -13,9 +13,9 @@
 using namespace smu;
 
 // Derive a fixture named ReadTest from the Session fixture.
-class ReadTest : public SessionTest {
+class ReadTest : public SessionFixture {
 	virtual void SetUp() {
-		SessionTest::SetUp();
+		SessionFixture::SetUp();
 		m_session->add_all();
 
 		// requires at least one device plugged in
