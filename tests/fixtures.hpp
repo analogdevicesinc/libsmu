@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <set>
+
 #include <libsmu/libsmu.hpp>
 
 using namespace smu;
@@ -22,7 +24,6 @@ class SessionFixture : public testing::Test {
 		}
 };
 
-
 // Require at least one device to exist.
 class SingleDeviceFixture : public SessionFixture {
 	protected:
@@ -37,5 +38,22 @@ class SingleDeviceFixture : public SessionFixture {
 				FAIL() << "no devices plugged in";
 
 			m_dev = *(m_session->m_devices.begin());
+		}
+};
+
+// Require at least two devices to exist.
+class MultiDeviceFixture : public SessionFixture {
+	protected:
+		std::set<Device*> m_devices;
+
+		virtual void SetUp() {
+			SessionFixture::SetUp();
+			m_session->add_all();
+
+			// requires at least one device plugged in
+			if (m_session->m_devices.size() < 2)
+				FAIL() << "multiple devices are required";
+
+			m_devices = m_session->m_devices;
 		}
 };
