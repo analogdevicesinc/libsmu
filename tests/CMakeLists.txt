@@ -40,10 +40,6 @@ if(NOT WIN32)
 endif()
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
-add_executable(read-test read-test.cpp)
-target_link_libraries(read-test smu ${GTEST_LIBS})
-add_test(NAME read-test COMMAND read-test)
-
 add_executable(session-test session-test.cpp)
 target_link_libraries(session-test smu ${GTEST_LIBS})
 add_test(NAME session-test COMMAND session-test)
@@ -52,6 +48,14 @@ add_executable(device-test device-test.cpp)
 target_link_libraries(device-test smu ${GTEST_LIBS})
 add_test(NAME device-test COMMAND device-test)
 
+add_executable(read-test read-test.cpp)
+target_link_libraries(read-test smu ${GTEST_LIBS})
+add_test(NAME read-test COMMAND read-test)
+
+add_executable(read-write-test read-write-test.cpp)
+target_link_libraries(read-write-test smu ${GTEST_LIBS})
+add_test(NAME read-write-test COMMAND read-write-test)
+
 # add support for `make check` to build/run tests
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V
-                  DEPENDS read-test session-test device-test)
+                  DEPENDS session-test device-test read-test read-write-test)
