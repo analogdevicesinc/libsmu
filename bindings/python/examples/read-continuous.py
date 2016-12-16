@@ -29,7 +29,7 @@ if __name__ == '__main__':
         # Grab the first device from the session.
         dev = session.devices[0]
 
-        # Ignore read buffer overflows when printing to stdout.
+        # Ignore read buffer sample drops when printing to stdout.
         dev.ignore_dataflow = sys.stdout.isatty()
 
         # Start a continuous session.

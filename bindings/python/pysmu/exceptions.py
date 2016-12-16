@@ -33,11 +33,11 @@ class DataflowError(LibsmuError):
     pass
 
 
-class BufferOverflow(DataflowError):
-    """The incoming read buffer has overflowed."""
+class SampleDrop(DataflowError):
+    """An incoming sample has been dropped."""
     pass
 
 
-class BufferTimeout(DataflowError):
+class WriteTimeout(DataflowError):
     """An outgoing write buffer has timed out."""
     pass

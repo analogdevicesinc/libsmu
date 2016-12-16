@@ -59,7 +59,7 @@ cdef class Session:
 
         Attributes:
             add_all (bool, optional): Add all attached devices to the session on initialization.
-            ignore_dataflow (bool, optional): Ignore buffer overflows or timeouts for all
+            ignore_dataflow (bool, optional): Ignore sample drops or write timeouts for all
                 devices in the session.
             sample_rate (int, optional): Sample rate to run the session at.
                 A sample rate of 0 (the default) causes the session to use the
@@ -287,7 +287,7 @@ cdef class Device:
         """Initialize a device.
 
         Attributes:
-            ignore_dataflow (bool): Ignore buffer overflows or timeouts for the device.
+            ignore_dataflow (bool): Ignore sample drops or write timeouts for the device.
         """
         self.ignore_dataflow = ignore_dataflow
         self.channels = OrderedDict([
@@ -358,7 +358,7 @@ cdef class Device:
         except RuntimeError as e:
             err = 'data sample dropped'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise BufferOverflow(err)
+                raise SampleDrop(err)
 
         if ret < 0:
             raise DeviceError('failed reading from device', ret)
@@ -385,7 +385,7 @@ cdef class Device:
         except RuntimeError as e:
             err = 'data write timeout'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise BufferTimeout(err)
+                raise WriteTimeout(err)
 
         if errcode < 0:
             raise DeviceError('failed writing to device', errcode)

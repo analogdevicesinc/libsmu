@@ -39,9 +39,6 @@ if __name__ == '__main__':
         # Grab the first device from the session.
         dev = session.devices[0]
 
-        # Ignore read buffer overflows when printing to stdout.
-        dev.ignore_dataflow = sys.stdout.isatty()
-
         # Set both channels to source voltage, measure current mode.
         chan_a = dev.channels['A']
         chan_b = dev.channels['B']

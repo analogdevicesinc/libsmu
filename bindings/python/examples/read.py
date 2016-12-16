@@ -29,9 +29,6 @@ if __name__ == '__main__':
         # Grab the first device from the session.
         dev = session.devices[0]
 
-        # Ignore read buffer overflows when printing to stdout.
-        dev.ignore_dataflow = sys.stdout.isatty()
-
         while True:
             # Run the session for 1024 samples.
             session.run(1024)
