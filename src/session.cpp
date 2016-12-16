@@ -440,6 +440,7 @@ int Session::add(Device* device)
 int Session::add_all()
 {
 	int ret;
+	int num_devices = 0;
 
 	// This method may not be called while the session is active.
 	if (m_active_devices)
@@ -454,8 +455,12 @@ int Session::add_all()
 		ret = add(dev);
 		if (ret)
 			break;
+		num_devices++;
 	}
-	return ret;
+
+	if (ret < 0)
+		return ret;
+	return num_devices;
 }
 
 int Session::remove(Device* device, bool detached)

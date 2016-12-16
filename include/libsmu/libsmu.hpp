@@ -138,7 +138,7 @@ namespace smu {
 
 		/// @brief Shim to scan and add all available devices to a session.
 		/// This method may not be called while the session is active.
-		/// @return On success, 0 is returned.
+		/// @return On success, the number of devices added to the session is returned.
 		/// @return On error, a negative errno code is returned.
 		int add_all();
 

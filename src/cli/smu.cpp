@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
-	if (session->add_all()) {
+	if (session->add_all() < 0) {
 		perror("smu: error initializing session");
 		return 1;
 	}

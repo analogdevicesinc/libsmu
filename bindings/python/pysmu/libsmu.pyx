@@ -152,7 +152,7 @@ cdef class Session:
         """
         cdef int errcode
         errcode = self._session.add_all()
-        if errcode:
+        if errcode < 0:
             raise SessionError('failed scanning and/or adding all supported devices', errcode)
 
     def add(self, Device dev):
