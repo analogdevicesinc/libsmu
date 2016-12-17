@@ -1,8 +1,11 @@
 # distutils: language = c++
 
 from collections import OrderedDict
+from functools import partial
+from multiprocessing.pool import ThreadPool
 import warnings
 
+from cython.parallel import parallel, prange
 from libc.stdint cimport uint32_t
 from libcpp.vector cimport vector
 
@@ -16,6 +19,7 @@ except ImportError:
 cimport cpp_libsmu
 from .array cimport array
 from .exceptions import *
+from .utils import iterify
 
 __version__ = cpp_libsmu.libsmu_version_str().decode()
 
@@ -269,24 +273,35 @@ cdef class Session:
         if ret:
             raise SessionError('failed ending session stream', ret)
 
-    def flash_firmware(self, file, Device dev=None):
+    def flash_firmware(self, path, devices=None):
         """Update firmware for a given device.
 
         Attributes:
-            file (str): Path to firmware file.
-            dev (obj:`Device`, optional): The device targeted for updating. If not supplied or None, the
-                first attached device in the session will be used.
+            path (str): Path to firmware file.
+            devices (list of `Device`s, optional): The device(s) targeted for
+                updating. If not supplied or None, the first attached device in the
+                session will be used.
 
         Raises: SessionError on writing failures.
         """
-        cdef cpp_libsmu.Device *device
-        if dev is None:
-            device = NULL
-        else:
-            device = dev._device
+        devices = iterify(devices)
+
+        # wrapper function to C++ func to be able to bind the firmware path to it
+        def _flash(fw, Device dev):
+            cdef cpp_libsmu.Device *device
+            if dev is None:
+                device = NULL
+            else:
+                device = dev._device
+            self._session.flash_firmware(fw, device)
+
+        flash = partial(_flash, path.encode())
+        pool = ThreadPool(4)
 
         try:
-            return self._session.flash_firmware(file.encode(), device)
+            results = pool.map(flash, devices, 1)
+            pool.close()
+            pool.join()
         except RuntimeError as e:
             raise SessionError(str(e))
 
