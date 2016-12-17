@@ -145,44 +145,44 @@ cdef class Session:
 
         Raises: SessionError on failure.
         """
-        cdef int errcode
-        errcode = self._session.scan()
-        if errcode < 0:
-            raise SessionError('failed scanning for supported devices', errcode)
+        cdef int ret = 0
+        ret = self._session.scan()
+        if ret < 0:
+            raise SessionError('failed scanning for supported devices', ret)
 
     def add_all(self):
         """Scan the system and add all supported devices to the session.
 
         Raises: SessionError on failure.
         """
-        cdef int errcode
-        errcode = self._session.add_all()
-        if errcode < 0:
-            raise SessionError('failed scanning and/or adding all supported devices', errcode)
+        cdef int ret = 0
+        ret = self._session.add_all()
+        if ret < 0:
+            raise SessionError('failed scanning and/or adding all supported devices', ret)
 
     def add(self, Device dev):
         """Add a device to the session.
 
         Raises: SessionError on failure.
         """
-        cdef int errcode
-        errcode = self._session.add(dev._device)
-        if errcode:
-            raise SessionError('failed adding device', errcode)
+        cdef int ret = 0
+        ret = self._session.add(dev._device)
+        if ret:
+            raise SessionError('failed adding device', ret)
 
     def remove(self, Device dev, bint detached=False):
         """Remove a device from the session."""
-        cdef int errcode
-        errcode = self._session.remove(dev._device, detached)
-        if errcode:
-            raise SessionError('failed removing device', errcode)
+        cdef int ret = 0
+        ret = self._session.remove(dev._device, detached)
+        if ret:
+            raise SessionError('failed removing device', ret)
 
     def destroy(self, Device dev):
         """Drop a device from the list of available devices."""
-        cdef int errcode
-        errcode = self._session.destroy(dev._device)
-        if errcode:
-            raise SessionError('failed destroying device', errcode)
+        cdef int ret = 0
+        ret = self._session.destroy(dev._device)
+        if ret:
+            raise SessionError('failed destroying device', ret)
 
     def configure(self, uint32_t sample_rate=0):
         """Configure the session's sample rate.
@@ -197,10 +197,10 @@ cdef class Session:
         if sample_rate < 0:
             raise ValueError('invalid sample rate: {}'.format(sample_rate))
 
-        cdef int errcode
-        errcode = self._session.configure(sample_rate)
-        if errcode < 0:
-            raise SessionError('failed configuring device', errcode)
+        cdef int ret = 0
+        ret = self._session.configure(sample_rate)
+        if ret < 0:
+            raise SessionError('failed configuring device', ret)
 
     def run(self, int samples):
         """Run the configured capture for a certain number of samples.
@@ -212,10 +212,10 @@ cdef class Session:
         if samples < 0:
             raise ValueError('invalid number of samples: {}'.format(samples))
 
-        cdef int errcode
-        errcode = self._session.run(samples)
-        if errcode:
-            raise SessionError('failed running session stream', errcode)
+        cdef int ret = 0
+        ret = self._session.run(samples)
+        if ret:
+            raise SessionError('failed running session stream', ret)
 
     def start(self, int samples):
         """Start the currently configured capture, but do not wait for it to complete.
@@ -227,20 +227,20 @@ cdef class Session:
         if samples < 0:
             raise ValueError('invalid number of samples: {}'.format(samples))
 
-        cdef int errcode
-        errcode = self._session.start(samples)
-        if errcode:
-            raise SessionError('failed starting session stream', errcode)
+        cdef int ret = 0
+        ret = self._session.start(samples)
+        if ret:
+            raise SessionError('failed starting session stream', ret)
 
     def cancel(self):
         """Cancel the current capture and block while waiting for completion.
 
         Raises: SessionError on failure.
         """
-        cdef int errcode
-        errcode = self._session.cancel()
-        if errcode:
-            raise SessionError('failed canceling device transfers', errcode)
+        cdef int ret = 0
+        ret = self._session.cancel()
+        if ret:
+            raise SessionError('failed canceling device transfers', ret)
 
     def flush(self):
         """Flush the read and write queues for all devices in a session."""
@@ -252,10 +252,10 @@ cdef class Session:
 
     def end(self):
         """Block until all devices have completed, then turn off the devices."""
-        cdef int errcode
-        errcode = self._session.end()
-        if errcode:
-            raise SessionError('failed ending session stream', errcode)
+        cdef int ret = 0
+        ret = self._session.end()
+        if ret:
+            raise SessionError('failed ending session stream', ret)
 
     def flash_firmware(self, file, Device dev=None):
         """Update firmware for a given device.
@@ -380,11 +380,11 @@ cdef class Device:
 
         Raises: DeviceError on writing failures.
         """
-        cdef int errcode = 0
+        cdef int ret = 0
         cdef vector[float] buf = data
 
         try:
-            errcode = self._device.write(buf, channel, cyclic)
+            ret = self._device.write(buf, channel, cyclic)
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:
@@ -392,8 +392,8 @@ cdef class Device:
             if not self.ignore_dataflow and e.message[:len(err)] == err:
                 raise WriteTimeout(err)
 
-        if errcode < 0:
-            raise DeviceError('failed writing to device', errcode)
+        if ret < 0:
+            raise DeviceError('failed writing to device', ret)
 
     def flush(self):
         """Flush the read and write queues for the device."""
@@ -436,6 +436,7 @@ cdef class Device:
 
         Raises: DeviceError on writing failures.
         """
+        cdef int ret = 0
         cdef const char* cal_path
         if file is None:
             cal_path = NULL
@@ -443,8 +444,8 @@ cdef class Device:
             file = file.encode()
             cal_path = file
 
-        r = self._device.write_calibration(cal_path)
-        if r < 0:
+        ret = self._device.write_calibration(cal_path)
+        if ret < 0:
             raise DeviceError('failed writing device calibration data')
 
     def __str__(self):
@@ -452,10 +453,10 @@ cdef class Device:
 
     def samba_mode(self):
         """Enable SAM-BA bootloader mode on the device."""
-        cdef int errcode
-        errcode = self._device.samba_mode()
-        if errcode:
-            raise DeviceError('failed to enable SAM-BA mode', errcode)
+        cdef int ret = 0
+        ret = self._device.samba_mode()
+        if ret:
+            raise DeviceError('failed to enable SAM-BA mode', ret)
 
     def set_led(self, led, status):
         """Set device LEDs on or off.
@@ -504,6 +505,8 @@ cdef class Device:
         Returns: the number of bytes actually transferred
         Raises: IOError on USB failures
         """
+        cdef int ret = 0
+
         data = str(data).encode()
 
         if bm_request_type & 0x80 == 0x80:
@@ -512,15 +515,15 @@ cdef class Device:
         else:
             wLength = 0
 
-        r = self._device.ctrl_transfer(bm_request_type, b_request, wValue,
+        ret = self._device.ctrl_transfer(bm_request_type, b_request, wValue,
                                          wIndex, data, wLength, timeout)
-        if r < 0:
-            raise IOError(abs(r), 'USB control transfer failed')
+        if ret < 0:
+            raise IOError(abs(ret), 'USB control transfer failed')
         else:
             if bm_request_type & 0x80 == 0x80:
                 return map(ord, data)
             else:
-                return r
+                return ret
 
 
 cdef class Channel:
@@ -557,10 +560,10 @@ cdef class Channel:
             if mode not in Mode:
                 raise ValueError('invalid mode: {}'.format(mode))
 
-            cdef int errcode
-            errcode = self.dev._device.set_mode(self.chan, mode.value)
-            if errcode:
-                raise DeviceError('failed setting mode {}: '.format(mode), errcode)
+            cdef int ret = 0
+            ret = self.dev._device.set_mode(self.chan, mode.value)
+            if ret:
+                raise DeviceError('failed setting mode {}: '.format(mode), ret)
 
     def read(self, num_samples, timeout=0):
         """Acquire samples from a channel.
