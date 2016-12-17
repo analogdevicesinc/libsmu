@@ -1,6 +1,7 @@
 # distutils: language = c++
 
 from collections import OrderedDict
+import warnings
 
 from libc.stdint cimport uint32_t
 from libcpp.vector cimport vector
@@ -150,6 +151,13 @@ cdef class Session:
         if ret < 0:
             raise SessionError('failed scanning for supported devices', ret)
 
+    def _check_fw_versions(self):
+        """Check session for devices with different firmware versions."""
+        if self.devices > 1:
+            fw_versions = [dev.fwver for dev in self.devices]
+            if len(set(fw_versions)) > 1:
+                warnings.warn("differing firmware versions in session devices", RuntimeWarning)
+
     def add_all(self):
         """Scan the system and add all supported devices to the session.
 
@@ -157,6 +165,8 @@ cdef class Session:
         """
         cdef int ret = 0
         ret = self._session.add_all()
+        self._check_fw_versions()
+
         if ret < 0:
             raise SessionError('failed scanning and/or adding all supported devices', ret)
 
@@ -167,6 +177,8 @@ cdef class Session:
         """
         cdef int ret = 0
         ret = self._session.add(dev._device)
+        self._check_fw_versions()
+
         if ret:
             raise SessionError('failed adding device', ret)
 
