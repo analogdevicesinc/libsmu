@@ -171,7 +171,8 @@ cdef class Session:
         """
         cdef int ret = 0
         ret = self._session.add_all()
-        self._check_fw_versions()
+        if __debug__:
+            self._check_fw_versions()
 
         if ret < 0:
             raise SessionError('failed scanning and/or adding all supported devices', ret)
@@ -183,7 +184,8 @@ cdef class Session:
         """
         cdef int ret = 0
         ret = self._session.add(dev._device)
-        self._check_fw_versions()
+        if __debug__:
+            self._check_fw_versions()
 
         if ret:
             raise SessionError('failed adding device', ret)
