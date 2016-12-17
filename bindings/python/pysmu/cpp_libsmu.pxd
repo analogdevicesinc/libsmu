@@ -20,7 +20,7 @@ cdef extern from "libsmu/version.hpp":
     const char* libsmu_version_str()
 
 
-cdef extern from "libsmu/libsmu.hpp" namespace "smu":
+cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
     cdef cppclass Session:
         vector[Device*] m_available_devices
         set[Device*] m_devices
