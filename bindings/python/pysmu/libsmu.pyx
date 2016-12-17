@@ -160,7 +160,9 @@ cdef class Session:
         if self.devices > 1:
             fw_versions = [dev.fwver for dev in self.devices]
             if len(set(fw_versions)) > 1:
-                warnings.warn("differing firmware versions in session devices", RuntimeWarning)
+                warnings.warn(
+                    "differing firmware versions in session devices: {}".format(
+                        ', '.join(fw_versions)), RuntimeWarning)
 
     def add_all(self):
         """Scan the system and add all supported devices to the session.
