@@ -39,7 +39,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int cancel()
         bint cancelled()
         void flush()
-        void flash_firmware(const char* path, Device* dev) except +
+        void flash_firmware(const char* path, vector[Device*]) except +
         void wait_for_completion()
         int end()
         void hotplug_attach(void (Device *dev, void *data) nogil, void *data)

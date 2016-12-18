@@ -1,11 +1,8 @@
 # distutils: language = c++
 
 from collections import OrderedDict
-from functools import partial
-from multiprocessing.pool import ThreadPool
 import warnings
 
-from cython.parallel import parallel, prange
 from libc.stdint cimport uint32_t
 from libcpp.vector cimport vector
 
@@ -282,30 +279,18 @@ cdef class Session:
 
         Attributes:
             path (str): Path to firmware file.
-            devices (list of `Device`s, optional): The device(s) targeted for
-                updating. If not supplied or None, the first attached device in the
-                session will be used.
+            devices (Device or iterable of `Device`s, optional): The device(s) targeted for
+                updating. If None, all supported devices on the system will be used.
 
         Raises: SessionError on writing failures.
         """
-        devices = iterify(devices)
-
-        # wrapper function to C++ func to be able to bind the firmware path to it
-        def _flash(fw, Device dev):
-            cdef cpp_libsmu.Device *device
-            if dev is None:
-                device = NULL
-            else:
-                device = dev._device
-            self._session.flash_firmware(fw, device)
-
-        flash = partial(_flash, path.encode())
-        pool = ThreadPool(4)
+        cdef vector[cpp_libsmu.Device*] devs
+        if devices is not None:
+            for d in iterify(devices):
+                devs.push_back((<Device>d)._device)
 
         try:
-            results = pool.map(flash, devices, 1)
-            pool.close()
-            pool.join()
+            self._session.flash_firmware(path.encode(), devs)
         except RuntimeError as e:
             raise SessionError(str(e))
 
