@@ -283,5 +283,5 @@ if __name__ == '__main__':
                 'list_releases', 'select_release'))):
             args.flash_auto = True
 
-    session = pysmu.Session()
+    session = pysmu.Session(ignore_dataflow=True)
     args.func(session, args)
