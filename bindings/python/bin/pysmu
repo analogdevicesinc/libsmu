@@ -79,6 +79,13 @@ def list_devices(session, args):
 def stream_data(session, args):
     """Stream data from an attached device."""
     if session.devices:
+        # If stdout is a terminal continuously overwrite a single line, otherwise
+        # output each line individually.
+        if sys.stdout.isatty():
+            output = lambda s: sys.stdout.write("\r" + s)
+        else:
+            output = print
+
         dev = session.devices[0]
         # Ignore read buffer overflows when printing to stdout.
         dev.ignore_dataflow = sys.stdout.isatty()
@@ -88,7 +95,7 @@ def stream_data(session, args):
 
         while True:
             for x in dev.samples:
-                print("{:6f} {:6f} {:6f} {:6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
+                output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         pprint('no devices attached')
         sys.exit(1)
