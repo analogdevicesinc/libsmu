@@ -118,9 +118,17 @@ def flash(session, args):
     github_fw_releases = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
     dev_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/raw/master/m1000.bin'
 
+    devices = []
+    if args.device:
+        devices = [y for y in session.devices for x in args.device if y.serial == x]
+        if not devices:
+            pprint("invalid or unknown device serial, use one of the following:")
+            list_devices(session, args)
+            sys.exit(1)
+
     if args.firmware_path is not None:
         try:
-            session.flash_firmware(args.firmware_path)
+            session.flash_firmware(args.firmware_path, devices)
             flashed = True
         except pysmu.SessionError as e:
             pprint(str(e))
@@ -175,7 +183,7 @@ def flash(session, args):
                 temp_fw = tempfile.NamedTemporaryFile().name
                 urlretrieve(fw_url, temp_fw)
                 try:
-                    session.flash_firmware(temp_fw)
+                    session.flash_firmware(temp_fw, devices)
                 except pysmu.SessionError as e:
                     pprint(str(e))
                     sys.exit(1)
@@ -230,6 +238,9 @@ if __name__ == '__main__':
         'flash',
         description='flash firmware image to a device',
         help='flash firmware')
+    parser_flash.add_argument(
+        'device', nargs='*',
+        help='device(s) to flash identified by serial (use `pysmu list`)')
     parser_flash.set_defaults(func=flash)
     parser_flash_mux = parser_flash.add_mutually_exclusive_group()
     parser_flash_mux.add_argument(
