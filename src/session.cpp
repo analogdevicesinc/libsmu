@@ -188,6 +188,8 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 
 void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 {
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
+
 	// if no devices are specified, flash all supported devices on the system
 	if (devices.size() == 0)
 		devices = m_available_devices;
