@@ -359,7 +359,7 @@ int Session::scan()
 	m_lock_devlist.lock();
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
-	struct libusb_device **usb_devs;
+	libusb_device **usb_devs;
 	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
 	if (device_count < 0)
 		return -libusb_to_errno(device_count);
@@ -396,7 +396,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
 	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
 			!= SUPPORTED_DEVICES.end()) {
-		struct libusb_device_handle *usb_handle = NULL;
+		libusb_device_handle *usb_handle = NULL;
 
 		// probably lacking permission to open the underlying usb device
 		if (libusb_open(usb_dev, &usb_handle) != 0)
