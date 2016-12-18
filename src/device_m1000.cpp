@@ -783,6 +783,9 @@ int M1000_Device::samba_mode()
 	int ret = 0;
 
 	ret = ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
+	// TODO: figure out some way to programmatically query a device in SAM-BA
+	// to ask if it's ready to accept commands.
+	//
 	// Wait for 1 second for the device to drop into SAM-BA bootloader mode.
 	// Without a delay often the code scanning the system for device signatures
 	// matching SAM-BA mode won't find anything because the device hasn't fully
