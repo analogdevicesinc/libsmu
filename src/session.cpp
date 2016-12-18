@@ -291,6 +291,7 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		if (dev) {
 			remove(dev);
 			dev->samba_mode();
+			delete dev;
 		}
 	}
 
