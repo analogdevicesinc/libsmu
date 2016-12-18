@@ -38,7 +38,7 @@ static void list_devices(Session* session)
 		cerr << "smu: no supported devices plugged in" << endl;
 	} else {
 		for (auto dev: session->m_devices) {
-			printf("%s: serial %s: fw %s: hw %s\n",
+			printf("%s: serial %s : fw %s : hw %s\n",
 					dev->info()->label, dev->m_serial.c_str(),
 					dev->m_fwver.c_str(), dev->m_hwver.c_str());
 		}

@@ -465,7 +465,7 @@ cdef class Device:
             raise DeviceError('failed writing device calibration data')
 
     def __str__(self):
-        return 'serial {}: fw {}: hw {}'.format(self.serial, self.fwver, self.hwver)
+        return 'serial {} : fw {} : hw {}'.format(self.serial, self.fwver, self.hwver)
 
     def samba_mode(self):
         """Enable SAM-BA bootloader mode on the device."""
