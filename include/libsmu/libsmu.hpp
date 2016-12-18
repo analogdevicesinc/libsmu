@@ -213,14 +213,14 @@ namespace smu {
 		/// @brief Flush the read and write queues for all devices in a session.
 		void flush();
 
-		/// @brief Update firmware for a given device.
+		/// @brief Update firmware for the target device(s).
 		/// @param file Path to firmware file.
-		/// @param device The device targeted for updating.
+		/// @param devices The device(s) targeted for updating.
 		/// If device is NULL the first attached device in a session will be
 		/// used instead. If no configured devices are found, devices in SAM-BA
 		/// bootloader mode are searched for and the first matching device is used.
 		/// @throws std::runtime_error for various USB failures causing aborted flashes.
-		void flash_firmware(std::string file, Device* device = NULL);
+		void flash_firmware(std::string file, std::vector<Device*> devices = {});
 
 		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();

@@ -11,6 +11,7 @@
 #include <functional>
 #include <string.h>
 
+#include <omp.h>
 #include <libusb.h>
 
 #include "debug.hpp"
@@ -186,139 +187,150 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 	}
 }
 
-void Session::flash_firmware(std::string file, Device *dev)
+void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 {
-	struct libusb_device *usb_dev = NULL;
-	struct libusb_device_handle *usb_handle = NULL;
-	struct libusb_device **usb_devs;
-	struct libusb_device_descriptor usb_info;
-	unsigned char usb_data[512];
-	unsigned int device_count, page;
-	int ret;
-	std::vector<uint16_t> samba_device_id;
+	// if no devices are specified, flash all supported devices on the system
+	if (devices.size() == 0)
+		devices = m_available_devices;
 
 	std::ifstream firmware (file, std::ios::in | std::ios::binary);
 	long firmware_size;
-	const uint32_t flashbase = 0x80000;
-
-	if (!dev && m_devices.size() > 1) {
-		throw std::runtime_error("multiple devices attached, flashing only works on a single device");
-	}
 
 	if (!firmware.is_open()) {
 		throw std::runtime_error("failed to open firmware file");
 	}
 
 	// TODO: verify that file is a compatible firmware file
+	// read firmware file into buffer
+	firmware.seekg(0, std::ios::end);
+	firmware_size = firmware.tellg();
+	firmware_size = firmware_size + (256 - firmware_size % 256);
+	firmware.seekg(0, std::ios::beg);
+	auto fwdata = std::unique_ptr<char[]>{ new char[firmware_size] };
+	firmware.read(fwdata.get(), firmware_size);
+	firmware.close();
 
-	// force attached device into command mode
-	if (dev || !m_devices.empty()) {
-		if (!dev) {
-			dev = *(m_devices.begin());
+	auto flash_device = [&](libusb_device *usb_dev) {
+		libusb_device_handle *usb_handle = NULL;
+		unsigned char usb_data[512];
+		unsigned int page;
+		const uint32_t flashbase = 0x80000;
+		int ret;
+
+		ret = libusb_open(usb_dev, &usb_handle);
+		if (ret < 0) {
+			std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+			throw std::runtime_error("failed opening USB device: " + libusb_error_str);
 		}
-		ret = remove(dev);
-		if (ret < 0)
-			throw std::runtime_error("failed to remove device from current session");
-		ret = dev->samba_mode();
-		if (ret < 0)
-			throw std::runtime_error("failed to enable SAM-BA command mode");
+#ifndef _WIN32
+		libusb_detach_kernel_driver(usb_handle, 0);
+		libusb_detach_kernel_driver(usb_handle, 1);
+#endif
+		libusb_claim_interface(usb_handle, 1);
+
+		// erase flash
+		samba_usb_write(usb_handle, "W400E0804,5A000005#");
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		samba_usb_read(usb_handle, usb_data);
+		// check if flash is erased
+		samba_usb_write(usb_handle, "w400E0808,4#");
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		samba_usb_read(usb_handle, usb_data);
+		samba_usb_read(usb_handle, usb_data);
+		samba_usb_read(usb_handle, usb_data);
+
+		// write firmware
+		page = 0;
+		char cmd[20];
+		uint32_t data;
+		for (auto pos = 0; pos < firmware_size; pos += 4) {
+			data = (uint8_t)fwdata[pos] | (uint8_t)fwdata[pos+1] << 8 |
+				(uint8_t)fwdata[pos+2] << 16 | (uint8_t)fwdata[pos+3] << 24;
+			snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
+			samba_usb_write(usb_handle, cmd);
+			samba_usb_read(usb_handle, usb_data);
+			samba_usb_read(usb_handle, usb_data);
+			// On page boundaries, write the page.
+			if ((pos & 0xFC) == 0xFC) {
+				snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
+				samba_usb_write(usb_handle, cmd);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				samba_usb_read(usb_handle, usb_data);
+				samba_usb_read(usb_handle, usb_data);
+				// Verify page is written.
+				samba_usb_write(usb_handle, "w400E0808,4#");
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				samba_usb_read(usb_handle, usb_data);
+				samba_usb_read(usb_handle, usb_data);
+				samba_usb_read(usb_handle, usb_data);
+				// TODO: check page status
+				page++;
+			}
+		}
+
+		// TODO: verify flashed data
+
+		// disable SAM-BA
+		samba_usb_write(usb_handle, "W400E0804,5A00010B#");
+		samba_usb_read(usb_handle, usb_data);
+		samba_usb_read(usb_handle, usb_data);
+		// jump to flash
+		samba_usb_write(usb_handle, "G00000000#");
+		samba_usb_read(usb_handle, usb_data);
+
+		libusb_release_interface(usb_handle, 1);
+		libusb_close(usb_handle);
+	};
+
+	// force all specified devices into SAM-BA mode
+	#pragma omp parallel for num_threads(4)
+	for (unsigned i = 0; i < devices.size(); i++) {
+		Device* dev = devices[i];
+		if (dev) {
+			remove(dev);
+			dev->samba_mode();
+		}
 	}
+
+	unsigned int device_count;
+	libusb_device **usb_devs;
+	std::vector<libusb_device *> samba_devs;
+	struct libusb_device_descriptor usb_info;
+	std::vector<uint16_t> samba_device_id;
 
 	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
 	if (device_count <= 0) {
 		throw std::runtime_error("error enumerating USB devices");
 	}
 
-	// Walk the list of USB devices looking for the device in SAM-BA mode.
+	// Walk the list of USB devices looking for devices in SAM-BA mode.
 	for (unsigned int i = 0; i < device_count; i++) {
 		libusb_get_device_descriptor(usb_devs[i], &usb_info);
 		samba_device_id = {usb_info.idVendor, usb_info.idProduct};
 		if (std::find(SAMBA_DEVICES.begin(), SAMBA_DEVICES.end(), samba_device_id)
 				!= SAMBA_DEVICES.end()) {
-			// Take the first device found, we disregard multiple devices.
-			usb_dev = usb_devs[i];
-			break;
+			samba_devs.push_back(usb_devs[i]);
 		}
 	}
 
 	libusb_free_device_list(usb_devs, 1);
 
-	if (usb_dev == NULL) {
-		throw std::runtime_error("no supported devices plugged in");
+	if (samba_devs.size() == 0) {
+		throw std::runtime_error("no devices found in SAM-BA mode");
 	}
 
-	ret = libusb_open(usb_dev, &usb_handle);
-	if (ret < 0) {
-		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		throw std::runtime_error("failed opening USB device: " + libusb_error_str);
-	}
-#ifndef _WIN32
-	libusb_detach_kernel_driver(usb_handle, 0);
-	libusb_detach_kernel_driver(usb_handle, 1);
-#endif
-	libusb_claim_interface(usb_handle, 1);
-
-	// erase flash
-	samba_usb_write(usb_handle, "W400E0804,5A000005#");
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	samba_usb_read(usb_handle, usb_data);
-	// check if flash is erased
-	samba_usb_write(usb_handle, "w400E0808,4#");
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-
-	// read firmware file into buffer
-	firmware.seekg(0, std::ios::end);
-	firmware_size = firmware.tellg();
-	firmware_size = firmware_size + (256 - firmware_size % 256);
-	firmware.seekg(0, std::ios::beg);
-	auto buf = std::unique_ptr<char[]>{ new char[firmware_size] };
-	firmware.read(buf.get(), firmware_size);
-	firmware.close();
-
-	// write firmware
-	page = 0;
-	char cmd[20];
-	uint32_t data;
-	for (auto pos = 0; pos < firmware_size; pos += 4) {
-		data = (uint8_t)buf[pos] | (uint8_t)buf[pos+1] << 8 |
-			(uint8_t)buf[pos+2] << 16 | (uint8_t)buf[pos+3] << 24;
-		snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
-		samba_usb_write(usb_handle, cmd);
-		samba_usb_read(usb_handle, usb_data);
-		samba_usb_read(usb_handle, usb_data);
-		// On page boundaries, write the page.
-		if ((pos & 0xFC) == 0xFC) {
-			snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
-			samba_usb_write(usb_handle, cmd);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			// Verify page is written.
-			samba_usb_write(usb_handle, "w400E0808,4#");
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			// TODO: check page status
-			page++;
+	// flash all devices in SAM-BA mode
+	#pragma omp parallel for num_threads(4)
+	for (unsigned i = 0; i < samba_devs.size(); i++) {
+		try {
+			flash_device(samba_devs[i]);
+		} catch (...) {
+			e_ptr = std::current_exception();
 		}
 	}
 
-	// TODO: verify flashed data
-
-	// disable SAM-BA
-	samba_usb_write(usb_handle, "W400E0804,5A00010B#");
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-	// jump to flash
-	samba_usb_write(usb_handle, "G00000000#");
-	samba_usb_read(usb_handle, usb_data);
-
-	libusb_release_interface(usb_handle, 1);
-	libusb_close(usb_handle);
+	if (e_ptr)
+		std::rethrow_exception(e_ptr);
 }
 
 int Session::destroy(Device *dev)

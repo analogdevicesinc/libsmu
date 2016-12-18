@@ -261,7 +261,7 @@ int main(int argc, char **argv)
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
-				// flash firmware image to an attached m1k device
+				// flash firmware image to all attached m1k devices
 				try {
 					session->flash_firmware(optarg);
 				} catch (const std::exception& e) {
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
 					return EXIT_FAILURE;
 				}
 				cout << "smu: successfully updated firmware" << endl;
-				cout << "Please unplug and replug the device to finish the process." << endl;
+				cout << "Please unplug and replug the device(s) to finish the process." << endl;
 				break;
 			case 'h':
 				display_usage();
