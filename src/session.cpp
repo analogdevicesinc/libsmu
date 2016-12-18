@@ -11,7 +11,6 @@
 #include <functional>
 #include <string.h>
 
-#include <omp.h>
 #include <libusb.h>
 
 #include "debug.hpp"
