@@ -118,14 +118,9 @@ def flash(session, args):
     github_fw_releases = 'https://api.github.com/repos/analogdevicesinc/m1k-fw/releases'
     dev_fw_url = 'https://github.com/analogdevicesinc/m1k-fw/raw/master/m1000.bin'
 
-    if args.flash_all:
-        devices = session.devices
-    else:
-        devices = None
-
     if args.firmware_path is not None:
         try:
-            session.flash_firmware(args.firmware_path, devices)
+            session.flash_firmware(args.firmware_path)
             flashed = True
         except pysmu.SessionError as e:
             pprint(str(e))
@@ -180,7 +175,7 @@ def flash(session, args):
                 temp_fw = tempfile.NamedTemporaryFile().name
                 urlretrieve(fw_url, temp_fw)
                 try:
-                    session.flash_firmware(temp_fw, devices)
+                    session.flash_firmware(temp_fw)
                 except pysmu.SessionError as e:
                     pprint(str(e))
                     sys.exit(1)
@@ -189,7 +184,7 @@ def flash(session, args):
                 flashed = True
 
     if flashed:
-        pprint('successfully updated firmware, please unplug and replug the device')
+        pprint('successfully updated firmware, please unplug and replug the device(s)')
 
 
 if __name__ == '__main__':
@@ -236,9 +231,6 @@ if __name__ == '__main__':
         description='flash firmware image to a device',
         help='flash firmware')
     parser_flash.set_defaults(func=flash)
-    parser_flash.add_argument(
-        '--all', action='store_true', dest='flash_all',
-        help='flash all attached devices')
     parser_flash_mux = parser_flash.add_mutually_exclusive_group()
     parser_flash_mux.add_argument(
         '-a', '--auto', action='store_true', dest='flash_auto',
