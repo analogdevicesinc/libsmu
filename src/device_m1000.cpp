@@ -788,7 +788,7 @@ int M1000_Device::samba_mode()
 	// matching SAM-BA mode won't find anything because the device hasn't fully
 	// switched over yet and been re-enumerated by the host system.
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE))
+	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE && ret != LIBUSB_ERROR_NO_DEVICE))
 		return -libusb_to_errno(ret);
 	return 0;
 }
