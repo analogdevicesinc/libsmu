@@ -282,8 +282,9 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	};
 
 	// force all specified devices into SAM-BA mode
+	// TODO: revert to unsigned index when VS supports OpenMP 3.0
 	#pragma omp parallel for num_threads(4)
-	for (unsigned i = 0; i < devices.size(); i++) {
+	for (int i = 0; i < (int)devices.size(); i++) {
 		Device* dev = devices[i];
 		if (dev) {
 			remove(dev);
@@ -319,8 +320,9 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	}
 
 	// flash all devices in SAM-BA mode
+	// TODO: revert to unsigned index when VS supports OpenMP 3.0
 	#pragma omp parallel for num_threads(4)
-	for (unsigned i = 0; i < samba_devs.size(); i++) {
+	for (int i = 0; i < (int)samba_devs.size(); i++) {
 		try {
 			flash_device(samba_devs[i]);
 		} catch (...) {
