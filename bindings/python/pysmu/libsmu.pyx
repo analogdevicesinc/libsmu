@@ -323,17 +323,12 @@ cdef class Session:
 
         Raises: DeviceError on writing failures.
         """
-        # Verify proper data format, the channels for each device in the
-        # session should have an iterable of samples associated with them which
-        # can be empty; however, the list can be shorter than the number of
-        # devices in the session. Any devices without data mapped to them won't
-        # be written to.
-        if len(data) > self.devices or any(len(x) != 2 for x in data):
+        try:
+            for i, x in enumerate(data):
+                self.devices[i].write(x[0], channel=0, cyclic=cyclic)
+                self.devices[i].write(x[1], channel=1, cyclic=cyclic)
+        except IndexError:
             raise ValueError("invalid data buffer format")
-
-        for i, x in enumerate(data):
-            self.devices[i].write(x[0], channel=0, cyclic=cyclic)
-            self.devices[i].write(x[1], channel=1, cyclic=cyclic)
 
     def get_samples(self, num_samples):
         """Acquire signal samples from all devices in a session.
