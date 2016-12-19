@@ -23,7 +23,10 @@ if __name__ == '__main__':
     # don't throw KeyboardInterrupt on Ctrl-C
     signal(SIGINT, SIG_DFL)
 
-    session = Session()
+    # only add one device to the session
+    session = Session(add_all=False)
+    session.scan()
+    session.add(session.available_devices[0])
 
     if session.devices:
         while True:
