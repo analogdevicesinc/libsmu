@@ -404,13 +404,6 @@ cdef class Device:
         def __get__(self):
             return self._device.get_default_rate()
 
-    property samples:
-        """Iterable of continuous sampling."""
-        def __get__(self):
-            while True:
-                for x in self.read(1000):
-                    yield x
-
     def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
 
@@ -686,13 +679,6 @@ cdef class Channel:
         >>> assert len(samples[0]) == 2
         """
         return [x[self.chan] for x in self.dev.get_samples(num_samples)]
-
-    property samples:
-        """Iterable of continuous sampling."""
-        def __get__(self):
-            while True:
-                for x in self.read(1000):
-                    yield x
 
     def arbitrary(self, waveform, cyclic=False):
         """Output an arbitrary waveform.
