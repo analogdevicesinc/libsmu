@@ -294,6 +294,60 @@ cdef class Session:
         except RuntimeError as e:
             raise SessionError(str(e))
 
+    def read(self, size_t num_samples, int timeout=0):
+        """Acquire all signal samples from all device in the session.
+
+        Args:
+            num_samples (int): number of samples to read
+            timeout (int, optional): amount of time in milliseconds to wait for samples to be available.
+                - If 0 (the default), return immediately.
+                - If -1, block indefinitely until the requested number of samples is returned.
+
+        Raises: DeviceError on reading failures.
+        Returns: A list of lists containing sample values.
+        """
+        samples = []
+        for dev in self.devices:
+            samples.append(dev.read(num_samples, timeout=timeout))
+        return samples
+
+    def write(self, data, bint cyclic=False):
+        """Write data to all devices in a session.
+
+        Args:
+            data: iterable of sample values for each channel of each device in the session
+                Example data for session with two devices: [[[1][3]],[[],[4]]]
+            cyclic (bool, optional): continuously iterate over the same buffer
+
+        Raises: DeviceError on writing failures.
+        """
+        # Verify proper data format, the channels for each device in the
+        # session should have an iterable of samples associated with them which
+        # can be empty; however, the list can be shorter than the number of
+        # devices in the session. Any devices without data mapped to them won't
+        # be written to.
+        if len(data) > self.devices or any(len(x) != 2 for x in data):
+            raise ValueError("invalid data buffer format")
+
+        for i, x in enumerate(data):
+            self.devices[i].write(x[0], channel=0, cyclic=cyclic)
+            self.devices[i].write(x[1], channel=1, cyclic=cyclic)
+
+    def get_samples(self, num_samples):
+        """Acquire signal samples from all devices in a session.
+
+        Blocks until the requested number of samples is available.
+
+        Args:
+            num_samples (int): number of samples to read
+
+        Raises: DeviceError on reading failures.
+        Returns: A list of lists containing the specified number of sample values for
+            all devices in the session.
+        """
+        self.run(num_samples)
+        return self.read(num_samples, -1)
+
     def __dealloc__(self):
         del self._session
 
