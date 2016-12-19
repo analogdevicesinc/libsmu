@@ -86,6 +86,12 @@ def stream_data(session, args):
         else:
             output = print
 
+        # exit on device unplug
+        # TODO: Reraise exceptions thrown by hotplug callbacks in python so
+        # this can use sys.exit() instead.
+        detached = lambda dev: os._exit(1)
+        session.hotplug_detach(detached)
+
         dev = session.devices[0]
         # Ignore read buffer overflows when printing to stdout.
         dev.ignore_dataflow = sys.stdout.isatty()
