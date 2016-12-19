@@ -33,9 +33,7 @@ if __name__ == '__main__':
             dev.channels['A'].constant(v)
             dev.channels['B'].constant(i)
 
-        session.run(10)
-
-        for idx, dev in enumerate(session.devices):
-            print('dev: {}: chan A voltage: {}, chan B current: {}'.format(idx + 1, v, i))
-            for x in dev.get_samples(10):
+        for dev, samples in enumerate(session.get_samples(10)):
+            print('dev: {}: chan A voltage: {}, chan B current: {}'.format(dev, v, i))
+            for x in samples:
                 print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))

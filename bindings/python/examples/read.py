@@ -26,16 +26,11 @@ if __name__ == '__main__':
     session = Session()
 
     if session.devices:
-        # Grab the first device from the session.
-        dev = session.devices[0]
-
         while True:
-            # Run the session for 1024 samples.
-            session.run(1024)
-
-            # Read incoming samples from both channels which are in HI-Z mode
-            # by default in a blocking fashion.
-            samples = dev.read(1024, -1)
+            # Run the session for 1024 samples in noncontinuous mode and read
+            # incoming samples from both channels of the first device in a
+            # blocking fashion.
+            samples = session.get_samples(1024)[0]
             for x in samples:
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

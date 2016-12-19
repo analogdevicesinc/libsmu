@@ -26,12 +26,8 @@ if __name__ == '__main__':
         dev.channels['B'].mode = Mode.SIMV
         dev.channels['B'].constant(0.05)
 
-    # Run the session for 10 incoming samples in noncontinuous mode. This means
-    # that after the requested number of samples is collected, all the devices
-    # in the session are turned off and reset into HI-Z mode.
-    session.run(10)
-
-    for idx, dev in enumerate(session.devices):
-        print('dev: {}'.format(idx + 1))
-        for x in dev.get_samples(10):
+    # Run the session for at least 10 captured samples in noncontinuous mode.
+    for dev, samples in enumerate(session.get_samples(10)):
+        print('dev: {}'.format(dev))
+        for x in samples:
             print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))

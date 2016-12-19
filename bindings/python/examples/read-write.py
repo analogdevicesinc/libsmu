@@ -59,14 +59,13 @@ if __name__ == '__main__':
                 v = i
 
             # Write iterating voltage values to both channels.
-            chan_a.write(refill_data(num_samples, v % 6))
-            chan_b.write(refill_data(num_samples, v % 6))
+            chan_a = refill_data(num_samples, v % 6)
+            chan_b = refill_data(num_samples, v % 6)
+            session.write([[chan_a, chan_b]])
             i += 1
 
-            session.run(num_samples)
-
-            # Read incoming samples in a blocking fashion.
-            samples = dev.read(num_samples, -1)
+            # Read incoming samples from the first device in a blocking fashion.
+            samples = session.get_samples(num_samples)[0]
             for x in samples:
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
