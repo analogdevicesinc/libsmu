@@ -42,6 +42,10 @@ def pkgconfig(*packages, **kw):
 
 # configure various required compile flags
 ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
+if os.path.exists(os.path.join(TOPDIR, 'build', 'src')):
+    # link against locally built library if build dir exists
+    ext_kwargs['library_dirs'] = [os.path.join(TOPDIR, 'build', 'src')]
+
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
 else:

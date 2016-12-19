@@ -25,7 +25,7 @@ $ git clone https://github.com/analogdevicesinc/libsmu.git
 
 Configure via cmake:
 ```
-$ cmake .
+$ mkdir build && cd build && cmake ..
 ```
 
 Compile:
@@ -47,7 +47,7 @@ This can also be built locally if enabled using the following cmake option
 before running make:
 
 ```
-cmake -DWITH_DOC=ON .
+cmake -DWITH_DOC=ON ..
 ```
 
 After make is run, the generated documentation files can then be found in the
@@ -60,7 +60,7 @@ run various streaming tests. Make sure it's installed on the host system and the
 following to build and run tests:
 
 ```
-cmake -DBUILD_TESTS=ON .
+cmake -DBUILD_TESTS=ON ..
 make check
 ```
 
@@ -73,7 +73,7 @@ Bindings for python (2.7, 3.4, and 3.5) are available and can be enabled
 explicitly via the following cmake command (they're enabled by default):
 
 ```
-$ cmake -DBUILD_PYTHON=ON .
+$ cmake -DBUILD_PYTHON=ON ..
 ```
 
 Note that this will build only one versions of python for the first supported
