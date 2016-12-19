@@ -60,6 +60,11 @@ add_executable(test-read-write test-read-write.cpp)
 target_link_libraries(test-read-write smu ${GTEST_LIBS})
 add_test(NAME test-read-write COMMAND test-read-write)
 
+# don't run any tests in parallel
+set_tests_properties(
+	test-session test-device test-read test-multi-read
+	test-read-write PROPERTIES RUN_SERIAL TRUE)
+
 # add support for `make check` to build/run tests
 add_custom_target(
 	check COMMAND ${CMAKE_CTEST_COMMAND} -V
