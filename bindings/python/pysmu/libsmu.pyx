@@ -58,13 +58,13 @@ cdef class Session:
         # initialize/acquire the GIL
         PyEval_InitThreads()
 
-    def __init__(self, add_all=True, ignore_dataflow=False, sample_rate=0, queue_size=None):
+    def __init__(self, add_all=True, ignore_dataflow=True, sample_rate=0, queue_size=None):
         """Initialize a session.
 
         Attributes:
             add_all (bool, optional): Add all attached devices to the session on initialization.
             ignore_dataflow (bool, optional): Ignore sample drops or write timeouts for all
-                devices in the session.
+                devices in the session which mainly affects running in continuous mode.
             sample_rate (int, optional): Sample rate to run the session at.
                 A sample rate of 0 (the default) causes the session to use the
                 default sample rate.
