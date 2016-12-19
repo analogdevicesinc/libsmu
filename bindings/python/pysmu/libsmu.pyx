@@ -324,9 +324,9 @@ cdef class Session:
         Raises: DeviceError on writing failures.
         """
         try:
-            for i, x in enumerate(data):
-                self.devices[i].write(x[0], channel=0, cyclic=cyclic)
-                self.devices[i].write(x[1], channel=1, cyclic=cyclic)
+            for i, chan_data in enumerate(data):
+                self.devices[i].write(chan_data[0], channel=0, cyclic=cyclic)
+                self.devices[i].write(chan_data[1], channel=1, cyclic=cyclic)
         except IndexError:
             raise ValueError("invalid data buffer format")
 
