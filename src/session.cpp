@@ -289,7 +289,10 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	for (int i = 0; i < (int)devices.size(); i++) {
 		Device* dev = devices[i];
 		if (dev) {
-			remove(dev);
+			#pragma omp critical
+			{
+				remove(dev);
+			}
 			dev->samba_mode();
 			delete dev;
 		}
