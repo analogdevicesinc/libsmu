@@ -40,33 +40,23 @@ if(NOT WIN32)
 endif()
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 
-add_executable(test-session test-session.cpp)
-target_link_libraries(test-session smu ${GTEST_LIBS})
-add_test(NAME test-session COMMAND test-session)
+# determine all tests from existing sources
+file(GLOB TEST_SRCS "test-*.cpp")
+foreach(TEST_SRC ${TEST_SRCS})
+	# pull the test name from the .cpp file name without the extension
+	get_filename_component(TEST "${TEST_SRC}" NAME_WE)
 
-add_executable(test-device test-device.cpp)
-target_link_libraries(test-device smu ${GTEST_LIBS})
-add_test(NAME test-device COMMAND test-device)
+	# create the test application
+	add_executable(${TEST} ${TEST}.cpp)
+	target_link_libraries(${TEST} smu ${GTEST_LIBS})
+	add_test(NAME ${TEST} COMMAND ${TEST})
 
-add_executable(test-read test-read.cpp)
-target_link_libraries(test-read smu ${GTEST_LIBS})
-add_test(NAME test-read COMMAND test-read)
-
-add_executable(test-multi-read test-multi-read.cpp)
-target_link_libraries(test-multi-read smu ${GTEST_LIBS})
-add_test(NAME test-multi-read COMMAND test-multi-read)
-
-add_executable(test-read-write test-read-write.cpp)
-target_link_libraries(test-read-write smu ${GTEST_LIBS})
-add_test(NAME test-read-write COMMAND test-read-write)
+	# add test to the test list
+	list(APPEND TESTS ${TEST})
+endforeach(TEST_SRC)
 
 # don't run any tests in parallel
-set_tests_properties(
-	test-session test-device test-read test-multi-read
-	test-read-write PROPERTIES RUN_SERIAL TRUE)
+set_tests_properties(${TESTS} PROPERTIES RUN_SERIAL TRUE)
 
 # add support for `make check` to build/run tests
-add_custom_target(
-	check COMMAND ${CMAKE_CTEST_COMMAND} -V
-	DEPENDS test-session test-device test-read test-multi-read test-read-write
-)
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -V DEPENDS ${TESTS})
