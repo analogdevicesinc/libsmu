@@ -100,7 +100,7 @@ def stream_data(session, args):
         session.start(0)
 
         while True:
-            for x in dev.samples:
+            for x in dev.read(1000):
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
         pprint('no devices attached')
