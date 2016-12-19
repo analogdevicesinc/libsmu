@@ -1,5 +1,7 @@
 # distutils: language = c++
 
+from __future__ import division
+
 from collections import OrderedDict
 import warnings
 
@@ -345,8 +347,22 @@ cdef class Session:
         Returns: A list of lists containing the specified number of sample values for
             all devices in the session.
         """
-        self.run(num_samples)
-        return self.read(num_samples, -1)
+        data = [[] for dev in self.devices]
+
+        # maximum number of samples that can fit in the internal, incoming queue
+        max_samples = (self.queue_size // 512) * 512
+        required_samples = num_samples
+
+        # If requested samples are bigger than internal queue size, then
+        # multiple run/read calls must be used.
+        while required_samples:
+            run_samples = required_samples if required_samples < max_samples else max_samples
+            self.run(run_samples)
+            for i, x in enumerate(self.read(run_samples, -1)):
+                data[i].extend(x)
+            required_samples -= run_samples
+
+        return data
 
     def __dealloc__(self):
         del self._session
