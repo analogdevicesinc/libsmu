@@ -27,11 +27,12 @@ if __name__ == '__main__':
         # constant waveform.
         session.flush()
 
-        for dev in session.devices:
-            v = x * (5 / 20.0)
-            i = ((x * (4 / 20.0)) / 10.0) - 0.2
-            dev.channels['A'].constant(v)
-            dev.channels['B'].constant(i)
+        # Write 1000 samples of incrementing voltage and current values to
+        # channel A and B, respectively, for every device in the session.
+        v = x * (5 / 20.0)
+        i = ((x * (4 / 20.0)) / 10.0) - 0.2
+        data = (([v] * 1000,[i] * 1000) for dev in session.devices)
+        session.write(data)
 
         for dev, samples in enumerate(session.get_samples(10)):
             print('dev: {}: chan A voltage: {}, chan B current: {}'.format(dev, v, i))
