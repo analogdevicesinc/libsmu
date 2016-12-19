@@ -396,6 +396,10 @@ cdef class Device:
 
         Raises: DeviceError on writing failures.
         """
+        # don't waste time writing empty data sets
+        if not data:
+            return
+
         cdef int ret = 0
         cdef vector[float] buf = data
 
