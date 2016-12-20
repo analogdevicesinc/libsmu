@@ -99,6 +99,10 @@ Session::Session()
 
 Session::~Session()
 {
+	// force devices to quit streaming if any are active
+	cancel();
+	end();
+
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
