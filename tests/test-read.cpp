@@ -110,6 +110,8 @@ TEST_F(ReadTest, continuous) {
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
 
 		int sample_rate = m_session->configure(i * 1000);
+		// Make sure the session got configured properly.
+		EXPECT_GT(sample_rate, 0);
 		// Verify we're within the minimum configurable range from the specified target.
 		EXPECT_LE(std::abs((i * 1000) - sample_rate), 256);
 		std::cout << "running test at " << sample_rate << " Hz" << std::endl;
