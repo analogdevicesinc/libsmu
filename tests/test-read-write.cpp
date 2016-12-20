@@ -100,7 +100,7 @@ TEST_F(ReadWriteTest, continuous) {
 
 			// Read incoming samples in a non-blocking fashion.
 			m_dev->read(rxbuf, 1000);
-		} catch (const std::runtime_error& e) {
+		} catch (const std::runtime_error&) {
 			// ignore sample drops
 		}
 

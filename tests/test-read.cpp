@@ -126,7 +126,7 @@ TEST_F(ReadTest, continuous_blocking) {
 	// Grab 1000 samples in a blocking fashion.
 	try {
 		m_dev->read(rxbuf, 1000, -1);
-	} catch (const std::runtime_error& e) {
+	} catch (const std::runtime_error&) {
 		// ignore sample drops
 	}
 
@@ -140,7 +140,7 @@ TEST_F(ReadTest, continuous_timeout) {
 	// Grab 1000 samples with a timeout of 110ms.
 	try {
 		m_dev->read(rxbuf, 1000, 110);
-	} catch (const std::runtime_error& e) {
+	} catch (const std::runtime_error&) {
 		// ignore sample drops
 	}
 
@@ -176,7 +176,7 @@ TEST_F(ReadTest, continuous_sample_rates) {
 			// Grab 1000 samples in a non-blocking fashion in HI-Z mode.
 			try {
 				m_dev->read(rxbuf, 1000);
-			} catch (const std::runtime_error& e) {
+			} catch (const std::runtime_error&) {
 				// ignore sample drops
 			}
 
