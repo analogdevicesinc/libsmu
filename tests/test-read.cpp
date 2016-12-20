@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "fixtures.hpp"
+#include "gtest-output.hpp"
 #include <libsmu/libsmu.hpp>
 
 using namespace smu;
@@ -162,7 +163,7 @@ TEST_F(ReadTest, continuous_sample_rates) {
 		EXPECT_GT(sample_rate, 0) << "failed to configure session at " << sample_rate << " SPS";
 		// Verify we're within the minimum configurable range from the specified target.
 		EXPECT_LE(std::abs((i * 1000) - sample_rate), 256);
-		std::cout << "running test at " << sample_rate << " SPS" << std::endl;
+		TEST_COUT << "running test at " << sample_rate << " SPS" << std::endl;
 		m_session->start(0);
 
 		while (true) {
@@ -192,8 +193,7 @@ TEST_F(ReadTest, continuous_sample_rates) {
 		int samples_per_second = std::round((float)sample_count / (clk_diff.count() / 1000));
 		// Verify we're running within 250 SPS of the configured sample rate.
 		EXPECT_LE(std::abs(samples_per_second - sample_rate), 250);
-		printf("received %lu samples in %lums: ~%u SPS\n", sample_count, clk_diff.count(), samples_per_second);
-		printf("======================================\n");
+		PRINTF("received %lu samples in %lums: ~%u SPS\n", sample_count, clk_diff.count(), samples_per_second);
 
 		// Stop the session.
 		m_session->cancel();
