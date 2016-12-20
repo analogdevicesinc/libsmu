@@ -343,10 +343,16 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	int v = 32768 * 4 / 5;
 
 	if (m_mode[channel] != HI_Z) {
+		// only wait up to 100ms for sample values
+		// TODO: make the period dependent on the input buffer size
+		auto clk_start = std::chrono::high_resolution_clock::now();
 		while (!m_out_samples_q[channel]->pop(val)) {
-			DEBUG("%s: channel %u: waiting for samples from write queue\n", __func__, channel);
+			auto clk_end = std::chrono::high_resolution_clock::now();
+			auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+			if (clk_diff.count() > 100)
+				throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
-		};
+		}
 	}
 
 	if (m_mode[channel] == SVMI) {
@@ -488,7 +494,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
 		if (clk_diff.count() > 100)
-			throw std::system_error(EBUSY, std::system_category(), "data write timeout");
+			throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available queue space");
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
