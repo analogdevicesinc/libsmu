@@ -30,10 +30,10 @@ TEST_F(ReadTest, non_continuous) {
 
 	// Which all should be near 0.
 	for (unsigned i = 0; i < rxbuf.size(); i++) {
-		EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << i;
-		EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << i;
-		EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << i;
-		EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << i;
+		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample " << i;
+		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][1]))) << "failed at sample " << i;
+		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample " << i;
+		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][3]))) << "failed at sample " << i;
 	}
 
 	// Verify streaming HI-Z data values for ten seconds.
@@ -51,10 +51,10 @@ TEST_F(ReadTest, non_continuous) {
 		// Which all should be near 0.
 		for (unsigned i = 0; i < rxbuf.size(); i++) {
 			sample_count++;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
 		}
 	}
 }
@@ -111,7 +111,7 @@ TEST_F(ReadTest, continuous) {
 
 		int sample_rate = m_session->configure(i * 1000);
 		// Verify we're within the minimum configurable range from the specified target.
-		EXPECT_LE(abs((i * 1000) - sample_rate), 256);
+		EXPECT_LE(std::abs((i * 1000) - sample_rate), 256);
 		std::cout << "running test at " << sample_rate << " Hz" << std::endl;
 		m_session->start(0);
 
@@ -132,16 +132,16 @@ TEST_F(ReadTest, continuous) {
 			// Which all should be near 0.
 			for (unsigned i = 0; i < rxbuf.size(); i++) {
 				sample_count++;
-				EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
 			}
 		}
 
-		uint32_t samples_per_second = round((float)sample_count / (clk_diff.count() / 1000));
+		int samples_per_second = std::round((float)sample_count / (clk_diff.count() / 1000));
 		// Verify we're running within 250Hz of the configured sample rate.
-		EXPECT_LE(abs(samples_per_second - sample_rate), 250);
+		EXPECT_LE(std::abs(samples_per_second - sample_rate), 250);
 		printf("received %lu samples in %lums: ~%u Hz\n", sample_count, clk_diff.count(), samples_per_second);
 		printf("======================================\n");
 
@@ -149,9 +149,7 @@ TEST_F(ReadTest, continuous) {
 		m_session->cancel();
 		m_session->end();
 	}
-
 }
-
 
 int main(int argc, char **argv) {
 	::testing::InitGoogleTest(&argc, argv);

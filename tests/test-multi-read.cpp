@@ -29,10 +29,10 @@ TEST_F(MultiReadTest, non_continuous) {
 
 		// Which all should be near 0.
 		for (auto x: rxbuf) {
-			EXPECT_EQ(0, fabs(round(x[0])));
-			EXPECT_EQ(0, fabs(round(x[1])));
-			EXPECT_EQ(0, fabs(round(x[2])));
-			EXPECT_EQ(0, fabs(round(x[3])));
+			EXPECT_EQ(0, std::fabs(std::round(x[0])));
+			EXPECT_EQ(0, std::fabs(std::round(x[1])));
+			EXPECT_EQ(0, std::fabs(std::round(x[2])));
+			EXPECT_EQ(0, std::fabs(std::round(x[3])));
 		}
 	}
 }
