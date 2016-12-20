@@ -14,11 +14,18 @@
 
 using namespace smu;
 
-class ReadTest : public SingleDeviceFixture {};
+class ReadTest : public SingleDeviceFixture {
+	protected:
+		std::vector<std::array<float, 4>> rxbuf;
+
+		// TearDown() is invoked immediately after a test finishes.
+		virtual void TearDown() {
+			SingleDeviceFixture::TearDown();
+			rxbuf.clear();
+		}
+};
 
 TEST_F(ReadTest, non_continuous) {
-	std::vector<std::array<float, 4>> rxbuf;
-
 	// Run session in non-continuous mode.
 	m_session->run(1000);
 
@@ -76,7 +83,7 @@ TEST_F(ReadTest, continuous) {
 	// We should have gotten between 0 and 1000 samples.
 	EXPECT_LE(rxbuf.size(), 1000);
 	EXPECT_GE(rxbuf.size(), 0);
-	rxbuf.clear();
+}
 
 	// Grab 1000 samples with a timeout of 150ms.
 	m_dev->read(rxbuf, 1000, 150);
@@ -87,7 +94,7 @@ TEST_F(ReadTest, continuous) {
 	// Grab 1000 more samples in a blocking fashion.
 	m_dev->read(rxbuf, 1000, -1);
 	EXPECT_EQ(rxbuf.size(), 1000);
-	rxbuf.clear();
+}
 
 	// Sleeping for a bit to cause an overflow exception.
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
