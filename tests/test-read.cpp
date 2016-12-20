@@ -73,14 +73,15 @@ TEST_F(ReadTest, non_continuous_sample_drop) {
 
 	// Trying to read should now throw a sample drop exception.
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
+	m_session->flush();
 
-	// Unbalanced run/read calls will lead to sample drops.
-	auto unbalanced_run_read = [&](int run_samples, int read_samples) {
+	// Perform a non-continuous run/read session for a given amount of samples and time.
+	auto run_read = [&](int run_samples, int read_samples, int max_run_time) {
 		auto clk_start = std::chrono::high_resolution_clock::now();
 		while (true) {
 			auto clk_end = std::chrono::high_resolution_clock::now();
 			auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
-			if (clk_diff.count() > 3)
+			if (clk_diff.count() > max_run_time)
 				break;
 
 			m_session->run(run_samples);
@@ -89,7 +90,12 @@ TEST_F(ReadTest, non_continuous_sample_drop) {
 		}
 	};
 
-	ASSERT_THROW(unbalanced_run_read(1024, 1000), std::system_error);
+	// Unbalanced run/read calls will lead to sample drops.
+	ASSERT_THROW(run_read(2000, 1000, 5), std::system_error);
+	m_session->flush();
+
+	// Run/read calls that aren't aligned to sample packet size won't lead to sample drops.
+	ASSERT_NO_THROW(run_read(2000, 2000, 5));
 }
 
 TEST_F(ReadTest, continuous_sample_drop) {
