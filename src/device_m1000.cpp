@@ -461,8 +461,12 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	// If a data overflow occurred in the USB thread, rethrow the exception
 	// here in the main thread. This allows users to just wrap read() in order
 	// to catch and/or act on overflows.
-	if (e_ptr)
-		std::rethrow_exception(e_ptr);
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
 
 	return samples;
 }
