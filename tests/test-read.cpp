@@ -66,9 +66,43 @@ TEST_F(ReadTest, non_continuous) {
 	}
 }
 
-TEST_F(ReadTest, continuous) {
-	std::vector<std::array<float, 4>> rxbuf;
+TEST_F(ReadTest, non_continuous_sample_drop) {
+	// Run the session for more samples than the incoming queue fits.
+	m_session->run(m_session->m_queue_size + 1);
 
+	// Trying to read should now throw a sample drop exception.
+	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
+
+	// Unbalanced run/read calls will lead to sample drops.
+	auto unbalanced_run_read = [&](int run_samples, int read_samples) {
+		auto clk_start = std::chrono::high_resolution_clock::now();
+		while (true) {
+			auto clk_end = std::chrono::high_resolution_clock::now();
+			auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
+			if (clk_diff.count() > 3)
+				break;
+
+			m_session->run(run_samples);
+			m_dev->read(rxbuf, read_samples, -1);
+			EXPECT_EQ(rxbuf.size(), read_samples);
+		}
+	};
+
+	ASSERT_THROW(unbalanced_run_read(1024, 1000), std::system_error);
+}
+
+TEST_F(ReadTest, continuous_sample_drop) {
+	// Run session in continuous mode.
+	m_session->start(0);
+
+	// Sleeping for a bit to cause a sample drop exception.
+	std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+	// Trying to read should now throw a sample drop exception.
+	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
+}
+
+TEST_F(ReadTest, continuous_non_blocking) {
 	// Try to get samples in a nonblocking fashion before a session is started.
 	m_dev->read(rxbuf, 1000);
 	// Shouldn't be an issue as long as you always expect 0 samples back.
@@ -79,35 +113,42 @@ TEST_F(ReadTest, continuous) {
 
 	// Grab 1000 samples in a nonblocking fashion in HI-Z mode.
 	m_dev->read(rxbuf, 1000);
-
 	// We should have gotten between 0 and 1000 samples.
 	EXPECT_LE(rxbuf.size(), 1000);
 	EXPECT_GE(rxbuf.size(), 0);
 }
 
-	// Grab 1000 samples with a timeout of 150ms.
-	m_dev->read(rxbuf, 1000, 150);
-	// Which should be long enough to get all 1000 samples.
-	EXPECT_EQ(rxbuf.size(), 1000);
-	rxbuf.clear();
+TEST_F(ReadTest, continuous_blocking) {
+	// Run session in continuous mode.
+	m_session->start(0);
 
-	// Grab 1000 more samples in a blocking fashion.
-	m_dev->read(rxbuf, 1000, -1);
+	// Grab 1000 samples in a blocking fashion.
+	try {
+		m_dev->read(rxbuf, 1000, -1);
+	} catch (const std::runtime_error& e) {
+		// ignore sample drops
+	}
+
 	EXPECT_EQ(rxbuf.size(), 1000);
 }
 
-	// Sleeping for a bit to cause an overflow exception.
-	std::this_thread::sleep_for(std::chrono::milliseconds(250));
+TEST_F(ReadTest, continuous_timeout) {
+	// Run session in continuous mode.
+	m_session->start(0);
 
-	// Trying to read should now throw a buffer overflow exception.
-	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
-	m_session->flush();
+	// Grab 1000 samples with a timeout of 110ms.
+	try {
+		m_dev->read(rxbuf, 1000, 110);
+	} catch (const std::runtime_error& e) {
+		// ignore sample drops
+	}
 
-	// Stop the previous session.
-	m_session->cancel();
-	m_session->end();
+	// Which should be long enough to get all 1000 samples.
+	EXPECT_EQ(rxbuf.size(), 1000);
+}
 
-	// Verify streaming HI-Z data values at every ~5kHz from 100kHz to 10kHz.
+TEST_F(ReadTest, continuous_sample_rates) {
+	// Verify streaming HI-Z data values from 100 kSPS to 10 kSPS every ~5k SPS.
 	// Run each session for a minute.
 	unsigned test_ms = 60000;
 	for (auto i = 100; i >= 10; i -= 5) {
@@ -118,10 +159,10 @@ TEST_F(ReadTest, continuous) {
 
 		int sample_rate = m_session->configure(i * 1000);
 		// Make sure the session got configured properly.
-		EXPECT_GT(sample_rate, 0);
+		EXPECT_GT(sample_rate, 0) << "failed to configure session at " << sample_rate << " SPS";
 		// Verify we're within the minimum configurable range from the specified target.
 		EXPECT_LE(std::abs((i * 1000) - sample_rate), 256);
-		std::cout << "running test at " << sample_rate << " Hz" << std::endl;
+		std::cout << "running test at " << sample_rate << " SPS" << std::endl;
 		m_session->start(0);
 
 		while (true) {
@@ -131,7 +172,7 @@ TEST_F(ReadTest, continuous) {
 				break;
 			}
 
-			// Grab 1000 samples in a blocking fashion in HI-Z mode.
+			// Grab 1000 samples in a non-blocking fashion in HI-Z mode.
 			try {
 				m_dev->read(rxbuf, 1000);
 			} catch (const std::runtime_error& e) {
@@ -149,9 +190,9 @@ TEST_F(ReadTest, continuous) {
 		}
 
 		int samples_per_second = std::round((float)sample_count / (clk_diff.count() / 1000));
-		// Verify we're running within 250Hz of the configured sample rate.
+		// Verify we're running within 250 SPS of the configured sample rate.
 		EXPECT_LE(std::abs(samples_per_second - sample_rate), 250);
-		printf("received %lu samples in %lums: ~%u Hz\n", sample_count, clk_diff.count(), samples_per_second);
+		printf("received %lu samples in %lums: ~%u SPS\n", sample_count, clk_diff.count(), samples_per_second);
 		printf("======================================\n");
 
 		// Stop the session.
