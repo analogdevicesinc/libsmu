@@ -548,10 +548,12 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 				samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
 			}
 			m_in_sampleno++;
-			if (!m_in_samples_q.push(samples)) {
-				throw std::system_error(EBUSY, std::system_category(), "data sample dropped");
-			} else {
-				m_in_samples_avail++;
+			if (m_sample_count == 0 || m_in_sampleno <= m_sample_count) {
+				if (!m_in_samples_q.push(samples)) {
+					throw std::system_error(EBUSY, std::system_category(), "data sample dropped");
+				} else {
+					m_in_samples_avail++;
+				}
 			}
 		}
 	}
