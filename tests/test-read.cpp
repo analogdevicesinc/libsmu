@@ -158,8 +158,13 @@ TEST_F(ReadTest, continuous_sample_rates) {
 	// Verify streaming HI-Z data values from 100 kSPS to 10 kSPS every ~5k SPS.
 	// Run each session for a minute.
 	unsigned test_ms = 60000;
+	std::vector<float> failure_vals;
+	std::vector<uint64_t> failure_samples;
+
 	for (auto i = 100; i >= 10; i -= 5) {
 		uint64_t sample_count = 0;
+		bool failure = false;
+
 		auto clk_start = std::chrono::high_resolution_clock::now();
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
@@ -189,12 +194,38 @@ TEST_F(ReadTest, continuous_sample_rates) {
 			// Which all should be near 0.
 			for (unsigned i = 0; i < rxbuf.size(); i++) {
 				sample_count++;
-				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
-				EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
+				for (unsigned j = 0; j < 4; j++) {
+					if (std::fabs(std::round(rxbuf[i][j])) != 0) {
+						failure = true;
+						failure_vals.push_back(rxbuf[i][j]);
+						failure_samples.push_back(sample_count);
+					}
+				}
+
+				// show output progress per second
+				if (sample_count % sample_rate == 0) {
+					if (failure) {
+						failure = false;
+						std::cout << "#" << std::flush;
+					} else {
+						std::cout << "*" << std::flush;
+					}
+				}
 			}
 		}
+		std::cout << std::endl;
+
+		// check if bad sample values were received and display them if any exist
+		EXPECT_EQ(failure_samples.size(), 0);
+		if (failure_samples.size() != 0) {
+			std::cout << failure_samples.size() << " bad sample(s):" << std::endl;
+			for (unsigned i = 0; i < failure_samples.size(); i++) {
+				std::cout << "sample: " << failure_samples[i] << ", expected: 0, received: " << failure_vals[i] << std::endl;
+			}
+		}
+
+		failure_samples.clear();
+		failure_vals.clear();
 
 		int samples_per_second = std::round((float)sample_count / (clk_diff.count() / 1000));
 		// Verify we're running within 250 SPS of the configured sample rate.
