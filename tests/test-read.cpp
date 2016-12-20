@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <array>
+#include <chrono>
 #include <thread>
 #include <vector>
 
@@ -27,12 +28,36 @@ TEST_F(ReadTest, non_continuous) {
 	EXPECT_EQ(rxbuf.size(), 1000);
 
 	// Which all should be near 0.
-	for (auto x: rxbuf) {
-		EXPECT_EQ(0, fabs(round(x[0])));
-		EXPECT_EQ(0, fabs(round(x[1])));
-		EXPECT_EQ(0, fabs(round(x[2])));
-		EXPECT_EQ(0, fabs(round(x[3])));
+	for (unsigned i = 0; i < rxbuf.size(); i++) {
+		EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << i;
+		EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << i;
+		EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << i;
+		EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << i;
 	}
+
+	// Verify streaming HI-Z data values for ten seconds.
+	unsigned sample_count = 0;
+	auto clk_start = std::chrono::high_resolution_clock::now();
+	while (true) {
+		auto clk_end = std::chrono::high_resolution_clock::now();
+		auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
+		if (clk_diff.count() > 10)
+			break;
+
+		m_session->run(1024);
+		m_dev->read(rxbuf, 1024, -1);
+		EXPECT_EQ(rxbuf.size(), 1024);
+		// Which all should be near 0.
+		for (unsigned i = 0; i < rxbuf.size(); i++) {
+			sample_count++;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << sample_count;
+		}
+	}
+
+
 }
 
 TEST_F(ReadTest, continuous) {
@@ -70,6 +95,34 @@ TEST_F(ReadTest, continuous) {
 
 	// Trying to read should now throw a buffer overflow exception.
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
+	m_session->flush();
+
+	// Verify streaming HI-Z data values for ten seconds.
+	unsigned sample_count = 0;
+	auto clk_start = std::chrono::high_resolution_clock::now();
+	while (true) {
+		auto clk_end = std::chrono::high_resolution_clock::now();
+		auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
+		if (clk_diff.count() > 10)
+			break;
+
+		// Grab 1000 samples in a nonblocking fashion in HI-Z mode.
+		try {
+			m_dev->read(rxbuf, 1000);
+		} catch (const std::runtime_error& e) {
+			// ignore sample drops
+		}
+		// Which all should be near 0.
+		for (unsigned i = 0; i < rxbuf.size(); i++) {
+			sample_count++;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << sample_count;
+		}
+	}
+
+
 }
 
 
