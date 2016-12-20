@@ -36,7 +36,7 @@ TEST_F(ReadTest, non_continuous) {
 	}
 
 	// Verify streaming HI-Z data values for ten seconds.
-	unsigned sample_count = 0;
+	uint64_t sample_count = 0;
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
@@ -50,14 +50,12 @@ TEST_F(ReadTest, non_continuous) {
 		// Which all should be near 0.
 		for (unsigned i = 0; i < rxbuf.size(); i++) {
 			sample_count++;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
 		}
 	}
-
-
 }
 
 TEST_F(ReadTest, continuous) {
@@ -97,13 +95,13 @@ TEST_F(ReadTest, continuous) {
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
 	m_session->flush();
 
-	// Verify streaming HI-Z data values for ten seconds.
-	unsigned sample_count = 0;
+	// Verify streaming HI-Z data values for a minute.
+	uint64_t sample_count = 0;
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
-		if (clk_diff.count() > 10)
+		if (clk_diff.count() > 60)
 			break;
 
 		// Grab 1000 samples in a nonblocking fashion in HI-Z mode.
@@ -115,10 +113,10 @@ TEST_F(ReadTest, continuous) {
 		// Which all should be near 0.
 		for (unsigned i = 0; i < rxbuf.size(); i++) {
 			sample_count++;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
 		}
 	}
 
