@@ -5,6 +5,7 @@
 #include <cmath>
 #include <array>
 #include <chrono>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -95,31 +96,59 @@ TEST_F(ReadTest, continuous) {
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
 	m_session->flush();
 
-	// Verify streaming HI-Z data values for a minute.
-	uint64_t sample_count = 0;
-	auto clk_start = std::chrono::high_resolution_clock::now();
-	while (true) {
+	// Stop the previous session.
+	m_session->cancel();
+	m_session->end();
+
+	// Verify streaming HI-Z data values at every ~5kHz from 100kHz to 10kHz.
+	// Run each session for a minute.
+	unsigned test_ms = 60000;
+	for (auto i = 100; i >= 10; i -= 5) {
+		uint64_t sample_count = 0;
+		auto clk_start = std::chrono::high_resolution_clock::now();
 		auto clk_end = std::chrono::high_resolution_clock::now();
-		auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
-		if (clk_diff.count() > 60)
-			break;
+		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
 
-		// Grab 1000 samples in a nonblocking fashion in HI-Z mode.
-		try {
-			m_dev->read(rxbuf, 1000);
-		} catch (const std::runtime_error& e) {
-			// ignore sample drops
+		int sample_rate = m_session->configure(i * 1000);
+		// Verify we're within the minimum configurable range from the specified target.
+		EXPECT_LE(abs((i * 1000) - sample_rate), 256);
+		std::cout << "running test at " << sample_rate << " Hz" << std::endl;
+		m_session->start(0);
+
+		while (true) {
+			clk_end = std::chrono::high_resolution_clock::now();
+			clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+			if (clk_diff.count() > test_ms) {
+				break;
+			}
+
+			// Grab 1000 samples in a blocking fashion in HI-Z mode.
+			try {
+				m_dev->read(rxbuf, 1000);
+			} catch (const std::runtime_error& e) {
+				// ignore sample drops
+			}
+
+			// Which all should be near 0.
+			for (unsigned i = 0; i < rxbuf.size(); i++) {
+				sample_count++;
+				EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+				EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
+			}
 		}
-		// Which all should be near 0.
-		for (unsigned i = 0; i < rxbuf.size(); i++) {
-			sample_count++;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][1]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
-			EXPECT_EQ(0, fabs(round(rxbuf[i][3]))) << "failed at sample: " << sample_count;
-		}
+
+		uint32_t samples_per_second = round((float)sample_count / (clk_diff.count() / 1000));
+		// Verify we're running within 250Hz of the configured sample rate.
+		EXPECT_LE(abs(samples_per_second - sample_rate), 250);
+		printf("received %lu samples in %lums: ~%u Hz\n", sample_count, clk_diff.count(), samples_per_second);
+		printf("======================================\n");
+
+		// Stop the session.
+		m_session->cancel();
+		m_session->end();
 	}
-
 
 }
 
