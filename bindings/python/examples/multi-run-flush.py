@@ -32,7 +32,7 @@ if __name__ == '__main__':
         v = x * (5 / 20.0)
         i = ((x * (4 / 20.0)) / 10.0) - 0.2
         data = (([v] * 1000,[i] * 1000) for dev in session.devices)
-        session.write(data)
+        session.write(data, cyclic=True)
 
         for dev, samples in enumerate(session.get_samples(10)):
             print('dev: {}: chan A voltage: {}, chan B current: {}'.format(dev, v, i))
