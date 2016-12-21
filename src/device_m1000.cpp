@@ -360,12 +360,12 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 			// noncontinuous mode use the previously written value as a
 			// fallback. This allows for filling out full packets if only
 			// partial packets worth of samples were requested.
-			if (m_previous_output[channel] != -100) {
-				val = m_previous_output[channel];
-			} else {
+			if (std::isnan(m_previous_output[channel])) {
 				// Throw exception if trying to use fallback values without
 				// writing any data first.
 				throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
+			} else {
+				val = m_previous_output[channel];
 			}
 		}
 	}
@@ -867,8 +867,8 @@ int M1000_Device::off()
 	m_out_samples_stop[CHAN_B] = 2;
 
 	// reset fallback output values to defaults
-	m_previous_output[CHAN_A] = -100;
-	m_previous_output[CHAN_B] = -100;
+	m_previous_output[CHAN_A] = std::nanf("");
+	m_previous_output[CHAN_B] = std::nanf("");
 
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();

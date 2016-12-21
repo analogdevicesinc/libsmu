@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cmath>
 #include <array>
 #include <atomic>
 #include <condition_variable>
@@ -144,7 +145,7 @@ namespace smu {
 		// Most recent value written to the output of each channel initialized
 		// to an invalid value in order to know when data hasn't been written
 		// to a channel.
-		float m_previous_output[2] = {-100,-100};
+		float m_previous_output[2] = {std::nanf(""), std::nanf("")};
 
 		// USB start of frame packet number.
 		uint16_t m_sof_start = 0;
