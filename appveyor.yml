@@ -26,8 +26,8 @@ build_script:
   # see https://github.com/libusb/libusb/issues/86
   - ps: pushd "C:\libusb"
   - git checkout hotplug
-  - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=%CONFIGURATION% /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
 
   # build 32-bit version of libsmu -- python bindings are built separately
@@ -36,7 +36,7 @@ build_script:
   - cmake -G "Visual Studio 14 2015" \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_62_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_62_0\\lib32-msvc-14.0" \
@@ -57,7 +57,7 @@ build_script:
   - cmake -G "Visual Studio 14 2015 Win64" \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.lib" \
+    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\Release\\lib\\libusb-1.0.lib" \
     -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_62_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_62_0\\lib64-msvc-14.0" \
@@ -87,10 +87,10 @@ build_script:
   - copy ..\dist\m1k-winusbx64.cat c:\libsmu\drivers
   - copy ..\dist\m1k-winusbx86.cat c:\libsmu\drivers
   # libraries
-  - copy C:\\libusb\\Win32\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\32
-  - copy C:\\libusb\\Win32\\%CONFIGURATION%\\dll\\libusb-1.0.* c:\libsmu\32
-  - copy C:\\libusb\\x64\\%CONFIGURATION%\\lib\\libusb-1.0.* c:\libsmu\64
-  - copy C:\\libusb\\x64\\%CONFIGURATION%\\dll\\libusb-1.0.* c:\libsmu\64
+  - copy C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.* c:\libsmu\32
+  - copy C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.* c:\libsmu\32
+  - copy C:\\libusb\\x64\\Release\\lib\\libusb-1.0.* c:\libsmu\64
+  - copy C:\\libusb\\x64\\Release\\dll\\libusb-1.0.* c:\libsmu\64
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   # gtest libraries for test executables
