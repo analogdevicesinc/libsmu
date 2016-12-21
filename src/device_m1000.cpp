@@ -741,12 +741,14 @@ int M1000_Device::run(uint64_t samples)
 		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
 		std::vector<float>& buf = dev->m_out_samples_buf[channel];
 		std::mutex& mtx = dev->m_out_samples_mtx[channel];
+		std::mutex& state_mtx = dev->m_out_samples_state_mtx[channel];
 		std::condition_variable& cv = dev->m_out_samples_cv[channel];
 		std::atomic<int>& stop = dev->m_out_samples_stop[channel];
 		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
 		std::vector<float>::iterator it;
 		std::unique_lock<std::mutex> lk(mtx, std::defer_lock);
+		std::unique_lock<std::mutex> lk_state(state_mtx);
 
 		while (true) {
 			lk.lock();
@@ -765,7 +767,7 @@ start:
 
 				if (stop == 2) {
 					// signaled to pause
-					cv.wait(lk, [&buf,&stop]{ return stop != 2; });
+					cv.wait(lk_state, [&stop]{ return stop != 2; });
 				} else if (stop) {
 					// signaled to stop
 					goto end;
@@ -798,8 +800,10 @@ end:
 			std::swap(t, m_out_samples_thr[ch_i]);
 		} else {
 			// Threads already exist, make sure they're running if paused.
-			m_out_samples_stop[ch_i] = 0;
-			m_out_samples_cv[ch_i].notify_one();
+			if (m_out_samples_stop[ch_i] == 2) {
+				m_out_samples_stop[ch_i] = 0;
+				m_out_samples_cv[ch_i].notify_one();
+			}
 		}
 	}
 

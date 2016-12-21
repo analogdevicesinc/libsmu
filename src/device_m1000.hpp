@@ -94,6 +94,7 @@ namespace smu {
 		std::vector<float> m_out_samples_buf[2];
 		bool m_out_samples_buf_cyclic[2]{false,false};
 		std::mutex m_out_samples_mtx[2];
+		std::mutex m_out_samples_state_mtx[2];
 		std::condition_variable m_out_samples_cv[2];
 
 		// Used for write thread signaling, initialized to zero. If greater
