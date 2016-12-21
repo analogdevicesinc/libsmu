@@ -340,7 +340,8 @@ cdef class Session:
     def get_samples(self, num_samples):
         """Acquire signal samples from all devices in a session.
 
-        Blocks until the requested number of samples is available.
+        This runs the devices in a noncontinuous fashion and blocks until the
+        requested number of samples have been captured.
 
         Args:
             num_samples (int): number of samples to read
