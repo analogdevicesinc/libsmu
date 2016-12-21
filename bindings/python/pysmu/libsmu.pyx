@@ -232,7 +232,14 @@ cdef class Session:
             raise ValueError('invalid number of samples: {}'.format(samples))
 
         cdef int ret = 0
-        ret = self._session.run(samples)
+
+        try:
+            ret = self._session.run(samples)
+        except RuntimeError as e:
+            err = 'data write timeout'
+            if not self.ignore_dataflow and e.message[:len(err)] == err:
+                raise WriteTimeout(err)
+
         if ret:
             raise SessionError('failed running session stream', ret)
 

@@ -718,6 +718,7 @@ int M1000_Device::run(uint64_t samples)
 		for (auto t: dev->m_out_transfers) {
 			if (dev->submit_out_transfer(t)) break;
 		}
+
 #ifdef _WIN32
 		// Keep the thread alive on Windows otherwise the libusb event
 		// callbacks return 995 (ERROR_OPERATION_ABORTED) due to this thread
@@ -752,14 +753,18 @@ int M1000_Device::run(uint64_t samples)
 			if (stop < 0)
 				return;
 			stop = 0;
-
-start:		it = buf.begin();
+start:
+			it = buf.begin();
 			while (it != buf.end()) {
 				it = q.push(it, buf.end());
 
-				// signaled to stop writing
-				if (stop)
+				if (stop == 2) {
+					// signaled to pause writing
+					cv.wait(lk, [&buf,&stop]{ return stop != 2; });
+				} else if (stop) {
+					// signaled to stop writing
 					goto end;
+				}
 
 				// wait a bit for space if unable to queue the entire buffer
 				if (it != buf.end())
@@ -768,8 +773,8 @@ start:		it = buf.begin();
 
 			if (cyclic)
 				goto start;
-
-end:		if (stop || !cyclic)
+end:
+			if (stop || !cyclic)
 				buf.clear();
 
 			lk.unlock();
@@ -777,12 +782,16 @@ end:		if (stop || !cyclic)
 		}
 	};
 
-	// Kick off channel write threads.
+	// Kick off channel write threads or restart write process.
 	for (unsigned ch_i = 0; ch_i < info()->channel_count; ch_i++) {
 		// Don't restart threads on multiple run() calls.
 		if (!m_out_samples_thr[ch_i].joinable()) {
 			std::thread t(write_samples, this, ch_i);
 			std::swap(t, m_out_samples_thr[ch_i]);
+		} else {
+			// Threads already exist, make sure they're running if paused.
+			m_out_samples_stop[ch_i] = 0;
+			m_out_samples_cv[ch_i].notify_one();
 		}
 	}
 
@@ -802,14 +811,24 @@ int M1000_Device::off()
 {
 	int ret = 0;
 
-	// stop writing samples
-	m_out_samples_stop[CHAN_A] = 1;
-	m_out_samples_stop[CHAN_B] = 1;
+	// If a data flow exception occurred while submitting transfers in
+	// noncontinuous mode, rethrow the exception here.
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
+
+	// stop or pause writing samples depending on if we're finished
+	m_out_samples_stop[CHAN_A] = 2;
+	m_out_samples_stop[CHAN_B] = 2;
 
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();
 
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+
 	return libusb_errno_or_zero(ret);
 }
 

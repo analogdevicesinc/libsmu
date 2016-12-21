@@ -34,7 +34,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int remove(Device* dev, bint detached)
         int destroy(Device* dev)
         int configure(uint32_t sample_rate)
-        int run(int samples)
+        int run(int samples) except +
         int start(int samples)
         int cancel()
         bint cancelled()
