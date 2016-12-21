@@ -14,7 +14,7 @@ if __name__ == '__main__':
     session = Session()
 
     if not session.devices:
-        sys.exit()
+        sys.exit(1)
 
     for dev in session.devices:
         dev.channels['A'].mode = Mode.SVMI

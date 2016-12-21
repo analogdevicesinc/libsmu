@@ -17,7 +17,7 @@ if __name__ == '__main__':
     session = Session()
 
     if not session.devices:
-        sys.exit()
+        sys.exit(1)
 
     while True:
         val = randrange(0, 8)

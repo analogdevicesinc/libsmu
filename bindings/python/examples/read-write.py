@@ -36,6 +36,8 @@ if __name__ == '__main__':
     # only add one device to the session
     session = Session(add_all=False)
     session.scan()
+    if not session.available_devices:
+        sys.exit(1)
     session.add(session.available_devices[0])
 
     if session.devices:

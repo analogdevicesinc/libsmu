@@ -14,7 +14,7 @@ if __name__ == '__main__':
     session = Session()
 
     if not session.devices:
-        sys.exit()
+        sys.exit(1)
 
     for idx, dev in enumerate(session.devices):
         # Set all devices in the session to use source voltage, measure current
