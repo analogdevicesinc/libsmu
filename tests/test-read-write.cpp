@@ -13,7 +13,20 @@
 
 using namespace smu;
 
-class ReadWriteTest : public SingleDeviceFixture {};
+class ReadWriteTest : public SingleDeviceFixture {
+	protected:
+		std::vector<std::array<float, 4>> rxbuf;
+		std::vector<float> a_txbuf;
+		std::vector<float> b_txbuf;
+
+		// TearDown() is invoked immediately after a test finishes.
+		virtual void TearDown() {
+			SingleDeviceFixture::TearDown();
+			rxbuf.clear();
+			a_txbuf.clear();
+			b_txbuf.clear();
+		}
+};
 
 // refill Tx buffers with data
 static void refill_data(std::vector<float>& buf, unsigned size, int voltage) {
@@ -27,10 +40,6 @@ TEST_F(ReadWriteTest, non_continuous) {
 	// Set device channels to source voltage and measure current.
 	m_dev->set_mode(0, SVMI);
 	m_dev->set_mode(1, SVMI);
-
-	std::vector<std::array<float, 4>> rxbuf;
-	std::vector<float> a_txbuf;
-	std::vector<float> b_txbuf;
 
 	// Verify read/write data for 10 seconds.
 	unsigned voltage = 0;
@@ -71,10 +80,6 @@ TEST_F(ReadWriteTest, continuous) {
 	// Set device channels to source voltage and measure current.
 	m_dev->set_mode(0, SVMI);
 	m_dev->set_mode(1, SVMI);
-
-	std::vector<std::array<float, 4>> rxbuf;
-	std::vector<float> a_txbuf;
-	std::vector<float> b_txbuf;
 
 	// Run session in continuous mode.
 	m_session->start(0);
