@@ -18,11 +18,13 @@ using namespace smu;
 class ReadTest : public SingleDeviceFixture {
 	protected:
 		std::vector<std::array<float, 4>> rxbuf;
+		uint64_t sample_count = 0;
 
 		// TearDown() is invoked immediately after a test finishes.
 		virtual void TearDown() {
 			SingleDeviceFixture::TearDown();
 			rxbuf.clear();
+			sample_count = 0;
 		}
 };
 
@@ -45,7 +47,6 @@ TEST_F(ReadTest, non_continuous) {
 	}
 
 	// Verify streaming HI-Z data values for ten seconds.
-	uint64_t sample_count = 0;
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
@@ -168,7 +169,7 @@ TEST_F(ReadTest, continuous_sample_rates) {
 	std::vector<uint64_t> failure_samples;
 
 	for (auto i = 100; i >= 10; i -= 5) {
-		uint64_t sample_count = 0;
+		sample_count = 0;
 		bool failure = false;
 
 		auto clk_start = std::chrono::high_resolution_clock::now();

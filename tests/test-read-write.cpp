@@ -18,6 +18,7 @@ class ReadWriteTest : public SingleDeviceFixture {
 		std::vector<std::array<float, 4>> rxbuf;
 		std::vector<float> a_txbuf;
 		std::vector<float> b_txbuf;
+		uint64_t sample_count = 0;
 
 		// TearDown() is invoked immediately after a test finishes.
 		virtual void TearDown() {
@@ -25,6 +26,7 @@ class ReadWriteTest : public SingleDeviceFixture {
 			rxbuf.clear();
 			a_txbuf.clear();
 			b_txbuf.clear();
+			sample_count = 0;
 		}
 };
 
@@ -41,7 +43,6 @@ TEST_F(ReadWriteTest, non_continuous_fallback_values) {
 	m_dev->set_mode(0, SVMI);
 	m_dev->set_mode(1, SVMI);
 
-	uint64_t sample_count = 0;
 
 	// Fill Tx buffers with 1000 samples and request 1024 back. The remaining
 	// 24 samples should have the same output values since the most recently
@@ -68,7 +69,6 @@ TEST_F(ReadWriteTest, non_continuous) {
 
 	// Verify read/write data for 10 seconds.
 	unsigned voltage = 0;
-	uint64_t sample_count = 0;
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
@@ -111,7 +111,6 @@ TEST_F(ReadWriteTest, continuous) {
 
 	// Verify read/write data for 10 seconds.
 	unsigned voltage = 0;
-	uint64_t sample_count = 0;
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
