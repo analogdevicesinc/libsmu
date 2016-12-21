@@ -699,6 +699,15 @@ cdef class Channel:
         """
         return [x[self.chan] for x in self.dev.get_samples(num_samples)]
 
+    def arbitrary(self, waveform, cyclic=False):
+        """Output an arbitrary waveform.
+
+        Args:
+            waveform: sequence of raw waveform values (floats or ints)
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
+        """
+        self.write(waveform, cyclic=cyclic)
+
     def constant(self, value):
         """Set output to a constant waveform.
 
