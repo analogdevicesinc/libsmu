@@ -559,9 +559,19 @@ void M1000_Device::flush()
 	m_in_samples_avail = 0;
 	m_in_samples_q.consume_all(flush_read_queue);
 
-	// flush write queues
+	// notify write threads to stop
+	m_out_samples_avail[CHAN_A] = 0;
+	m_out_samples_avail[CHAN_B] = 0;
 	m_out_samples_stop[CHAN_A] = 1;
 	m_out_samples_stop[CHAN_B] = 1;
+	m_out_samples_cv[CHAN_A].notify_one();
+	m_out_samples_cv[CHAN_B].notify_one();
+
+	// wait for write threads to stop
+	std::unique_lock<std::mutex> lk_a(m_out_samples_mtx[CHAN_A]);
+	std::unique_lock<std::mutex> lk_b(m_out_samples_mtx[CHAN_B]);
+
+	// flush the write queues
 	m_out_samples_q[CHAN_A]->consume_all(flush_write_queue);
 	m_out_samples_q[CHAN_B]->consume_all(flush_write_queue);
 }
