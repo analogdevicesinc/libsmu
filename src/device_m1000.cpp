@@ -431,7 +431,7 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 int M1000_Device::submit_in_transfer(libusb_transfer* t)
 {
 	int ret;
-	if (m_sample_count == 0 || m_requested_sampleno < m_required_sample_count) {
+	if (m_sample_count == 0 || m_requested_sampleno < m_sample_count) {
 		ret = libusb_submit_transfer(t);
 		if (ret != 0) {
 			m_in_transfers.failed(t);
@@ -711,8 +711,6 @@ int M1000_Device::run(uint64_t samples)
 		return -libusb_to_errno(ret);
 
 	m_sample_count = samples;
-	m_required_sample_count = (uint64_t)(
-		ceil((double)m_sample_count / m_samples_per_transfer) * m_samples_per_transfer);
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
 	// Kick off USB transfers.

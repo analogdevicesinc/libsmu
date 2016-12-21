@@ -159,10 +159,6 @@ namespace smu {
 
 		// Number of requested samples.
 		uint64_t m_sample_count = 0;
-		// Number of required samples to be able to return the requested
-		// samples. This will be a multiple of the number of samples that are
-		// transferred in a USB packet.
-		uint64_t m_required_sample_count = 0;
 
 		// Override virtual methods of the base Device class.
 		int get_default_rate() override;
