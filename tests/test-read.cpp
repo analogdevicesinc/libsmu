@@ -69,10 +69,16 @@ TEST_F(ReadTest, non_continuous) {
 
 TEST_F(ReadTest, non_continuous_sample_drop) {
 	// Run the session for more samples than the incoming queue fits.
-	m_session->run(m_session->m_queue_size + 1);
+	ASSERT_THROW(m_session->run(m_session->m_queue_size + 1), std::system_error);
 
-	// Trying to read should now throw a sample drop exception.
-	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
+	// Make sure exception gets reset so nothing should throw now.
+	ASSERT_NO_THROW(m_dev->read(rxbuf, m_session->m_queue_size, -1));
+	// We should have gotten all the samples.
+	EXPECT_EQ(rxbuf.size(), m_session->m_queue_size);
+	// And there shouldn't be anymore samples available to read.
+	m_dev->read(rxbuf, 1, 200);
+	EXPECT_EQ(rxbuf.size(), 0);
+
 	m_session->flush();
 
 	// Perform a non-continuous run/read session for a given amount of samples and time.
