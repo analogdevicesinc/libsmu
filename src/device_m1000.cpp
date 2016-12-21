@@ -518,6 +518,16 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	lk.unlock();
 	cv.notify_one();
 
+	// If a data flow exception occurred in the USB thread, rethrow the
+	// exception here in the main thread. This allows users to just wrap
+	// read()/write() in order to catch and/or act on data flow issues.
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
+
 	return 0;
 }
 
