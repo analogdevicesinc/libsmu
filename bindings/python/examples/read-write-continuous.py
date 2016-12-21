@@ -53,7 +53,7 @@ if __name__ == '__main__':
         # Start a continuous session.
         session.start(0)
         i = 0
-        num_samples = 1024
+        num_samples = 1000
 
         while True:
             # If stdout is a terminal change the written value approximately

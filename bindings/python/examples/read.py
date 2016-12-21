@@ -30,10 +30,10 @@ if __name__ == '__main__':
 
     if session.devices:
         while True:
-            # Run the session for 1024 samples in noncontinuous mode and read
+            # Run the session for 1000 samples in noncontinuous mode and read
             # incoming samples from both channels of the first device in a
             # blocking fashion.
-            samples = session.get_samples(1024)[0]
+            samples = session.get_samples(1000)[0]
             for x in samples:
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

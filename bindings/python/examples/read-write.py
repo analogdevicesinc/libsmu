@@ -51,7 +51,7 @@ if __name__ == '__main__':
         #chan_b.mode = Mode.SIMV
 
         i = 0
-        num_samples = 1024
+        num_samples = 1000
 
         while True:
             # If stdout is a terminal change the written value every ten
