@@ -467,8 +467,8 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		// Stop waiting for samples if we've run out of time.
 		if (timeout >= 0 && clk_diff.count() > timeout)
 			break;
-		DEBUG("%s: waiting for incoming samples: requested: %lu, available: %u\n",
-				__func__, samples, m_in_samples_avail.load());
+		DEBUG("%s: waiting %i ms for incoming samples: requested: %lu, available: %u\n",
+				__func__, timeout, samples, m_in_samples_avail.load());
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
