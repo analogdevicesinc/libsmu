@@ -340,7 +340,7 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 
 	if (m_mode[channel] != HI_Z) {
 		// only wait up to 100ms for sample values
-		// TODO: make the period dependent on the input buffer size
+		// TODO: make the period dependent on the sample rate/input buffer size
 		auto clk_start = std::chrono::high_resolution_clock::now();
 		while (!m_out_samples_q[channel]->pop(val)) {
 			auto clk_end = std::chrono::high_resolution_clock::now();
@@ -477,9 +477,10 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		buf.push_back(sample);
 	}
 
-	// If a data overflow occurred in the USB thread, rethrow the exception
-	// here in the main thread. This allows users to just wrap read() in order
-	// to catch and/or act on overflows.
+	// If a data flow exception occurred in the USB thread, rethrow the
+	// exception here in the main thread. This allows users to just wrap
+	// read()/write() in addition to session.run() in order to catch and/or act
+	// on data flow issues.
 	if (e_ptr) {
 		// copy exception pointer for throwing and reset it
 		std::exception_ptr new_e_ptr = e_ptr;
@@ -501,7 +502,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 		m_out_samples_stop[channel] = 1;
 
 	// only wait up to 100ms for queue space
-	// TODO: make the period dependent on the input buffer size
+	// TODO: make the period dependent on the sample rate/input buffer size
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (m_out_samples_buf[channel].size()) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
@@ -520,7 +521,8 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 
 	// If a data flow exception occurred in the USB thread, rethrow the
 	// exception here in the main thread. This allows users to just wrap
-	// read()/write() in order to catch and/or act on data flow issues.
+	// read()/write() in addition to session.run() in order to catch and/or act
+	// on data flow issues.
 	if (e_ptr) {
 		// copy exception pointer for throwing and reset it
 		std::exception_ptr new_e_ptr = e_ptr;
@@ -811,8 +813,8 @@ int M1000_Device::off()
 {
 	int ret = 0;
 
-	// If a data flow exception occurred while submitting transfers in
-	// noncontinuous mode, rethrow the exception here.
+	// If a data flow exception occurred while submitting transfers, rethrow
+	// the exception here. This can be caught by wrapping session.run().
 	if (e_ptr) {
 		// copy exception pointer for throwing and reset it
 		std::exception_ptr new_e_ptr = e_ptr;
@@ -820,7 +822,7 @@ int M1000_Device::off()
 		std::rethrow_exception(new_e_ptr);
 	}
 
-	// stop or pause writing samples depending on if we're finished
+	// pause writing samples
 	m_out_samples_stop[CHAN_A] = 2;
 	m_out_samples_stop[CHAN_B] = 2;
 
