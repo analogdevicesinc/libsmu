@@ -78,10 +78,11 @@ namespace smu {
 		// specifically in the following order: <ChanA voltage, ChanA current, ChanB voltage, ChanB current>.
 		boost::lockfree::spsc_queue<std::array<float, 4>> m_in_samples_q;
 
-		// Number of samples available for reading.
+		// Number of samples available for reading/writing.
 		// TODO: Drop this when stable distros contain >= boost-1.57 with
 		// read_available() and write_available() calls for the spsc queue.
 		std::atomic<uint32_t> m_in_samples_avail;
+		std::atomic<uint32_t> m_out_samples_avail[2] = {};
 
 		// Queues with ~100ms worth of outgoing sample values for both channels at the default rate.
 		boost::lockfree::spsc_queue<float> _out_samples_a_q;
@@ -139,6 +140,11 @@ namespace smu {
 		// Encode output samples.
 		// @param chan Target channel index.
 		uint16_t encode_out(unsigned chan);
+
+		// Most recent value written to the output of each channel initialized
+		// to an invalid value in order to know when data hasn't been written
+		// to a channel.
+		float m_previous_output[2] = {-100,-100};
 
 		// USB start of frame packet number.
 		uint16_t m_sof_start = 0;

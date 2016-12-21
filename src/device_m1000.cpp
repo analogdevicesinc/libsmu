@@ -339,15 +339,34 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 	int v = 32768 * 4 / 5;
 
 	if (m_mode[channel] != HI_Z) {
-		// only wait up to 100ms for sample values
-		// TODO: make the period dependent on the sample rate/input buffer size
-		auto clk_start = std::chrono::high_resolution_clock::now();
-		while (!m_out_samples_q[channel]->pop(val)) {
-			auto clk_end = std::chrono::high_resolution_clock::now();
-			auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-			if (clk_diff.count() > 100)
+		if (m_sample_count == 0 || m_out_samples_avail[channel] > 0) {
+			// only wait up to 100ms for sample values
+			// TODO: make the period dependent on the sample rate/input buffer size
+			auto clk_start = std::chrono::high_resolution_clock::now();
+			while (!m_out_samples_q[channel]->pop(val)) {
+				auto clk_end = std::chrono::high_resolution_clock::now();
+				auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+				if (clk_diff.count() > 100)
+					throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
+			}
+
+			// Decrement available output sample count and store value to use
+			// as a fallback in noncontinuous mode.
+			m_out_samples_avail[channel]--;
+			m_previous_output[channel] = val;
+		} else {
+			// When trying to read more data than has been written in
+			// noncontinuous mode use the previously written value as a
+			// fallback. This allows for filling out full packets if only
+			// partial packets worth of samples were requested.
+			if (m_previous_output[channel] != -100) {
+				val = m_previous_output[channel];
+			} else {
+				// Throw exception if trying to use fallback values without
+				// writing any data first.
 				throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
-			std::this_thread::sleep_for(std::chrono::microseconds(1));
+			}
 		}
 	}
 
@@ -391,12 +410,6 @@ void M1000_Device::handle_out_transfer(libusb_transfer* t)
 			}
 
 			m_out_sampleno++;
-
-			// Return when we've satisfied the requested sample count in
-			// non-continuous mode.
-			if (m_sample_count > 0 && m_out_sampleno == m_sample_count) {
-				return;
-			}
 		}
 	}
 }
@@ -411,7 +424,7 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 		} catch (...) {
 			// Throw exception if we're not done writing all required
 			// samples or are in continuous mode.
-			if (m_out_sampleno != m_sample_count) {
+			if (m_out_sampleno < m_sample_count) {
 				e_ptr = std::current_exception();
 				return -1;
 			}
@@ -511,6 +524,10 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 			throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available queue space");
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+
+	// Bump available sample count before it's fully queued in order to signal
+	// to the encoding threads that they can count on future data existing.
+	m_out_samples_avail[channel] += buf.size();
 
 	std::unique_lock<std::mutex> lk(m_out_samples_mtx[channel]);
 	std::condition_variable& cv = m_out_samples_cv[channel];
@@ -744,6 +761,7 @@ int M1000_Device::run(uint64_t samples)
 		std::mutex& state_mtx = dev->m_out_samples_state_mtx[channel];
 		std::condition_variable& cv = dev->m_out_samples_cv[channel];
 		std::atomic<int>& stop = dev->m_out_samples_stop[channel];
+		std::atomic<uint32_t>& samples_available = dev->m_out_samples_avail[channel];
 		bool& cyclic = dev->m_out_samples_buf_cyclic[channel];
 
 		std::vector<float>::iterator it;
@@ -779,8 +797,10 @@ start:
 			}
 
 			// if the buffer is cyclic continue pushing values from the beginning
-			if (cyclic)
+			if (cyclic) {
+				samples_available += buf.size();
 				goto start;
+			}
 end:
 			// either signaled to stop or done writing so wipe the buffer
 			if (stop || !cyclic)
@@ -835,6 +855,10 @@ int M1000_Device::off()
 	// pause writing samples, writing will resume on the next run() call
 	m_out_samples_stop[CHAN_A] = 2;
 	m_out_samples_stop[CHAN_B] = 2;
+
+	// reset fallback output values to defaults
+	m_previous_output[CHAN_A] = -100;
+	m_previous_output[CHAN_B] = -100;
 
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();
