@@ -340,8 +340,12 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		}
 	}
 
-	if (e_ptr)
-		std::rethrow_exception(e_ptr);
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
 }
 
 int Session::destroy(Device *dev)
