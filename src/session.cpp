@@ -20,7 +20,7 @@
 
 extern std::exception_ptr e_ptr;
 
-using namespace std::placeholders;
+using namespace std::placeholders;  // for _1, _2, _3...
 using namespace smu;
 
 // Callback for libusb hotplug events, proxies to Session::attached() and Session::detached().
@@ -233,16 +233,20 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 #endif
 		libusb_claim_interface(usb_handle, 1);
 
+		// ease of use abbreviations
+		auto samba_write = std::bind(samba_usb_write, usb_handle, _1);
+		auto samba_read = std::bind(samba_usb_read, usb_handle, usb_data);
+
 		// erase flash
-		samba_usb_write(usb_handle, "W400E0804,5A000005#");
+		samba_write("W400E0804,5A000005#");
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		samba_usb_read(usb_handle, usb_data);
+		samba_read();
 		// check if flash is erased
-		samba_usb_write(usb_handle, "w400E0808,4#");
+		samba_write("w400E0808,4#");
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		samba_usb_read(usb_handle, usb_data);
-		samba_usb_read(usb_handle, usb_data);
-		samba_usb_read(usb_handle, usb_data);
+		samba_read();
+		samba_read();
+		samba_read();
 
 		// write firmware
 		page = 0;
@@ -252,22 +256,22 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 			data = (uint8_t)fwdata[pos] | (uint8_t)fwdata[pos+1] << 8 |
 				(uint8_t)fwdata[pos+2] << 16 | (uint8_t)fwdata[pos+3] << 24;
 			snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
-			samba_usb_write(usb_handle, cmd);
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
+			samba_write(cmd);
+			samba_read();
+			samba_read();
 			// On page boundaries, write the page.
 			if ((pos & 0xFC) == 0xFC) {
 				snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
-				samba_usb_write(usb_handle, cmd);
+				samba_write(cmd);
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				samba_usb_read(usb_handle, usb_data);
-				samba_usb_read(usb_handle, usb_data);
+				samba_read();
+				samba_read();
 				// Verify page is written.
-				samba_usb_write(usb_handle, "w400E0808,4#");
+				samba_write("w400E0808,4#");
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				samba_usb_read(usb_handle, usb_data);
-				samba_usb_read(usb_handle, usb_data);
-				samba_usb_read(usb_handle, usb_data);
+				samba_read();
+				samba_read();
+				samba_read();
 				// TODO: check page status
 				page++;
 			}
@@ -276,12 +280,12 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		// TODO: verify flashed data
 
 		// disable SAM-BA
-		samba_usb_write(usb_handle, "W400E0804,5A00010B#");
-		samba_usb_read(usb_handle, usb_data);
-		samba_usb_read(usb_handle, usb_data);
+		samba_write("W400E0804,5A00010B#");
+		samba_read();
+		samba_read();
 		// jump to flash
-		samba_usb_write(usb_handle, "G00000000#");
-		samba_usb_read(usb_handle, usb_data);
+		samba_write("G00000000#");
+		samba_read();
 
 		libusb_release_interface(usb_handle, 1);
 		libusb_close(usb_handle);
