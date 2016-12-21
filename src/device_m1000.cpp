@@ -623,7 +623,6 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 
 	m_mode[channel] = mode;
 
-	// set feedback potentiometers with mode heuristics
 	unsigned pset;
 	switch (mode) {
 		case SIMV: pset = 0x7f7f; break;
@@ -632,6 +631,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 		default: pset = 0x3000;
 	};
 
+	// set feedback potentiometers with mode heuristics
 	ret = ctrl_transfer(0x40, 0x59, channel, pset, 0, 0, 100);
 	if (ret < 0)
 		return -libusb_to_errno(ret);
@@ -695,13 +695,17 @@ int M1000_Device::on()
 int M1000_Device::sync()
 {
 	int ret = 0;
+
+	// get the location of the device's microframe
 	ret = ctrl_transfer(0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
 	m_sof_start = (m_sof_start + 0xff) & 0x3c00;
+
 	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::run(uint64_t samples)
 {
+	// tell device to start sampling
 	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0)
 		return -libusb_to_errno(ret);
@@ -758,13 +762,14 @@ int M1000_Device::run(uint64_t samples)
 start:
 			it = buf.begin();
 			while (it != buf.end()) {
+				// push all the values that can fit at once
 				it = q.push(it, buf.end());
 
 				if (stop == 2) {
-					// signaled to pause writing
+					// signaled to pause
 					cv.wait(lk, [&buf,&stop]{ return stop != 2; });
 				} else if (stop) {
-					// signaled to stop writing
+					// signaled to stop
 					goto end;
 				}
 
@@ -773,12 +778,15 @@ start:
 					std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
 
+			// if the buffer is cyclic continue pushing values from the beginning
 			if (cyclic)
 				goto start;
 end:
+			// either signaled to stop or done writing so wipe the buffer
 			if (stop || !cyclic)
 				buf.clear();
 
+			// notify waiting write() calls that the buffer is ready to be swapped
 			lk.unlock();
 			cv.notify_one();
 		}
@@ -822,13 +830,14 @@ int M1000_Device::off()
 		std::rethrow_exception(new_e_ptr);
 	}
 
-	// pause writing samples
+	// pause writing samples, writing will resume on the next run() call
 	m_out_samples_stop[CHAN_A] = 2;
 	m_out_samples_stop[CHAN_B] = 2;
 
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();
 
+	// tell device to stop sampling
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 
 	return libusb_errno_or_zero(ret);
