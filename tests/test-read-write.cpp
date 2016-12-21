@@ -36,6 +36,31 @@ static void refill_data(std::vector<float>& buf, unsigned size, int voltage) {
 	}
 }
 
+TEST_F(ReadWriteTest, non_continuous_fallback_values) {
+	// Set device channels to source voltage and measure current.
+	m_dev->set_mode(0, SVMI);
+	m_dev->set_mode(1, SVMI);
+
+	uint64_t sample_count = 0;
+
+	// Fill Tx buffers with 1000 samples and request 1024 back. The remaining
+	// 24 samples should have the same output values since the most recently
+	// written value to the channel will be used to complete output packets.
+	refill_data(a_txbuf, 1000, 2);
+	refill_data(b_txbuf, 1000, 4);
+	m_dev->write(a_txbuf, 0);
+	m_dev->write(b_txbuf, 1);
+	m_session->run(1024);
+	m_dev->read(rxbuf, 1024, -1);
+
+	// Verify all samples are what we expect.
+	for (unsigned i = 0; i < rxbuf.size(); i++) {
+		sample_count++;
+		EXPECT_EQ(2, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
+		EXPECT_EQ(4, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+	}
+}
+
 TEST_F(ReadWriteTest, non_continuous) {
 	// Set device channels to source voltage and measure current.
 	m_dev->set_mode(0, SVMI);
