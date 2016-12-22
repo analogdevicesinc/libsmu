@@ -853,14 +853,8 @@ int M1000_Device::off()
 {
 	int ret = 0;
 
-	// If a data flow exception occurred while submitting transfers, rethrow
-	// the exception here. This can be caught by wrapping session.run().
-	if (e_ptr) {
-		// copy exception pointer for throwing and reset it
-		std::exception_ptr new_e_ptr = e_ptr;
-		e_ptr = nullptr;
-		std::rethrow_exception(new_e_ptr);
-	}
+	// tell device to stop sampling
+	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 
 	// pause writing samples, writing will resume on the next run() call
 	m_out_samples_stop[CHAN_A] = 2;
@@ -873,8 +867,14 @@ int M1000_Device::off()
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();
 
-	// tell device to stop sampling
-	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
+	// If a data flow exception occurred while submitting transfers, rethrow
+	// the exception here. This can be caught by wrapping session.run().
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
 
 	return libusb_errno_or_zero(ret);
 }
