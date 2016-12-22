@@ -99,14 +99,17 @@ Session::Session()
 
 Session::~Session()
 {
-	// cancel all active USB transfers
-	cancel();
-
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
 
-	// run device destructors before libusb_exit
+	// Cancel all outstanding transfers and wait for all active devices to
+	// finish the cancellation process.
+	cancel();
+	if (m_active_devices > 0)
+		wait_for_completion();
+	
+	// Run device destructors before libusb_exit().
 	for (Device* dev: m_devices) {
 		delete dev;
 	}
