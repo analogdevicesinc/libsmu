@@ -871,8 +871,9 @@ int M1000_Device::off()
 	m_usb_cv.notify_one();
 
 	// If a data flow exception occurred while submitting transfers, rethrow
-	// the exception here. This can be caught by wrapping session.run().
-	if (e_ptr) {
+	// the exception here for non-continuous sessions. This can be caught by
+	// wrapping session.run().
+	if (e_ptr && m_sample_count > 0) {
 		// copy exception pointer for throwing and reset it
 		std::exception_ptr new_e_ptr = e_ptr;
 		e_ptr = nullptr;
