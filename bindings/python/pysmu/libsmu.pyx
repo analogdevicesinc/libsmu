@@ -462,7 +462,7 @@ cdef class Device:
         Raises: DeviceError on writing failures.
         """
         # don't waste time writing empty data sets
-        if not data:
+        if len(data) == 0:
             return
 
         cdef int ret = 0
