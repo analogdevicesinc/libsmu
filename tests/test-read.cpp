@@ -178,7 +178,9 @@ TEST_F(ReadTest, continuous_sample_rates) {
 
 		int sample_rate = m_session->configure(i * 1000);
 		// Make sure the session got configured properly.
-		EXPECT_GT(sample_rate, 0) << "failed to configure session at " << sample_rate << " SPS";
+		if (sample_rate < 0)
+			FAIL() << "failed to configure session: " << sample_rate << std::endl;
+
 		// Verify we're within the minimum configurable range from the specified target.
 		EXPECT_LE(std::abs((i * 1000) - sample_rate), 256);
 		TEST_COUT << "running test at " << sample_rate << " SPS" << std::endl;
