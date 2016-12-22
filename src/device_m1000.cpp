@@ -72,11 +72,14 @@ M1000_Device::~M1000_Device()
 		}
 	}
 
+	// release and close USB interface
 	if (m_usb) {
 		libusb_release_interface(m_usb, 0);
 		libusb_close(m_usb);
 	}
 
+	// cancel and free the transfers
+	cancel();
 	m_in_transfers.clear();
 	m_out_transfers.clear();
 }
