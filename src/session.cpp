@@ -99,6 +99,9 @@ Session::Session()
 
 Session::~Session()
 {
+	// cancel all active USB transfers
+	cancel();
+
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
@@ -563,15 +566,11 @@ int Session::end()
 	int ret = 0;
 	std::unique_lock<std::mutex> lk(m_lock);
 
-	// If session is non-continuous, wait a second for it to finish before
-	// timing out. Continuous sessions will never complete so don't wait at all
-	// in that case.
-	if (m_sample_count > 0) {
-		auto now = std::chrono::system_clock::now();
-		auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
-		if (!res) {
-			DEBUG("%s: timed out waiting for completion\n", __func__);
-		}
+	// Wait up to a second for devices to finish streaming before continuing.
+	auto now = std::chrono::system_clock::now();
+	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
+	if (!res) {
+		DEBUG("%s: timed out waiting for completion\n", __func__);
 	}
 
 	for (Device* dev: m_devices) {
@@ -604,7 +603,6 @@ int Session::start(uint64_t samples)
 {
 	int ret = 0;
 	m_cancellation = 0;
-	m_sample_count = samples;
 
 	// if session is unconfigured, use device default sample rate
 	if (m_sample_rate == 0)
