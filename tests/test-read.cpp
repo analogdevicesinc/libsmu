@@ -51,12 +51,20 @@ TEST_F(ReadTest, non_continuous) {
 	while (true) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
-		if (clk_diff.count() > 10)
+		if (clk_diff.count() > 10) {
+			std::cout << std::endl;
 			break;
+		}
 
-		m_session->run(1024);
-		m_dev->read(rxbuf, 1024, -1);
-		EXPECT_EQ(rxbuf.size(), 1024);
+		// provide minimalistic progress updates
+		if (sample_count > m_session->m_sample_rate) {
+			std::cout << "*" << std::flush;
+			sample_count = 0;
+		}
+
+		m_session->run(1000);
+		m_dev->read(rxbuf, 1000, -1);
+		EXPECT_EQ(rxbuf.size(), 1000);
 		// Which all should be near 0.
 		for (unsigned i = 0; i < rxbuf.size(); i++) {
 			sample_count++;
@@ -76,7 +84,7 @@ TEST_F(ReadTest, non_continuous_sample_drop) {
 	ASSERT_NO_THROW(m_dev->read(rxbuf, m_session->m_queue_size, -1));
 	// We should have gotten all the samples.
 	EXPECT_EQ(rxbuf.size(), m_session->m_queue_size);
-	// And there shouldn't be anymore samples available to read.
+	// And there shouldn't be any more samples available to read.
 	m_dev->read(rxbuf, 1, 200);
 	EXPECT_EQ(rxbuf.size(), 0);
 
@@ -85,24 +93,35 @@ TEST_F(ReadTest, non_continuous_sample_drop) {
 	// Perform a non-continuous run/read session for a given amount of samples and time.
 	auto run_read = [&](int run_samples, int read_samples, int max_run_time) {
 		auto clk_start = std::chrono::high_resolution_clock::now();
+		ssize_t samples = 0;
 		while (true) {
 			auto clk_end = std::chrono::high_resolution_clock::now();
 			auto clk_diff = std::chrono::duration_cast<std::chrono::seconds>(clk_end - clk_start);
-			if (clk_diff.count() > max_run_time)
+			if (clk_diff.count() > max_run_time) {
+				std::cout << std::endl;
 				break;
+			}
+
+			// provide minimalistic progress updates
+			if (sample_count > m_session->m_sample_rate) {
+				std::cout << "*" << std::flush;
+				sample_count = 0;
+			}
 
 			m_session->run(run_samples);
-			m_dev->read(rxbuf, read_samples, -1);
+			samples = m_dev->read(rxbuf, read_samples, -1);
 			EXPECT_EQ(rxbuf.size(), read_samples);
+			EXPECT_EQ(rxbuf.size(), samples);
+			sample_count += samples;
 		}
 	};
 
 	// Unbalanced run/read calls will lead to sample drops.
-	ASSERT_THROW(run_read(2000, 1000, 5), std::system_error);
+	ASSERT_THROW(run_read(4000, 2000, 5), std::system_error);
 	m_session->flush();
 
 	// Run/read calls that aren't aligned to sample packet size won't lead to sample drops.
-	ASSERT_NO_THROW(run_read(2000, 2000, 5));
+	ASSERT_NO_THROW(run_read(1025, 1025, 5));
 }
 
 TEST_F(ReadTest, continuous_sample_drop) {
