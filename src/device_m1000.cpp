@@ -478,7 +478,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 	buf.clear();
 
 	// no samples are available
-	if (!m_in_samples_avail)
+	if (m_in_samples_avail == 0)
 		return 0;
 
 	std::array<float, 4> sample = {};
@@ -559,12 +559,10 @@ void M1000_Device::flush()
 	auto flush_write_queue = [=](float sample) { return; };
 
 	// flush read queue
-	m_in_samples_avail = 0;
 	m_in_samples_q.consume_all(flush_read_queue);
+	m_in_samples_avail = 0;
 
 	// notify write threads to stop
-	m_out_samples_avail[CHAN_A] = 0;
-	m_out_samples_avail[CHAN_B] = 0;
 	m_out_samples_stop[CHAN_A] = 1;
 	m_out_samples_stop[CHAN_B] = 1;
 	m_out_samples_cv[CHAN_A].notify_one();
@@ -577,6 +575,8 @@ void M1000_Device::flush()
 	// flush the write queues
 	m_out_samples_q[CHAN_A]->consume_all(flush_write_queue);
 	m_out_samples_q[CHAN_B]->consume_all(flush_write_queue);
+	m_out_samples_avail[CHAN_A] = 0;
+	m_out_samples_avail[CHAN_B] = 0;
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
