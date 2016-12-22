@@ -54,7 +54,7 @@ Session::Session()
 
 	ret = libusb_init(&m_usb_ctx);
 	if (ret != 0) {
-		DEBUG("libusb init failed: %s\n", libusb_error_name(ret));
+		DEBUG("%s: libusb init failed: %s\n", __func__, libusb_error_name(ret));
 		abort();
 	}
 
@@ -74,9 +74,9 @@ Session::Session()
 			this,
 			&m_usb_cb);
 		if (ret != 0)
-			DEBUG("libusb hotplug callback registration failed: %s\n", libusb_error_name(ret));
+			DEBUG("%s: libusb hotplug callback registration failed: %s\n", __func__, libusb_error_name(ret));
 	} else {
-		DEBUG("libusb hotplug not supported, only currently attached devices will be used.\n");
+		DEBUG("%s: libusb hotplug not supported, only currently attached devices will be used.\n", __func__);
 	}
 
 	struct timeval zero_tv;
@@ -407,7 +407,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 	libusb_device_descriptor usb_desc;
 	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
 	if (ret != 0) {
-		DEBUG("Error %i in get_device_descriptor\n", ret);
+		DEBUG("%s: error %i in get_device_descriptor\n", __func__, ret);
 		return NULL;
 	}
 
@@ -567,7 +567,7 @@ int Session::end()
 	auto now = std::chrono::system_clock::now();
 	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
 	if (!res) {
-		DEBUG("timed out\n");
+		DEBUG("%s: timed out waiting for completion\n", __func__);
 	}
 
 	for (Device* dev: m_devices) {
@@ -641,7 +641,7 @@ void Session::handle_error(int status, const char * tag)
 	std::lock_guard<std::mutex> lock(m_lock);
 	// a canceled transfer completing is not an error...
 	if ((m_cancellation == 0) && (status != LIBUSB_TRANSFER_CANCELLED) ) {
-		DEBUG("error condition at %s: %s\n", tag, libusb_error_name(status));
+		DEBUG("%s: error condition at %s: %s\n", __func__, tag, libusb_error_name(status));
 		m_cancellation = status;
 		cancel();
 	}

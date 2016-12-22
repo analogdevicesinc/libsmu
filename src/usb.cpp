@@ -95,7 +95,7 @@ void Transfers::clear()
 		libusb_free_transfer(i);
 	}
 	if (num_active != 0)
-		DEBUG("num_active after free: %i\n", num_active);
+		DEBUG("%s: num_active after free: %i\n", __func__, num_active);
 	m_transfers.clear();
 }
 
@@ -107,7 +107,7 @@ int Transfers::cancel()
 			ret = libusb_cancel_transfer(i);
 			if (ret != 0) {
 				// abort if a transfer is not successfully cancelled
-				DEBUG("usb transfer cancelled with status: %s\n", libusb_error_name(ret));
+				DEBUG("%s: usb transfer cancelled with status: %s\n", __func__, libusb_error_name(ret));
 				return -libusb_to_errno(ret);
 			}
 		}
