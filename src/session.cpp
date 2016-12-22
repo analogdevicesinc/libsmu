@@ -99,19 +99,9 @@ Session::Session()
 
 Session::~Session()
 {
-	// force devices to quit streaming if any are active
-	cancel();
-	end();
-
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
-
-	// stop USB thread loop
-	if (m_usb_thread.joinable()) {
-		m_usb_thread_loop = false;
-		m_usb_thread.join();
-	}
 
 	// run device destructors before libusb_exit
 	for (Device* dev: m_devices) {
@@ -120,6 +110,15 @@ Session::~Session()
 
 	m_devices.clear();
 	m_available_devices.clear();
+
+	// Stop USB thread loop. This must be called right before libusb_exit() so
+	// all USB events, including closing devices, are handled properly. Certain
+	// events (such as those triggered by libusb_close()) can cause hangs
+	// within libusb if called after event handling is stopped.
+	if (m_usb_thread.joinable()) {
+		m_usb_thread_loop = false;
+		m_usb_thread.join();
+	}
 
 	libusb_exit(m_usb_ctx);
 }
