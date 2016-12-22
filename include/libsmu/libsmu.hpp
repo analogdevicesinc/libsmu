@@ -122,7 +122,7 @@ namespace smu {
 		/// target usage. The default is approximately 100ms worth of samples
 		/// at the maximum sampling rate. Note that must be changed before
 		/// devices are added to a session otherwise they'll use the default.
-		unsigned m_queue_size = 10240;
+		unsigned m_queue_size = 10000;
 
 		/// @brief Scan system for all supported devices.
 		/// Updates the list of available, supported devices for the session

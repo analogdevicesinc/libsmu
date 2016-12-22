@@ -352,7 +352,7 @@ cdef class Session:
         data = [[] for dev in self.devices]
 
         # maximum number of samples that can fit in the internal, incoming queue
-        max_samples = (self.queue_size // 512) * 512
+        max_samples = self.queue_size
         required_samples = num_samples
 
         # If requested samples are bigger than internal queue size, then
