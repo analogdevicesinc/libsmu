@@ -283,7 +283,7 @@ cdef class Session:
         if ret:
             raise SessionError('failed ending session stream', ret)
 
-    def flash_firmware(self, path, devices=None):
+    def flash_firmware(self, path, devices=()):
         """Update firmware for a given device.
 
         Attributes:
@@ -294,9 +294,8 @@ cdef class Session:
         Raises: SessionError on writing failures.
         """
         cdef vector[cpp_libsmu.Device*] devs
-        if devices is not None:
-            for d in iterify(devices):
-                devs.push_back((<Device>d)._device)
+        for d in iterify(devices):
+            devs.push_back((<Device>d)._device)
 
         try:
             self._session.flash_firmware(path.encode(), devs)
