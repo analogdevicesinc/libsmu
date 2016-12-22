@@ -558,6 +558,9 @@ void M1000_Device::flush()
 	auto flush_read_queue = [=](std::array<float, 4>) { return; };
 	auto flush_write_queue = [=](float sample) { return; };
 
+	// make sure USB transfers aren't being processed concurrently
+	std::lock_guard<std::mutex> lock(m_state);
+
 	// flush read queue
 	m_in_samples_q.consume_all(flush_read_queue);
 	m_in_samples_avail = 0;
