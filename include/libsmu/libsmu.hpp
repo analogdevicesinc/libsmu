@@ -277,6 +277,9 @@ namespace smu {
 		/// also use libusb without interfering with internal usage.
 		libusb_context* m_usb_ctx;
 
+		// Number of requested samples.
+		uint64_t m_sample_count = 0;
+
 		/// @brief libusb hotplug callback handle.
 		libusb_hotplug_callback_handle m_usb_cb;
 

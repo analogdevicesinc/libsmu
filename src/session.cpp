@@ -564,10 +564,15 @@ int Session::end()
 	int ret = 0;
 	std::unique_lock<std::mutex> lk(m_lock);
 
-	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
-	if (!res) {
-		DEBUG("%s: timed out waiting for completion\n", __func__);
+	// If session is non-continuous, wait a second for it to finish before
+	// timing out. Continuous sessions will never complete so don't wait at all
+	// in that case.
+	if (m_sample_count > 0) {
+		auto now = std::chrono::system_clock::now();
+		auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
+		if (!res) {
+			DEBUG("%s: timed out waiting for completion\n", __func__);
+		}
 	}
 
 	for (Device* dev: m_devices) {
@@ -600,6 +605,7 @@ int Session::start(uint64_t samples)
 {
 	int ret = 0;
 	m_cancellation = 0;
+	m_sample_count = samples;
 
 	// if session is unconfigured, use device default sample rate
 	if (m_sample_rate == 0)
