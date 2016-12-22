@@ -31,13 +31,17 @@ class SingleDeviceFixture : public SessionFixture {
 
 		virtual void SetUp() {
 			SessionFixture::SetUp();
-			m_session->scan();
 
-			// requires at least one device plugged in
-			if (m_session->m_available_devices.size() == 0)
+			int ret = m_session->scan();
+
+			if (ret < 0)
+				FAIL() << "failed scanning for devices";
+			else if (ret == 0)
 				FAIL() << "no devices plugged in";
 
-			m_session->add(m_session->m_available_devices[0]);
+			if (m_session->add(m_session->m_available_devices[0]))
+				FAIL() << "failed adding device";
+
 			m_dev = *(m_session->m_devices.begin());
 		}
 };
@@ -49,10 +53,9 @@ class MultiDeviceFixture : public SessionFixture {
 
 		virtual void SetUp() {
 			SessionFixture::SetUp();
-			m_session->add_all();
 
 			// requires at least one device plugged in
-			if (m_session->m_devices.size() < 2)
+			if (m_session->add_all() < 2)
 				FAIL() << "multiple devices are required";
 
 			m_devices = m_session->m_devices;
