@@ -488,9 +488,13 @@ cdef class Device:
         self._device.flush()
 
     def get_samples(self, num_samples):
-        """Acquire all signal samples from a device.
+        """Acquire all signal samples from a device in a non-continuous fashion.
 
         Blocks until the requested number of samples is available.
+
+        Note that this should only be used for single device sessions as it
+        calls session.run() internally. Using session.get_samples() directly is
+        a more robust way to handle all types of sessions.
 
         Args:
             num_samples (int): number of samples to read
@@ -500,7 +504,6 @@ cdef class Device:
         >>> from pysmu import Session, Mode
         >>> session = Session()
         >>> dev = session.devices[0]
-        >>> session.run(10)
         >>> samples = dev.get_samples(10))
         >>> assert len(samples) == 10
 
@@ -513,7 +516,15 @@ cdef class Device:
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
         """
-        return self.read(num_samples, -1)
+        i = 0
+        for d in self._session.devices:
+            if d.serial == self.serial:
+                break
+            i += 1
+        else:
+            raise DeviceError("device isn't in an active session")
+
+        return self._session.get_samples(num_samples)[i]
 
     def write_calibration(self, file):
         """Write calibration data to the device's EEPROM.
@@ -692,9 +703,13 @@ cdef class Channel:
         self.dev.write(data, channel=self.chan, cyclic=cyclic)
 
     def get_samples(self, num_samples):
-        """Acquire samples from a channel.
+        """Acquire samples from a channel in a non-continuous fashion.
 
         Blocks until the requested number of samples is available.
+
+        Note that this should only be used for single device sessions as it
+        calls session.run() internally. Using session.get_samples() directly is
+        a more robust way to handle all types of sessions.
 
         Args:
             num_samples (int): number of samples to read
@@ -705,7 +720,6 @@ cdef class Channel:
         >>> session = Session()
         >>> dev = session.devices[0]
         >>> chan_a = dev.channels['A']
-        >>> session.run(10)
         >>> samples = chan_a.get_samples(10))
         >>> assert len(samples) == 10
 
@@ -734,7 +748,6 @@ cdef class Channel:
         >>> chan_a = dev.channels['A']
         >>> chan_a.mode = Mode.SVMI
         >>> chan_a.constant(4)
-        >>> session.run(10)
         >>> print(chan_a.get_samples(2))
         [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
         """
