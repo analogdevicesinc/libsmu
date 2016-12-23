@@ -516,15 +516,10 @@ cdef class Device:
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
         """
-        i = 0
-        for d in self._session.devices:
-            if d.serial == self.serial:
-                break
-            i += 1
-        else:
-            raise DeviceError("device isn't in an active session")
+        if len(self._session.devices) > 1:
+            raise DeviceError("device exists in a multi-device session, use session.get_samples()")
 
-        return self._session.get_samples(num_samples)[i]
+        return self._session.get_samples(num_samples)[0]
 
     def write_calibration(self, file):
         """Write calibration data to the device's EEPROM.
