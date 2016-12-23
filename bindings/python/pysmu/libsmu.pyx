@@ -539,6 +539,19 @@ cdef class Device:
     def __str__(self):
         return 'serial {} : fw {} : hw {}'.format(self.serial, self.fwver, self.hwver)
 
+    def flash_firmware(self, path):
+        """Update firmware for the device.
+
+        Attributes:
+            path (str): Path to firmware file.
+
+        Raises: DeviceError on writing failures.
+        """
+        try:
+            self._session.flash_firmware(path.encode(), (self,))
+        except SessionError as e:
+            raise DeviceError(str(e))
+
     def samba_mode(self):
         """Enable SAM-BA bootloader mode on the device."""
         cdef int ret = 0
