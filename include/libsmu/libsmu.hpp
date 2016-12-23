@@ -363,8 +363,8 @@ namespace smu {
 		/// @throws std::system_error of EBUSY if sample underflows have occurred.
 		virtual int write(std::vector<float>& buf, unsigned channel, bool cyclic = false) = 0;
 
-		/// @brief Flush the read and write queues for a device.
-		virtual void flush() = 0;
+		/// @brief Flush the read and selected channel write queue for a device.
+		virtual void flush(unsigned channel) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.

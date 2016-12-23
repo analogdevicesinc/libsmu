@@ -483,9 +483,9 @@ cdef class Device:
         if ret < 0:
             raise DeviceError('failed writing to device', ret)
 
-    def flush(self):
-        """Flush the read and write queues for the device."""
-        self._device.flush()
+    def flush(self, unsigned channel):
+        """Flush the read and selected channel write queue for the device."""
+        self._device.flush(channel)
 
     def get_samples(self, num_samples):
         """Acquire all signal samples from a device in a non-continuous fashion.
