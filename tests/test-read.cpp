@@ -135,6 +135,26 @@ TEST_F(ReadTest, continuous_sample_drop) {
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
 }
 
+TEST_F(ReadTest, continuous_large_request) {
+	// Run session in continuous mode.
+	m_session->start(0);
+
+	// Requesting more samples than fits in the input queue doesn't cause issues.
+	m_dev->read(rxbuf, 100000, -1);
+	EXPECT_EQ(rxbuf.size(), 100000);
+	m_dev->read(rxbuf, 100000, 100);
+	EXPECT_GT(rxbuf.size(), 0);
+}
+
+TEST_F(ReadTest, non_continuous_large_request) {
+	// Run session in non-continuous mode.
+	m_session->run(m_session->m_queue_size);
+
+	// Requesting more samples than fits in the input queue will timeout.
+	m_dev->read(rxbuf, 100000, 1000);
+	EXPECT_EQ(rxbuf.size(), m_session->m_queue_size);
+}
+
 TEST_F(ReadTest, continuous_non_blocking) {
 	// Try to get samples in a nonblocking fashion before a session is started.
 	m_dev->read(rxbuf, 1000);
