@@ -462,34 +462,42 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 
 ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
 {
+	buf.clear();
+	std::array<float, 4> sample = {};
+	uint32_t remaining_samples = samples;
+
 	auto clk_start = std::chrono::high_resolution_clock::now();
-	while (timeout && m_in_samples_avail < samples) {
+	while (remaining_samples > 0) {
+		// we can only grab up to the amount of samples that are available
+		if (remaining_samples > m_in_samples_avail)
+			samples = m_in_samples_avail;
+		else
+			samples = remaining_samples;
+
+		// copy samples to the output buffer
+		for (uint32_t i = 0; i < samples; i++) {
+			m_in_samples_q.pop(sample);
+			m_in_samples_avail--;
+			buf.push_back(sample);
+		}
+
+		// stop acquiring samples if we've fulfilled the requested number
+		remaining_samples -= samples;
+		if (remaining_samples == 0)
+			break;
+
+		// stop waiting for samples if we're out of time
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-		// Stop waiting for samples if we've run out of time.
 		if (timeout >= 0 && clk_diff.count() > timeout)
 			break;
-		DEBUG("%s: waiting %i ms for incoming samples: requested: %lu, available: %u\n",
-				__func__, timeout, samples, m_in_samples_avail.load());
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
 
-	buf.clear();
-
-	// no samples are available
-	if (m_in_samples_avail == 0)
-		return 0;
-
-	std::array<float, 4> sample = {};
-
-	// we can only grab up to the amount of samples that are available
-	if (samples > m_in_samples_avail)
-		samples = m_in_samples_avail;
-
-	for (uint32_t i = 0; i < samples; i++) {
-		m_in_samples_q.pop(sample);
-		m_in_samples_avail--;
-		buf.push_back(sample);
+		// briefly wait if no samples are available
+		if (m_in_samples_avail == 0) {
+			DEBUG("%s: waiting %i ms for incoming samples: requested: %lu, available: %u\n",
+					__func__, timeout, samples, m_in_samples_avail.load());
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 	}
 
 	// If a data flow exception occurred in the USB thread, rethrow the
@@ -503,7 +511,7 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 		std::rethrow_exception(new_e_ptr);
 	}
 
-	return samples;
+	return buf.size();
 }
 
 int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
