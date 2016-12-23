@@ -111,13 +111,13 @@ cdef class Session:
     property available_devices:
         """Devices that are accessible on the system."""
         def __get__(self):
-            return tuple(Device._create(d, self.ignore_dataflow) for d
+            return tuple(Device._create(d, self.ignore_dataflow, self) for d
                          in self._session.m_available_devices)
 
     property devices:
         """Devices that are included in this session."""
         def __get__(self):
-            return tuple(Device._create(d, self.ignore_dataflow) for d
+            return tuple(Device._create(d, self.ignore_dataflow, self) for d
                          in self._session.m_devices)
 
     property active_devices:
@@ -373,25 +373,28 @@ cdef class Session:
 cdef class Device:
     # pointer to the underlying C++ smu::Device object
     cdef cpp_libsmu.Device *_device
+    # session the device belongs to
+    cdef Session _session
     cdef public bint ignore_dataflow
     cdef readonly object channels
 
-    def __init__(self, ignore_dataflow=False):
+    def __init__(self, bint ignore_dataflow=False, Session session=None):
         """Initialize a device.
 
         Attributes:
             ignore_dataflow (bool): Ignore sample drops or write timeouts for the device.
         """
         self.ignore_dataflow = ignore_dataflow
+        self._session = session
         self.channels = OrderedDict([
             ('A', Channel(self, 0)),
             ('B', Channel(self, 1)),
         ])
 
     @staticmethod
-    cdef _create(cpp_libsmu.Device *device, ignore_dataflow=False) with gil:
+    cdef _create(cpp_libsmu.Device *device, bint ignore_dataflow=False, Session session=None) with gil:
         """Internal method to wrap C++ smu::Device objects."""
-        d = Device(ignore_dataflow=ignore_dataflow)
+        d = Device(ignore_dataflow=ignore_dataflow, session=session)
         d._device = device
         return d
 
