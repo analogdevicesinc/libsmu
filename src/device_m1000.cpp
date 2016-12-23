@@ -522,7 +522,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 
 	// stop ongoing cyclic writes and flush channel
 	if (m_out_samples_buf_cyclic[channel])
-		flush(channel);
+		flush(channel, false);
 
 	// only wait up to 100ms for queue space
 	// TODO: make the period dependent on the sample rate/input buffer size
@@ -560,7 +560,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	return 0;
 }
 
-void M1000_Device::flush(unsigned channel)
+void M1000_Device::flush(unsigned channel, bool read)
 {
 	auto flush_read_queue = [=](std::array<float, 4>) { return; };
 	auto flush_write_queue = [=](float sample) { return; };
@@ -569,8 +569,10 @@ void M1000_Device::flush(unsigned channel)
 	std::lock_guard<std::mutex> lock(m_state);
 
 	// flush read queue
-	m_in_samples_q.consume_all(flush_read_queue);
-	m_in_samples_avail = 0;
+	if (read) {
+		m_in_samples_q.consume_all(flush_read_queue);
+		m_in_samples_avail = 0;
+	}
 
 	// notify write threads to stop
 	m_out_samples_stop[channel] = 1;

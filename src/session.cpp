@@ -592,9 +592,9 @@ int Session::end()
 void Session::flush()
 {
 	for (Device* dev: m_devices) {
-		// flush both write channels
-		dev->flush(0);
-		dev->flush(1);
+		// flush all read/write queues
+		dev->flush(0, true);
+		dev->flush(1, true);
 	}
 }
 

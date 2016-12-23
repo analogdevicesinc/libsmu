@@ -55,7 +55,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int fwver_sem(array[unsigned, three]& components)
         ssize_t read(vector[array[float, four]]& buf, size_t samples, int timeout) except +
         int write(vector[float]& buf, unsigned channel, bint cyclic) except +
-        void flush(unsigned channel)
+        void flush(unsigned channel, bint read)
         int ctrl_transfer(
             int bmRequestType, int bRequest, int wValue, int wIndex,
             unsigned char* data, int wLength, int timeout)
