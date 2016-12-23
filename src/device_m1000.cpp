@@ -520,9 +520,9 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
-	// send signal to stop cyclic writes
+	// stop ongoing cyclic writes and flush channel
 	if (m_out_samples_buf_cyclic[channel])
-		m_out_samples_stop[channel] = 1;
+		flush(channel);
 
 	// only wait up to 100ms for queue space
 	// TODO: make the period dependent on the sample rate/input buffer size
