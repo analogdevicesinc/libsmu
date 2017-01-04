@@ -289,7 +289,8 @@ cdef class Session:
         Attributes:
             path (str): Path to firmware file.
             devices (Device or iterable of `Device`s, optional): The device(s) targeted for
-                updating. If None, all supported devices on the system will be used.
+                updating. If not provided or empty, all supported devices on the system
+                will be flashed.
 
         Raises: SessionError on writing failures.
         """
