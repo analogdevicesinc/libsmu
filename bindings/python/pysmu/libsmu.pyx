@@ -148,11 +148,14 @@ cdef class Session:
         """Scan the system for supported devices.
 
         Raises: SessionError on failure.
+        Returns: The number of devices found is returned.
         """
         cdef int ret = 0
         ret = self._session.scan()
         if ret < 0:
             raise SessionError('failed scanning for supported devices', ret)
+
+        return ret
 
     def _check_fw_versions(self):
         """Check session for devices with different firmware versions."""
@@ -167,6 +170,7 @@ cdef class Session:
         """Scan the system and add all supported devices to the session.
 
         Raises: SessionError on failure.
+        Returns: The number of devices added to the session is returned.
         """
         cdef int ret = 0
         ret = self._session.add_all()
@@ -175,6 +179,8 @@ cdef class Session:
 
         if ret < 0:
             raise SessionError('failed scanning and/or adding all supported devices', ret)
+
+        return ret
 
     def add(self, Device dev):
         """Add a device to the session.
