@@ -60,6 +60,9 @@ extensions.extend([
         [os.path.join(BINDINGS_DIR, 'pysmu', 'libsmu.pyx')], **ext_kwargs),
     ])
 
+# Embed function signature information into built cython modules for sphinx doc generation.
+for e in extensions:
+    e.cython_directives = {"embedsignature": True}
 
 class sdist(dst_sdist):
     """Make sure generated cython extensions are included."""
