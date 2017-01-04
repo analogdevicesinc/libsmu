@@ -13,6 +13,7 @@
 
 using namespace smu;
 
+// Read/write fixture initializing generic variables used by all read/write tests.
 class ReadWriteTest : public SingleDeviceFixture {
 	protected:
 		std::vector<std::array<float, 4>> rxbuf;

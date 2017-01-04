@@ -15,6 +15,7 @@
 
 using namespace smu;
 
+// Read fixture initializing generic variables used by all read tests.
 class ReadTest : public SingleDeviceFixture {
 	protected:
 		std::vector<std::array<float, 4>> rxbuf;
@@ -28,6 +29,7 @@ class ReadTest : public SingleDeviceFixture {
 		}
 };
 
+// Test non-continuous data reading.
 TEST_F(ReadTest, non_continuous) {
 	// Run session in non-continuous mode.
 	m_session->run(1000);
@@ -76,6 +78,7 @@ TEST_F(ReadTest, non_continuous) {
 	}
 }
 
+// Verify workflows that lead to sample drop exceptions in non-continuous mode.
 TEST_F(ReadTest, non_continuous_sample_drop) {
 	// Run the session for more samples than the incoming queue fits.
 	ASSERT_THROW(m_session->run(m_session->m_queue_size + 1), std::system_error);
@@ -124,6 +127,7 @@ TEST_F(ReadTest, non_continuous_sample_drop) {
 	ASSERT_NO_THROW(run_read(1025, 1025, 5));
 }
 
+// Verify workflows that lead to sample drop exceptions in continuous mode.
 TEST_F(ReadTest, continuous_sample_drop) {
 	// Run session in continuous mode.
 	m_session->start(0);
@@ -135,6 +139,7 @@ TEST_F(ReadTest, continuous_sample_drop) {
 	ASSERT_THROW(m_dev->read(rxbuf, 1000), std::system_error);
 }
 
+// Verify large sample requests don't cause issues in continuous mode.
 TEST_F(ReadTest, continuous_large_request) {
 	// Run session in continuous mode.
 	m_session->start(0);
@@ -146,6 +151,7 @@ TEST_F(ReadTest, continuous_large_request) {
 	EXPECT_GT(rxbuf.size(), 0);
 }
 
+// Verify large sample requests don't cause issues in non-continuous mode.
 TEST_F(ReadTest, non_continuous_large_request) {
 	// Run session in non-continuous mode.
 	m_session->run(m_session->m_queue_size);
@@ -155,6 +161,7 @@ TEST_F(ReadTest, non_continuous_large_request) {
 	EXPECT_EQ(rxbuf.size(), m_session->m_queue_size);
 }
 
+// Verify nonblocking reads in continuous mode.
 TEST_F(ReadTest, continuous_non_blocking) {
 	// Try to get samples in a nonblocking fashion before a session is started.
 	m_dev->read(rxbuf, 1000);
@@ -171,6 +178,7 @@ TEST_F(ReadTest, continuous_non_blocking) {
 	EXPECT_GE(rxbuf.size(), 0);
 }
 
+// Verify blocking reads in continuous mode.
 TEST_F(ReadTest, continuous_blocking) {
 	// Run session in continuous mode.
 	m_session->start(0);
@@ -185,6 +193,7 @@ TEST_F(ReadTest, continuous_blocking) {
 	EXPECT_EQ(rxbuf.size(), 1000);
 }
 
+// Verify read calls with timeouts in continuous mode.
 TEST_F(ReadTest, continuous_timeout) {
 	// Run session in continuous mode.
 	m_session->start(0);
@@ -200,8 +209,8 @@ TEST_F(ReadTest, continuous_timeout) {
 	EXPECT_EQ(rxbuf.size(), 1000);
 }
 
+// Verify streaming HI-Z data values and speed from 100 kSPS to 10 kSPS every ~5k SPS.
 TEST_F(ReadTest, continuous_sample_rates) {
-	// Verify streaming HI-Z data values from 100 kSPS to 10 kSPS every ~5k SPS.
 	// Run each session for a minute.
 	unsigned test_ms = 60000;
 	std::vector<float> failure_vals;
