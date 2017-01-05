@@ -31,23 +31,6 @@ class ReadTest : public SingleDeviceFixture {
 
 // Test non-continuous data reading.
 TEST_F(ReadTest, non_continuous) {
-	// Run session in non-continuous mode.
-	m_session->run(1000);
-
-	// Grab 1000 samples in a blocking fashion in HI-Z mode.
-	m_dev->read(rxbuf, 1000, -1);
-
-	// We should have gotten 1000 samples.
-	EXPECT_EQ(rxbuf.size(), 1000);
-
-	// Which all should be near 0.
-	for (unsigned i = 0; i < rxbuf.size(); i++) {
-		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample " << i;
-		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][1]))) << "failed at sample " << i;
-		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample " << i;
-		EXPECT_EQ(0, std::fabs(std::round(rxbuf[i][3]))) << "failed at sample " << i;
-	}
-
 	// Verify streaming HI-Z data values for ten seconds.
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (true) {
