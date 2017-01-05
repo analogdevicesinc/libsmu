@@ -373,7 +373,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t) {
 				val = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) / 65535.0 * 5.0;
 				m_signals[0][0].put_sample((val - m_cal.offset[0]) * m_cal.gain_p[0]);
 				val = (((buf[(i+chunk_size*1)*2] << 8 | buf[(i+chunk_size*1)*2+1]) / 65535.0 * 0.4 ) - 0.195)*1.25;
-				m_signals[0][1].put_sample((val - m_cal.offset[0]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
+				m_signals[0][1].put_sample((val - m_cal.offset[1]) * (val > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]));
 				val = (buf[(i+chunk_size*2)*2] << 8 | buf[(i+chunk_size*2)*2+1]) / 65535.0 * 5.0;
 				m_signals[1][0].put_sample((val - m_cal.offset[4]) * m_cal.gain_p[4]);
 				val = (((buf[(i+chunk_size*3)*2] << 8 | buf[(i+chunk_size*3)*2+1]) / 65535.0 * 0.4) - 0.195)*1.25;
