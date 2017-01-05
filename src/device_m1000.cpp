@@ -520,7 +520,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
-	// stop ongoing cyclic writes and flush channel
+	// stop cyclic writes and flush related channel write queue
 	if (m_out_samples_buf_cyclic[channel])
 		flush(channel, false);
 
