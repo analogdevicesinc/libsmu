@@ -116,8 +116,13 @@ cdef class Session:
     property devices:
         """Devices that are included in this session."""
         def __get__(self):
-            return tuple(SessionDevice._session_create(d, session=self, ignore_dataflow=self.ignore_dataflow) for d
-                         in self._session.m_devices)
+            devs = []
+            index = 0
+            for d in self._session.m_devices:
+                devs.append(SessionDevice._session_create(
+                    d, session=self, session_index=index, ignore_dataflow=self.ignore_dataflow))
+                index += 1
+            return tuple(devs)
 
     property active_devices:
         """Number of devices that are currently active (streaming data) in this session."""
@@ -516,27 +521,30 @@ cdef class Device:
 cdef class SessionDevice(Device):
     # session the device belongs to
     cdef Session _session
+    cdef unsigned _session_index
     cdef public bint ignore_dataflow
     cdef readonly object channels
 
-    def __init__(self, Session session, bint ignore_dataflow=False):
+    def __init__(self, Session session, unsigned session_index, bint ignore_dataflow=False):
         """Initialize a device.
 
         Attributes:
             session (Session object): Session that the device belongs to.
+            session_index (unsigned): Device index in the session it belongs to.
             ignore_dataflow (bool): Ignore sample drops or write timeouts for the device.
         """
         self.ignore_dataflow = ignore_dataflow
         self._session = session
+        self._session_index = session_index
         self.channels = OrderedDict([
             ('A', Channel(self, 0)),
             ('B', Channel(self, 1)),
         ])
 
     @staticmethod
-    cdef _session_create(cpp_libsmu.Device *device, Session session, bint ignore_dataflow=False) with gil:
+    cdef _session_create(cpp_libsmu.Device *device, Session session, unsigned session_index, bint ignore_dataflow=False) with gil:
         """Internal method to wrap C++ smu::Device objects."""
-        d = SessionDevice(session=session, ignore_dataflow=ignore_dataflow)
+        d = SessionDevice(session=session, session_index=session_index, ignore_dataflow=ignore_dataflow)
         d._device = device
         return d
 
@@ -612,9 +620,9 @@ cdef class SessionDevice(Device):
 
         Blocks until the requested number of samples is available.
 
-        Note that this should only be used for single device sessions as it
-        calls session.run() internally. Using session.get_samples() directly is
-        a more robust way to handle all types of sessions.
+        Note that this should mainly be used for single device sessions as it
+        calls session.run() internally. Use session.get_samples() directly for
+        a more robust solution.
 
         Args:
             num_samples (int): number of samples to read
@@ -636,10 +644,7 @@ cdef class SessionDevice(Device):
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
         """
-        if len(self._session.devices) > 1:
-            raise DeviceError("device exists in a multi-device session, use session.get_samples()")
-
-        return self._session.get_samples(num_samples)[0]
+        return self._session.get_samples(num_samples)[self._session_index]
 
     def flash_firmware(self, path):
         """Update firmware for the device.
@@ -724,9 +729,9 @@ cdef class Channel:
 
         Blocks until the requested number of samples is available.
 
-        Note that this should only be used for single device sessions as it
-        calls session.run() internally. Using session.get_samples() directly is
-        a more robust way to handle all types of sessions.
+        Note that this should mainly be used for single device sessions as it
+        calls session.run() internally. Use session.get_samples() directly for
+        a more robust solution.
 
         Args:
             num_samples (int): number of samples to read
