@@ -111,13 +111,12 @@ cdef class Session:
     property available_devices:
         """Devices that are accessible on the system."""
         def __get__(self):
-            return tuple(Device._create(d, self.ignore_dataflow, self) for d
-                         in self._session.m_available_devices)
+            return tuple(Device._create(d) for d in self._session.m_available_devices)
 
     property devices:
         """Devices that are included in this session."""
         def __get__(self):
-            return tuple(Device._create(d, self.ignore_dataflow, self) for d
+            return tuple(SessionDevice._session_create(d, session=self, ignore_dataflow=self.ignore_dataflow) for d
                          in self._session.m_devices)
 
     property active_devices:
@@ -380,28 +379,11 @@ cdef class Session:
 cdef class Device:
     # pointer to the underlying C++ smu::Device object
     cdef cpp_libsmu.Device *_device
-    # session the device belongs to
-    cdef Session _session
-    cdef public bint ignore_dataflow
-    cdef readonly object channels
-
-    def __init__(self, bint ignore_dataflow=False, Session session=None):
-        """Initialize a device.
-
-        Attributes:
-            ignore_dataflow (bool): Ignore sample drops or write timeouts for the device.
-        """
-        self.ignore_dataflow = ignore_dataflow
-        self._session = session
-        self.channels = OrderedDict([
-            ('A', Channel(self, 0)),
-            ('B', Channel(self, 1)),
-        ])
 
     @staticmethod
-    cdef _create(cpp_libsmu.Device *device, bint ignore_dataflow=False, Session session=None) with gil:
+    cdef _create(cpp_libsmu.Device *device) with gil:
         """Internal method to wrap C++ smu::Device objects."""
-        d = Device(ignore_dataflow=ignore_dataflow, session=session)
+        d = Device()
         d._device = device
         return d
 
@@ -431,6 +413,132 @@ cdef class Device:
         """Get the default sample rate for the device."""
         def __get__(self):
             return self._device.get_default_rate()
+
+    def write_calibration(self, file):
+        """Write calibration data to the device's EEPROM.
+
+        Args:
+            file (str): path to calibration file
+                (use None to reset the calibration to the defaults)
+
+        Raises: DeviceError on writing failures.
+        """
+        cdef int ret = 0
+        cdef const char* cal_path
+        if file is None:
+            cal_path = NULL
+        else:
+            file = file.encode()
+            cal_path = file
+
+        ret = self._device.write_calibration(cal_path)
+        if ret < 0:
+            raise DeviceError('failed writing device calibration data')
+
+    def __str__(self):
+        return 'serial {} : fw {} : hw {}'.format(self.serial, self.fwver, self.hwver)
+
+    def samba_mode(self):
+        """Enable SAM-BA bootloader mode on the device."""
+        cdef int ret = 0
+        ret = self._device.samba_mode()
+        if ret:
+            raise DeviceError('failed to enable SAM-BA mode', ret)
+
+    def set_led(self, led, status):
+        """Set device LEDs on or off.
+
+        Args:
+            led: specific LED (red, green, blue) to control
+            status (bool): on or off
+
+        Raises: ValueError if an invalid LED is passed.
+        Raises: IOError on USB failures.
+        """
+        if led not in LED:
+            raise ValueError('invalid LED: {}'.format(led))
+
+        if status:
+            # on
+            req = 0x50
+        else:
+            # off
+            req = 0x51
+
+        if led == LED.all:
+            # toggle all LEDs together
+            for x in (l for l in LED if l != LED.all):
+                self.ctrl_transfer(0x40, req, x.value, 0, 0, 0, 100)
+        else:
+            self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
+
+    def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
+                      data, wLength, timeout):
+        """Perform raw USB control transfers.
+
+        The arguments map directly to those of the underlying
+        libusb_control_transfer call.
+
+        Args:
+            bm_request_type: the request type field for the setup packet
+            b_request: the request field for the setup packet
+            wValue: the value field for the setup packet
+            wIndex: the index field for the setup packet
+            data: a suitably-sized data buffer for either input or output
+            wLength: the length field for the setup packet
+            timeout: timeout (in milliseconds) that this function should wait
+                before giving up due to no response being received
+
+        Returns: the number of bytes actually transferred
+        Raises: IOError on USB failures
+        """
+        cdef int ret = 0
+
+        data = str(data).encode()
+
+        if bm_request_type & 0x80 == 0x80:
+            if data == '0':
+                data = '\x00' * wLength
+        else:
+            wLength = 0
+
+        ret = self._device.ctrl_transfer(bm_request_type, b_request, wValue,
+                                         wIndex, data, wLength, timeout)
+        if ret < 0:
+            raise IOError(abs(ret), 'USB control transfer failed')
+        else:
+            if bm_request_type & 0x80 == 0x80:
+                return map(ord, data)
+            else:
+                return ret
+
+
+cdef class SessionDevice(Device):
+    # session the device belongs to
+    cdef Session _session
+    cdef public bint ignore_dataflow
+    cdef readonly object channels
+
+    def __init__(self, Session session, bint ignore_dataflow=False):
+        """Initialize a device.
+
+        Attributes:
+            session (Session object): Session that the device belongs to.
+            ignore_dataflow (bool): Ignore sample drops or write timeouts for the device.
+        """
+        self.ignore_dataflow = ignore_dataflow
+        self._session = session
+        self.channels = OrderedDict([
+            ('A', Channel(self, 0)),
+            ('B', Channel(self, 1)),
+        ])
+
+    @staticmethod
+    cdef _session_create(cpp_libsmu.Device *device, Session session, bint ignore_dataflow=False) with gil:
+        """Internal method to wrap C++ smu::Device objects."""
+        d = SessionDevice(session=session, ignore_dataflow=ignore_dataflow)
+        d._device = device
+        return d
 
     def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
@@ -533,30 +641,6 @@ cdef class Device:
 
         return self._session.get_samples(num_samples)[0]
 
-    def write_calibration(self, file):
-        """Write calibration data to the device's EEPROM.
-
-        Args:
-            file (str): path to calibration file
-                (use None to reset the calibration to the defaults)
-
-        Raises: DeviceError on writing failures.
-        """
-        cdef int ret = 0
-        cdef const char* cal_path
-        if file is None:
-            cal_path = NULL
-        else:
-            file = file.encode()
-            cal_path = file
-
-        ret = self._device.write_calibration(cal_path)
-        if ret < 0:
-            raise DeviceError('failed writing device calibration data')
-
-    def __str__(self):
-        return 'serial {} : fw {} : hw {}'.format(self.serial, self.fwver, self.hwver)
-
     def flash_firmware(self, path):
         """Update firmware for the device.
 
@@ -569,80 +653,6 @@ cdef class Device:
             self._session.flash_firmware(path.encode(), (self,))
         except SessionError as e:
             raise DeviceError(str(e))
-
-    def samba_mode(self):
-        """Enable SAM-BA bootloader mode on the device."""
-        cdef int ret = 0
-        ret = self._device.samba_mode()
-        if ret:
-            raise DeviceError('failed to enable SAM-BA mode', ret)
-
-    def set_led(self, led, status):
-        """Set device LEDs on or off.
-
-        Args:
-            led: specific LED (red, green, blue) to control
-            status (bool): on or off
-
-        Raises: ValueError if an invalid LED is passed.
-        Raises: IOError on USB failures.
-        """
-        if led not in LED:
-            raise ValueError('invalid LED: {}'.format(led))
-
-        if status:
-            # on
-            req = 0x50
-        else:
-            # off
-            req = 0x51
-
-        if led == LED.all:
-            # toggle all LEDs together
-            for x in (l for l in LED if l != LED.all):
-                self.ctrl_transfer(0x40, req, x.value, 0, 0, 0, 100)
-        else:
-            self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
-
-    def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
-                      data, wLength, timeout):
-        """Perform raw USB control transfers.
-
-        The arguments map directly to those of the underlying
-        libusb_control_transfer call.
-
-        Args:
-            bm_request_type: the request type field for the setup packet
-            b_request: the request field for the setup packet
-            wValue: the value field for the setup packet
-            wIndex: the index field for the setup packet
-            data: a suitably-sized data buffer for either input or output
-            wLength: the length field for the setup packet
-            timeout: timeout (in milliseconds) that this function should wait
-                before giving up due to no response being received
-
-        Returns: the number of bytes actually transferred
-        Raises: IOError on USB failures
-        """
-        cdef int ret = 0
-
-        data = str(data).encode()
-
-        if bm_request_type & 0x80 == 0x80:
-            if data == '0':
-                data = '\x00' * wLength
-        else:
-            wLength = 0
-
-        ret = self._device.ctrl_transfer(bm_request_type, b_request, wValue,
-                                         wIndex, data, wLength, timeout)
-        if ret < 0:
-            raise IOError(abs(ret), 'USB control transfer failed')
-        else:
-            if bm_request_type & 0x80 == 0x80:
-                return map(ord, data)
-            else:
-                return ret
 
 
 cdef class Channel:
