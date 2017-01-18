@@ -20,7 +20,7 @@ def session():
     yield s
 
 def test_empty(session):
-    assert session.devices == []
+    assert len(session.devices) == 0
 
 def test_scan(session):
     prompt('make sure at least one device is plugged in')
