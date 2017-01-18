@@ -105,7 +105,7 @@ int Transfers::cancel()
 	for (auto i: m_transfers) {
 		if (num_active > 1) {
 			ret = libusb_cancel_transfer(i);
-			if (ret != 0) {
+			if (ret != 0 && ret != LIBUSB_ERROR_NOT_FOUND) {
 				// abort if a transfer is not successfully cancelled
 				DEBUG("%s: usb transfer cancelled with status: %s\n", __func__, libusb_error_name(ret));
 				return -libusb_to_errno(ret);
