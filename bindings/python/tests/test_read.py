@@ -96,3 +96,13 @@ def test_read_non_continuous_large_request(device):
     """
     samples = device.get_samples(100000)
     assert len(samples) == 100000
+
+def test_read_continuous_timeout(session, device):
+    """Verify read calls with timeouts work in continuous mode."""
+    session.start(0)
+
+    # Grab 1000 samples with a timeout of 110ms.
+    samples = device.read(1000, 110)
+
+    # Which should be long enough to get all 1000 samples.
+    assert len(samples) == 1000
