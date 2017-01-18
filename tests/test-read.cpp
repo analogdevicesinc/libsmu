@@ -269,8 +269,10 @@ TEST_F(ReadTest, continuous_sample_rates) {
 
 		int samples_per_second = std::round((float)sample_count / (clk_diff.count() / 1000));
 		// Verify we're running within 250 SPS of the configured sample rate.
-		EXPECT_LE(std::abs(samples_per_second - sample_rate), 250);
-		PRINTF("received %lu samples in %lu seconds: ~%u SPS\n", sample_count, clk_diff.count() / 1000, samples_per_second);
+        int sample_rate_diff = samples_per_second - sample_rate;
+		EXPECT_LE(std::abs(sample_rate_diff), 250);
+		PRINTF("received %lu samples in %lu seconds: ~%u SPS (%i SPS difference)\n",
+			sample_count, clk_diff.count() / 1000, samples_per_second, sample_rate_diff);
 
 		// Stop the session.
 		m_session->cancel();
