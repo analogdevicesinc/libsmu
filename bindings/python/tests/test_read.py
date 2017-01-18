@@ -9,18 +9,21 @@ from misc import prompt
 
 
 # single device session fixture
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def session(request):
-    session = Session(add_all=False)
+    s = Session(add_all=False)
 
-    if session.scan() == 0:
+    if s.scan() == 0:
         # no devices plugged in
         raise ValueError
 
-    session.add(session.available_devices[0])
-    return session
+    s.add(s.available_devices[0])
+    yield s
 
-@pytest.fixture(scope='module')
+    # force session destruction
+    s._close()
+
+@pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
 
@@ -72,6 +75,8 @@ def test_read_continuous_dataflow_raises():
     with pytest.raises(SampleDrop):
         samples = device.read(1000)
 
+    session._close()
+
 def test_read_continuous_large_request(session, device):
     """Request more samples than fits in the read/write queues under default settings in continuous mode."""
     session.start(0)
@@ -81,7 +86,6 @@ def test_read_continuous_large_request(session, device):
 
     samples = device.read(100000, 100)
     assert len(samples) > 0
-
 
 def test_read_non_continuous_large_request(device):
     """Request more samples than fits in the read/write queues under default settings in non-continuous mode.
