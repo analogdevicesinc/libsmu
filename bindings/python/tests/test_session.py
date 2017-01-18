@@ -19,6 +19,9 @@ def session():
     s = Session(add_all=False)
     yield s
 
+    # force session destruction
+    s._close()
+
 def test_empty(session):
     assert len(session.devices) == 0
 

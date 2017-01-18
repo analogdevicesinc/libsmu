@@ -377,8 +377,17 @@ cdef class Session:
 
         return data
 
-    def __dealloc__(self):
+    def _close(self):
+        """Force session destruction."""
+        # TODO: There probably is some way of properly using shared/weak ptrs for
+        # the relevant underlying C++ objects so calling del on a session object calls __dealloc__.
         del self._session
+        self._session = NULL
+
+    def __dealloc__(self):
+        """Destroy session if it exists."""
+        if self._session is not NULL:
+            self._close()
 
 
 cdef class Device:
