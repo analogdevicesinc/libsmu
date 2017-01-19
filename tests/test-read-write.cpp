@@ -97,9 +97,15 @@ TEST_F(ReadWriteTest, non_continuous) {
 			sample_count++;
 			EXPECT_EQ(voltage % 6, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
 			EXPECT_EQ(voltage % 6, std::fabs(std::round(rxbuf[i][2]))) << "failed at sample: " << sample_count;
+
+			// show output progress per second
+			if (sample_count % m_session->m_sample_rate == 0) {
+				std::cout << "*" << std::flush;
+			}
 		}
 		voltage++;
 	}
+	std::cout << std::endl;
 }
 
 TEST_F(ReadWriteTest, continuous) {
@@ -139,11 +145,17 @@ TEST_F(ReadWriteTest, continuous) {
 			sample_count++;
 			EXPECT_EQ(voltage % 6, std::fabs(std::round(rxbuf[i][0]))) << "value: " << rxbuf[i][0] << " ,failed at sample: " << sample_count;
 			EXPECT_EQ(voltage % 6, std::fabs(std::round(rxbuf[i][2]))) << "value: " << rxbuf[i][2] << " ,failed at sample: " << sample_count;
+
+			// show output progress per second
+			if (sample_count % m_session->m_sample_rate == 0) {
+				std::cout << "*" << std::flush;
+			}
 		}
 
 		if (sample_count && sample_count % 1000 == 0)
 			voltage++;
 	}
+	std::cout << std::endl;
 
 	// Verify we're running at 100+ ksps.
 	EXPECT_GE(sample_count, 100000*10);
