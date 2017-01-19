@@ -2,11 +2,15 @@ import pytest
 
 from pysmu import Device, Session, DeviceError, Mode
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def session(request):
-    return Session()
+    s = Session()
+    yield s
 
-@pytest.fixture(scope='module')
+    # force session destruction
+    s._close()
+
+@pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
 
