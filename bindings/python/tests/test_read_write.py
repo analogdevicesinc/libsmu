@@ -126,3 +126,22 @@ def test_read_write_continuous(session, device):
 
     # Verify we're running near the set sample rate.
     assert abs(round(sample_count / 10) - session.sample_rate) <= 256
+
+def test_read_write_cyclic_non_continuous(session, device):
+    device.channels['A'].mode = Mode.SVMI
+    device.channels['B'].mode = Mode.SVMI
+
+    voltage = 0
+    sample_count = 0
+
+    for v in range(6):
+        device.write([v] * 1000, 0, cyclic=True)
+        device.write([v] * 1000, 1, cyclic=True)
+
+        samples = device.get_samples(session.queue_size + 1)
+        assert len(samples) == session.queue_size + 1
+
+        # verify sample values
+        for sample in samples:
+            assert abs(round(sample[0][0])) == v
+            assert abs(round(sample[1][0])) == v
