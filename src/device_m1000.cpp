@@ -560,7 +560,7 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	return 0;
 }
 
-void M1000_Device::flush(unsigned channel, bool read)
+void M1000_Device::flush(int channel, bool read)
 {
 	auto flush_read_queue = [=](std::array<float, 4>) { return; };
 	auto flush_write_queue = [=](float sample) { return; };
@@ -568,22 +568,24 @@ void M1000_Device::flush(unsigned channel, bool read)
 	// make sure USB transfers aren't being processed concurrently
 	std::lock_guard<std::mutex> lock(m_state);
 
+	if (channel == 0 || channel == 1) {
+		// notify write threads to stop
+		m_out_samples_stop[channel] = 1;
+		m_out_samples_cv[channel].notify_one();
+
+		// wait for write threads to stop
+		std::unique_lock<std::mutex> lk(m_out_samples_mtx[channel]);
+
+		// flush the write queues
+		m_out_samples_q[channel]->consume_all(flush_write_queue);
+		m_out_samples_avail[channel] = 0;
+	}
+
 	// flush read queue
 	if (read) {
 		m_in_samples_q.consume_all(flush_read_queue);
 		m_in_samples_avail = 0;
 	}
-
-	// notify write threads to stop
-	m_out_samples_stop[channel] = 1;
-	m_out_samples_cv[channel].notify_one();
-
-	// wait for write threads to stop
-	std::unique_lock<std::mutex> lk(m_out_samples_mtx[channel]);
-
-	// flush the write queues
-	m_out_samples_q[channel]->consume_all(flush_write_queue);
-	m_out_samples_avail[channel] = 0;
 }
 
 void M1000_Device::handle_in_transfer(libusb_transfer* t)
