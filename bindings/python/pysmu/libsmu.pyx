@@ -616,7 +616,7 @@ cdef class SessionDevice(Device):
             raise DeviceError('failed writing to device', ret)
 
     def flush(self, unsigned channel, bint read):
-        """Flush the selected channel write queue and optionally the write queue for the device.
+        """Flush the selected channel's write queue and optionally the read queue for the device.
 
         Args:
             channel (int): channel write queue to flush
