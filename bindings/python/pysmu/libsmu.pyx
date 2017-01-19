@@ -615,12 +615,12 @@ cdef class SessionDevice(Device):
         if ret < 0:
             raise DeviceError('failed writing to device', ret)
 
-    def flush(self, unsigned channel, bint read):
+    def flush(self, unsigned channel, bint read=False):
         """Flush the selected channel's write queue and optionally the read queue for the device.
 
         Args:
             channel (int): channel write queue to flush
-            read (bool): whether to flush the incoming read queue
+            read (bool, optional): whether to flush the incoming read queue
         """
         self._device.flush(channel, read)
 

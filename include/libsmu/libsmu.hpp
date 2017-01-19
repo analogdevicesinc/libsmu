@@ -366,7 +366,7 @@ namespace smu {
 		/// @brief Flush the read and selected channel write queue for a device.
 		/// @param channel Channel to flush the write queues for.
 		/// @param read Whether to flush the incoming read queue as well.
-		virtual void flush(unsigned channel, bool read) = 0;
+		virtual void flush(unsigned channel, bool read = false) = 0;
 
 		/// @brief Perform a raw USB control transfer on the underlying USB device.
 		/// @return Passes through the return value of the underlying libusb_control_transfer method.
