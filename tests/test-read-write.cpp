@@ -45,15 +45,16 @@ TEST_F(ReadWriteTest, non_continuous_fallback_values) {
 	m_dev->set_mode(1, SVMI);
 
 
-	// Fill Tx buffers with 1000 samples and request 1024 back. The remaining
-	// 24 samples should have the same output values since the most recently
-	// written value to the channel will be used to complete output packets.
+	// Fill Tx buffers with 1000 samples and request the maximum amount of
+	// samples (queue size) back. The remaining 24 samples should have the same
+	// output values since the most recently written value to the channel will
+	// be used to complete output packets.
 	refill_data(a_txbuf, 1000, 2);
 	refill_data(b_txbuf, 1000, 4);
 	m_dev->write(a_txbuf, 0);
 	m_dev->write(b_txbuf, 1);
-	m_session->run(1024);
-	m_dev->read(rxbuf, 1024, -1);
+	m_session->run(m_session->m_queue_size);
+	m_dev->read(rxbuf, m_session->m_queue_size, -1);
 
 	// Verify all samples are what we expect.
 	for (unsigned i = 0; i < rxbuf.size(); i++) {
@@ -78,21 +79,21 @@ TEST_F(ReadWriteTest, non_continuous) {
 			break;
 
 		// Refill outgoing data buffers.
-		refill_data(a_txbuf, 1024, voltage % 6);
-		refill_data(b_txbuf, 1024, voltage % 6);
+		refill_data(a_txbuf, 1000, voltage % 6);
+		refill_data(b_txbuf, 1000, voltage % 6);
 
 		// Write iterating voltage values to both channels.
 		m_dev->write(a_txbuf, 0);
 		m_dev->write(b_txbuf, 1);
 
-		// Run the session for 1024 samples.
-		m_session->run(1024);
+		// Run the session for 1000 samples.
+		m_session->run(1000);
 
 		// Read incoming samples in a blocking fashion.
-		m_dev->read(rxbuf, 1024, -1);
+		m_dev->read(rxbuf, 1000, -1);
 
 		// Validate received values.
-		EXPECT_EQ(rxbuf.size(), 1024);
+		EXPECT_EQ(rxbuf.size(), 1000);
 		for (unsigned i = 0; i < rxbuf.size(); i++) {
 			sample_count++;
 			EXPECT_EQ(voltage % 6, std::fabs(std::round(rxbuf[i][0]))) << "failed at sample: " << sample_count;
