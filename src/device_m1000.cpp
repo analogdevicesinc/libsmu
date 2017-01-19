@@ -871,10 +871,6 @@ int M1000_Device::off()
 	m_out_samples_stop[CHAN_A] = 2;
 	m_out_samples_stop[CHAN_B] = 2;
 
-	// reset fallback output values to defaults
-	m_previous_output[CHAN_A] = std::nanf("");
-	m_previous_output[CHAN_B] = std::nanf("");
-
 	// signal usb transfer thread to exit
 	m_usb_cv.notify_one();
 
