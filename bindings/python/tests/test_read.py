@@ -111,6 +111,7 @@ def test_read_continuous_sample_rates(session, device):
     """Verify streaming HI-Z data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
     sample_count = 0
 
+    failures = []
     failure_vals = []
     failure_samples = []
     sys.stdout.write('\n')
@@ -163,6 +164,8 @@ def test_read_continuous_sample_rates(session, device):
 
         sys.stdout.write('\n')
 
+        failures.append(len(failure_samples))
+
         # check if bad sample values were received and display them if any exist
         if failure_samples:
             print("{} bad sample(s):".format(len(failure_samples)))
@@ -182,3 +185,6 @@ def test_read_continuous_sample_rates(session, device):
         # Stop the session.
         session.cancel()
         session.end()
+
+    # fail test if any sample rates returned bad values
+    assert not any(failures)
