@@ -708,6 +708,10 @@ cdef class Channel:
             if ret:
                 raise DeviceError('failed setting mode {}: '.format(mode), ret)
 
+    def flush(self):
+        """Flush the channel's write queue."""
+        self.dev.flush(self.chan)
+
     def read(self, num_samples, timeout=0):
         """Acquire samples from a channel.
 
