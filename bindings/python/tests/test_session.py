@@ -25,6 +25,7 @@ def session():
 def test_empty(session):
     assert len(session.devices) == 0
 
+@pytest.mark.interactive
 def test_scan(session):
     prompt('make sure at least one device is plugged in')
     session.scan()
@@ -78,6 +79,7 @@ def test_destroy(session):
     session.destroy(session.available_devices[0])
     assert not any(d.serial == serial for d in session.available_devices)
 
+@pytest.mark.interactive
 def test_flash_firmware(session):
     session.add_all()
     assert len(session.devices) == 1
@@ -101,6 +103,7 @@ def test_flash_firmware(session):
     assert session.devices[0].serial == serial
     assert session.devices[0].fwver == '2.06'
 
+@pytest.mark.interactive
 def test_hotplug(session):
     prompt('unplug/plug a device within 10 seconds')
     session.add_all()

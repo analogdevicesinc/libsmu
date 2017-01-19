@@ -5,7 +5,6 @@ import time
 import pytest
 
 from pysmu import Device, Session, DeviceError, SampleDrop
-from misc import prompt
 
 
 # single device session fixture

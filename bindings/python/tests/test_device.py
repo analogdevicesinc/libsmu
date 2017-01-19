@@ -17,6 +17,7 @@ def session(request):
 def device(session):
     return session.available_devices[0]
 
+@pytest.mark.interactive
 def test_device_serial(device):
     prompt('make sure at least one device is plugged in')
     assert device.serial != ""
@@ -30,6 +31,7 @@ def test_device_hwver(device):
 def test_calibration(device):
     assert len(device.calibration) == 8
 
+@pytest.mark.interactive
 def test_write_calibration(session, device):
     default_cal = [[0.0, 1.0, 1.0] for x in range(8)]
 
@@ -98,6 +100,7 @@ def test_write_calibration(session, device):
     device.write_calibration(default_cal_data)
     assert device.calibration == default_cal
 
+@pytest.mark.interactive
 def test_samba_mode(session, device):
     # supported devices exist in the session
     num_available_devices = len(session.available_devices)
