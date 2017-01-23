@@ -708,6 +708,16 @@ cdef class Channel:
             if ret:
                 raise DeviceError('failed setting mode {}: '.format(mode), ret)
 
+    property signal:
+        """Get the signal for the channel."""
+        def __get__(self):
+            if self.mode == Mode.SVMI:
+                return Signal._create(self.dev._device.signal(self.chan, 0))
+            elif self.mode == Mode.SIMV:
+                return Signal._create(self.dev._device.signal(self.chan, 1))
+            else:
+                raise ValueError('invalid mode: {}'.format(self.mode))
+
     def flush(self):
         """Flush the channel's write queue."""
         self.dev.flush(self.chan)
@@ -788,3 +798,69 @@ cdef class Channel:
         """
         data = [value] * 1000
         self.write(data, cyclic=True)
+
+    def square(self, float midpoint, float peak, double period, double phase, double duty):
+        """Set output to a square waveform."""
+        cdef vector[float] buf
+        self.signal.square(buf, midpoint, peak, period, phase, duty)
+        self.write(buf, cyclic=True)
+
+    def sawtooth(self, midpoint, peak, period, phase):
+        """Set output to a sawtooth waveform."""
+        cdef vector[float] buf
+        self.signal.sawtooth(buf, midpoint, peak, period, phase)
+        self.write(buf, cyclic=True)
+
+    def stairstep(self, midpoint, peak, period, phase):
+        """Set output to a stairstep waveform."""
+        cdef vector[float] buf
+        self.signal.stairstep(buf, midpoint, peak, period, phase)
+        self.write(buf, cyclic=True)
+
+    def sine(self, midpoint, peak, period, phase):
+        """Set output to a sinusoidal waveform."""
+        cdef vector[float] buf
+        self.signal.sine(buf, midpoint, peak, period, phase)
+        self.write(buf, cyclic=True)
+
+    def triangle(self, midpoint, peak, period, phase):
+        """Set output to a triangular waveform."""
+        cdef vector[float] buf
+        self.signal.triangle(buf, midpoint, peak, period, phase)
+        self.write(buf, cyclic=True)
+
+
+cdef class Signal:
+    # pointer to the underlying C++ smu::Signal object
+    cdef cpp_libsmu.Signal *_signal
+
+    @staticmethod
+    cdef _create(cpp_libsmu.Signal *signal) with gil:
+        """Internal method to wrap C++ smu::Signal objects."""
+        s = Signal()
+        s._signal = signal
+        return s
+
+    def constant(vector[float]& buf, float val):
+        """Generate a constant waveform."""
+        return self._signal.constant(buf, val)
+
+    def square(vector[float]& buf, float midpoint, float peak, double period, double phase, double duty):
+        """Generate a square waveform."""
+        return self._signal.square(buf, midpoint, peak, period, phase, duty)
+
+    def sawtooth(vector[float]& buf, float midpoint, float peak, double period, double phase):
+        """Generate a sawtooth waveform."""
+        return self._signal.sawtooth(buf, midpoint, peak, period, phase)
+
+    def stairstep(vector[float]& buf, float midpoint, float peak, double period, double phase):
+        """Generate a stairstep waveform."""
+        return self._signal.stairstep(buf, midpoint, peak, period, phase)
+
+    def sine(vector[float]& buf, float midpoint, float peak, double period, double phase):
+        """Generate a sinusoidal waveform."""
+        return self._signal.sine(buf, midpoint, peak, period, phase)
+
+    def triangle(vector[float]& buf, float midpoint, float peak, double period, double phase):
+        """Generate a triangular waveform."""
+        return self._signal.triangle(buf, midpoint, peak, period, phase)

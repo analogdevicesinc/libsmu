@@ -50,6 +50,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         string m_fwver
         string m_hwver
 
+        Signal* signal(unsigned channel, unsigned signal)
         int set_mode(int channel, int mode)
         int get_mode(int channel)
         int fwver_sem(array[unsigned, three]& components)
@@ -66,3 +67,11 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         void unlock()
         int write_calibration(const char* path)
         void calibration(vector[vector[float]]* cal)
+
+    cdef cppclass Signal:
+        void constant(vector[float]& buf, float val)
+        void square(vector[float]& buf, float midpoint, float peak, double period, double phase, double duty)
+        void sawtooth(vector[float]& buf, float midpoint, float peak, double period, double phase)
+        void stairstep(vector[float]& buf, float midpoint, float peak, double period, double phase)
+        void sine(vector[float]& buf, float midpoint, float peak, double period, double phase)
+        void triangle(vector[float]& buf, float midpoint, float peak, double period, double phase)
