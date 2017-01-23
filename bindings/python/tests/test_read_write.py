@@ -168,3 +168,95 @@ def test_read_write_cyclic_continuous(session, device):
         for sample in samples:
             assert abs(round(sample[0][0])) == v
             assert abs(round(sample[1][0])) == v
+
+def test_read_write_continuous_sample_rates(session, device):
+    """Verify streaming data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
+    device.channels['A'].mode = Mode.SVMI
+    device.channels['B'].mode = Mode.SVMI
+
+    sample_count = 0
+
+    failures = []
+    failure_vals = []
+    failure_samples = []
+    sys.stdout.write('\n')
+
+    # Perform singular, cyclic buffer writes across all sample rate tests.
+    device.write([4] * 10000, 0, cyclic=True)
+    device.write([4] * 10000, 1, cyclic=True)
+
+    for rate in range(100, 5, -5):
+        sample_count = long(0)
+        failure = False
+        session.sample_rate = rate * 1000
+        sample_rate = session.sample_rate
+
+        # Make sure the session got configured properly.
+        if sample_rate < 0:
+            print("failed to configure session: {}".format(sample_rate))
+            continue
+
+        # Verify we're within the minimum configurable range from the specified target.
+        assert abs((rate * 1000) - sample_rate) <= 256
+        sys.stdout.write("running test at {} SPS: ".format(sample_rate))
+
+        start = time.time()
+        session.start(0)
+
+        while True:
+            end = time.time()
+            clk_diff = end - start
+            # Run each session for a minute.
+            if clk_diff > 60:
+                break
+
+            # Grab up to 1000 samples in a non-blocking fashion.
+            samples = device.read(1000)
+
+            # Which all should be near the expected voltage.
+            for sample in samples:
+                sample_count += 1
+                if round(sample[0][0]) != 4:
+                    failure = True
+                    failure_vals.append('Chan A: {}'.format(sample[0][0]))
+                    failure_samples.append(sample_count)
+                if round(sample[1][0]) != 4:
+                    failure = True
+                    failure_vals.append('Chan B: {}'.format(sample[1][0]))
+                    failure_samples.append(sample_count)
+
+                # show output progress per second
+                if sample_count % sample_rate == 0:
+                    if failure:
+                        failure = False
+                        sys.stdout.write('#')
+                    else:
+                        sys.stdout.write('*')
+                    sys.stdout.flush()
+
+        sys.stdout.write('\n')
+
+        failures.append(len(failure_samples))
+
+        # check if bad sample values were received and display them if any exist
+        if failure_samples:
+            print("{} bad sample(s):".format(len(failure_samples)))
+            for i, x in enumerate(failure_samples):
+                print("sample: {}, expected: 4, received: {}".format(x, failure_vals[i]))
+
+        failure_samples = []
+        failure_vals = []
+
+        samples_per_second = int(round(sample_count / clk_diff))
+        # Verify we're running within 250 SPS of the configured sample rate.
+        sample_rate_diff = int(samples_per_second - sample_rate)
+        assert abs(sample_rate_diff) <= 250
+        print("received {} samples in {} seconds: ~{} SPS ({} SPS difference)".format(
+            sample_count, int(round(clk_diff)), samples_per_second, sample_rate_diff))
+
+        # Stop the session.
+        session.cancel()
+        session.end()
+
+    # fail test if any sample rates returned bad values
+    assert not any(failures)
