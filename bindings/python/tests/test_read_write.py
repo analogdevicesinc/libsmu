@@ -187,7 +187,7 @@ def test_read_write_continuous_sample_rates(session, device):
     failure_samples = []
     sys.stdout.write('\n')
 
-    # Perform singular, cyclic buffer writes across all sample rate tests.
+    # Set channel output to static values for all sample rate tests.
     device.channels['A'].constant(4)
     device.channels['B'].constant(4)
 
