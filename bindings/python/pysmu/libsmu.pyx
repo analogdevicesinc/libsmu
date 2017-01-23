@@ -794,7 +794,7 @@ cdef class Channel:
         >>> print(chan_a.get_samples(2))
         [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
         """
-        data = [value] * 1000
+        data = self.signal.constant(1000, value)
         self.write(data, cyclic=True)
 
     def square(self, float midpoint, float peak, double period, double phase, double duty):
