@@ -489,27 +489,33 @@ namespace smu {
 
 		/// @brief Generate a constant waveform.
 		/// @param buf Buffer object to store waveform into.
-		void constant(std::vector<float>& buf, float val);
+		/// @param samples Number of samples to create for the waveform.
+		void constant(std::vector<float>& buf, uint64_t samples, float val);
 
 		/// @brief Generate a square waveform.
 		/// @param buf Buffer object to store waveform into.
-		void square(std::vector<float>& buf, float midpoint, float peak, double period, double phase, double duty);
+		/// @param samples Number of samples to create for the waveform.
+		void square(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase, double duty);
 
 		/// @brief Generate a sawtooth waveform.
 		/// @param buf Buffer object to store waveform into.
-		void sawtooth(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+		/// @param samples Number of samples to create for the waveform.
+		void sawtooth(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a stairstep waveform.
 		/// @param buf Buffer object to store waveform into.
-		void stairstep(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+		/// @param samples Number of samples to create for the waveform.
+		void stairstep(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a sinusoidal waveform.
 		/// @param buf Buffer object to store waveform into.
-		void sine(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+		/// @param samples Number of samples to create for the waveform.
+		void sine(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a triangle waveform.
 		/// @param buf Buffer object to store waveform into.
-		void triangle(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+		/// @param samples Number of samples to create for the waveform.
+		void triangle(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 	protected:
 		Src m_src;

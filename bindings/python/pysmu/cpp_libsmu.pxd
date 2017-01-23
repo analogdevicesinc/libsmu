@@ -1,7 +1,7 @@
 # Interface wrapper for the libsmu library.
 # distutils: language = c++
 
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.set cimport set
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -69,9 +69,9 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         void calibration(vector[vector[float]]* cal)
 
     cdef cppclass Signal:
-        void constant(vector[float]& buf, float val)
-        void square(vector[float]& buf, float midpoint, float peak, double period, double phase, double duty)
-        void sawtooth(vector[float]& buf, float midpoint, float peak, double period, double phase)
-        void stairstep(vector[float]& buf, float midpoint, float peak, double period, double phase)
-        void sine(vector[float]& buf, float midpoint, float peak, double period, double phase)
-        void triangle(vector[float]& buf, float midpoint, float peak, double period, double phase)
+        void constant(vector[float]& buf, uint64_t samples, float val)
+        void square(vector[float]& buf, uint64_t samples, float midpoint, float peak, double period, double phase, double duty)
+        void sawtooth(vector[float]& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
+        void stairstep(vector[float]& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
+        void sine(vector[float]& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
+        void triangle(vector[float]& buf, uint64_t samples, float midpoint, float peak, double period, double phase)

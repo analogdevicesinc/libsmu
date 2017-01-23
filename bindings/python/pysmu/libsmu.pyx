@@ -5,7 +5,7 @@ from __future__ import division
 from collections import OrderedDict
 import warnings
 
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.vector cimport vector
 
 # enum is only in py34 and up, use vendored backport if the system doesn't have
@@ -711,12 +711,10 @@ cdef class Channel:
     property signal:
         """Get the signal for the channel."""
         def __get__(self):
-            if self.mode == Mode.SVMI:
-                return Signal._create(self.dev._device.signal(self.chan, 0))
-            elif self.mode == Mode.SIMV:
+            if self.mode == Mode.SIMV:
                 return Signal._create(self.dev._device.signal(self.chan, 1))
             else:
-                raise ValueError('invalid mode: {}'.format(self.mode))
+                return Signal._create(self.dev._device.signal(self.chan, 0))
 
     def flush(self):
         """Flush the channel's write queue."""
@@ -801,33 +799,28 @@ cdef class Channel:
 
     def square(self, float midpoint, float peak, double period, double phase, double duty):
         """Set output to a square waveform."""
-        cdef vector[float] buf
-        self.signal.square(buf, midpoint, peak, period, phase, duty)
-        self.write(buf, cyclic=True)
+        data = self.signal.square(1000, midpoint, peak, period, phase, duty)
+        self.write(data, cyclic=True)
 
-    def sawtooth(self, midpoint, peak, period, phase):
+    def sawtooth(self, float midpoint, float peak, float period, float phase):
         """Set output to a sawtooth waveform."""
-        cdef vector[float] buf
-        self.signal.sawtooth(buf, midpoint, peak, period, phase)
-        self.write(buf, cyclic=True)
+        data = self.signal.sawtooth(1000, midpoint, peak, period, phase)
+        self.write(data, cyclic=True)
 
-    def stairstep(self, midpoint, peak, period, phase):
+    def stairstep(self, float midpoint, float peak, float period, float phase):
         """Set output to a stairstep waveform."""
-        cdef vector[float] buf
-        self.signal.stairstep(buf, midpoint, peak, period, phase)
-        self.write(buf, cyclic=True)
+        data = self.signal.stairstep(1000, midpoint, peak, period, phase)
+        self.write(data, cyclic=True)
 
-    def sine(self, midpoint, peak, period, phase):
+    def sine(self, float midpoint, float peak, float period, float phase):
         """Set output to a sinusoidal waveform."""
-        cdef vector[float] buf
-        self.signal.sine(buf, midpoint, peak, period, phase)
-        self.write(buf, cyclic=True)
+        data = self.signal.sine(1000, midpoint, peak, period, phase)
+        self.write(data, cyclic=True)
 
-    def triangle(self, midpoint, peak, period, phase):
+    def triangle(self, float midpoint, float peak, float period, float phase):
         """Set output to a triangular waveform."""
-        cdef vector[float] buf
-        self.signal.triangle(buf, midpoint, peak, period, phase)
-        self.write(buf, cyclic=True)
+        data = self.signal.triangle(1000, midpoint, peak, period, phase)
+        self.write(data, cyclic=True)
 
 
 cdef class Signal:
@@ -841,26 +834,38 @@ cdef class Signal:
         s._signal = signal
         return s
 
-    def constant(vector[float]& buf, float val):
+    def constant(self, uint64_t samples, float val):
         """Generate a constant waveform."""
-        return self._signal.constant(buf, val)
+        cdef vector[float] buf
+        self._signal.constant(buf, samples, val)
+        return buf
 
-    def square(vector[float]& buf, float midpoint, float peak, double period, double phase, double duty):
+    def square(self, uint64_t samples, float midpoint, float peak, double period, double phase, double duty):
         """Generate a square waveform."""
-        return self._signal.square(buf, midpoint, peak, period, phase, duty)
+        cdef vector[float] buf
+        self._signal.square(buf, samples, midpoint, peak, period, phase, duty)
+        return buf
 
-    def sawtooth(vector[float]& buf, float midpoint, float peak, double period, double phase):
+    def sawtooth(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a sawtooth waveform."""
-        return self._signal.sawtooth(buf, midpoint, peak, period, phase)
+        cdef vector[float] buf
+        self._signal.sawtooth(buf, samples, midpoint, peak, period, phase)
+        return buf
 
-    def stairstep(vector[float]& buf, float midpoint, float peak, double period, double phase):
+    def stairstep(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a stairstep waveform."""
-        return self._signal.stairstep(buf, midpoint, peak, period, phase)
+        cdef vector[float] buf
+        self._signal.stairstep(buf, samples, midpoint, peak, period, phase)
+        return buf
 
-    def sine(vector[float]& buf, float midpoint, float peak, double period, double phase):
+    def sine(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a sinusoidal waveform."""
-        return self._signal.sine(buf, midpoint, peak, period, phase)
+        cdef vector[float] buf
+        self._signal.sine(buf, samples, midpoint, peak, period, phase)
+        return buf
 
-    def triangle(vector[float]& buf, float midpoint, float peak, double period, double phase):
+    def triangle(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a triangular waveform."""
-        return self._signal.triangle(buf, midpoint, peak, period, phase)
+        cdef vector[float] buf
+        self._signal.triangle(buf, samples, midpoint, peak, period, phase)
+        return buf

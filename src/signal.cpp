@@ -16,17 +16,17 @@
 
 using namespace smu;
 
-void Signal::constant(std::vector<float>& buf, float val)
+void Signal::constant(std::vector<float>& buf, uint64_t samples, float val)
 {
 	m_src = CONSTANT;
 	m_src_v1 = val;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
 
-void Signal::square(std::vector<float>& buf, float midpoint, float peak, double period, double phase, double duty)
+void Signal::square(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase, double duty)
 {
 	m_src = SQUARE;
 	m_src_phase = phase;
@@ -35,12 +35,12 @@ void Signal::square(std::vector<float>& buf, float midpoint, float peak, double 
 	m_src_v2 = peak;
 	m_src_duty = duty;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
 
-void Signal::sawtooth(std::vector<float>& buf, float midpoint, float peak, double period, double phase)
+void Signal::sawtooth(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
 {
 	m_src = SAWTOOTH;
 	m_src_phase = phase;
@@ -48,12 +48,12 @@ void Signal::sawtooth(std::vector<float>& buf, float midpoint, float peak, doubl
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
 
-void Signal::stairstep(std::vector<float>& buf, float midpoint, float peak, double period, double phase)
+void Signal::stairstep(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
 {
 	m_src = STAIRSTEP;
 	m_src_phase = phase;
@@ -61,12 +61,12 @@ void Signal::stairstep(std::vector<float>& buf, float midpoint, float peak, doub
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
 
-void Signal::sine(std::vector<float>& buf, float midpoint, float peak, double period, double phase)
+void Signal::sine(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
 {
 	m_src = SINE;
 	m_src_phase = phase;
@@ -74,12 +74,12 @@ void Signal::sine(std::vector<float>& buf, float midpoint, float peak, double pe
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
 
-void Signal::triangle(std::vector<float>& buf, float midpoint, float peak, double period, double phase)
+void Signal::triangle(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase)
 {
 	m_src = TRIANGLE;
 	m_src_phase = phase;
@@ -87,7 +87,7 @@ void Signal::triangle(std::vector<float>& buf, float midpoint, float peak, doubl
 	m_src_v1 = midpoint;
 	m_src_v2 = peak;
 
-	for (unsigned i = 0; i < buf.size(); i++) {
+	for (unsigned i = 0; i < samples; i++) {
 		buf.push_back(get_sample());
 	}
 }
