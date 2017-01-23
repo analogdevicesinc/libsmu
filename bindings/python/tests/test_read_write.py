@@ -188,8 +188,8 @@ def test_read_write_continuous_sample_rates(session, device):
     sys.stdout.write('\n')
 
     # Perform singular, cyclic buffer writes across all sample rate tests.
-    device.write([4] * 10000, 0, cyclic=True)
-    device.write([4] * 10000, 1, cyclic=True)
+    device.channels['A'].constant(4)
+    device.channels['B'].constant(4)
 
     for rate in range(100, 5, -5):
         sample_count = long(0)
