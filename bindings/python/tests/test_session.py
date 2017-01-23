@@ -11,7 +11,7 @@ except ImportError:
 import pytest
 
 from pysmu import Session, SessionError
-from misc import prompt, OLD_FW_URL, NEW_FW_URL, OLD_FW, NEW_FW
+from misc import prompt, OLD_FW, NEW_FW
 
 
 @pytest.yield_fixture(scope='function')
@@ -22,8 +22,10 @@ def session():
     # force session destruction
     s._close()
 
+
 def test_empty(session):
     assert len(session.devices) == 0
+
 
 @pytest.mark.interactive
 def test_scan(session):
@@ -33,6 +35,7 @@ def test_scan(session):
     # available devices haven't been added to the session yet
     assert session.available_devices
     assert len(session.available_devices) != len(session.devices)
+
 
 def test_add(session):
     assert not session.devices
@@ -49,6 +52,7 @@ def test_add(session):
     assert len(session.devices) == 1
     assert session.devices[0].serial == dev.serial
 
+
 def test_add_all(session):
     assert not session.devices
     session.add_all()
@@ -56,6 +60,7 @@ def test_add_all(session):
     # all available devices should be in the session
     assert session.devices
     assert len(session.available_devices) == len(session.devices)
+
 
 def test_remove(session):
     session.add_all()
@@ -71,6 +76,7 @@ def test_remove(session):
         session.remove(dev)
     assert excinfo.value.errcode == errno.ENXIO
 
+
 def test_destroy(session):
     session.scan()
     # available devices haven't been added to the session yet
@@ -78,6 +84,7 @@ def test_destroy(session):
     serial = session.available_devices[0].serial
     session.destroy(session.available_devices[0])
     assert not any(d.serial == serial for d in session.available_devices)
+
 
 @pytest.mark.interactive
 def test_flash_firmware(session):
@@ -102,6 +109,7 @@ def test_flash_firmware(session):
     assert len(session.devices) == 1
     assert session.devices[0].serial == serial
     assert session.devices[0].fwver == '2.06'
+
 
 @pytest.mark.interactive
 def test_hotplug(session):

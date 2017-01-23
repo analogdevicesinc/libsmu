@@ -4,8 +4,9 @@ import tempfile
 
 import pytest
 
-from pysmu import Device, Session, DeviceError
-from misc import prompt, NEW_FW_URL, OLD_FW_URL, OLD_FW, NEW_FW
+from pysmu import Session, DeviceError
+from misc import prompt, OLD_FW, NEW_FW
+
 
 @pytest.fixture(scope='module')
 def session(request):
@@ -13,23 +14,29 @@ def session(request):
     session.scan()
     return session
 
+
 @pytest.fixture(scope='module')
 def device(session):
     return session.available_devices[0]
+
 
 @pytest.mark.interactive
 def test_device_serial(device):
     prompt('make sure at least one device is plugged in')
     assert device.serial != ""
 
+
 def test_device_fwver(device):
     assert device.fwver != ""
+
 
 def test_device_hwver(device):
     assert device.hwver != ""
 
+
 def test_calibration(device):
     assert len(device.calibration) == 8
+
 
 @pytest.mark.interactive
 def test_write_calibration(session, device):
@@ -100,6 +107,7 @@ def test_write_calibration(session, device):
     device.write_calibration(default_cal_data)
     assert device.calibration == default_cal
 
+
 @pytest.mark.interactive
 def test_samba_mode(session, device):
     # supported devices exist in the session
@@ -123,6 +131,7 @@ def test_samba_mode(session, device):
     dev = session.available_devices[0]
     assert dev.serial == orig_serial
     assert dev.fwver == '2.06'
+
 
 def test_ctrl_transfer(device):
     # set pin input and get pin value

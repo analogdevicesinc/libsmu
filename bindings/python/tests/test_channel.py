@@ -1,6 +1,7 @@
 import pytest
 
-from pysmu import Device, Session, DeviceError, Mode
+from pysmu import Session, Mode
+
 
 @pytest.fixture(scope='function')
 def session(request):
@@ -10,9 +11,11 @@ def session(request):
     # force session destruction
     s._close()
 
+
 @pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
+
 
 def test_mode(device):
     # channels start in HI_Z mode by default
@@ -29,22 +32,27 @@ def test_mode(device):
     device.channels['A'].mode = device.channels['B'].mode = Mode.SVMI
     assert device.channels['A'].mode == device.channels['B'].mode == Mode.SVMI
 
+
 def test_channel_read(session, device):
     session.run(1000)
     samples = device.channels['A'].read(1000, -1)
     assert len(samples) == 1000
     assert len(samples[0]) == 2
 
+
 def test_channel_write(device):
     pass
+
 
 def test_get_samples(device):
     samples = device.channels['A'].get_samples(1000)
     assert len(samples) == 1000
     assert len(samples[0]) == 2
 
+
 def test_arbitrary(device):
     pass
+
 
 def test_constant(session, device):
     device.channels['A'].mode = Mode.SVMI

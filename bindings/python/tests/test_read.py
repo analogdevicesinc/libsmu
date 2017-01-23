@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from pysmu import Device, Session, DeviceError, SampleDrop
+from pysmu import Session, SampleDrop
 
 
 # single device session fixture
@@ -22,9 +22,11 @@ def session(request):
     # force session destruction
     s._close()
 
+
 @pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
+
 
 def test_read_non_continuous(session, device):
     """verify streaming HI-Z data values for ~10 seconds"""
@@ -53,6 +55,7 @@ def test_read_non_continuous(session, device):
             for x in chain.from_iterable(sample):
                 assert abs(round(x)) == 0
 
+
 def test_read_continuous_dataflow_ignore(session, device):
     """Verify workflows that lead to data flow issues are ignored by default."""
     session.start(0)
@@ -60,6 +63,7 @@ def test_read_continuous_dataflow_ignore(session, device):
     # by default, data flow issues are ignored so no exception should be raised here
     samples = device.read(1000)
     assert len(samples) == 1000
+
 
 def test_read_continuous_dataflow_raises():
     """Verify workflows that lead to data flow issues."""
@@ -76,6 +80,7 @@ def test_read_continuous_dataflow_raises():
 
     session._close()
 
+
 def test_read_continuous_large_request(session, device):
     """Request more samples than fits in the read/write queues under default settings in continuous mode."""
     session.start(0)
@@ -85,6 +90,7 @@ def test_read_continuous_large_request(session, device):
 
     samples = device.read(100000, 100)
     assert len(samples) > 0
+
 
 def test_read_non_continuous_large_request(device):
     """Request more samples than fits in the read/write queues under default settings in non-continuous mode.
@@ -96,6 +102,7 @@ def test_read_non_continuous_large_request(device):
     samples = device.get_samples(100000)
     assert len(samples) == 100000
 
+
 def test_read_continuous_timeout(session, device):
     """Verify read calls with timeouts work in continuous mode."""
     session.start(0)
@@ -105,6 +112,7 @@ def test_read_continuous_timeout(session, device):
 
     # Which should be long enough to get all 1000 samples.
     assert len(samples) == 1000
+
 
 def test_read_continuous_sample_rates(session, device):
     """Verify streaming HI-Z data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""

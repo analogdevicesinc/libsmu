@@ -1,10 +1,9 @@
-from itertools import chain
 import sys
 import time
 
 import pytest
 
-from pysmu import Device, Session, Mode
+from pysmu import Session, Mode
 
 
 # single device session fixture
@@ -22,9 +21,11 @@ def session(request):
     # force session destruction
     s._close()
 
+
 @pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
+
 
 def test_read_write_non_continuous_fallback_values(session, device):
     """Verify fallback values are used when running out of values to write."""
@@ -32,8 +33,8 @@ def test_read_write_non_continuous_fallback_values(session, device):
     device.channels['B'].mode = Mode.SVMI
 
     num_samples = 20000
-    device.write([2]*1000, 0)
-    device.write([4]*1000, 1)
+    device.write([2] * 1000, 0)
+    device.write([4] * 1000, 1)
     samples = device.get_samples(num_samples)
 
     assert len(samples) == num_samples
@@ -41,6 +42,7 @@ def test_read_write_non_continuous_fallback_values(session, device):
     for sample in samples:
         assert abs(round(sample[0][0])) == 2
         assert abs(round(sample[1][0])) == 4
+
 
 def test_read_write_non_continuous(session, device):
     device.channels['A'].mode = Mode.SVMI
@@ -83,6 +85,7 @@ def test_read_write_non_continuous(session, device):
         voltage += 1
 
     sys.stdout.write('\n')
+
 
 def test_read_write_continuous(session, device):
     device.channels['A'].mode = Mode.SVMI
@@ -127,6 +130,7 @@ def test_read_write_continuous(session, device):
     # Verify we're running near the set sample rate.
     assert abs(round(sample_count / 10) - session.sample_rate) <= 256
 
+
 def test_read_write_cyclic_non_continuous(session, device):
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI
@@ -144,6 +148,7 @@ def test_read_write_cyclic_non_continuous(session, device):
         for sample in samples:
             assert abs(round(sample[0][0])) == v
             assert abs(round(sample[1][0])) == v
+
 
 @pytest.mark.skip(reason="requires USB transfer flushing support")
 def test_read_write_cyclic_continuous(session, device):
@@ -168,6 +173,7 @@ def test_read_write_cyclic_continuous(session, device):
         for sample in samples:
             assert abs(round(sample[0][0])) == v
             assert abs(round(sample[1][0])) == v
+
 
 def test_read_write_continuous_sample_rates(session, device):
     """Verify streaming data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
