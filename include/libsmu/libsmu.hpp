@@ -75,14 +75,12 @@ typedef struct sl_device_info {
 
 /// @brief Supported signal sources.
 enum Src {
-	SRC_CONSTANT, ///< Constant value output.
-	SRC_SQUARE, ///< Square wave output.
-	SRC_SAWTOOTH, ///< Sawtooth wave output.
-	SRC_STAIRSTEP, ///< Stairstep wave output.
-	SRC_SINE, ///< Sine wave output.
-	SRC_TRIANGLE, ///< Triangle wave output.
-	SRC_BUFFER, ///< Use samples from a specified buffer.
-	SRC_CALLBACK, ///< Use samples from a specified callback function.
+	CONSTANT, ///< Constant value output.
+	SQUARE, ///< Square wave output.
+	SAWTOOTH, ///< Sawtooth wave output.
+	STAIRSTEP, ///< Stairstep wave output.
+	SINE, ///< Sine wave output.
+	TRIANGLE, ///< Triangle wave output.
 };
 
 /// @brief Supported channel modes.
@@ -488,5 +486,40 @@ namespace smu {
 		const sl_signal_info* info() const { return m_info; }
 		/// Signal information.
 		const sl_signal_info* const m_info;
+
+		/// @brief Generate a constant waveform.
+		/// @param buf Buffer object to store waveform into.
+		void constant(std::vector<float>& buf, float val);
+
+		/// @brief Generate a square waveform.
+		/// @param buf Buffer object to store waveform into.
+		void square(std::vector<float>& buf, float midpoint, float peak, double period, double phase, double duty);
+
+		/// @brief Generate a sawtooth waveform.
+		/// @param buf Buffer object to store waveform into.
+		void sawtooth(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+
+		/// @brief Generate a stairstep waveform.
+		/// @param buf Buffer object to store waveform into.
+		void stairstep(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+
+		/// @brief Generate a sinusoidal waveform.
+		/// @param buf Buffer object to store waveform into.
+		void sine(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+
+		/// @brief Generate a triangle waveform.
+		/// @param buf Buffer object to store waveform into.
+		void triangle(std::vector<float>& buf, float midpoint, float peak, double period, double phase);
+
+	protected:
+		Src m_src;
+		float m_src_v1;
+		float m_src_v2;
+		double m_src_period;
+		double m_src_duty;
+		double m_src_phase;
+
+		/// @brief Generate value for currently selected waveform.
+		float get_sample();
 	};
 }
