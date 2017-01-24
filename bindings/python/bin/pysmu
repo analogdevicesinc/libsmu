@@ -6,26 +6,51 @@ This script provides similar support to the smu command-line utility mostly to
 provide examples for how to leverage the pysmu bindings.
 """
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import argparse
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from itertools import chain
+from io import open
 import json
 import os
 import signal
+from shutil import copyfile
 from signal import signal, SIG_DFL, SIGINT
 import sys
 import tempfile
+from textwrap import dedent
 import time
 from urllib import urlretrieve
 import urllib2
 
 import pysmu
 
+# input = raw_input in py3, copy this for py2
+if sys.hexversion < 0x03000000:
+    input = raw_input
+
+
+def prompt(s, s_cont='(hit Enter to continue)'):
+    """Prompt the user to perform an action before continuing."""
+    val = input('{} {}'.format(s, s_cont))
+    if s_cont == '':
+        while not val.strip():
+            val = input('{} {}'.format(s, s_cont))
+            try:
+                float(val.strip())
+            except ValueError:
+                if val.strip():
+                    print('invalid data value: {}'.format(val.strip()))
+                    val = ''
+                continue
+    return val
+
+
 def pprint(s, **kwargs):
     """Prefix output with program name."""
     print('{}: {}'.format(os.path.basename(__file__), s), **kwargs)
+
 
 def calibration(session, args):
     """Read, write, or reset device calibration."""
@@ -36,24 +61,128 @@ def calibration(session, args):
 
     dev = session.devices[0]
 
-    if args.cal_display:
-        cal_str_map = {
-            0: 'Channel A, measure V',
-            1: 'Channel A, measure I',
-            2: 'Channel A, source V',
-            3: 'Channel A, source I',
-            4: 'Channel B, measure V',
-            5: 'Channel B, measure I',
-            6: 'Channel B, source V',
-            7: 'Channel B, source I',
-        }
+    cal_str_map = {
+        0: 'Channel A, measure V',
+        1: 'Channel A, measure I',
+        2: 'Channel A, source V',
+        3: 'Channel A, source I',
+        4: 'Channel B, measure V',
+        5: 'Channel B, measure I',
+        6: 'Channel B, source V',
+        7: 'Channel B, source I',
+    }
 
+    if args.cal_display:
         for i, vals in enumerate(dev.calibration):
             print(cal_str_map[i])
             print("  offset: {:.4f}".format(vals[0]))
             print("  p gain: {:.4f}".format(vals[1]))
             print("  n gain: {:.4f}".format(vals[2]))
+    elif args.cal_run:
+        # semi-automated version of https://wiki.analog.com/university/tools/m1k/calibration#calibration_procedures
+        d = defaultdict(list)
+        chan_a = dev.channels['A']
+        chan_b = dev.channels['B']
 
+        def rounded_mean(l):
+            """Simple average of list values rounded to four decimals."""
+            return round(sum(l) / len(l), 4)
+
+        # voltage measurement calibration
+        prompt('connect the CH A and CH B inputs to GND')
+        chan_a.mode = pysmu.Mode.HI_Z
+        chan_b.mode = pysmu.Mode.HI_Z
+        samples = dev.get_samples(10000)
+        chan_a_voltages = [x[0][0] for x in samples]
+        chan_b_voltages = [x[1][0] for x in samples]
+        d[0].append((0.0000, rounded_mean(chan_a_voltages)))
+        d[4].append((0.0000, rounded_mean(chan_b_voltages)))
+
+        prompt('connect the CH A to 2.5V')
+        samples = dev.get_samples(10000)
+        chan_a_voltages = [x[0][0] for x in samples]
+        prompt('connect the CH B to 2.5V')
+        samples = dev.get_samples(10000)
+        chan_b_voltages = [x[1][0] for x in samples]
+        dmm_voltage = float(prompt('measure the 2.5V relative to GND with a multimeter and enter the value here:', ''))
+        d[0].append((rounded_mean(chan_a_voltages), dmm_voltage))
+        d[4].append((rounded_mean(chan_b_voltages), dmm_voltage))
+
+        # voltage source calibration
+        chan_a.mode = pysmu.Mode.SVMI
+        chan_b.mode = pysmu.Mode.SVMI
+        chan_a.constant(0)
+        chan_b.constant(0)
+        session.start(0)
+        dmm_chan_a_voltage = float(prompt('measure CH A with a multimeter relative to GND and enter the value here:', ''))
+        dmm_chan_b_voltage = float(prompt('measure CH B with a multimeter relative to GND and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_a_voltages = [x[0][0] for x in samples]
+        chan_b_voltages = [x[1][0] for x in samples]
+        d[2].append((rounded_mean(chan_a_voltages), dmm_chan_a_voltage))
+        d[6].append((rounded_mean(chan_b_voltages), dmm_chan_b_voltage))
+        session.cancel()
+        session.end()
+
+        chan_a.constant(2.5)
+        chan_b.constant(2.5)
+        session.start(0)
+        dmm_chan_a_voltage = float(prompt('measure CH A with a multimeter relative to GND and enter the value here:', ''))
+        dmm_chan_b_voltage = float(prompt('measure CH B with a multimeter relative to GND and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_a_voltages = [x[0][0] for x in samples]
+        chan_b_voltages = [x[1][0] for x in samples]
+        d[2].append((rounded_mean(chan_a_voltages), dmm_chan_a_voltage))
+        d[6].append((rounded_mean(chan_b_voltages), dmm_chan_b_voltage))
+        session.cancel()
+        session.end()
+
+        # current measurement calibration
+        prompt('make sure that CH A and CH B are both open')
+        chan_a.mode = pysmu.Mode.SVMI
+        chan_b.mode = pysmu.Mode.SVMI
+        samples = dev.get_samples(10000)
+        chan_a_voltages = [x[0][0] for x in samples]
+        d[1].append((0.0000, rounded_mean(chan_a_voltages)))
+        chan_b_voltages = [x[1][0] for x in samples]
+        d[5].append((0.0000, rounded_mean(chan_b_voltages)))
+
+        # TODO: resistor
+        d[1].append((0.1000, 0.1000))
+        d[5].append((0.1000, 0.1000))
+        d[1].append((-0.1000, -0.1000))
+        d[5].append((-0.1000, -0.1000))
+
+        # current source calibration
+        # TODO: resistor
+        d[3].append((0.0000, 0.0000))
+        d[7].append((0.0000, 0.0000))
+        d[3].append((0.1000, 0.1000))
+        d[7].append((0.1000, 0.1000))
+        d[3].append((-0.1000, -0.1000))
+        d[7].append((-0.1000, -0.1000))
+
+        cal_file_path = tempfile.NamedTemporaryFile(delete=False).name
+        with open(cal_file_path, 'w+') as cal_file:
+            cal_file.write(dedent('''\
+                # ADALM1000 calibration file
+                # Device: {}
+
+            '''.format(str(dev))))
+            for i in range(8):
+                cal_file.write(dedent('''\
+                    # {}
+                    </>
+                '''.format(cal_str_map[i])))
+                cal_file.write('\n'.join('<{:.4f}, {:.4f}>'.format(*x) for x in d[i]))
+                cal_file.write('\n<\>\n\n')
+        try:
+            copyfile(cal_file_path, 'calib.txt')
+            os.remove(cal_file_path)
+            cal_file_path = 'calib.txt'
+        except Exception as e:
+            pass
+        print('calibration data written to: {}'.format(cal_file_path))
     else:
         cal_path = None
         if args.cal_write is not None:
@@ -232,6 +361,9 @@ if __name__ == '__main__':
         '-r', '--reset', action='store_true', dest='cal_reset',
         help='reset calibration data on a device to the defaults')
     parser_cal_mux.add_argument(
+        '-R', '--run', action='store_true', dest='cal_run',
+        help='run the interactive calibration procedure on a device')
+    parser_cal_mux.add_argument(
         '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='cal_write',
         help='write calibration data to a device')
 
@@ -279,7 +411,7 @@ if __name__ == '__main__':
 
     # default to displaying calibration data if no subcommand is selected
     if args.func.__name__ == 'calibration':
-        if (all(not getattr(args, x) for x in ('cal_display', 'cal_reset', 'cal_write'))):
+        if (all(not getattr(args, x) for x in ('cal_display', 'cal_reset', 'cal_run', 'cal_write'))):
             args.cal_display = True
 
     # default to auto-flashing if no option is selected
