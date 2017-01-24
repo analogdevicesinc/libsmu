@@ -36,7 +36,7 @@ def calibration(session, args):
 
     dev = session.devices[0]
 
-    if args.display:
+    if args.cal_display:
         cal_str_map = {
             0: 'Channel A, measure V',
             1: 'Channel A, measure I',
@@ -56,14 +56,14 @@ def calibration(session, args):
 
     else:
         cal_path = None
-        if args.write is not None:
-            cal_path = args.write
+        if args.cal_write is not None:
+            cal_path = args.cal_write
             if not os.path.exists(cal_path):
                 pprint("calibration file doesn't exist: {}".format(cal_path))
                 sys.exit(1)
 
         try:
-            dev.write_calibration(args.write)
+            dev.write_calibration(args.cal_write)
         except pysmu.DeviceError as e:
             pprint(str(e))
             sys.exit(1)
@@ -226,13 +226,13 @@ if __name__ == '__main__':
     parser_cal.set_defaults(func=calibration)
     parser_cal_mux = parser_cal.add_mutually_exclusive_group()
     parser_cal_mux.add_argument(
-        '-d', '--display', action='store_true', dest='display',
+        '-d', '--display', action='store_true', dest='cal_display',
         help='display calibration data from a device')
     parser_cal_mux.add_argument(
-        '-r', '--reset', action='store_true', dest='reset',
+        '-r', '--reset', action='store_true', dest='cal_reset',
         help='reset calibration data on a device to the defaults')
     parser_cal_mux.add_argument(
-        '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='write',
+        '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='cal_write',
         help='write calibration data to a device')
 
     parser_list = subparsers.add_parser(
@@ -279,8 +279,8 @@ if __name__ == '__main__':
 
     # default to displaying calibration data if no subcommand is selected
     if args.func.__name__ == 'calibration':
-        if (all(not getattr(args, x) for x in ('display', 'reset', 'write'))):
-            args.display = True
+        if (all(not getattr(args, x) for x in ('cal_display', 'cal_reset', 'cal_write'))):
+            args.cal_display = True
 
     # default to auto-flashing if no option is selected
     if args.func.__name__ == 'flash':
