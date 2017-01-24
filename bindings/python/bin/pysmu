@@ -139,6 +139,8 @@ def calibration(session, args):
 
         # current measurement calibration
         prompt('make sure that CH A and CH B are both open')
+        chan_a.constant(0)
+        chan_b.constant(0)
         chan_a.mode = pysmu.Mode.SVMI
         chan_b.mode = pysmu.Mode.SVMI
         samples = dev.get_samples(10000)
@@ -147,31 +149,58 @@ def calibration(session, args):
         chan_b_voltages = [x[1][0] for x in samples]
         d[5].append((0.0000, rounded_mean(chan_b_voltages)))
 
+        def voltage_search(channel, target_current):
+            """Search for sourced voltage so current measurement is close to the target."""
+            voltage = 2.5
+            previous_diff = None
+            while True:
+                chan_a.constant(voltage)
+                samples = dev.get_samples(10000)
+                chan_a_mean = rounded_mean([x[channel][1] for x in samples])
+
+                current_diff = chan_a_mean - target_current
+                if current_diff == 0 and previous_diff == current_diff:
+                    break
+
+                voltage += -(current_diff * 4)
+                if voltage >= 5 or voltage <= 0:
+                    raise ValueError('something is probably wrong with the circuit')
+
+                previous_diff = current_diff
+
+            return voltage
+
         prompt('connect CH A to one end of a 2.5 ohm to 25 ohm resistor')
         prompt('connect the other end of the resistor to the current input of the multimeter')
         prompt('connect the GND of the multimeter to the 2.5V pin')
-        # TODO: search for sourced voltage so current measurement is close to 100mA
+        voltage_search(0, 0.1)
+        session.start(0)
         dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
-        samples = dev.get_samples(10000)
-        chan_a_currents = [x[0][1] for x in samples]
-        d[1].append((dmm_current, rounded_mean(chan_a_currents)))
-        # TODO: search for sourced voltage so current measurement is close to -100mA
+        d[1].append((dmm_current, 0.1))
+        session.cancel()
+        session.end()
+
+        voltage_search(0, -0.1)
+        session.start(0)
         dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
-        samples = dev.get_samples(10000)
-        chan_a_currents = [x[0][1] for x in samples]
-        d[1].append((dmm_current, rounded_mean(chan_a_currents)))
+        d[1].append((dmm_current, -0.1))
+        session.cancel()
+        session.end()
 
         prompt('using the same setup, switch CH A with CH B connecting to the resistor')
-        # TODO: search for sourced voltage so current measurement is close to 100mA
+        voltage_search(1, 0.1)
+        session.start(0)
         dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
-        samples = dev.get_samples(10000)
-        chan_b_currents = [x[1][1] for x in samples]
-        d[5].append((dmm_current, rounded_mean(chan_b_currents)))
-        # TODO: search for sourced voltage so current measurement is close to -100mA
+        d[5].append((dmm_current, 0.1))
+        session.cancel()
+        session.end()
+
+        voltage_search(1, -0.1)
+        session.start(0)
         dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
-        samples = dev.get_samples(10000)
-        chan_b_currents = [x[1][1] for x in samples]
-        d[5].append((dmm_current, rounded_mean(chan_b_currents)))
+        d[5].append((dmm_current, -0.1))
+        session.cancel()
+        session.end()
 
         # current source calibration
         chan_a.mode = pysmu.Mode.SIMV
