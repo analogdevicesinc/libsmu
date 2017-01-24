@@ -804,27 +804,27 @@ cdef class Channel:
 
     def square(self, float midpoint, float peak, double period, double phase, double duty):
         """Set output to a square waveform."""
-        data = self.signal.square(1000, midpoint, peak, period, phase, duty)
+        data = self.signal.square(period, midpoint, peak, period, phase, duty)
         self.write(data, cyclic=True)
 
     def sawtooth(self, float midpoint, float peak, float period, float phase):
         """Set output to a sawtooth waveform."""
-        data = self.signal.sawtooth(1000, midpoint, peak, period, phase)
+        data = self.signal.sawtooth(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def stairstep(self, float midpoint, float peak, float period, float phase):
         """Set output to a stairstep waveform."""
-        data = self.signal.stairstep(1000, midpoint, peak, period, phase)
+        data = self.signal.stairstep(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def sine(self, float midpoint, float peak, float period, float phase):
         """Set output to a sinusoidal waveform."""
-        data = self.signal.sine(1000, midpoint, peak, period, phase)
+        data = self.signal.sine(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def triangle(self, float midpoint, float peak, float period, float phase):
         """Set output to a triangular waveform."""
-        data = self.signal.triangle(1000, midpoint, peak, period, phase)
+        data = self.signal.triangle(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
 
