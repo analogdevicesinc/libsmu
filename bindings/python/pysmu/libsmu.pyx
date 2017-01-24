@@ -802,7 +802,7 @@ cdef class Channel:
         >>> print(chan_a.get_samples(2))
         [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
         """
-        data = self.signal.constant(samples=1000, value)
+        data = self.signal.constant(1000, value)
         self.write(data, cyclic=True)
 
     def square(self, float midpoint, float peak, double period, double phase, double duty):
@@ -815,7 +815,7 @@ cdef class Channel:
             phase: position in time (sample number) that the wave starts at
             duty: length of the duty cycle in samples
         """
-        data = self.signal.square(samples=period, midpoint, peak, period, phase, duty)
+        data = self.signal.square(period, midpoint, peak, period, phase, duty)
         self.write(data, cyclic=True)
 
     def sawtooth(self, float midpoint, float peak, float period, float phase):
@@ -827,7 +827,7 @@ cdef class Channel:
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
         """
-        data = self.signal.sawtooth(samples=period, midpoint, peak, period, phase)
+        data = self.signal.sawtooth(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def stairstep(self, float midpoint, float peak, float period, float phase):
@@ -839,7 +839,7 @@ cdef class Channel:
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
         """
-        data = self.signal.stairstep(samples=period, midpoint, peak, period, phase)
+        data = self.signal.stairstep(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def sine(self, float midpoint, float peak, float period, float phase):
@@ -851,7 +851,7 @@ cdef class Channel:
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
         """
-        data = self.signal.sine(samples=period, midpoint, peak, period, phase)
+        data = self.signal.sine(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def triangle(self, float midpoint, float peak, float period, float phase):
@@ -863,7 +863,7 @@ cdef class Channel:
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
         """
-        data = self.signal.triangle(samples=period, midpoint, peak, period, phase)
+        data = self.signal.triangle(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
 
