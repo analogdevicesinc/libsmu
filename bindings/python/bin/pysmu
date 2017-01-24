@@ -271,7 +271,14 @@ def calibration(session, args):
             cal_file_path = 'calib.txt'
         except Exception as e:
             pass
-        print('calibration data written to: {}'.format(cal_file_path))
+
+        try:
+            dev.write_calibration(cal_file_path)
+            print('device calibration updated and backup file written to: {}'.format(cal_file_path))
+        except pysmu.DeviceError as e:
+            pprint(str(e))
+            print('invalid calibration file written to: {}'.format(cal_file_path))
+            sys.exit(1)
     else:
         cal_path = None
         if args.cal_write is not None:
@@ -451,7 +458,7 @@ if __name__ == '__main__':
         help='reset calibration data on a device to the defaults')
     parser_cal_mux.add_argument(
         '-R', '--run', action='store_true', dest='cal_run',
-        help='run the interactive calibration procedure on a device')
+        help='run an interactive calibration procedure on a device')
     parser_cal_mux.add_argument(
         '-w', '--write', metavar='PATH_TO_CAL_FILE', dest='cal_write',
         help='write calibration data to a device')
