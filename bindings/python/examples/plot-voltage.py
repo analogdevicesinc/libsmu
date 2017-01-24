@@ -25,8 +25,8 @@ if __name__ == '__main__':
         dev.channels['B'].mode = Mode.SVMI
         dev.channels['B'].sine(0, 5, 100, 0)
 
-    # Run the session for 1000 captured samples in noncontinuous mode.
-    for i, samples in enumerate(session.get_samples(1000)):
+    # Run the session in noncontinuous mode.
+    for i, samples in enumerate(session.get_samples(1001)):
         chan_a = [x[0][0] for x in samples]
         chan_b = [x[1][0] for x in samples]
         plt.figure(i)
