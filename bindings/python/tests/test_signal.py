@@ -45,25 +45,48 @@ def test_constant(signal):
 
 
 def test_square(signal):
-    data = signal.square(100, 0, 5, 99, 0, 0)
-    assert len(data) == 100
+    data = signal.square(101, 0, 5, 100, 0, 0.5)
+    assert len(data) == 101
+    for i in range(50):
+        assert data[i] == 0
+        assert data[i + 50] == 5
+    assert data[100] == 0
 
 
 def test_sawtooth(signal):
-    data = signal.sawtooth(100, -5, 5, 99, 0)
-    assert len(data) == 100
+    data = signal.sawtooth(101, -5, 5, 100, 0)
+    assert data[0] == 5
+    assert data[99] == -5
+    assert data[100] == 5
+    assert len(data) == 101
 
 
 def test_stairstep(signal):
-    data = signal.stairstep(100, -5, 5, 99, 0)
-    assert len(data) == 100
+    data = signal.stairstep(101, -5, 5, 100, 0)
+    assert len(data) == 101
+    assert data[0] == 5
+    assert data[100] == 5
+
+    for i in range(10):
+        step_vals = [data[i * 10 + j] for j in range(10)]
+        check_val = step_vals[0]
+        for i, x in enumerate(step_vals):
+            assert x == check_val
 
 
 def test_sine(signal):
-    data = signal.sine(100, -5, 5, 99, 0)
-    assert len(data) == 100
+    data = signal.sine(101, -5, 5, 100, -25)
+    assert len(data) == 101
+    assert round(data[0], 4) == 0
+    assert round(data[25], 4) == 5
+    assert round(data[50], 4) == 0
+    assert round(data[75], 4) == -5
+    assert round(data[100], 4) == 0
 
 
 def test_triangle(signal):
-    data = signal.triangle(100, -5, 5, 99, 0)
-    assert len(data) == 100
+    data = signal.triangle(101, -5, 5, 100, 0)
+    assert len(data) == 101
+    assert data[0] == 5
+    assert data[50] == -5
+    assert data[100] == 5
