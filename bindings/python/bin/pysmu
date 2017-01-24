@@ -147,20 +147,80 @@ def calibration(session, args):
         chan_b_voltages = [x[1][0] for x in samples]
         d[5].append((0.0000, rounded_mean(chan_b_voltages)))
 
-        # TODO: resistor
-        d[1].append((0.1000, 0.1000))
-        d[5].append((0.1000, 0.1000))
-        d[1].append((-0.1000, -0.1000))
-        d[5].append((-0.1000, -0.1000))
+        prompt('connect CH A to one end of a 2.5 ohm to 25 ohm resistor')
+        prompt('connect the other end of the resistor to the current input of the multimeter')
+        prompt('connect the GND of the multimeter to the 2.5V pin')
+        # TODO: search for sourced voltage so current measurement is close to 100mA
+        dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
+        samples = dev.get_samples(10000)
+        chan_a_currents = [x[0][1] for x in samples]
+        d[1].append((dmm_current, rounded_mean(chan_a_currents)))
+        # TODO: search for sourced voltage so current measurement is close to -100mA
+        dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
+        samples = dev.get_samples(10000)
+        chan_a_currents = [x[0][1] for x in samples]
+        d[1].append((dmm_current, rounded_mean(chan_a_currents)))
+
+        prompt('using the same setup, switch CH A with CH B connecting to the resistor')
+        # TODO: search for sourced voltage so current measurement is close to 100mA
+        dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
+        samples = dev.get_samples(10000)
+        chan_b_currents = [x[1][1] for x in samples]
+        d[5].append((dmm_current, rounded_mean(chan_b_currents)))
+        # TODO: search for sourced voltage so current measurement is close to -100mA
+        dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
+        samples = dev.get_samples(10000)
+        chan_b_currents = [x[1][1] for x in samples]
+        d[5].append((dmm_current, rounded_mean(chan_b_currents)))
 
         # current source calibration
-        # TODO: resistor
-        d[3].append((0.0000, 0.0000))
-        d[7].append((0.0000, 0.0000))
-        d[3].append((0.1000, 0.1000))
-        d[7].append((0.1000, 0.1000))
-        d[3].append((-0.1000, -0.1000))
-        d[7].append((-0.1000, -0.1000))
+        chan_a.mode = pysmu.Mode.SIMV
+        chan_b.mode = pysmu.Mode.SIMV
+        chan_a.constant(0)
+        chan_b.constant(0)
+        session.start(0)
+        dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_b_currents = [x[1][1] for x in samples]
+        d[7].append((rounded_mean(chan_b_currents), dmm_current))
+        prompt('using the same setup, switch CH B with CH A connecting to the resistor')
+        dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_a_currents = [x[0][1] for x in samples]
+        d[3].append((rounded_mean(chan_a_currents), dmm_current))
+        session.cancel()
+        session.end()
+
+        chan_a.constant(0.1)
+        chan_b.constant(0.1)
+        session.start(0)
+        dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_a_currents = [x[0][1] for x in samples]
+        d[3].append((rounded_mean(chan_a_currents), dmm_current))
+        prompt('using the same setup, switch CH A with CH B connecting to the resistor')
+        dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_b_currents = [x[1][1] for x in samples]
+        d[7].append((rounded_mean(chan_b_currents), dmm_current))
+        session.cancel()
+        session.end()
+
+        chan_a.constant(-0.1)
+        chan_b.constant(-0.1)
+        session.start(0)
+        prompt('using the same setup, switch CH B with CH A connecting to the resistor')
+        dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_a_currents = [x[0][1] for x in samples]
+        d[3].append((rounded_mean(chan_a_currents), dmm_current))
+        prompt('using the same setup, switch CH A with CH B connecting to the resistor')
+        dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
+        samples = dev.read(10000, -1)
+        chan_b_currents = [x[1][1] for x in samples]
+        d[7].append((rounded_mean(chan_b_currents), dmm_current))
+        session.cancel()
+        session.end()
 
         cal_file_path = tempfile.NamedTemporaryFile(delete=False).name
         with open(cal_file_path, 'w+') as cal_file:
