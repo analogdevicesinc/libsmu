@@ -788,6 +788,9 @@ cdef class Channel:
     def constant(self, value):
         """Set output to a constant waveform.
 
+        Attributes:
+            value: Constant value to set the channel to.
+
         Example usage with at least one device plugged in:
 
         >>> from pysmu import Session, Mode
@@ -799,32 +802,68 @@ cdef class Channel:
         >>> print(chan_a.get_samples(2))
         [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
         """
-        data = self.signal.constant(1000, value)
+        data = self.signal.constant(samples=1000, value)
         self.write(data, cyclic=True)
 
     def square(self, float midpoint, float peak, double period, double phase, double duty):
-        """Set output to a square waveform."""
-        data = self.signal.square(period, midpoint, peak, period, phase, duty)
+        """Set output to a square waveform.
+
+        Attributes:
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+            duty: length of the duty cycle in samples
+        """
+        data = self.signal.square(samples=period, midpoint, peak, period, phase, duty)
         self.write(data, cyclic=True)
 
     def sawtooth(self, float midpoint, float peak, float period, float phase):
-        """Set output to a sawtooth waveform."""
-        data = self.signal.sawtooth(period, midpoint, peak, period, phase)
+        """Set output to a sawtooth waveform.
+
+        Attributes:
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
+        data = self.signal.sawtooth(samples=period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def stairstep(self, float midpoint, float peak, float period, float phase):
-        """Set output to a stairstep waveform."""
-        data = self.signal.stairstep(period, midpoint, peak, period, phase)
+        """Set output to a stairstep waveform.
+
+        Attributes:
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
+        data = self.signal.stairstep(samples=period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def sine(self, float midpoint, float peak, float period, float phase):
-        """Set output to a sinusoidal waveform."""
-        data = self.signal.sine(period, midpoint, peak, period, phase)
+        """Set output to a sinusoidal waveform.
+
+        Attributes:
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
+        data = self.signal.sine(samples=period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
     def triangle(self, float midpoint, float peak, float period, float phase):
-        """Set output to a triangular waveform."""
-        data = self.signal.triangle(period, midpoint, peak, period, phase)
+        """Set output to a triangular waveform.
+
+        Attributes:
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
+        data = self.signal.triangle(samples=period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
 
 
@@ -846,31 +885,72 @@ cdef class Signal:
         return buf
 
     def square(self, uint64_t samples, float midpoint, float peak, double period, double phase, double duty):
-        """Generate a square waveform."""
+        """Generate a square waveform.
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+            duty: length of the duty cycle in samples
+        """
         cdef vector[float] buf
         self._signal.square(buf, samples, midpoint, peak, period, phase, duty)
         return buf
 
     def sawtooth(self, uint64_t samples, float midpoint, float peak, double period, double phase):
-        """Generate a sawtooth waveform."""
+        """Generate a sawtooth waveform.
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
         cdef vector[float] buf
         self._signal.sawtooth(buf, samples, midpoint, peak, period, phase)
         return buf
 
     def stairstep(self, uint64_t samples, float midpoint, float peak, double period, double phase):
-        """Generate a stairstep waveform."""
+        """Generate a stairstep waveform.
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
         cdef vector[float] buf
         self._signal.stairstep(buf, samples, midpoint, peak, period, phase)
         return buf
 
     def sine(self, uint64_t samples, float midpoint, float peak, double period, double phase):
-        """Generate a sinusoidal waveform."""
+        """Generate a sinusoidal waveform.
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
         cdef vector[float] buf
         self._signal.sine(buf, samples, midpoint, peak, period, phase)
         return buf
 
     def triangle(self, uint64_t samples, float midpoint, float peak, double period, double phase):
-        """Generate a triangular waveform."""
+        """Generate a triangular waveform.
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            midpoint: value at the middle of the wave
+            peak: maximum value of the wave
+            period: number of samples the wave takes for one cycle
+            phase: position in time (sample number) that the wave starts at
+        """
         cdef vector[float] buf
         self._signal.triangle(buf, samples, midpoint, peak, period, phase)
         return buf
