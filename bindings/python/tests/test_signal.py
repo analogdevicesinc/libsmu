@@ -1,6 +1,6 @@
 import pytest
 
-from pysmu import Session
+from pysmu import Session, Mode
 
 
 @pytest.fixture(scope='function')
@@ -35,6 +35,17 @@ def chan_b(device):
 @pytest.fixture(scope='function')
 def signal(chan_a):
     return chan_a.signal
+
+
+def test_signal_info(chan_a):
+    chan_a.mode = Mode.SVMI
+    assert chan_a.signal.label == 'Voltage'
+    assert chan_a.signal.min == 0
+    assert chan_a.signal.max == 5
+    chan_a.mode = Mode.SIMV
+    assert chan_a.signal.label == 'Current'
+    assert chan_a.signal.min == -0.2
+    assert chan_a.signal.max == 0.2
 
 
 def test_constant(signal):

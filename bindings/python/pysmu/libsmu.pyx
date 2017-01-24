@@ -871,6 +871,21 @@ cdef class Signal:
     # pointer to the underlying C++ smu::Signal object
     cdef cpp_libsmu.Signal *_signal
 
+    property label:
+        """Get the signal's label."""
+        def __get__(self):
+            return self._signal.info().label
+
+    property min:
+        """Get the signal's minimum value."""
+        def __get__(self):
+            return self._signal.info().min
+
+    property max:
+        """Get the signal's maximum value."""
+        def __get__(self):
+            return self._signal.info().max
+
     @staticmethod
     cdef _create(cpp_libsmu.Signal *signal) with gil:
         """Internal method to wrap C++ smu::Signal objects."""
