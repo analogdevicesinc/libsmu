@@ -30,12 +30,12 @@ if __name__ == '__main__':
         chan_a = [x[0][0] for x in samples]
         chan_b = [x[1][0] for x in samples]
         plt.figure(i)
-        plt.plot(chan_a, label='channel A')
-        plt.plot(chan_b, label='channel B')
+        plt.plot(chan_a, label='Channel A')
+        plt.plot(chan_b, label='Channel B')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.title('Device {}: {}'.format(i, str(session.devices[i])))
-        plt.ylabel('voltage')
-        plt.xlabel('sample number')
+        plt.ylabel('Voltage')
+        plt.xlabel('Sample number')
 
     # Show all channel voltage plots for attached devices.
     plt.show()
