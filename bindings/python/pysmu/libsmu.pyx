@@ -557,6 +557,11 @@ cdef class SessionDevice(Device):
         d._device = device
         return d
 
+    property sample_rate:
+        """The device's configured sample rate."""
+        def __get__(self):
+            return self._session.sample_rate
+
     def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
 
