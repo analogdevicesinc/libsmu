@@ -495,26 +495,47 @@ namespace smu {
 		/// @brief Generate a square waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param midpoint Value at the middle of the wave.
+		/// @param peak Maximum value of the wave.
+		/// @param period Number of samples the wave takes for one cycle.
+		/// @param phase Position in time (sample number) that the wave starts at.
+		/// @param duty Duty cycle of the waveform (fraction of time in which the signal is active, e.g. 0.5 is half the time).
 		void square(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase, double duty);
 
 		/// @brief Generate a sawtooth waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param midpoint Value at the middle of the wave.
+		/// @param peak Maximum value of the wave.
+		/// @param period Number of samples the wave takes for one cycle.
+		/// @param phase Position in time (sample number) that the wave starts at.
 		void sawtooth(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a stairstep waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param midpoint Value at the middle of the wave.
+		/// @param peak Maximum value of the wave.
+		/// @param period Number of samples the wave takes for one cycle.
+		/// @param phase Position in time (sample number) that the wave starts at.
 		void stairstep(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a sinusoidal waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param midpoint Value at the middle of the wave.
+		/// @param peak Maximum value of the wave.
+		/// @param period Number of samples the wave takes for one cycle.
+		/// @param phase Position in time (sample number) that the wave starts at.
 		void sine(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 		/// @brief Generate a triangle waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param midpoint Value at the middle of the wave.
+		/// @param peak Maximum value of the wave.
+		/// @param period Number of samples the wave takes for one cycle.
+		/// @param phase Position in time (sample number) that the wave starts at.
 		void triangle(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 	protected:

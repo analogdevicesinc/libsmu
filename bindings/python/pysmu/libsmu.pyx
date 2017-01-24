@@ -813,7 +813,8 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
-            duty: length of the duty cycle in samples
+            duty: duty cycle of the waveform (fraction of time in which the
+                signal is active, e.g. 0.5 is half the time)
         """
         data = self.signal.square(period, midpoint, peak, period, phase, duty)
         self.write(data, cyclic=True)
