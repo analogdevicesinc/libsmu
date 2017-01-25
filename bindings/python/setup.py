@@ -144,6 +144,7 @@ class PyTest(Command):
         ('coverage', 'c', 'generate coverage info'),
         ('report=', 'r', 'generate and/or show a coverage report'),
         ('match=', 'k', 'run only tests that match the provided expressions'),
+        ('skip-build', 's', 'skip building the extension and instead test against an installed version'),
     ]
 
     default_test_dir = os.path.join(BINDINGS_DIR, 'tests')
@@ -151,12 +152,14 @@ class PyTest(Command):
     def initialize_options(self):
         self.pytest_args = ''
         self.coverage = False
+        self.skip_build = False
         self.match = None
         self.report = None
 
     def finalize_options(self):
         self.test_args = ['-s', '-v', self.default_test_dir]
         self.coverage = bool(self.coverage)
+        self.skip_build = bool(self.skip_build)
         if self.match is not None:
             self.test_args.extend(['-k', self.match])
 
@@ -184,20 +187,26 @@ class PyTest(Command):
             sys.stderr.write('error: pytest is not installed\n')
             sys.exit(1)
 
-        # build extensions and byte-compile python
-        build_ext = self.reinitialize_command('build_ext')
-        build_py = self.reinitialize_command('build_py')
-        build_ext.ensure_finalized()
-        build_py.ensure_finalized()
-        self.run_command('build_ext')
-        self.run_command('build_py')
+        if self.skip_build:
+            # run tests from the parent directory to the local pysmu dir isn't used for module imports
+            builddir = os.path.abspath("..")
+            self.test_args.extend([os.path.join(BINDINGS_DIR, 'tests')])
+        else:
+            # build extensions and byte-compile python
+            build_ext = self.reinitialize_command('build_ext')
+            build_py = self.reinitialize_command('build_py')
+            build_ext.ensure_finalized()
+            build_py.ensure_finalized()
+            self.run_command('build_ext')
+            self.run_command('build_py')
 
-        # Change the current working directory to the builddir during testing
-        # so coverage paths are correct.
-        builddir = os.path.abspath(build_py.build_lib)
-        if self.coverage and os.path.exists(os.path.join(TOPDIR, '.coveragerc')):
-            shutil.copyfile(os.path.join(TOPDIR, '.coveragerc'),
-                            os.path.join(builddir, '.coveragerc'))
+            # Change the current working directory to the builddir during testing
+            # so coverage paths are correct.
+            builddir = os.path.abspath(build_py.build_lib)
+            if self.coverage and os.path.exists(os.path.join(TOPDIR, '.coveragerc')):
+                shutil.copyfile(os.path.join(TOPDIR, '.coveragerc'),
+                                os.path.join(builddir, '.coveragerc'))
+
         ret = subprocess.call([sys.executable, '-m', 'pytest'] + self.test_args, cwd=builddir)
         sys.exit(ret)
 
