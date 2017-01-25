@@ -44,6 +44,54 @@ def test_read_write_non_continuous_fallback_values(session, device):
         assert abs(round(sample[1][0])) == 4
 
 
+def test_read_write_continuous_large_request(session, device):
+    """Request more samples than fits in the read/write queues under default settings in continuous mode.
+
+    Internally, pysmu splits up the request into sizes smaller than the
+    internal queue size, runs all the separate requests, and then returns the
+    data.
+    """
+    device.channels['A'].mode = Mode.SVMI
+    device.channels['B'].mode = Mode.SVMI
+    device.write([2] * 1000, 0, cyclic=True)
+    device.write([4] * 1000, 1, cyclic=True)
+    session.start(0)
+
+    samples = device.read(100000, -1)
+    assert len(samples) == 100000
+
+    for sample in samples:
+        assert abs(round(sample[0][0])) == 2
+        assert abs(round(sample[1][0])) == 4
+
+    samples = device.read(100000, 100)
+    assert len(samples) > 0
+
+    for sample in samples:
+        assert abs(round(sample[0][0])) == 2
+        assert abs(round(sample[1][0])) == 4
+
+
+def test_read_write_non_continuous_large_request(device):
+    """Request more samples than fits in the read/write queues under default settings in non-continuous mode.
+
+    Internally, pysmu splits up the request into sizes smaller than the
+    internal queue size, runs all the separate requests, and then returns the
+    data.
+    """
+    device.channels['A'].mode = Mode.SVMI
+    device.channels['B'].mode = Mode.SVMI
+    device.write([2] * 1000, 0, cyclic=True)
+    device.write([4] * 1000, 1, cyclic=True)
+
+    samples = device.get_samples(100000)
+    assert len(samples) == 100000
+
+    for sample in samples:
+        assert abs(round(sample[0][0])) == 2
+        assert abs(round(sample[1][0])) == 4
+
+
 def test_read_write_non_continuous(session, device):
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI

@@ -82,7 +82,7 @@ def test_read_continuous_dataflow_raises():
 
 
 def test_read_continuous_large_request(session, device):
-    """Request more samples than fits in the read/write queues under default settings in continuous mode."""
+    """Request more samples than fits in the read queues under default settings in continuous mode."""
     session.start(0)
 
     samples = device.read(100000, -1)
@@ -93,7 +93,7 @@ def test_read_continuous_large_request(session, device):
 
 
 def test_read_non_continuous_large_request(device):
-    """Request more samples than fits in the read/write queues under default settings in non-continuous mode.
+    """Request more samples than fits in the read queues under default settings in non-continuous mode.
 
     Internally, pysmu splits up the request into sizes smaller than the
     internal queue size, runs all the separate requests, and then returns the
