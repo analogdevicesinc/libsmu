@@ -568,7 +568,7 @@ void M1000_Device::flush(int channel, bool read)
 	// make sure USB transfers aren't being processed concurrently
 	std::lock_guard<std::mutex> lock(m_state);
 
-	if (channel == 0 || channel == 1) {
+	if (channel == CHAN_A || channel == CHAN_B) {
 		// notify write threads to stop
 		m_out_samples_stop[channel] = 1;
 		m_out_samples_cv[channel].notify_one();
