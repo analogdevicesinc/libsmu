@@ -23,19 +23,17 @@ if __name__ == '__main__':
     # don't throw KeyboardInterrupt on Ctrl-C
     signal(SIGINT, SIG_DFL)
 
-    # only add one device to the session
-    session = Session(add_all=False)
-    session.scan()
-    if not session.available_devices:
-        sys.exit(1)
-    session.add(session.available_devices[0])
+    session = Session()
 
     if session.devices:
+        # Grab the first device from the session.
+        dev = session.devices[0]
+
         while True:
             # Run the session for 1000 samples in noncontinuous mode and read
             # incoming samples from both channels of the first device in a
             # blocking fashion.
-            samples = session.get_samples(1000)[0]
+            samples = dev.get_samples(1000)
             for x in samples:
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:

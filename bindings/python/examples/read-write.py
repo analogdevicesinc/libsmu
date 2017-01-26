@@ -33,12 +33,7 @@ if __name__ == '__main__':
     # don't throw KeyboardInterrupt on Ctrl-C
     signal(SIGINT, SIG_DFL)
 
-    # only add one device to the session
-    session = Session(add_all=False)
-    session.scan()
-    if not session.available_devices:
-        sys.exit(1)
-    session.add(session.available_devices[0])
+    session = Session()
 
     if session.devices:
         # Grab the first device from the session.
@@ -64,13 +59,12 @@ if __name__ == '__main__':
                 v = i
 
             # Write iterating voltage values to both channels.
-            chan_a = refill_data(num_samples, v % 6)
-            chan_b = refill_data(num_samples, v % 6)
-            session.write([[chan_a, chan_b]])
+            chan_a.write(refill_data(num_samples, v % 6))
+            chan_b.write(refill_data(num_samples, v % 6))
             i += 1
 
-            # Read incoming samples from the first device in a blocking fashion.
-            samples = session.get_samples(num_samples)[0]
+            # Read incoming samples in a blocking fashion.
+            samples = dev.get_samples(num_samples)
             for x in samples:
                 output("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
     else:
