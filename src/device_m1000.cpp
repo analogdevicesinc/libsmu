@@ -752,7 +752,7 @@ int M1000_Device::run(uint64_t samples)
 	m_sample_count = samples;
 	m_requested_sampleno = m_in_sampleno = m_out_sampleno = 0;
 
-	// Kick off USB transfers.
+	// Method to kick off USB transfers.
 	auto start_usb_transfers = [=](M1000_Device* dev) {
 		std::unique_lock<std::mutex> lk(dev->m_state);
 		for (auto t: dev->m_in_transfers) {
@@ -775,7 +775,7 @@ int M1000_Device::run(uint64_t samples)
 	// Run the USB transfers within their own thread.
 	std::thread(start_usb_transfers, this).detach();
 
-	// Queue up samples being sent to the device.
+	// Method to queue samples being sent to the device.
 	auto write_samples = [=](M1000_Device* dev, unsigned channel) {
 		boost::lockfree::spsc_queue<float>& q = *(dev->m_out_samples_q[channel]);
 		std::vector<float>& buf = dev->m_out_samples_buf[channel];
