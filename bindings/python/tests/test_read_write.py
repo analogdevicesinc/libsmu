@@ -198,7 +198,6 @@ def test_read_write_cyclic_non_continuous(session, device):
             assert abs(round(sample[1][0])) == v
 
 
-@pytest.mark.skip(reason="requires USB transfer flushing support")
 def test_read_write_cyclic_continuous(session, device):
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI
@@ -207,20 +206,22 @@ def test_read_write_cyclic_continuous(session, device):
     sample_count = 0
     session.start(0)
 
-    for v in range(6):
-        device.write([v] * 1000, 0, cyclic=True)
-        device.write([v] * 1000, 1, cyclic=True)
+    for _ in range(10):
+        for v in range(6):
+            device.write([v] * 1000, 0, cyclic=True)
+            device.write([v] * 1000, 1, cyclic=True)
 
-        # flush the read buffer
-        device.flush(-1, True)
+            # flush the read buffer
+            #device.flush(-1, True)
 
-        samples = device.read(session.queue_size + 1, -1)
-        assert len(samples) == session.queue_size + 1
+            samples = device.read(session.queue_size + 1, -1)
+            assert len(samples) == session.queue_size + 1
 
-        # verify sample values
-        for sample in samples:
-            assert abs(round(sample[0][0])) == v
-            assert abs(round(sample[1][0])) == v
+            # skipped until USB transfer flushing support is added
+            ## verify sample values
+            #for sample in samples:
+            #    assert abs(round(sample[0][0])) == v
+            #    assert abs(round(sample[1][0])) == v
 
 
 def test_read_write_continuous_sample_rates(session, device):
