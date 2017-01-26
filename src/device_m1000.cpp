@@ -660,6 +660,10 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
 
+	// skip unnecessarily resetting mode
+	if (m_mode[channel] == mode)
+		return 0;
+
 	m_mode[channel] = mode;
 
 	unsigned pset;
