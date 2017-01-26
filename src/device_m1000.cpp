@@ -664,8 +664,6 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	if (m_mode[channel] == mode)
 		return 0;
 
-	m_mode[channel] = mode;
-
 	unsigned pset;
 	switch (mode) {
 		case SIMV: pset = 0x7f7f; break;
@@ -681,7 +679,11 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 
 	// set mode
 	ret = ctrl_transfer(0x40, 0x53, channel, mode, 0, 0, 100);
-	return libusb_errno_or_zero(ret);
+	if (ret < 0)
+		return -libusb_to_errno(ret);
+
+	m_mode[channel] = mode;
+	return 0;
 }
 
 int M1000_Device::get_mode(unsigned channel)
