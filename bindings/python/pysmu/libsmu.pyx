@@ -248,7 +248,7 @@ cdef class Session:
         except RuntimeError as e:
             err = 'data write timeout'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise WriteTimeout(err)
+                raise WriteTimeout(e.message)
 
         if ret:
             raise SessionError('failed running session stream', ret)
@@ -584,7 +584,7 @@ cdef class SessionDevice(Device):
         except RuntimeError as e:
             err = 'data sample dropped'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise SampleDrop(err)
+                raise SampleDrop(e.message)
 
         if ret < 0:
             raise DeviceError('failed reading from device', ret)
@@ -615,7 +615,7 @@ cdef class SessionDevice(Device):
         except RuntimeError as e:
             err = 'data write timeout'
             if not self.ignore_dataflow and e.message[:len(err)] == err:
-                raise WriteTimeout(err)
+                raise WriteTimeout(e.message)
 
         if ret < 0:
             raise DeviceError('failed writing to device', ret)
