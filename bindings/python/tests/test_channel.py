@@ -64,7 +64,7 @@ def test_arbitrary(chan_a, chan_b):
     pass
 
 
-def test_constant(chan_a, chan_b):
+def test_chan_constant(chan_a, chan_b):
     chan_a.mode = Mode.SVMI
     chan_a.constant(2)
     chan_b.mode = Mode.SVMI
