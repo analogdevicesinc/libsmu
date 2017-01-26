@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pytest
 
 from pysmu import Session, Mode
@@ -81,3 +83,25 @@ def test_chan_constant(chan_a, chan_b):
     assert len(samples) == 1000
     for x in samples:
         assert abs(round(x[0])) == 4
+
+
+def test_chan_sine(chan_a, chan_b, device):
+    chan_a.mode = Mode.SVMI
+    chan_a.sine(0, 5, 10, -25)
+    chan_b.mode = Mode.SVMI
+    chan_b.sine(0, 5, 10, 0)
+
+    samples = device.get_samples(1001)
+    chan_a_samples = [x[0][0] for x in samples]
+    chan_b_samples = [x[1][0] for x in samples]
+    assert len(chan_a_samples) == len(chan_b_samples) == 1001
+
+    try:
+        # verify the frequencies of the resulting waveforms, we check that the
+        # 100th bin is the largest, i.e. 100 Hz
+        import numpy as np
+        chan_a_ps = np.abs(np.fft.fft(chan_a_samples)) ** 2
+        chan_b_ps = np.abs(np.fft.fft(chan_b_samples)) ** 2
+        assert np.argmax(chan_a_ps[1:len(chan_a_ps) / 2]) == np.argmax(chan_b_ps[1:len(chan_b_ps) / 2]) == 99
+    except ImportError:
+        pass
