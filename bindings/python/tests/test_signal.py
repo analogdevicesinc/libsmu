@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pytest
 
 from pysmu import Session, Mode
@@ -93,6 +95,17 @@ def test_sine(signal):
     assert round(data[50], 4) == 0
     assert round(data[75], 4) == -5
     assert round(data[100], 4) == 0
+
+    try:
+        import numpy as np
+        samples = 10000
+        period = 10
+        data = signal.sine(samples + 1, -5, 5, period, -25)
+        ps = np.abs(np.fft.fft(data)) ** 2
+        freq = np.argmax(ps)
+        assert freq == samples / period
+    except ImportError:
+        pass
 
 
 def test_triangle(signal):
