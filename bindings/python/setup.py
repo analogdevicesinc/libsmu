@@ -188,9 +188,8 @@ class PyTest(Command):
             sys.exit(1)
 
         if self.skip_build:
-            # run tests from the parent directory to the local pysmu dir isn't used for module imports
+            # run tests from the parent directory so the local dir isn't used for module imports
             builddir = os.path.abspath("..")
-            self.test_args.extend([os.path.join(BINDINGS_DIR, 'tests')])
         else:
             # build extensions and byte-compile python
             build_ext = self.reinitialize_command('build_ext')
