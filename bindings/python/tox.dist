@@ -1,0 +1,17 @@
+# generate dist files -- source tarball and wheels 
+#
+# Make sure to build the C++ library first in the root repo directory via:
+#   cmake . && make
+
+[tox]
+envlist = py27, py35
+skipsdist = True
+[testenv]
+whitelist_externals = bash
+deps =
+	wheel
+	py35: auditwheel
+commands =
+	py27: python "{toxinidir}"/setup.py bdist_wheel
+	py27: python "{toxinidir}"/setup.py sdist
+	py35: bash -c "if [[ $OSTYPE =~ linux-* ]]; then for wheel in dist/*.whl; do auditwheel repair -w dist $wheel && rm $wheel; done; fi"
