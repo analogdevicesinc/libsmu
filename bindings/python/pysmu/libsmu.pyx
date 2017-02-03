@@ -739,9 +739,9 @@ cdef class Channel:
         """Get the signal for the channel."""
         def __get__(self):
             if self.mode == Mode.SIMV:
-                return Signal._create(self.dev._device.signal(self.chan, 1))
+                return _DeviceSignal._create(self.dev._device.signal(self.chan, 1))
             else:
-                return Signal._create(self.dev._device.signal(self.chan, 0))
+                return _DeviceSignal._create(self.dev._device.signal(self.chan, 0))
 
     def flush(self):
         """Flush the channel's write queue."""
@@ -1041,61 +1041,6 @@ cdef class Signal:
         if self._signal is NULL:
             raise MemoryError()
 
-    property label:
-        """Get the signal's label.
-
-        >>> from pysmu import Session, Mode
-        >>> dev = session.devices[0]
-        >>> chan_a = dev.channels['A']
-        >>> chan_a.mode = Mode.SVMI
-        >>> chan_a.signal.label
-        Voltage
-        >>> chan_a.mode = Mode.SIMV
-        >>> chan_a.signal.label
-        Current
-        """
-        def __get__(self):
-            return self._signal.info().label
-
-    property min:
-        """Get the signal's minimum value.
-
-        >>> from pysmu import Session, Mode
-        >>> dev = session.devices[0]
-        >>> chan_a = dev.channels['A']
-        >>> chan_a.mode = Mode.SVMI
-        >>> chan_a.signal.min
-        0.0
-        >>> chan_a.mode = Mode.SIMV
-        >>> chan_a.signal.min
-        -0.2
-        """
-        def __get__(self):
-            return self._signal.info().min
-
-    property max:
-        """Get the signal's maximum value.
-
-        >>> from pysmu import Session, Mode
-        >>> dev = session.devices[0]
-        >>> chan_a = dev.channels['A']
-        >>> chan_a.mode = Mode.SVMI
-        >>> chan_a.signal.max
-        5.0
-        >>> chan_a.mode = Mode.SIMV
-        >>> chan_a.signal.max
-        0.2
-        """
-        def __get__(self):
-            return self._signal.info().max
-
-    @staticmethod
-    cdef _create(cpp_libsmu.Signal *signal) with gil:
-        """Internal method to wrap C++ smu::Signal objects."""
-        s = Signal()
-        s._signal = signal
-        return s
-
     def constant(self, uint64_t samples, float val):
         """Generate a constant waveform.
 
@@ -1258,3 +1203,62 @@ cdef class Signal:
         cdef vector[float] buf
         self._signal.triangle(buf, samples, midpoint, peak, period, phase)
         return buf
+
+
+cdef class _DeviceSignal(Signal):
+    """Wrapper for device specific signal properties."""
+
+    property label:
+        """Get the signal's label.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.label
+        Voltage
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.label
+        Current
+        """
+        def __get__(self):
+            return self._signal.info().label
+
+    property min:
+        """Get the signal's minimum value.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.min
+        0.0
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.min
+        -0.2
+        """
+        def __get__(self):
+            return self._signal.info().min
+
+    property max:
+        """Get the signal's maximum value.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.max
+        5.0
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.max
+        0.2
+        """
+        def __get__(self):
+            return self._signal.info().max
+
+    @staticmethod
+    cdef _create(cpp_libsmu.Signal *signal) with gil:
+        """Internal method to wrap C++ smu::Signal objects."""
+        s = _DeviceSignal()
+        s._signal = signal
+        return s
