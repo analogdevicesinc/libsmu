@@ -111,6 +111,9 @@ Session::~Session()
 	
 	// Run device destructors before libusb_exit().
 	for (Device* dev: m_devices) {
+		// reset devices to high impedance mode before removing
+		dev->set_mode(0, HI_Z);
+		dev->set_mode(1, HI_Z);
 		delete dev;
 	}
 
