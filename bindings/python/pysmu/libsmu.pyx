@@ -794,6 +794,26 @@ cdef class Channel:
         Args:
             waveform: sequence of raw waveform values (floats or ints)
             cyclic (boolean, optional): repeat the waveform when arriving at its end
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.arbitrary([1,3,5,3,1], cyclic=True)
+        >>> print(chan_a.get_samples(10))
+        [1.6732025146484375,
+         3.3382415771484375,
+         4.1905975341796875,
+         2.4416351318359375,
+         1.12823486328125,
+         1.55853271484375,
+         3.3242034912109375,
+         4.1870880126953125,
+         2.441253662109375,
+         1.126708984375]
         """
         self.write(waveform, cyclic=cyclic)
 
@@ -803,7 +823,7 @@ cdef class Channel:
         Attributes:
             value: Constant value to set the channel to.
 
-        Example usage with at least one device plugged in:
+        Example waveform writing to a channel:
 
         >>> from pysmu import Session, Mode
         >>> session = Session()
@@ -811,8 +831,17 @@ cdef class Channel:
         >>> chan_a = dev.channels['A']
         >>> chan_a.mode = Mode.SVMI
         >>> chan_a.constant(4)
-        >>> print(chan_a.get_samples(2))
-        [(3.9046478271484375, 0.0003219604550395161), (3.904571533203125, 0.0002914428769145161)]
+        >>> print(chan_a.get_samples(10))
+        [3.905792236328125,
+         3.905792236328125,
+         3.9055633544921875,
+         3.9054107666015625,
+         3.9055633544921875,
+         3.905487060546875,
+         3.905487060546875,
+         3.90533447265625,
+         3.9054107666015625,
+         3.90533447265625]
         """
         data = self.signal.constant(1000, value)
         self.write(data, cyclic=True)
@@ -827,6 +856,26 @@ cdef class Channel:
             phase: position in time (sample number) that the wave starts at
             duty: duty cycle of the waveform (fraction of time in which the
                 signal is active, e.g. 0.5 is half the time)
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.square(0, 5, 10, 0, .5)
+        >>> print([x[0] for x in chan_a.get_samples(10)])
+        [0.0025177001953125,
+         0.0020599365234375,
+         0.0016021728515625,
+         0.0014495849609375,
+         0.60089111328125,
+         4.106903076171875,
+         4.7507476806640625,
+         4.852752685546875,
+         4.871063232421875,
+         4.1985321044921875]
         """
         data = self.signal.square(period, midpoint, peak, period, phase, duty)
         self.write(data, cyclic=True)
@@ -839,6 +888,26 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.sawtooth(0, 5, 10, 0)
+        >>> print([x[0] for x in chan_a.get_samples(10)])
+        [4.5452880859375,
+         4.163665771484375,
+         3.6379241943359375,
+         3.08868408203125,
+         2.5484466552734375,
+         2.0189666748046875,
+         1.4780426025390625,
+         0.9271240234375,
+         0.39886474609375,
+         0.6231689453125]
         """
         data = self.signal.sawtooth(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
@@ -851,6 +920,26 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.stairstep(0, 5, 10, 0)
+        >>> print([x[0] for x in chan_a.get_samples(10)])
+        [4.5502471923828125,
+          4.16473388671875,
+         3.636932373046875,
+         3.0841064453125,
+         2.5444793701171875,
+         2.017669677734375,
+         1.48040771484375,
+         0.9300994873046875,
+         0.40069580078125,
+         0.623779296875]
         """
         data = self.signal.stairstep(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
@@ -863,6 +952,26 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.sine(0, 5, 10, 0)
+        >>> print([x[0] for x in chan_a.get_samples(10)])
+        [4.3698883056640625,
+         3.99261474609375,
+         2.756195068359375,
+         1.3651275634765625,
+         0.4055023193359375,
+         0.2043914794921875,
+         0.859222412109375,
+         2.1010589599609375,
+         3.5059356689453125,
+         4.4654083251953125]
         """
         data = self.signal.sine(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
@@ -875,6 +984,26 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+
+        Example waveform writing to a channel:
+
+        >>> from pysmu import Session, Mode
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.triangle(0, 5, 10, 0)
+        >>> print([x[0] for x in chan_a.get_samples(10)])
+        [4.27337646484375,
+         3.5883331298828125,
+         2.6357269287109375,
+         1.683807373046875,
+         0.729522705078125,
+         0.378570556640625,
+         1.2639617919921875,
+         2.2304534912109375,
+         3.199462890625,
+         4.13421630859375]
         """
         data = self.signal.triangle(period, midpoint, peak, period, phase)
         self.write(data, cyclic=True)
