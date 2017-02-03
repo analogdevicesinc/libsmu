@@ -20,11 +20,6 @@ def device(session):
 
 
 @pytest.fixture(scope='function')
-def device(session):
-    return session.devices[0]
-
-
-@pytest.fixture(scope='function')
 def chan_a(device):
     return device.channels['A']
 
