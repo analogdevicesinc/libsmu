@@ -6,8 +6,9 @@
 from __future__ import print_function
 
 from signal import signal, SIG_DFL, SIGINT
-import sys
 import random
+import sys
+import time
 
 from pysmu import Session, Mode
 
@@ -54,19 +55,17 @@ if __name__ == '__main__':
         session.start(0)
         i = 0
         num_samples = 1000
+        start = time.time()
 
         while True:
-            # If stdout is a terminal change the written value approximately
-            # every second, otherwise change it on every iteration.
-            if sys.stdout.isatty():
-                v = i / 100
-            else:
-                v = i
+            # Change written value approximately every second.
+            if time.time() - start > 1:
+                i += 1
+                start = time.time()
 
             # Write iterating voltage values to both channels.
-            chan_a.write(refill_data(num_samples, v % 6))
-            chan_b.write(refill_data(num_samples, v % 6))
-            i += 1
+            chan_a.write(refill_data(num_samples, i % 6))
+            chan_b.write(refill_data(num_samples, i % 6))
 
             # Read incoming samples in a non-blocking fashion.
             samples = dev.read(num_samples)
