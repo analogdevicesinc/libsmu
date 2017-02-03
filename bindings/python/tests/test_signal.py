@@ -34,15 +34,15 @@ def signal():
     return Signal()
 
 
-def test_signal_info(chan_a):
+def test_signal_info(chan_a, chan_b):
     chan_a.mode = Mode.SVMI
+    chan_b.mode = Mode.SIMV
     assert chan_a.signal.label == 'Voltage'
     assert chan_a.signal.min == 0
     assert chan_a.signal.max == 5
-    chan_a.mode = Mode.SIMV
-    assert chan_a.signal.label == 'Current'
-    assert chan_a.signal.min == -0.2
-    assert chan_a.signal.max == 0.2
+    assert chan_b.signal.label == 'Current'
+    assert chan_b.signal.min == -0.2
+    assert chan_b.signal.max == 0.2
 
 
 def test_constant(signal):
