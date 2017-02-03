@@ -302,6 +302,12 @@ cdef class Session:
                 updating. If not provided or empty, all supported devices on the system
                 will be flashed.
 
+        >>> from pysmu import Session
+        >>> session = Session()
+        >>> session.flash_firmware('/path/to/m1000-2.06.bin')
+        >>> for dev in session.devices:
+        >>>     assert dev.fwver == '2.06'
+
         Raises: SessionError on writing failures.
         """
         cdef vector[cpp_libsmu.Device*] devs
@@ -665,6 +671,12 @@ cdef class SessionDevice(Device):
 
         Attributes:
             path (str): Path to firmware file.
+
+        >>> from pysmu import Session
+        >>> session = Session()
+        >>> dev = session.devices[0]
+        >>> dev.flash_firmware('/path/to/m1000-2.06.bin')
+        >>> assert dev.fwver == '2.06'
 
         Raises: DeviceError on writing failures.
         """
