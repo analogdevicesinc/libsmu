@@ -2,7 +2,7 @@ from __future__ import division
 
 import pytest
 
-from pysmu import Session, Mode
+from pysmu import Session, Mode, Signal
 
 
 @pytest.fixture(scope='function')
@@ -35,8 +35,8 @@ def chan_b(device):
 
 
 @pytest.fixture(scope='function')
-def signal(chan_a):
-    return chan_a.signal
+def signal():
+    return Signal()
 
 
 def test_signal_info(chan_a):
