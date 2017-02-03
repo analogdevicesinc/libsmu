@@ -913,13 +913,32 @@ cdef class Signal:
         return s
 
     def constant(self, uint64_t samples, float val):
-        """Generate a constant waveform."""
+        """Generate a constant waveform.
+
+        >>> from pysmu import Signal
+        >>> signal = Signal()
+        >>> constant_wave = signal.constant(10, 2)
+        >>> assert len(constant) == 10
+        >>> print(stairstep_wave)
+	[2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+
+        Attributes:
+            samples: number of samples to generate for the waveform
+            val: contant value for the waveform
+	"""
         cdef vector[float] buf
         self._signal.constant(buf, samples, val)
         return buf
 
     def square(self, uint64_t samples, float midpoint, float peak, double period, double phase, double duty):
         """Generate a square waveform.
+
+        >>> from pysmu import Signal
+        >>> signal = Signal()
+        >>> square_wave = signal.square(10, 0, 5, 10, 0, .5)
+        >>> assert len(square_wave) == 10
+        >>> print(square_wave)
+	[0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0]
 
         Attributes:
             samples: number of samples to generate for the waveform
@@ -950,6 +969,22 @@ cdef class Signal:
     def stairstep(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a stairstep waveform.
 
+        >>> from pysmu import Signal
+        >>> signal = Signal()
+        >>> stairstep_wave = signal.stairstep(10, 0, 5, 10, 0)
+        >>> assert len(stairstep_wave) == 10
+        >>> print(stairstep_wave)
+	[5.0,
+	 4.44444465637207,
+	 3.8888888359069824,
+	 3.3333334922790527,
+	 2.777777671813965,
+	 2.222222328186035,
+	 1.6666667461395264,
+	 1.1111111640930176,
+	 0.5555553436279297,
+	 0.0]
+
         Attributes:
             samples: number of samples to generate for the waveform
             midpoint: value at the middle of the wave
@@ -964,6 +999,22 @@ cdef class Signal:
     def sine(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a sinusoidal waveform.
 
+        >>> from pysmu import Signal
+        >>> signal = Signal()
+        >>> sine_wave = signal.sine(10, 0, 5, 10, 0)
+        >>> assert len(sine_wave) == 10
+        >>> print(sine_wave)
+	[5.0,
+	 4.522542476654053,
+	 3.2725424766540527,
+	 1.7274575233459473,
+	 0.47745752334594727,
+	 0.0,
+	 0.47745752334594727,
+	 1.7274575233459473,
+	 3.2725424766540527,
+	 4.522542476654053]
+
         Attributes:
             samples: number of samples to generate for the waveform
             midpoint: value at the middle of the wave
@@ -977,6 +1028,13 @@ cdef class Signal:
 
     def triangle(self, uint64_t samples, float midpoint, float peak, double period, double phase):
         """Generate a triangular waveform.
+
+        >>> from pysmu import Signal
+        >>> signal = Signal()
+        >>> triangle_wave = signal.triangle(10, 0, 5, 10, 0)
+        >>> assert len(triangle_wave) == 10
+        >>> print(triangle_wave)
+        [5.0, 4.0, 3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0]
 
         Attributes:
             samples: number of samples to generate for the waveform
