@@ -29,6 +29,12 @@ if __name__ == '__main__':
         # Grab the first device from the session.
         dev = session.devices[0]
 
+        # Set both channels to high impedance mode.
+        chan_a = dev.channels['A']
+        chan_b = dev.channels['B']
+        chan_a.mode = Mode.HI_Z
+        chan_b.mode = Mode.HI_Z
+
         # Ignore read buffer sample drops when printing to stdout.
         dev.ignore_dataflow = sys.stdout.isatty()
 

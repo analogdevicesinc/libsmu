@@ -29,6 +29,12 @@ if __name__ == '__main__':
         # Grab the first device from the session.
         dev = session.devices[0]
 
+        # Set both channels to high impedance mode.
+        chan_a = dev.channels['A']
+        chan_b = dev.channels['B']
+        chan_a.mode = Mode.HI_Z
+        chan_b.mode = Mode.HI_Z
+
         while True:
             # Run the session for 1000 samples in noncontinuous mode and read
             # incoming samples from both channels of the first device in a
