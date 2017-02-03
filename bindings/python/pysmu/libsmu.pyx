@@ -1020,17 +1020,50 @@ cdef class Signal:
             raise MemoryError()
 
     property label:
-        """Get the signal's label."""
+        """Get the signal's label.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.label
+        Voltage
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.label
+        Current
+        """
         def __get__(self):
             return self._signal.info().label
 
     property min:
-        """Get the signal's minimum value."""
+        """Get the signal's minimum value.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.min
+        0.0
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.min
+        -0.2
+        """
         def __get__(self):
             return self._signal.info().min
 
     property max:
-        """Get the signal's maximum value."""
+        """Get the signal's maximum value.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.max
+        5.0
+        >>> chan_a.mode = Mode.SIMV
+        >>> chan_a.signal.max
+        0.2
+        """
         def __get__(self):
             return self._signal.info().max
 
