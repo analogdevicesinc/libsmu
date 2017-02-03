@@ -884,6 +884,12 @@ cdef class Signal:
     # pointer to the underlying C++ smu::Signal object
     cdef cpp_libsmu.Signal *_signal
 
+    def __cinit__(self):
+        self._signal = new cpp_libsmu.Signal()
+
+        if self._signal is NULL:
+            raise MemoryError()
+
     property label:
         """Get the signal's label."""
         def __get__(self):
