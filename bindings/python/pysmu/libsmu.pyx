@@ -1,6 +1,6 @@
 # distutils: language = c++
 
-from __future__ import division
+from __future__ import absolute_import, print_function, division
 
 from collections import OrderedDict
 import warnings
@@ -15,7 +15,7 @@ try:
 except ImportError:
     from ._vendor.enum import Enum
 
-cimport cpp_libsmu
+from . cimport cpp_libsmu
 from .array cimport array
 from .exceptions import *
 from .utils import iterify
