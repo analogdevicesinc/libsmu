@@ -3,6 +3,8 @@
 from __future__ import absolute_import, print_function, division
 
 from collections import OrderedDict
+import os
+from signal import signal, SIG_DFL, SIGINT
 import warnings
 
 from libc.stdint cimport uint32_t, uint64_t
@@ -79,6 +81,14 @@ cdef class Session:
 
         self.ignore_dataflow = ignore_dataflow
         self.configure(sample_rate)
+
+        signal(SIGINT, self._signal_hander)
+
+    def _signal_hander(self, signum, frame):
+        self._close()
+        # resend the default SIGINT signal after closing the session
+        signal(SIGINT, SIG_DFL)
+        os.kill(os.getpid(), SIGINT)
 
     def hotplug_attach(self, *funcs):
         """Register a function to run on a device attach event.
