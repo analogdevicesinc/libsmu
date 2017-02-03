@@ -477,7 +477,7 @@ namespace smu {
 	class Signal {
 	public:
 		/// internal: Do not call the constructor directly; obtain a Signal from a Device.
-		Signal(const sl_signal_info* info):
+		Signal(const sl_signal_info* info = NULL):
 			m_info(info)
 			{}
 
