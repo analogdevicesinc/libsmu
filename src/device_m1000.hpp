@@ -61,7 +61,6 @@ namespace smu {
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		int read_calibration() override;
-		int read_adm1177() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
 
@@ -142,6 +141,12 @@ namespace smu {
 		// Encode output samples.
 		// @param chan Target channel index.
 		uint16_t encode_out(unsigned chan);
+
+		/// @brief Read ADM1177 status.
+		/// @return If an overcurrent event occurred in the most recent data request, 1 is returned.
+		/// @return If no overcurrent event occurred, 0 is returned.
+		/// @return On error, a negative integer is returned relating to the error status.
+		int read_adm1177();
 
 		// Most recent value written to the output of each channel initialized
 		// to an invalid value in order to know when data hasn't been written

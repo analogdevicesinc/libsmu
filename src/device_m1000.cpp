@@ -893,6 +893,13 @@ int M1000_Device::off()
 {
 	int ret = 0;
 
+	// determine if an overcurrent event occurred during the run
+	int overcurrent = read_adm1177();
+	// ignore errors if they occur
+	if (overcurrent < 0)
+		overcurrent = 0;
+	m_overcurrent = overcurrent;
+
 	// tell device to stop sampling
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 
