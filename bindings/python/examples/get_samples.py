@@ -27,7 +27,7 @@ if __name__ == '__main__':
         dev.channels['B'].constant(0.05)
 
     # Run the session for at least 10 captured samples in noncontinuous mode.
-    for dev, samples in enumerate(session.get_samples(10)):
-        print('dev: {}'.format(dev))
+    for dev_idx, samples in enumerate(session.get_samples(1000)):
+        print('dev: {}'.format(dev_idx))
         for x in samples:
             print("{: 6f} {: 6f} {: 6f} {: 6f}".format(x[0][0], x[0][1], x[1][0], x[1][1]))
