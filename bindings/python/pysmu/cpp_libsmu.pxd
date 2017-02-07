@@ -49,6 +49,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         string m_serial
         string m_fwver
         string m_hwver
+        bint m_overcurrent
 
         Signal* signal(unsigned channel, unsigned signal)
         int set_mode(int channel, int mode)

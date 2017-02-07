@@ -578,6 +578,11 @@ cdef class SessionDevice(Device):
         def __get__(self):
             return self._session.sample_rate
 
+    property overcurrent:
+        """Return the overcurrent status related to the most recent data acquisition."""
+        def __get__(self):
+            return self._device.m_overcurrent
+
     def read(self, size_t num_samples, int timeout=0):
         """Acquire all signal samples from a device.
 
