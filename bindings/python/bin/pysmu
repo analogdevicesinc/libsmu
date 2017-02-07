@@ -371,7 +371,7 @@ def flash(session, args):
         except pysmu.SessionError as e:
             pprint(str(e))
             sys.exit(1)
-    elif args.flash_auto or args.list_releases or args.select_release is not None:
+    elif args.flash_auto or args.flash_dev or args.list_releases or args.select_release is not None:
         resp = urllib2.urlopen(github_fw_releases)
         releases = json.load(resp)
         if not releases or not releases[0]['assets']:
@@ -391,18 +391,17 @@ def flash(session, args):
                 else:
                     pprint('no valid firmware file releases (m1000.bin) on github')
             else:
-                if args.select_release is not None:
-                    if args.select_release == 'dev':
-                        # use the latest fw checked into the repo
-                        fw_url = dev_fw_url
-                        version = 'dev'
-                    else:
-                        selected_version = 'v' + args.select_release.lstrip('v')
-                        try:
-                            selected = next(x for x in releases if x['tag_name'] == selected_version)
-                        except StopIteration:
-                            pprint("no such firmware version available on github: {}".format(selected_version))
-                            sys.exit(1)
+                if args.flash_dev:
+                    # use the latest fw checked into the repo
+                    fw_url = dev_fw_url
+                    version = 'dev'
+                elif args.select_release is not None:
+                    selected_version = 'v' + args.select_release.lstrip('v')
+                    try:
+                        selected = next(x for x in releases if x['tag_name'] == selected_version)
+                    except StopIteration:
+                        pprint("no such firmware version available on github: {}".format(selected_version))
+                        sys.exit(1)
                 else:
                     # choose the newest release
                     selected = releases[0]
@@ -488,6 +487,9 @@ if __name__ == '__main__':
         '-a', '--auto', action='store_true', dest='flash_auto',
         help='update to the latest firmware release from github (requires network access)')
     parser_flash_mux.add_argument(
+        '-d', '--dev', action='store_true', dest='flash_dev',
+        help='update to the latest development firmware from github (requires network access)')
+    parser_flash_mux.add_argument(
         '-f', dest='firmware_path',
         help='update via a specified firmware file')
     parser_flash_mux.add_argument(
@@ -513,7 +515,7 @@ if __name__ == '__main__':
     # default to auto-flashing if no option is selected
     if args.func.__name__ == 'flash':
         if (all(not getattr(args, x) for x in (
-                'firmware_path', 'flash_auto',
+                'firmware_path', 'flash_auto', 'flash_dev',
                 'list_releases', 'select_release'))):
             args.flash_auto = True
 
