@@ -10,6 +10,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <array>
 #include <chrono>
@@ -113,6 +114,10 @@ int M1000_Device::read_adm1177()
 {
 	int ret = 0;
 	unsigned char status;
+
+	// only firmware from 2.07 onwards supports querying the status byte of the ADM1177
+	if (atof(m_fwver.c_str()) < 2.07)
+		return 0;
 
 	ret = ctrl_transfer(0xC0, 0x17, 0, 1, &status, 1, 100);
 
