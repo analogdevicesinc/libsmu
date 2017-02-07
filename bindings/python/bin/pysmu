@@ -365,6 +365,7 @@ def flash(session, args):
             sys.exit(1)
 
     if args.firmware_path is not None:
+        pprint('updating firmware using: {}'.format(args.firmware_path))
         try:
             session.flash_firmware(args.firmware_path, devices)
             flashed = True
