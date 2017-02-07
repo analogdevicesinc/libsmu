@@ -109,6 +109,27 @@ int M1000_Device::release()
 	return -libusb_to_errno(ret);
 }
 
+int M1000_Device::read_adm1177()
+{
+	int ret = 0;
+	unsigned char status;
+
+	ret = ctrl_transfer(0xC0, 0x17, 0, 1, &status, 1, 100);
+
+	if (ret > 1) {
+		ret = -1;
+	} else if (ret == 1) {
+		// check the HS_OC bit of the status byte to see if an overcurrent
+		// event occurred.
+		if ((status & 0x4) == 0)
+			ret = 0;
+	} else {
+		ret = -libusb_to_errno(ret);
+	}
+
+	return ret;
+}
+
 int M1000_Device::read_calibration()
 {
 	int ret;

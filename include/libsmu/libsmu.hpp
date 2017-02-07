@@ -406,6 +406,12 @@ namespace smu {
 		/// @brief Read device calibration data from the EEPROM.
 		virtual int read_calibration() = 0;
 
+		/// @brief Read ADM1177 status.
+		/// @return If an overcurrent event occurred in the most recent data request, 1 is returned.
+		/// @return If no overcurrent event occurred, 0 is returned.
+		/// @return On error, a negative integer is returned relating to the error status.
+		virtual int read_adm1177() = 0;
+
 		/// @brief Get the device calibration data from the EEPROM.
 		/// @param cal A vector of vectors containing calibration values.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;

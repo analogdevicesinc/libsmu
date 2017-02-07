@@ -61,6 +61,7 @@ namespace smu {
 		int sync() override;
 		int write_calibration(const char* cal_file_name) override;
 		int read_calibration() override;
+		int read_adm1177() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
 
