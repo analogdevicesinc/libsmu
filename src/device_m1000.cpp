@@ -904,6 +904,14 @@ int M1000_Device::off()
 		overcurrent = 0;
 	m_overcurrent = overcurrent;
 
+	// reset channels into high impedance mode
+	ret = set_mode(CHAN_A, HI_Z, false);
+	if (ret < 0)
+		return ret;
+	ret = set_mode(CHAN_B, HI_Z, false);
+	if (ret < 0)
+		return ret;
+
 	// tell device to stop sampling
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
 
