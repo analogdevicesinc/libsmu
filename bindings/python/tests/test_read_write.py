@@ -34,16 +34,18 @@ def test_read_write_overcurrent(device):
     if device.fwver < 2.07:
         pytest.skip("requires firmware >= 2.07")
 
-    for action in ('', 'loopback 2.5V to CH A', 'loopback 5V to CH B'):
-        if action:
-            prompt(action)
+    sys.stdout.write('\n')
+    for action, value in (('loopback 2.5V to CH A', True),
+                          ('loopback 5V to CH B', True),
+                          ('remove loopback', False)):
+        prompt(action)
         device.channels['A'].mode = Mode.SVMI
         device.channels['A'].sine(0, 5, 100, -25)
         # Output a cosine wave for channel B voltage.
         device.channels['B'].mode = Mode.SVMI
         device.channels['B'].sine(0, 5, 100, 0)
         device.get_samples(1000)
-        assert device.overcurrent == bool(action)
+        assert device.overcurrent == value
 
 
 def test_read_write_non_continuous_fallback_values(session, device):
