@@ -330,10 +330,12 @@ namespace smu {
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
 		/// @param mode An unsigned integer relating to the requested mode.
+		/// @param restore Boolean relating to supporting saving the mode being
+		//  set in order to restore it for the next data acquisition, defaults to true.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative integer is returned relating to the error status.
 		/// This method may not be called while the session is active.
-		virtual int set_mode(unsigned channel, unsigned mode) = 0;
+		virtual int set_mode(unsigned channel, unsigned mode, bool restore = true) = 0;
 
 		/// @brief Get the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.

@@ -678,17 +678,13 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 	}
 }
 
-int M1000_Device::set_mode(unsigned channel, unsigned mode)
+int M1000_Device::set_mode(unsigned channel, unsigned mode, bool restore)
 {
 	int ret = 0;
 
 	// bad channel
 	if (channel != CHAN_A && channel != CHAN_B)
 		return -ENODEV;
-
-	// skip unnecessarily resetting mode
-	if (m_mode[channel] == mode)
-		return 0;
 
 	unsigned pset;
 	switch (mode) {
@@ -708,7 +704,10 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode)
 	if (ret < 0)
 		return -libusb_to_errno(ret);
 
-	m_mode[channel] = mode;
+	// save the current mode to restore before the next data acquisition
+	if (restore)
+		m_mode[channel] = mode;
+
 	return 0;
 }
 

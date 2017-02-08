@@ -52,7 +52,7 @@ namespace smu {
 		const sl_device_info* info() const override;
 		const sl_channel_info* channel_info(unsigned channel) const override;
 		Signal* signal(unsigned channel, unsigned signal) override;
-		int set_mode(unsigned channel, unsigned mode) override;
+		int set_mode(unsigned channel, unsigned mode, bool restore = true) override;
 		int get_mode(unsigned channel) override;
 		int fwver_sem(std::array<unsigned, 3>& components) override;
 		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout) override;
