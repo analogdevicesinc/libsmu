@@ -89,6 +89,12 @@ def test_chan_constant(chan_a, chan_b):
 
 
 def test_chan_sine(chan_a, chan_b, device):
+    try:
+        import numpy as np
+        from scipy import signal
+    except ImportError:
+        pytest.skip("test requires numpy and scipy installed")
+
     sys.stdout.write('\n')
     for _x in xrange(5):
         freq = random.randint(10, 100)
@@ -115,14 +121,9 @@ def test_chan_sine(chan_a, chan_b, device):
 
         assert len(chan_a_samples) == len(chan_b_samples) == num_samples
 
-        try:
-            # Verify the frequencies of the resulting waveforms
-            import numpy as np
-            from scipy import signal
-            hanning = signal.get_window('hanning', num_samples)
-            chan_a_freqs, chan_a_psd = signal.welch(chan_a_samples, window=hanning, nperseg=num_samples)
-            chan_b_freqs, chan_b_psd = signal.welch(chan_b_samples, window=hanning, nperseg=num_samples)
-            assert np.argmax(chan_a_psd) == np.argmax(chan_b_psd)
-            assert abs(freq - np.argmax(chan_a_psd)) <= 1
-        except ImportError:
-            pass
+        # Verify the frequencies of the resulting waveforms
+        hanning = signal.get_window('hanning', num_samples)
+        chan_a_freqs, chan_a_psd = signal.welch(chan_a_samples, window=hanning, nperseg=num_samples)
+        chan_b_freqs, chan_b_psd = signal.welch(chan_b_samples, window=hanning, nperseg=num_samples)
+        assert np.argmax(chan_a_psd) == np.argmax(chan_b_psd)
+        assert abs(freq - np.argmax(chan_a_psd)) <= 1
