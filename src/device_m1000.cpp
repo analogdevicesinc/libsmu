@@ -418,21 +418,27 @@ uint16_t M1000_Device::encode_out(unsigned channel)
 
 void M1000_Device::handle_out_transfer(libusb_transfer* t)
 {
+	uint16_t a, b;
+
 	for (unsigned p = 0; p < m_packets_per_transfer; p++) {
 		uint8_t* buf = (uint8_t*) (t->buffer + p * out_packet_size);
 		for (unsigned i = 0; i < chunk_size; i++) {
+			// Grab sample from write buffer as long as we haven't hit the requested number of
+			// samples. Once we have use the most recent value retrieved from the buffer to
+			// fill out the packet.
+			if (m_out_sampleno < m_sample_count) {
+				a = encode_out(CHAN_A);
+				b = encode_out(CHAN_B);
+			}
+
 			if (m_fwver.compare(0, 2, "2.") == 0) {
-				uint16_t a = encode_out(CHAN_A);
 				buf[i*4+0] = a >> 8;
 				buf[i*4+1] = a & 0xff;
-				uint16_t b = encode_out(CHAN_B);
 				buf[i*4+2] = b >> 8;
 				buf[i*4+3] = b & 0xff;
 			} else {
-				uint16_t a = encode_out(CHAN_A);
 				buf[(i+chunk_size*0)*2]   = a >> 8;
 				buf[(i+chunk_size*0)*2+1] = a & 0xff;
-				uint16_t b = encode_out(CHAN_B);
 				buf[(i+chunk_size*1)*2]   = b >> 8;
 				buf[(i+chunk_size*1)*2+1] = b & 0xff;
 			}
