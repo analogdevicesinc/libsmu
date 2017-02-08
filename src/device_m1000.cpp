@@ -361,23 +361,33 @@ static float constrain(float val, float lo, float hi)
 	return val;
 }
 
-uint16_t M1000_Device::encode_out(unsigned channel)
+uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 {
 	float val;
 	int v = 32768 * 4 / 5;
 
 	if (m_mode[channel] != HI_Z) {
 		if (m_sample_count == 0 || m_out_samples_avail[channel] > 0) {
-			// only wait up to 100ms for sample values
-			// TODO: make the period dependent on the sample rate/input buffer size
-			auto clk_start = std::chrono::high_resolution_clock::now();
-			while (!m_out_samples_q[channel]->pop(val)) {
-				auto clk_end = std::chrono::high_resolution_clock::now();
-				auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-				if (clk_diff.count() > 100)
-					throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
-				std::this_thread::sleep_for(std::chrono::microseconds(1));
+			if (!std::isnan(m_next_output[channel])) {
+				val = m_next_output[channel];
+			} else {
+				// only wait up to 100ms for sample values
+				// TODO: make the period dependent on the sample rate/input buffer size
+				auto clk_start = std::chrono::high_resolution_clock::now();
+				while (!m_out_samples_q[channel]->pop(val)) {
+					auto clk_end = std::chrono::high_resolution_clock::now();
+					auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
+					if (clk_diff.count() > 100)
+						throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
+					std::this_thread::sleep_for(std::chrono::microseconds(1));
+				}
 			}
+
+			// TODO: use front() from spsc queue support once we can use >= boost-1.57
+			if (peek)
+				m_next_output[channel] = val;
+			else
+				m_next_output[channel] = std::nanf("");
 
 			// Decrement available output sample count and store value to use
 			// as a fallback in noncontinuous mode.
@@ -426,9 +436,10 @@ void M1000_Device::handle_out_transfer(libusb_transfer* t)
 			// Grab sample from write buffer as long as we haven't hit the requested number of
 			// samples. Once we have use the most recent value retrieved from the buffer to
 			// fill out the packet.
-			if (m_out_sampleno < m_sample_count) {
-				a = encode_out(CHAN_A);
-				b = encode_out(CHAN_B);
+			if (m_sample_count == 0 || m_out_sampleno <= m_sample_count) {
+				bool peek = m_sample_count > 0 && m_out_sampleno == m_sample_count;
+				a = encode_out(CHAN_A, peek);
+				b = encode_out(CHAN_B, peek);
 			}
 
 			if (m_fwver.compare(0, 2, "2.") == 0) {

@@ -140,7 +140,8 @@ namespace smu {
 
 		// Encode output samples.
 		// @param chan Target channel index.
-		uint16_t encode_out(unsigned chan);
+		// @param peek Use the first element from the write queue without discarding it.
+		uint16_t encode_out(unsigned chan, bool peek = false);
 
 		/// @brief Read ADM1177 status.
 		/// @return If an overcurrent event occurred in the most recent data request, 1 is returned.
@@ -152,6 +153,9 @@ namespace smu {
 		// to an invalid value in order to know when data hasn't been written
 		// to a channel.
 		float m_previous_output[2] = {std::nanf(""), std::nanf("")};
+
+		// Next value available for the output of each channel.
+		float m_next_output[2] = {std::nanf(""), std::nanf("")};
 
 		// USB start of frame packet number.
 		uint16_t m_sof_start = 0;
