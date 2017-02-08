@@ -23,15 +23,15 @@ def device(session):
 @pytest.mark.interactive
 def test_device_serial(device):
     prompt('make sure at least one device is plugged in')
-    assert device.serial != ""
+    assert device.serial
 
 
 def test_device_fwver(device):
-    assert device.fwver != ""
+    assert device.fwver
 
 
 def test_device_hwver(device):
-    assert device.hwver != ""
+    assert device.hwver
 
 
 def test_calibration(device):
