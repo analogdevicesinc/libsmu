@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+from collections import defaultdict
 import sys
 
 from pysmu import Session, Mode
@@ -17,21 +18,27 @@ if __name__ == '__main__':
     if not session.devices:
         sys.exit(1)
 
-    for idx, dev in enumerate(session.devices):
+    for i, dev in enumerate(session.devices):
         # Output a sine wave for channel A voltage.
         dev.channels['A'].mode = Mode.SVMI
-        dev.channels['A'].sine(0, 5, 100, -25)
+        dev.channels['A'].sine(0, 5, 500, -25)
         # Output a cosine wave for channel B voltage.
         dev.channels['B'].mode = Mode.SVMI
-        dev.channels['B'].sine(0, 5, 100, 0)
+        dev.channels['B'].sine(0, 5, 500, 0)
+
+    chan_a = defaultdict(list)
+    chan_b = defaultdict(list)
 
     # Run the session in noncontinuous mode.
-    for i, samples in enumerate(session.get_samples(1001)):
-        chan_a = [x[0][0] for x in samples]
-        chan_b = [x[1][0] for x in samples]
+    for _x in xrange(10):
+        for i, samples in enumerate(session.get_samples(100)):
+            chan_a[i].extend([x[0][0] for x in samples])
+            chan_b[i].extend([x[1][0] for x in samples])
+
+    for i, dev in enumerate(session.devices):
         plt.figure(i)
-        plt.plot(chan_a, label='Channel A')
-        plt.plot(chan_b, label='Channel B')
+        plt.plot(chan_a[i], label='Channel A')
+        plt.plot(chan_b[i], label='Channel B')
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
         plt.title('Device {}: {}'.format(i, str(session.devices[i])))
         plt.ylabel('Voltage')
