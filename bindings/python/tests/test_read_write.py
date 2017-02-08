@@ -31,6 +31,9 @@ def device(session):
 @pytest.mark.interactive
 def test_read_write_overcurrent(device):
     """Verify overcurrent detection during data acquisition."""
+    if device.fwver < 2.07:
+        pytest.skip("requires firmware >= 2.07")
+
     for action in ('', 'loopback 2.5V to CH A', 'loopback 5V to CH B'):
         if action:
             prompt(action)
