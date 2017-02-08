@@ -316,7 +316,7 @@ cdef class Session:
         >>> session = Session()
         >>> session.flash_firmware('/path/to/m1000-2.06.bin')
         >>> for dev in session.devices:
-        >>>     assert dev.fwver == '2.06'
+        >>>     assert dev.fwver == 2.06
 
         Raises: SessionError on writing failures.
         """
@@ -425,7 +425,7 @@ cdef class Device:
     property fwver:
         """Return device's firmware revision."""
         def __get__(self):
-            return self._device.m_fwver.decode()
+            return float(self._device.m_fwver.decode())
 
     property hwver:
         """Return device's hardware revision."""
@@ -691,7 +691,7 @@ cdef class SessionDevice(Device):
         >>> session = Session()
         >>> dev = session.devices[0]
         >>> dev.flash_firmware('/path/to/m1000-2.06.bin')
-        >>> assert dev.fwver == '2.06'
+        >>> assert dev.fwver == 2.06
 
         Raises: DeviceError on writing failures.
         """

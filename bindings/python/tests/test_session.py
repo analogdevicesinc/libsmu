@@ -99,7 +99,7 @@ def test_flash_firmware(session):
     session.add_all()
     assert len(session.devices) == 1
     assert session.devices[0].serial == serial
-    assert session.devices[0].fwver == '2.02'
+    assert session.devices[0].fwver == 2.02
 
     # flash new firmware
     print('flashing firmware 2.06...')
@@ -108,7 +108,7 @@ def test_flash_firmware(session):
     session.add_all()
     assert len(session.devices) == 1
     assert session.devices[0].serial == serial
-    assert session.devices[0].fwver == '2.06'
+    assert session.devices[0].fwver == 2.06
 
 
 @pytest.mark.interactive
