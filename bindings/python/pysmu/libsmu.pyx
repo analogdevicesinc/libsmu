@@ -844,11 +844,12 @@ cdef class Channel:
         """
         self.write(waveform, cyclic=cyclic)
 
-    def constant(self, value):
+    def constant(self, value, cyclic=True):
         """Set output to a constant waveform.
 
         Attributes:
             value: Constant value to set the channel to.
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -871,9 +872,9 @@ cdef class Channel:
          3.90533447265625]
         """
         data = self.signal.constant(1000, value)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
-    def square(self, float midpoint, float peak, double period, double phase, double duty):
+    def square(self, float midpoint, float peak, double period, double phase, double duty, cyclic=True):
         """Set output to a square waveform.
 
         Attributes:
@@ -883,6 +884,7 @@ cdef class Channel:
             phase: position in time (sample number) that the wave starts at
             duty: duty cycle of the waveform (fraction of time in which the
                 signal is active, e.g. 0.5 is half the time)
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -905,9 +907,9 @@ cdef class Channel:
          4.1985321044921875]
         """
         data = self.signal.square(period, midpoint, peak, period, phase, duty)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
-    def sawtooth(self, float midpoint, float peak, float period, float phase):
+    def sawtooth(self, float midpoint, float peak, float period, float phase, cyclic=True):
         """Set output to a sawtooth waveform.
 
         Attributes:
@@ -915,6 +917,7 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -937,9 +940,9 @@ cdef class Channel:
          0.6231689453125]
         """
         data = self.signal.sawtooth(period, midpoint, peak, period, phase)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
-    def stairstep(self, float midpoint, float peak, float period, float phase):
+    def stairstep(self, float midpoint, float peak, float period, float phase, cyclic=True):
         """Set output to a stairstep waveform.
 
         Attributes:
@@ -947,6 +950,7 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -969,9 +973,9 @@ cdef class Channel:
          0.623779296875]
         """
         data = self.signal.stairstep(period, midpoint, peak, period, phase)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
-    def sine(self, float midpoint, float peak, float period, float phase):
+    def sine(self, float midpoint, float peak, float period, float phase, cyclic=True):
         """Set output to a sinusoidal waveform.
 
         Attributes:
@@ -979,6 +983,7 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -1001,9 +1006,9 @@ cdef class Channel:
          4.4654083251953125]
         """
         data = self.signal.sine(period, midpoint, peak, period, phase)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
-    def triangle(self, float midpoint, float peak, float period, float phase):
+    def triangle(self, float midpoint, float peak, float period, float phase, cyclic=True):
         """Set output to a triangular waveform.
 
         Attributes:
@@ -1011,6 +1016,7 @@ cdef class Channel:
             peak: maximum value of the wave
             period: number of samples the wave takes for one cycle
             phase: position in time (sample number) that the wave starts at
+            cyclic (boolean, optional): repeat the waveform when arriving at its end
 
         Example waveform writing to a channel:
 
@@ -1033,7 +1039,7 @@ cdef class Channel:
          4.13421630859375]
         """
         data = self.signal.triangle(period, midpoint, peak, period, phase)
-        self.write(data, cyclic=True)
+        self.write(data, cyclic=cyclic)
 
 
 cdef class Signal:
