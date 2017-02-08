@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 
 import random
+import sys
 
 import pytest
 
@@ -88,7 +89,7 @@ def test_chan_constant(chan_a, chan_b):
 
 
 def test_chan_sine(chan_a, chan_b, device):
-    print('\n', end='')
+    sys.stdout.write('\n')
     for _x in xrange(5):
         freq = random.randint(10, 100)
         print('testing frequency: {}'.format(freq))
@@ -105,7 +106,7 @@ def test_chan_sine(chan_a, chan_b, device):
         chan_a_samples = []
         chan_b_samples = []
 
-        # additional sample so we end up back at the starting value for a sine wave
+        # split data acquisition across multiple runs in order to test waveform continuity
         for i in xrange(10):
             samples = device.get_samples(period * freq / 10)
             chan_a_samples.extend([x[0][0] for x in samples])

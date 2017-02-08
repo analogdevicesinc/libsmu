@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import errno
+import sys
 import time
 
 try:
@@ -29,6 +30,7 @@ def test_empty(session):
 
 @pytest.mark.interactive
 def test_scan(session):
+    sys.stdout.write('\n')
     prompt('make sure at least one device is plugged in')
     session.scan()
 
@@ -93,6 +95,7 @@ def test_flash_firmware(session):
     serial = session.devices[0].serial
 
     # flash old firmware
+    sys.stdout.write('\n')
     print('flashing firmware 2.02...')
     session.flash_firmware(OLD_FW)
     prompt('unplug/replug the device')
@@ -113,6 +116,7 @@ def test_flash_firmware(session):
 
 @pytest.mark.interactive
 def test_hotplug(session):
+    sys.stdout.write('\n')
     prompt('unplug/plug a device within 10 seconds')
     session.add_all()
 

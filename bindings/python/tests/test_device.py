@@ -1,5 +1,6 @@
 import filecmp
 import os
+import sys
 import tempfile
 
 import pytest
@@ -22,6 +23,7 @@ def device(session):
 
 @pytest.mark.interactive
 def test_device_serial(device):
+    sys.stdout.write('\n')
     prompt('make sure at least one device is plugged in')
     assert device.serial
 
@@ -45,6 +47,7 @@ def test_write_calibration(session, device):
     # old firmware versions don't support writing calibration data
     session.add_all()
     session.flash_firmware(OLD_FW)
+    sys.stdout.write('\n')
     prompt('unplug/replug the device')
     session.scan()
     session.add_all()
@@ -123,6 +126,7 @@ def test_samba_mode(session, device):
 
     # flash device in SAM-BA mode
     session.flash_firmware(NEW_FW)
+    sys.stdout.write('\n')
     prompt('unplug/replug the device')
     session.scan()
 
