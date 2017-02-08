@@ -4,6 +4,7 @@ import time
 import pytest
 
 from pysmu import Session, Mode
+from misc import prompt
 
 
 # single device session fixture
@@ -25,6 +26,20 @@ def session(request):
 @pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
+
+
+@pytest.mark.interactive
+def test_read_write_overcurrent(device):
+    """Verify overcurrent detection during data acquisition."""
+    for action in ('loopback 2.5V to CH A', 'loopback 5V to CH B'):
+        prompt(action)
+        device.channels['A'].mode = Mode.SVMI
+        device.channels['A'].sine(0, 5, 100, -25)
+        # Output a cosine wave for channel B voltage.
+        device.channels['B'].mode = Mode.SVMI
+        device.channels['B'].sine(0, 5, 100, 0)
+        device.get_samples(1000)
+        assert device.overcurrent
 
 
 def test_read_write_non_continuous_fallback_values(session, device):
