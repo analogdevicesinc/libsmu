@@ -18,20 +18,22 @@ if __name__ == '__main__':
     if not session.devices:
         sys.exit(1)
 
+    waveform_samples = 500
+
     for i, dev in enumerate(session.devices):
         # Output a sine wave for channel A voltage.
         dev.channels['A'].mode = Mode.SVMI
-        dev.channels['A'].sine(0, 5, 500, -25)
+        dev.channels['A'].sine(0, 5, waveform_samples, -(waveform_samples / 4))
         # Output a cosine wave for channel B voltage.
         dev.channels['B'].mode = Mode.SVMI
-        dev.channels['B'].sine(0, 5, 500, 0)
+        dev.channels['B'].sine(0, 5, waveform_samples, 0)
 
     chan_a = defaultdict(list)
     chan_b = defaultdict(list)
 
     # Run the session in noncontinuous mode.
     for _x in xrange(10):
-        for i, samples in enumerate(session.get_samples(100)):
+        for i, samples in enumerate(session.get_samples(waveform_samples / 5)):
             chan_a[i].extend([x[0][0] for x in samples])
             chan_b[i].extend([x[1][0] for x in samples])
 
