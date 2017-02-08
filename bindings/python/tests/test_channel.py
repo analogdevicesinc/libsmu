@@ -1,4 +1,6 @@
-from __future__ import division
+from __future__ import division, print_function
+
+import random
 
 import pytest
 
@@ -86,22 +88,31 @@ def test_chan_constant(chan_a, chan_b):
 
 
 def test_chan_sine(chan_a, chan_b, device):
-    for freq in (10, 25, 50):
+    print('\n', end='')
+    for _x in xrange(5):
+        freq = random.randint(10, 100)
+        print('testing frequency: {}'.format(freq))
         period = freq * 10
         num_samples = period * freq
 
         # write a sine wave to both channels, one as a voltage source and the
         # other as current
         chan_a.mode = Mode.SVMI
-        chan_a.sine(chan_a.signal.min, chan_a.signal.max, period, 0)
+        chan_a.sine(chan_a.signal.min, chan_a.signal.max, period, -(period / 4))
         chan_b.mode = Mode.SIMV
         chan_b.sine(chan_b.signal.min, chan_b.signal.max, period, 0)
 
+        chan_a_samples = []
+        chan_b_samples = []
+
         # additional sample so we end up back at the starting value for a sine wave
-        samples = device.get_samples(num_samples + 1)
-        chan_a_samples = [x[0][0] for x in samples]
-        chan_b_samples = [x[1][1] for x in samples]
-        assert len(chan_a_samples) == len(chan_b_samples) == num_samples + 1
+        for i in xrange(10):
+            samples = device.get_samples(period * freq / 10)
+            chan_a_samples.extend([x[0][0] for x in samples])
+            chan_b_samples.extend([x[1][1] for x in samples])
+            assert len(chan_a_samples) == len(chan_b_samples) == (i + 1) * (period * freq / 10)
+
+        assert len(chan_a_samples) == len(chan_b_samples) == num_samples
 
         try:
             # Verify the frequencies of the resulting waveforms
