@@ -178,6 +178,7 @@ namespace smu {
 		///
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
+		/// @throws std::system_error of EBUSY if sample underflows/overflows have occurred.
 		int run(uint64_t samples);
 
 		/// @brief Start the currently configured capture, but do not wait for it to complete.
@@ -192,6 +193,7 @@ namespace smu {
 		///
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
+		/// @throws std::system_error of EBUSY if sample underflows/overflows have occurred.
 		int start(uint64_t samples);
 
 		/// @brief Cancel capture and block waiting for it to complete.
@@ -452,6 +454,7 @@ namespace smu {
 		/// @param samples Number of samples to run before stopping.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
+		/// @throws std::system_error of EBUSY if sample underflows/overflows have occurred.
 		virtual int run(uint64_t samples) = 0;
 
 		/// @brief Cancel all pending libusb transactions.
