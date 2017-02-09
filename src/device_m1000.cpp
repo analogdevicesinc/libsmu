@@ -902,7 +902,6 @@ end:
 
 int M1000_Device::cancel()
 {
-	std::lock_guard<std::mutex> lock(m_state);
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
 	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0))
