@@ -31,30 +31,18 @@ def device(session):
     return session.devices[0]
 
 
-def test_read_non_continuous(session, device):
-    """verify streaming HI-Z data values for ~10 seconds"""
+def test_read_initial_data(session, device):
+    """Verify data values of HI-Z samples on initial attach."""
+    sys.stdout.write('\n')
+    prompt('unplug the device, ground the metal USB connector, and plug it back in')
 
-    start = time.time()
-    seconds_iter = 1
+    samples = device.get_samples(1000)
+    assert len(samples) == 1000
 
-    while True:
-        elapsed = time.time() - start
-        if elapsed > 10:
-            break
-        elif elapsed > seconds_iter:
-            # progress updates
-            seconds_iter += 1
-            sys.stdout.write('*')
-            sys.stdout.flush()
-
-        session.run(1000)
-        samples = device.read(1000, -1)
-        assert len(samples) == 1000
-
-        # verify all samples are near 0
-        for sample in samples:
-            for x in chain.from_iterable(sample):
-                assert abs(round(x)) == 0
+    # verify all samples are near 0
+    for sample in samples:
+        for x in chain.from_iterable(sample):
+            assert abs(round(x)) == 0
 
 
 def test_read_continuous_dataflow_ignore(session, device):
