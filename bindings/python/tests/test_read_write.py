@@ -248,6 +248,7 @@ def test_read_write_cyclic_continuous(session, device):
             #    assert abs(round(sample[1][0])) == v
 
 
+@pytest.mark.long
 def test_read_write_continuous_sample_rates(session, device):
     """Verify streaming data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
     device.channels['A'].mode = Mode.SVMI

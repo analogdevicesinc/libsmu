@@ -167,6 +167,7 @@ def test_read_initial_data():
         assert all(tests)
 
 
+@pytest.mark.long
 def test_read_continuous_sample_rates(session, device):
     """Verify streaming HI-Z data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
     sample_count = 0
