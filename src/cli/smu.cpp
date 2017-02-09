@@ -68,10 +68,6 @@ static void stream_samples(Session* session)
 		dev->set_mode(ch_i, HI_Z);
 	}
 
-	session->hotplug_detach([=](Device* device, void* data){
-		throw std::runtime_error("device detached");
-	});
-
 	session->configure(dev->get_default_rate());
 	session->start(0);
 	std::vector<std::array<float, 4>> buf;
