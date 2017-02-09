@@ -34,23 +34,21 @@ def test_read_non_continuous(session, device):
     """verify streaming HI-Z data values for ~10 seconds"""
 
     start = time.time()
-    sample_count = 0
+    seconds_iter = 1
 
     while True:
-        end = time.time()
-        if end - start > 10:
+        elapsed = time.time() - start
+        if elapsed > 10:
             break
+        elif elapsed > seconds_iter:
+            # progress updates
+            seconds_iter += 1
+            sys.stdout.write('*')
+            sys.stdout.flush()
 
         session.run(1000)
         samples = device.read(1000, -1)
         assert len(samples) == 1000
-        sample_count += 1000
-
-        # progress updates
-        if sample_count > session.sample_rate:
-            sample_count = 0
-            sys.stdout.write('*')
-            sys.stdout.flush()
 
         # verify all samples are near 0
         for sample in samples:
