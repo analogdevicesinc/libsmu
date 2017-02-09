@@ -581,13 +581,16 @@ int Session::run(uint64_t samples)
 int Session::end()
 {
 	int ret = 0;
-	std::unique_lock<std::mutex> lk(m_lock);
 
-	// Wait up to a second for devices to finish streaming before continuing.
-	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
-	if (!res) {
-		DEBUG("%s: timed out waiting for completion\n", __func__);
+	// Wait up to a second for devices to finish streaming before continuing if
+	// session has not been cancelled.
+	if (m_cancellation == 0) {
+		std::unique_lock<std::mutex> lk(m_lock);
+		auto now = std::chrono::system_clock::now();
+		auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
+		if (!res) {
+			DEBUG("%s: timed out waiting for completion\n", __func__);
+		}
 	}
 
 	for (Device* dev: m_devices) {
@@ -614,8 +617,10 @@ void Session::flush()
 
 void Session::wait_for_completion()
 {
-	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	if (m_cancellation == 0) {
+		std::unique_lock<std::mutex> lk(m_lock);
+		m_completion.wait(lk, [&]{ return m_active_devices == 0; });
+	}
 }
 
 int Session::start(uint64_t samples)
@@ -671,9 +676,13 @@ void Session::handle_error(int status, const char * tag)
 
 void Session::completion()
 {
-	// On USB thread
+	// on USB thread
 	m_active_devices -= 1;
-	std::lock_guard<std::mutex> lock(m_lock);
+
+	// don't lock for cancelled sessions
+	if (m_cancellation == 0)
+		std::unique_lock<std::mutex> lock(m_lock);
+
 	if (m_active_devices == 0) {
 		if (m_completion_callback) {
 			m_completion_callback(m_cancellation);
