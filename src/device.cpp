@@ -14,7 +14,7 @@ using namespace smu;
 
 Device::Device(Session* s, libusb_device* d, libusb_device_handle *h,
 	const char* hwver, const char* fwver, const char* serial):
-	m_hwver(hwver), m_fwver(fwver), m_serial(serial), m_session(s), m_device(d), m_usb(h)
+	m_hwver(hwver), m_fwver(fwver), m_serial(serial), m_session(s), m_usb_dev(d), m_usb(h)
 {
 }
 

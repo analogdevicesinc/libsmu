@@ -466,7 +466,7 @@ namespace smu {
 		Session* const m_session;
 
 		/// @brief Underlying libusb device.
-		libusb_device* const m_device = NULL;
+		libusb_device* const m_usb_dev = NULL;
 		/// @brief Underlying libusb device handle.
 		libusb_device_handle* m_usb = NULL;
 

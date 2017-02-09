@@ -455,7 +455,7 @@ Device* Session::find_existing_device(libusb_device* usb_dev)
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 	for (Device* dev: m_available_devices) {
-		if (dev->m_device == usb_dev) {
+		if (dev->m_usb_dev == usb_dev) {
 			return dev;
 		}
 	}
