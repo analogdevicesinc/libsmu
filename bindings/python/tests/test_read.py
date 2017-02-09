@@ -10,16 +10,20 @@ from pysmu import Session, SampleDrop, DeviceError
 from misc import prompt
 
 
+def _add_device(session):
+    if session.scan() == 0:
+        # no devices plugged in
+        raise ValueError
+
+    session.add(session.available_devices[0])
+    return session, session.devices[0]
+
+
 # single device session fixture
 @pytest.fixture(scope='function')
 def session(request):
     s = Session(add_all=False)
-
-    if s.scan() == 0:
-        # no devices plugged in
-        raise ValueError
-
-    s.add(s.available_devices[0])
+    s, _ = _add_device(s)
     yield s
 
     # force session destruction
@@ -29,20 +33,6 @@ def session(request):
 @pytest.fixture(scope='function')
 def device(session):
     return session.devices[0]
-
-
-def test_read_initial_data(session, device):
-    """Verify data values of HI-Z samples on initial attach."""
-    sys.stdout.write('\n')
-    prompt('unplug the device, ground the metal USB connector, and plug it back in')
-
-    samples = device.get_samples(1000)
-    assert len(samples) == 1000
-
-    # verify all samples are near 0
-    for sample in samples:
-        for x in chain.from_iterable(sample):
-            assert abs(round(x)) == 0
 
 
 def test_read_continuous_dataflow_ignore(session, device):
@@ -133,7 +123,7 @@ def _read_hotplug(session, device, status):
 
     sys.stdout.write('\n')
     prompt('plug the device back in')
-    session.add_all()
+    session, device = _add_device(session)
 
 
 @pytest.mark.interactive
@@ -146,6 +136,35 @@ def test_read_noncontinuous_hotplug(session, device):
 def test_read_continuous_hotplug(session, device):
     """Verify no stalls when unplugging a device during continuous reads."""
     _read_hotplug(session, device, 'continuous')
+
+
+@pytest.mark.interactive
+def test_read_initial_data():
+    """Verify data values of HI-Z samples on initial attach.
+
+    See https://github.com/analogdevicesinc/m1k-fw/issues/9 for details.
+    """
+    sys.stdout.write('\n')
+    prompt('unplug the device, ground the metal USB connector, and plug it back in')
+
+    # create our own session to avoid detach exceptions
+    session = Session(add_all=False)
+    session, device = _add_device(session)
+
+    samples = device.get_samples(100)
+    assert len(samples) == 100
+
+    # verify all samples are near 0
+    tests = []
+    for sample in samples:
+        for x in chain.from_iterable(sample):
+            tests.append(abs(round(x)) == 0)
+
+    # old firmware versions exhibit bad data, newer versions should fix the issue
+    if device.fwver <= 2.09:
+        assert not all(tests)
+    else:
+        assert all(tests)
 
 
 def test_read_continuous_sample_rates(session, device):
