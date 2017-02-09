@@ -57,6 +57,7 @@ def test_read_continuous_dataflow_raises():
     with pytest.raises(SampleDrop):
         device.read(1000)
 
+    # force session destruction
     session._close()
 
 
@@ -165,6 +166,11 @@ def test_read_initial_data():
         assert not all(tests)
     else:
         assert all(tests)
+
+    # request a bunch of extra samples to flush bad values
+    device.get_samples(10000)
+    # force session destruction
+    session._close()
 
 
 @pytest.mark.long
