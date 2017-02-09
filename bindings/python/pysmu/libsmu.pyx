@@ -682,7 +682,10 @@ cdef class SessionDevice(Device):
         Raises: DeviceError on reading failures.
         Returns: A list containing the specified number of sample values.
         """
-        return self._session.get_samples(num_samples)[self._session_index]
+        try:
+            return self._session.get_samples(num_samples)[self._session_index]
+        except IndexError:
+            raise DeviceError('device detached')
 
     def flash_firmware(self, path):
         """Update firmware for the device.
