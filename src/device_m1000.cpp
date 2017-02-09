@@ -541,6 +541,13 @@ ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t sample
 					__func__, timeout, samples, m_in_samples_avail.load());
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
+
+		if (e_ptr) {
+			// copy exception pointer for throwing and reset it
+			std::exception_ptr new_e_ptr = e_ptr;
+			e_ptr = nullptr;
+			std::rethrow_exception(new_e_ptr);
+		}
 	}
 
 	// If a data flow exception occurred in the USB thread, rethrow the
