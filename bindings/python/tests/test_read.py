@@ -119,11 +119,15 @@ def _read_hotplug(session, device, status):
     """Verify no stalls when unplugging a device during reads."""
     printed = False
     num_samples = 0
+    start = time.time()
     if status == 'continuous':
         session.start(0)
 
     with pytest.raises(DeviceError) as excinfo:
         while True:
+            if time.time() - start > 10:
+                pytest.fail('failed to unplug the device within 10 seconds')
+
             if status == 'continuous':
                 samples = device.read(10000, -1)
             else:
@@ -131,7 +135,7 @@ def _read_hotplug(session, device, status):
             num_samples += len(samples)
 
             if not printed:
-                print('\nACTION: unplug the device')
+                print('\nACTION: unplug the device within 10 seconds')
                 printed = True
 
             sys.stdout.write('\rreceived samples: {}'.format(num_samples))
