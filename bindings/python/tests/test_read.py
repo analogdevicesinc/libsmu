@@ -7,6 +7,7 @@ import time
 import pytest
 
 from pysmu import Session, SampleDrop, DeviceError
+from misc import prompt
 
 
 # single device session fixture
@@ -128,20 +129,28 @@ def _read_hotplug(session, device, status):
             else:
                 samples = device.get_samples(10000)
             num_samples += len(samples)
+
             if not printed:
                 print('\nACTION: unplug the device')
                 printed = True
+
             sys.stdout.write('\rreceived samples: {}'.format(num_samples))
             sys.stdout.flush()
 
     assert 'device detached' == str(excinfo.value)
 
+    sys.stdout.write('\n')
+    prompt('plug the device back in')
+    session.add_all()
 
+
+@pytest.mark.interactive
 def test_read_noncontinuous_hotplug(session, device):
     """Verify no stalls when unplugging a device during noncontinuous reads."""
     _read_hotplug(session, device, 'noncontinuous')
 
 
+@pytest.mark.interactive
 def test_read_continuous_hotplug(session, device):
     """Verify no stalls when unplugging a device during continuous reads."""
     _read_hotplug(session, device, 'continuous')
