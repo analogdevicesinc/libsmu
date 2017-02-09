@@ -121,7 +121,6 @@ def calibration(session, args):
         chan_b_voltages = [x[1][0] for x in samples]
         d[2].append((rounded_mean(chan_a_voltages), dmm_chan_a_voltage))
         d[6].append((rounded_mean(chan_b_voltages), dmm_chan_b_voltage))
-        session.cancel()
         session.end()
 
         chan_a.constant(2.5)
@@ -134,7 +133,6 @@ def calibration(session, args):
         chan_b_voltages = [x[1][0] for x in samples]
         d[2].append((rounded_mean(chan_a_voltages), dmm_chan_a_voltage))
         d[6].append((rounded_mean(chan_b_voltages), dmm_chan_b_voltage))
-        session.cancel()
         session.end()
 
         # current measurement calibration
@@ -177,14 +175,12 @@ def calibration(session, args):
         session.start(0)
         dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
         d[1].append((dmm_current, 0.1))
-        session.cancel()
         session.end()
 
         voltage_search(0, -0.1)
         session.start(0)
         dmm_current = float(prompt('read the current measurement for CH A from the multimeter and enter the value here:', ''))
         d[1].append((dmm_current, -0.1))
-        session.cancel()
         session.end()
 
         prompt('using the same setup, switch CH A with CH B connecting to the resistor')
@@ -192,14 +188,12 @@ def calibration(session, args):
         session.start(0)
         dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
         d[5].append((dmm_current, 0.1))
-        session.cancel()
         session.end()
 
         voltage_search(1, -0.1)
         session.start(0)
         dmm_current = float(prompt('read the current measurement for CH B from the multimeter and enter the value here:', ''))
         d[5].append((dmm_current, -0.1))
-        session.cancel()
         session.end()
 
         # current source calibration
@@ -217,7 +211,6 @@ def calibration(session, args):
         samples = dev.read(10000, -1)
         chan_a_currents = [x[0][1] for x in samples]
         d[3].append((rounded_mean(chan_a_currents), dmm_current))
-        session.cancel()
         session.end()
 
         chan_a.constant(0.1)
@@ -232,7 +225,6 @@ def calibration(session, args):
         samples = dev.read(10000, -1)
         chan_b_currents = [x[1][1] for x in samples]
         d[7].append((rounded_mean(chan_b_currents), dmm_current))
-        session.cancel()
         session.end()
 
         chan_a.constant(-0.1)
@@ -248,7 +240,6 @@ def calibration(session, args):
         samples = dev.read(10000, -1)
         chan_b_currents = [x[1][1] for x in samples]
         d[7].append((rounded_mean(chan_b_currents), dmm_current))
-        session.cancel()
         session.end()
 
         cal_file_path = tempfile.NamedTemporaryFile(delete=False).name

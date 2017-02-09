@@ -272,7 +272,6 @@ def test_read_write_continuous_session_stop_start(session, device):
                 break
 
         # Stop the session.
-        session.cancel()
         session.end()
 
         if time.time() - start > 1:
@@ -371,7 +370,6 @@ def test_read_write_continuous_sample_rates(session, device):
             sample_count, int(round(clk_diff)), samples_per_second, sample_rate_diff))
 
         # Stop the session.
-        session.cancel()
         session.end()
 
     # fail test if any sample rates returned bad values
