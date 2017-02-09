@@ -91,6 +91,17 @@ Session::Session()
 		}
 	});
 
+	// Add default hotplug detach support to cancel/end a session and remove the related device.
+	hotplug_detach([=](Device* dev, void* data) {
+		if (m_devices.find(dev) != m_devices.end()) {
+			cancel();
+			end();
+			remove(dev, true);
+			destroy(dev);
+			throw std::runtime_error("device detached");
+		}
+	});
+
 	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
 	if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_ctx, 4);
