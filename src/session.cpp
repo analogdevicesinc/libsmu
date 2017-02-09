@@ -582,6 +582,10 @@ int Session::end()
 {
 	int ret = 0;
 
+	// cancel continuous sessions before ending them
+	if (m_continuous)
+		cancel();
+
 	// Wait up to a second for devices to finish streaming before continuing if
 	// session has not been cancelled.
 	if (m_cancellation == 0) {
@@ -627,6 +631,7 @@ int Session::start(uint64_t samples)
 {
 	int ret = 0;
 	m_cancellation = 0;
+	m_continuous = (samples == 0);
 
 	// if session is unconfigured, use device default sample rate
 	if (m_sample_rate == 0)
