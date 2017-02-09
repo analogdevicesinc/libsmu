@@ -249,6 +249,42 @@ def test_read_write_cyclic_continuous(session, device):
 
 
 @pytest.mark.long
+def test_read_write_continuous_session_stop_start(session, device):
+    chan_a = device.channels['A']
+    chan_b = device.channels['B']
+    chan_a.mode = Mode.SVMI
+    chan_b.mode = Mode.SIMV
+    period = 1000
+    chan_a.sine(chan_a.signal.min, chan_a.signal.max, period, -(period / 4))
+    chan_b.sine(chan_b.signal.min, chan_b.signal.max, period, 0)
+
+    for _ in range(1000):
+        session.start(0)
+        start = time.time()
+        num_samples = 0
+
+        while True:
+            num_samples += len(device.read(1000, -1))
+            if num_samples > 10000:
+                break
+            if time.time() - start > 1:
+                pytest.fail('took too long to acquire samples')
+                break
+
+        # Stop the session.
+        session.cancel()
+        session.end()
+
+        if time.time() - start > 1:
+            pytest.fail('took too long to end the continuous session')
+
+        sys.stdout.write('*')
+        sys.stdout.flush()
+
+    sys.stdout.write('\n')
+
+
+@pytest.mark.long
 def test_read_write_continuous_sample_rates(session, device):
     """Verify streaming data values and speed from 100 kSPS to 10 kSPS every ~5k SPS."""
     device.channels['A'].mode = Mode.SVMI
