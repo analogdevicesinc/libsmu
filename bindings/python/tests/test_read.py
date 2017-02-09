@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from pysmu import Session, SampleDrop
+from pysmu import Session, SampleDrop, DeviceError
 
 
 # single device session fixture
@@ -112,6 +112,39 @@ def test_read_continuous_timeout(session, device):
 
     # Which should be long enough to get all 1000 samples.
     assert len(samples) == 1000
+
+
+def _read_hotplug(session, device, status):
+    """Verify no stalls when unplugging a device during reads."""
+    printed = False
+    num_samples = 0
+    if status == 'continuous':
+        session.start(0)
+
+    with pytest.raises(DeviceError) as excinfo:
+        while True:
+            if status == 'continuous':
+                samples = device.read(10000, -1)
+            else:
+                samples = device.get_samples(10000)
+            num_samples += len(samples)
+            if not printed:
+                print('\nACTION: unplug the device')
+                printed = True
+            sys.stdout.write('\rreceived samples: {}'.format(num_samples))
+            sys.stdout.flush()
+
+    assert 'device detached' == str(excinfo.value)
+
+
+def test_read_noncontinuous_hotplug(session, device):
+    """Verify no stalls when unplugging a device during noncontinuous reads."""
+    _read_hotplug(session, device, 'noncontinuous')
+
+
+def test_read_continuous_hotplug(session, device):
+    """Verify no stalls when unplugging a device during continuous reads."""
+    _read_hotplug(session, device, 'continuous')
 
 
 def test_read_continuous_sample_rates(session, device):
