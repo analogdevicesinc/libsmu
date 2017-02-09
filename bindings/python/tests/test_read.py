@@ -71,7 +71,7 @@ def test_read_continuous_large_request(session, device):
     assert len(samples) > 0
 
 
-def test_read_non_continuous_large_request(device):
+def test_read_noncontinuous_large_request(device):
     """Request more samples than fits in the read queues under default settings in non-continuous mode.
 
     Internally, pysmu splits up the request into sizes smaller than the

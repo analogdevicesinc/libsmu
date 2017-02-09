@@ -50,7 +50,7 @@ def test_read_write_overcurrent(device):
         assert device.overcurrent == value
 
 
-def test_read_write_non_continuous_fallback_values(session, device):
+def test_read_write_noncontinuous_fallback_values(session, device):
     """Verify fallback values are used when running out of values to write."""
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI
@@ -95,7 +95,7 @@ def test_read_write_continuous_large_request(session, device):
         assert abs(round(sample[1][0])) == 4
 
 
-def test_read_write_non_continuous_large_request(device):
+def test_read_write_noncontinuous_large_request(device):
     """Request more samples than fits in the read/write queues under default settings in non-continuous mode.
 
     Internally, pysmu splits up the request into sizes smaller than the
@@ -115,7 +115,7 @@ def test_read_write_non_continuous_large_request(device):
         assert abs(round(sample[1][0])) == 4
 
 
-def test_read_write_non_continuous(session, device):
+def test_read_write_noncontinuous(session, device):
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI
 
@@ -202,7 +202,7 @@ def test_read_write_continuous(session, device):
     assert abs(round(sample_count / 10) - session.sample_rate) <= 256
 
 
-def test_read_write_cyclic_non_continuous(session, device):
+def test_read_write_cyclic_noncontinuous(session, device):
     device.channels['A'].mode = Mode.SVMI
     device.channels['B'].mode = Mode.SVMI
 
