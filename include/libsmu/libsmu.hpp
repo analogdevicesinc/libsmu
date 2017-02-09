@@ -234,7 +234,9 @@ namespace smu {
 		/// @brief Block until all devices have are finished streaming in the session.
 		void wait_for_completion();
 
-		/// @brief Block until all devices have completed, then turn off the devices.
+		/// @brief For noncontinuous sessions, block until all devices have completed,
+		/// then turn off the devices. Continuous sessions don't wait for completion
+		/// and instead proceed with turning off the devices after canceling the session.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		int end();
