@@ -55,7 +55,7 @@ def test_read_continuous_dataflow_raises():
     session.start(0)
     time.sleep(.5)
     with pytest.raises(SampleDrop):
-        samples = device.read(1000)
+        device.read(1000)
 
     session._close()
 
