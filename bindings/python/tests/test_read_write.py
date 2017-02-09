@@ -264,12 +264,12 @@ def test_read_write_continuous_session_stop_start(session, device):
         num_samples = 0
 
         while True:
-            num_samples += len(device.read(1000, -1))
-            if num_samples > 10000:
+            num_samples += len(device.read(1000))
+            if time.time() - start > 0.1:
                 break
-            if time.time() - start > 1:
-                pytest.fail('took too long to acquire samples')
-                break
+
+        if not num_samples:
+            pytest.fail('no samples acquired')
 
         # Stop the session.
         session.end()
