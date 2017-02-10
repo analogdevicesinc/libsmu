@@ -255,12 +255,12 @@ namespace smu {
 		/// @brief Session sample rate.
 		uint64_t m_sample_rate = 0;
 
+		/// @brief Flag used to determine if a session is in continuous mode or not.
+		bool m_continuous = false;
+
 	protected:
 		/// @brief Flag used to cancel all pending USB transactions for devices in a session.
 		unsigned m_cancellation = 0;
-
-		/// @brief Flag used to determine if a session is in continuous mode or not.
-		bool m_continuous = false;
 
 		/// @brief Flag for controlling USB event handling.
 		/// USB event handling loop will be run while m_usb_thread_loop is true.

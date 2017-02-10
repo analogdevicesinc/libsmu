@@ -27,6 +27,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int m_active_devices
         int m_queue_size
         int m_sample_rate
+        bint m_continuous
 
         int scan()
         int add(Device* dev)

@@ -315,6 +315,7 @@ def test_read_write_continuity_stop_start(session, device):
             pytest.fail('no samples acquired')
 
         # Stop the session.
+        assert session.continuous == session_num % 2
         session.end()
 
         if time.time() - start > 1:

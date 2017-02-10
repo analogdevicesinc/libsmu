@@ -151,6 +151,11 @@ cdef class Session:
         def __get__(self):
             return self._session.cancelled()
 
+    property continuous:
+        """Continuous status of a session."""
+        def __get__(self):
+            return bool(self._session.m_continuous)
+
     property sample_rate:
         """Session sample rate."""
         def __get__(self):
