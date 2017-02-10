@@ -349,8 +349,11 @@ int M1000_Device::configure(uint32_t sampleRate)
 
 	if (ret < 0)
 		return ret;
-	else
-		return set_sample_rate;
+
+	// update write timeout based on sample rate
+	m_write_timeout = (1 / (double)set_sample_rate) * 1e7;
+
+	return set_sample_rate;
 }
 
 // Constrain a given value by low and high bounds.
@@ -371,13 +374,11 @@ uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 			if (!std::isnan(m_next_output[channel])) {
 				val = m_next_output[channel];
 			} else {
-				// only wait up to 100ms for sample values
-				// TODO: make the period dependent on the sample rate/input buffer size
 				auto clk_start = std::chrono::high_resolution_clock::now();
 				while (!m_out_samples_q[channel]->pop(val)) {
 					auto clk_end = std::chrono::high_resolution_clock::now();
 					auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-					if (clk_diff.count() > 100)
+					if (clk_diff.count() > m_write_timeout)
 						throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
 					std::this_thread::sleep_for(std::chrono::microseconds(1));
 				}
@@ -574,13 +575,11 @@ int M1000_Device::write(std::vector<float>& buf, unsigned channel, bool cyclic)
 	if (m_out_samples_buf_cyclic[channel])
 		flush(channel, false);
 
-	// only wait up to 100ms for queue space
-	// TODO: make the period dependent on the sample rate/input buffer size
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (m_out_samples_buf[channel].size()) {
 		auto clk_end = std::chrono::high_resolution_clock::now();
 		auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-		if (clk_diff.count() > 100)
+		if (clk_diff.count() > m_write_timeout)
 			throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available queue space");
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}

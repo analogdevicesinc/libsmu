@@ -482,6 +482,10 @@ namespace smu {
 		/// Current sample number being submitted for output.
 		uint64_t m_out_sampleno = 0;
 
+		/// @brief Amount of time in milliseconds to wait before timing out write
+		/// operations, defaults to 100 ms and is based on the configured sample rate.
+		double m_write_timeout = 100;
+
 		/// Lock for transfer state.
 		std::mutex m_state;
 
