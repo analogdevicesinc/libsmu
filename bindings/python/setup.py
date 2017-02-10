@@ -225,7 +225,7 @@ if not version:
 
 test_requirements = ['pytest']
 if sys.hexversion < 0x03030000:
-        test_requirements.append('mock')
+    test_requirements.append('mock')
 
 setup(
     name='pysmu',
