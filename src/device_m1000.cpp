@@ -443,7 +443,7 @@ void M1000_Device::handle_out_transfer(libusb_transfer* t)
 				b = encode_out(CHAN_B, peek);
 			}
 
-			if (m_fwver.compare(0, 2, "2.") == 0) {
+			if (std::atof(m_fwver.c_str()) >= 2) {
 				buf[i*4+0] = a >> 8;
 				buf[i*4+1] = a & 0xff;
 				buf[i*4+2] = b >> 8;
@@ -647,7 +647,7 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
-			if (m_fwver.compare(0, 2, "2.") == 0) {
+			if (std::atof(m_fwver.c_str()) >= 2) {
 				v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
 				samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
 				v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
