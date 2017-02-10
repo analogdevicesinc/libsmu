@@ -295,6 +295,9 @@ def test_read_write_continuity_stop_start(session, device):
     chan_a.sine(chan_a.signal.min, chan_a.signal.max, period, -(period / 4))
     chan_b.sine(chan_b.signal.min, chan_b.signal.max, period, 0)
 
+    cont_str = {True: 'continuous', False: 'noncontinuous'}
+    cont_session_interval = {True: 1, False: 2}
+
     for session_num in range(1000):
         # continuous sessions on odd numbers, noncontinuous on evens
         if session_num % 2:
@@ -312,14 +315,16 @@ def test_read_write_continuity_stop_start(session, device):
                 break
 
         if not num_samples:
-            pytest.fail('no samples acquired: continuous: {}'.format(session.continuous))
+            pytest.fail('no samples acquired during {} session'.format(cont_str[session.continuous]))
 
         # Stop the session.
         assert session.continuous == session_num % 2
         session.end()
 
-        if time.time() - start > 1:
-            pytest.fail('took too long to end the session: continuous: {}'.format(session.continuous))
+        # allow noncontinuous sessions a little longer to bring down since the
+        # explicitly wait for device completion
+        if time.time() - start > cont_session_interval[session.continuous]:
+            pytest.fail('took too long to end the {} session'.format(cont_str[session.continuous]))
 
         sys.stdout.write('*')
         sys.stdout.flush()
