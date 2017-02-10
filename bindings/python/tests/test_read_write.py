@@ -312,14 +312,14 @@ def test_read_write_continuity_stop_start(session, device):
                 break
 
         if not num_samples:
-            pytest.fail('no samples acquired')
+            pytest.fail('no samples acquired: continuous: {}'.format(session.continuous))
 
         # Stop the session.
         assert session.continuous == session_num % 2
         session.end()
 
         if time.time() - start > 1:
-            pytest.fail('took too long to end the session')
+            pytest.fail('took too long to end the session: continuous: {}'.format(session.continuous))
 
         sys.stdout.write('*')
         sys.stdout.flush()
