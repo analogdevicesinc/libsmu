@@ -179,7 +179,7 @@ cdef class Session:
     def _check_fw_versions(self):
         """Check session for devices with different firmware versions."""
         if self.devices > 1:
-            fw_versions = [dev.fwver for dev in self.devices]
+            fw_versions = [str(dev.fwver) for dev in self.devices]
             if len(set(fw_versions)) > 1:
                 warnings.warn(
                     "differing firmware versions in session devices: {}".format(
