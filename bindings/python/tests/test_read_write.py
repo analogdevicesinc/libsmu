@@ -56,8 +56,8 @@ def test_read_write_noncontinuous_fallback_values(session, device):
     device.channels['B'].mode = Mode.SVMI
 
     num_samples = 20000
-    device.write([2] * 1000, 0)
-    device.write([4] * 1000, 1)
+    device.channels['A'].write([2] * 1000)
+    device.channels['B'].write([4] * 1000)
     samples = device.get_samples(num_samples)
 
     assert len(samples) == num_samples
