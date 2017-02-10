@@ -266,7 +266,7 @@ def test_read_write_continuous_session_stop_start(session, device):
 
         while True:
             num_samples += len(device.read(1000))
-            if time.time() - start > 0.1:
+            if time.time() - start > 0.2:
                 break
 
         if not num_samples:
@@ -311,7 +311,7 @@ def test_read_write_continuity_stop_start(session, device):
                 num_samples += len(device.read(1000))
             else:
                 num_samples += len(device.get_samples(1000))
-            if time.time() - start > 0.1:
+            if time.time() - start > 0.2:
                 break
 
         if not num_samples:
