@@ -319,6 +319,7 @@ def test_read_write_continuity_stop_start(session, device):
 
         # Stop the session.
         assert session.continuous == session_num % 2
+        start = time.time()
         session.end()
 
         # allow noncontinuous sessions a little longer to bring down since the
