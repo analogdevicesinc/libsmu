@@ -44,7 +44,7 @@ def test_chan_write_timeout(chan_a, chan_b):
         chan_b.constant(4)
 
 
-def test_mode(chan_a, chan_b):
+def test_chan_mode(chan_a, chan_b):
     # channels start in HI_Z mode by default
     assert chan_a.mode == chan_b.mode == Mode.HI_Z
 
@@ -60,24 +60,24 @@ def test_mode(chan_a, chan_b):
     assert chan_a.mode == chan_b.mode == Mode.SVMI
 
 
-def test_channel_read(session, chan_a):
+def test_chan_read(session, chan_a):
     session.run(1000)
     samples = chan_a.read(1000, -1)
     assert len(samples) == 1000
     assert len(samples[0]) == 2
 
 
-def test_channel_write(chan_a, chan_b):
+def test_chan_write(chan_a, chan_b):
     pass
 
 
-def test_get_samples(chan_a, chan_b):
+def test_chan_get_samples(chan_a, chan_b):
     samples = chan_a.get_samples(1000)
     assert len(samples) == 1000
     assert len(samples[0]) == 2
 
 
-def test_arbitrary(chan_a, chan_b):
+def test_chan_arbitrary(chan_a, chan_b):
     pass
 
 
