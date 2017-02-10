@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from pysmu import Session, Mode
+from pysmu import Session, Mode, WriteTimeout
 
 
 @pytest.fixture(scope='function')
@@ -30,6 +30,18 @@ def chan_a(device):
 @pytest.fixture(scope='function')
 def chan_b(device):
     return device.channels['B']
+
+
+def test_chan_write_timeout(chan_a, chan_b):
+    with pytest.raises(WriteTimeout):
+        chan_a.mode = Mode.SVMI
+        chan_a.sine(0, 5, 100, 0)
+        chan_a.constant(2)
+
+    with pytest.raises(WriteTimeout):
+        chan_b.mode = Mode.SVMI
+        chan_b.sine(0, 5, 100, 25)
+        chan_b.constant(4)
 
 
 def test_mode(chan_a, chan_b):
