@@ -261,8 +261,9 @@ cdef class Session:
         try:
             ret = self._session.run(samples)
         except RuntimeError as e:
-            err = 'data write timeout'
-            if e.message[:len(err)] == err:
+            err1 = 'data write timeout'
+            err2 = 'data sample dropped'
+            if e.message[:len(err1)] == err1 or e.message[:len(err2)] == err2:
                 if not self.ignore_dataflow:
                     raise WriteTimeout(e.message)
             else:
