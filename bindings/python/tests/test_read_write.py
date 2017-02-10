@@ -56,15 +56,16 @@ def test_read_write_noncontinuous_fallback_values(session, device):
     device.channels['B'].mode = Mode.SVMI
 
     num_samples = 20000
-    device.channels['A'].write([2] * 1000)
-    device.channels['B'].write([4] * 1000)
-    samples = device.get_samples(num_samples)
 
-    assert len(samples) == num_samples
+    for i in range(20):
+        device.channels['A'].write([(i + 2) % 6] * 1000)
+        device.channels['B'].write([(i + 4) % 6] * 1000)
+        samples = device.get_samples(num_samples)
+        assert len(samples) == num_samples
 
-    for sample in samples:
-        assert abs(round(sample[0][0])) == 2
-        assert abs(round(sample[1][0])) == 4
+        for sample in samples:
+            assert abs(round(sample[0][0])) == (i + 2) % 6
+            assert abs(round(sample[1][0])) == (i + 4) % 6
 
 
 def test_read_write_continuous_large_request(session, device):
