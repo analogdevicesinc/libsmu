@@ -250,6 +250,7 @@ def test_read_write_cyclic_continuous(session, device):
 
 @pytest.mark.long
 def test_read_write_continuous_session_stop_start(session, device):
+    """Test stopping and starting a continuous session in rapid succession."""
     chan_a = device.channels['A']
     chan_b = device.channels['B']
     chan_a.mode = Mode.SVMI
@@ -276,6 +277,48 @@ def test_read_write_continuous_session_stop_start(session, device):
 
         if time.time() - start > 1:
             pytest.fail('took too long to end the continuous session')
+
+        sys.stdout.write('*')
+        sys.stdout.flush()
+
+    sys.stdout.write('\n')
+
+
+@pytest.mark.long
+def test_read_write_continuity_stop_start(session, device):
+    """Test switching between noncontinuous and continuous sessions in rapid succession."""
+    chan_a = device.channels['A']
+    chan_b = device.channels['B']
+    chan_a.mode = Mode.SVMI
+    chan_b.mode = Mode.SIMV
+    period = 1000
+    chan_a.sine(chan_a.signal.min, chan_a.signal.max, period, -(period / 4))
+    chan_b.sine(chan_b.signal.min, chan_b.signal.max, period, 0)
+
+    for session_num in range(1000):
+        # continuous sessions on odd numbers, noncontinuous on evens
+        if session_num % 2:
+            session.start(0)
+
+        start = time.time()
+        num_samples = 0
+
+        while True:
+            if session_num % 2:
+                num_samples += len(device.read(1000))
+            else:
+                num_samples += len(device.get_samples(1000))
+            if time.time() - start > 0.1:
+                break
+
+        if not num_samples:
+            pytest.fail('no samples acquired')
+
+        # Stop the session.
+        session.end()
+
+        if time.time() - start > 1:
+            pytest.fail('took too long to end the session')
 
         sys.stdout.write('*')
         sys.stdout.flush()
