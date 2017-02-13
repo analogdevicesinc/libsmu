@@ -171,11 +171,6 @@ namespace smu {
 
 		/// @brief Run the currently configured capture and wait for it to complete.
 		/// @param samples Number of samples to capture until we stop. If 0, run in continuous mode.
-		///
-		/// Note that the number of samples actually captured will be the
-		/// nearest multiple of the amount of samples per USB packet larger than
-		/// the request amount of samples.
-		///
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative errno code is returned.
 		/// @throws std::system_error of EBUSY if sample underflows/overflows have occurred.
