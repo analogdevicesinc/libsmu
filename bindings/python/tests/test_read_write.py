@@ -263,21 +263,16 @@ def test_read_write_continuous_session_stop_start(session, device):
     for _ in range(1000):
         session.start(0)
         start = time.time()
-        num_samples = 0
 
         while True:
-            num_samples += len(device.read(1000))
-            if time.time() - start > 0.2:
+            if len(device.read(1000)):
                 break
-
-        if not num_samples:
-            pytest.fail('no samples acquired')
+            if time.time() - start > 1:
+                pytest.fail('no samples acquired within a second')
+                break
 
         # Stop the session.
         session.end()
-
-        if time.time() - start > 1:
-            pytest.fail('took too long to end the continuous session')
 
         sys.stdout.write('*')
         sys.stdout.flush()
@@ -297,7 +292,6 @@ def test_read_write_continuity_stop_start(session, device):
     chan_b.sine(chan_b.signal.min, chan_b.signal.max, period, 0)
 
     cont_str = {True: 'continuous', False: 'noncontinuous'}
-    cont_session_interval = {True: 1, False: 2}
 
     for session_num in range(1000):
         # continuous sessions on odd numbers, noncontinuous on evens
@@ -312,21 +306,16 @@ def test_read_write_continuity_stop_start(session, device):
                 num_samples += len(device.read(1000))
             else:
                 num_samples += len(device.get_samples(1000))
-            if time.time() - start > 0.2:
-                break
 
-        if not num_samples:
-            pytest.fail('no samples acquired during {} session'.format(cont_str[session.continuous]))
+            if num_samples:
+                break
+            elif time.time() - start > 1:
+                pytest.fail('no samples acquired within a second during {} session'.format(cont_str[session.continuous]))
 
         # Stop the session.
         assert session.continuous == session_num % 2
         start = time.time()
         session.end()
-
-        # allow noncontinuous sessions a little longer to bring down since the
-        # explicitly wait for device completion
-        if time.time() - start > cont_session_interval[session.continuous]:
-            pytest.fail('took too long to end the {} session'.format(cont_str[session.continuous]))
 
         sys.stdout.write('*')
         sys.stdout.flush()
