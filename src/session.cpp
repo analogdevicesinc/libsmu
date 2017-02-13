@@ -583,8 +583,10 @@ int Session::end()
 	int ret = 0;
 
 	// cancel continuous sessions before ending them
-	if (m_continuous)
+	if (m_continuous) {
 		cancel();
+		m_continuous = false;
+	}
 
 	// Wait up to a second for devices to finish streaming before continuing if
 	// session has not been cancelled.
