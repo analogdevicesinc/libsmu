@@ -571,6 +571,12 @@ int Session::run(uint64_t samples)
 {
 	int ret;
 
+	if (samples > 0 && m_continuous) {
+		// running session in noncontinuous mode while already running in
+		// continuous mode doesn't work
+		return -EBUSY;
+	}
+
 	ret = start(samples);
 	if (ret)
 		return ret;
