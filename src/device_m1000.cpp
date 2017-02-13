@@ -402,7 +402,7 @@ uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 			if (std::isnan(m_previous_output[channel])) {
 				// Throw exception if trying to use fallback values without
 				// writing any data first.
-				throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
+				throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available fallback sample");
 			} else {
 				val = m_previous_output[channel];
 			}
