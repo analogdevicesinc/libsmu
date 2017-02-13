@@ -303,10 +303,6 @@ cdef class Session:
         """Flush the read and write queues for all devices in a session."""
         self._session.flush()
 
-    def wait_for_completion(self):
-        """Block until all devices have are finished streaming in the session."""
-        self._session.wait_for_completion()
-
     def end(self):
         """Block until all devices have completed, then turn off the devices."""
         cdef int ret = 0

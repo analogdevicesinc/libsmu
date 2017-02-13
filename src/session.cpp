@@ -114,11 +114,8 @@ Session::~Session()
 
 	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
 
-	// Cancel all outstanding transfers and wait for all active devices to
-	// finish the cancellation process.
+	// Cancel all outstanding transfers.
 	cancel();
-	if (m_active_devices > 0)
-		wait_for_completion();
 	
 	// Run device destructors before libusb_exit().
 	for (Device* dev: m_devices) {
@@ -624,14 +621,6 @@ void Session::flush()
 		// flush all read/write queues
 		dev->flush(0, true);
 		dev->flush(1, true);
-	}
-}
-
-void Session::wait_for_completion()
-{
-	if (m_cancellation == 0) {
-		std::unique_lock<std::mutex> lk(m_lock);
-		m_completion.wait(lk, [&]{ return m_active_devices == 0; });
 	}
 }
 

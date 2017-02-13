@@ -226,9 +226,6 @@ namespace smu {
 		/// internal: Called by device detach events on the USB thread.
 		void detached(libusb_device* usb_dev);
 
-		/// @brief Block until all devices have are finished streaming in the session.
-		void wait_for_completion();
-
 		/// @brief For noncontinuous sessions, block until all devices have completed,
 		/// then turn off the devices. Continuous sessions don't wait for completion
 		/// and instead proceed with turning off the devices after canceling the session.
