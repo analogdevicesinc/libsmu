@@ -10,6 +10,7 @@ from pysmu import Session, Mode, WriteTimeout
 
 @pytest.fixture(scope='function')
 def session(request):
+    """Default session adding all attached devices."""
     s = Session()
     yield s
 
@@ -19,20 +20,24 @@ def session(request):
 
 @pytest.fixture(scope='function')
 def device(session):
+    """First device in the session fixture."""
     return session.devices[0]
 
 
 @pytest.fixture(scope='function')
 def chan_a(device):
+    """Channel A of the first device in the session fixture."""
     return device.channels['A']
 
 
 @pytest.fixture(scope='function')
 def chan_b(device):
+    """Channel B of the first device in the session fixture."""
     return device.channels['B']
 
 
 def test_chan_write_timeout(chan_a, chan_b):
+    """Performing multiple writes before starting a session causes write timeouts."""
     with pytest.raises(WriteTimeout):
         chan_a.mode = Mode.SVMI
         chan_a.sine(0, 5, 100, 0)
@@ -45,6 +50,7 @@ def test_chan_write_timeout(chan_a, chan_b):
 
 
 def test_chan_mode(chan_a, chan_b):
+    """Simple channel mode setting."""
     # channels start in HI_Z mode by default
     assert chan_a.mode == chan_b.mode == Mode.HI_Z
 
@@ -61,6 +67,7 @@ def test_chan_mode(chan_a, chan_b):
 
 
 def test_chan_read(session, chan_a):
+    """Simple channel data acquisition."""
     session.run(1000)
     samples = chan_a.read(1000, -1)
     assert len(samples) == 1000
@@ -72,6 +79,7 @@ def test_chan_write(chan_a, chan_b):
 
 
 def test_chan_get_samples(chan_a, chan_b):
+    """Simple channel data acquisition via get_samples()."""
     samples = chan_a.get_samples(1000)
     assert len(samples) == 1000
     assert len(samples[0]) == 2
@@ -82,6 +90,7 @@ def test_chan_arbitrary(chan_a, chan_b):
 
 
 def test_chan_constant(chan_a, chan_b):
+    """Write a constant value to both channels of a device and verify reteurned data."""
     chan_a.mode = Mode.SVMI
     chan_a.constant(2)
     chan_b.mode = Mode.SVMI
@@ -101,6 +110,7 @@ def test_chan_constant(chan_a, chan_b):
 
 
 def test_chan_sine(chan_a, chan_b, device):
+    """Write a sine wave to both channels of a device and verify a matching, returned frequency."""
     try:
         import numpy as np
         from scipy import signal
