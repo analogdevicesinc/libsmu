@@ -798,6 +798,12 @@ int M1000_Device::sync()
 
 int M1000_Device::run(uint64_t samples)
 {
+	if (samples > 0 && m_session->m_continuous) {
+		// running device in noncontinuous mode while running session in
+		// continuous mode doesn't work
+		return -EBUSY;
+	}
+
 	// tell device to start sampling
 	int ret = ctrl_transfer(0x40, 0xC5, m_sam_per, m_sof_start, 0, 0, 100);
 	if (ret < 0)
