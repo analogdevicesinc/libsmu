@@ -162,7 +162,7 @@ def test_read_initial_data():
             tests.append(abs(round(x)) == 0)
 
     # old firmware versions exhibit bad data, newer versions should fix the issue
-    if device.fwver <= 2.09:
+    if float(device.fwver) <= 2.10:
         assert not all(tests)
     else:
         assert all(tests)

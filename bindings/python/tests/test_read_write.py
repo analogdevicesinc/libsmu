@@ -33,7 +33,7 @@ def device(session):
 @pytest.mark.interactive
 def test_read_write_overcurrent(device):
     """Verify overcurrent detection during data acquisition."""
-    if device.fwver < 2.07:
+    if float(device.fwver) < 2.07:
         pytest.skip("requires firmware >= 2.07")
 
     sys.stdout.write('\n')

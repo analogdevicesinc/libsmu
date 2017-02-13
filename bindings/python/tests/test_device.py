@@ -52,7 +52,7 @@ def test_write_calibration(session, device):
     session.scan()
     session.add_all()
     device = session.devices[0]
-    assert device.fwver < 2.06
+    assert float(device.fwver) < 2.06
     assert device.calibration == default_cal
     with pytest.raises(DeviceError):
         device.write_calibration(None)
@@ -134,7 +134,7 @@ def test_samba_mode(session, device):
     assert len(session.available_devices) == num_available_devices
     dev = session.available_devices[0]
     assert dev.serial == orig_serial
-    assert dev.fwver == 2.06
+    assert dev.fwver == '2.06'
 
 
 def test_ctrl_transfer(device):
