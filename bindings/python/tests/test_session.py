@@ -88,6 +88,16 @@ def test_destroy(session):
     assert not any(d.serial == serial for d in session.available_devices)
 
 
+def test_session_continuous(session):
+    """Test session continuous attribute."""
+    session.add_all()
+    assert not session.continuous
+    session.start(0)
+    assert session.continuous
+    session.end()
+    assert not session.continuous
+
+
 @pytest.mark.interactive
 def test_flash_firmware(session):
     session.add_all()
