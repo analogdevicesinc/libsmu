@@ -470,7 +470,7 @@ int M1000_Device::submit_out_transfer(libusb_transfer* t)
 		} catch (...) {
 			// Throw exception if we're not done writing all required
 			// samples or are in continuous mode.
-			if (m_out_sampleno < m_sample_count) {
+			if (m_sample_count == 0 || m_out_sampleno < m_sample_count) {
 				e_ptr = std::current_exception();
 				return -1;
 			}
