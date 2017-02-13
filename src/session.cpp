@@ -591,15 +591,12 @@ int Session::end()
 		m_continuous = false;
 	}
 
-	// Wait up to a second for devices to finish streaming before continuing if
-	// session has not been cancelled.
-	if (m_cancellation == 0) {
-		std::unique_lock<std::mutex> lk(m_lock);
-		auto now = std::chrono::system_clock::now();
-		auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
-		if (!res) {
-			DEBUG("%s: timed out waiting for completion\n", __func__);
-		}
+	// Wait up to a second for devices to finish streaming.
+	std::unique_lock<std::mutex> lk(m_lock);
+	auto now = std::chrono::system_clock::now();
+	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
+	if (!res) {
+		DEBUG("%s: timed out waiting for completion\n", __func__);
 	}
 
 	for (Device* dev: m_devices) {
