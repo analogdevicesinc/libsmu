@@ -266,7 +266,7 @@ cdef class Session:
             if e.message[:len(sample_drop_err)] == sample_drop_err:
                 if not self.ignore_dataflow:
                     raise SampleDrop(e.message)
-            if e.message[:len(write_timeout_err)] == write_timeout_err:
+            elif e.message[:len(write_timeout_err)] == write_timeout_err:
                 raise WriteTimeout(e.message)
             else:
                 raise SessionError(str(e))
@@ -654,7 +654,7 @@ cdef class SessionDevice(Device):
             if e.message[:len(sample_drop_err)] == sample_drop_err:
                 if not self.ignore_dataflow:
                     raise SampleDrop(e.message)
-            if e.message[:len(write_timeout_err)] == write_timeout_err:
+            elif e.message[:len(write_timeout_err)] == write_timeout_err:
                 raise WriteTimeout(e.message)
             else:
                 raise DeviceError(str(e))
