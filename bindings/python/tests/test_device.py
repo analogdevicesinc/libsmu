@@ -18,13 +18,14 @@ def session(request):
 
 @pytest.fixture(scope='module')
 def device(session):
+    if not len(session.available_devices):
+        sys.stdout.write('\n')
+        prompt('plug in a device')
+        session.scan()
     return session.available_devices[0]
 
 
-@pytest.mark.interactive
 def test_device_serial(device):
-    sys.stdout.write('\n')
-    prompt('make sure at least one device is plugged in')
     assert device.serial
 
 
