@@ -707,6 +707,10 @@ int M1000_Device::set_serial(std::string serial)
 	int ret = 0;
 	unsigned char serial_data[36] = {0};
 
+	// This method may not be called while the session is active.
+	if (m_session->m_active_devices)
+		return -EBUSY;
+
 	// setting custom serial numbers is only supported in firmware versions 2.10 and on
 	if (atof(m_fwver.c_str()) < 2.10)
 		return -1;

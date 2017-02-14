@@ -331,7 +331,7 @@ namespace smu {
 		/// string that causes the device to reset back to its original serial number.
 		/// @return On success, 0 is returned.
 		/// @return On error, a negative integer is returned relating to the error status.
-		/// This method should not be called while the session is active.
+		/// This method may not be called while the session is active.
 		virtual int set_serial(std::string serial = "") = 0;
 
 		/// @brief Set the mode of the specified channel.
