@@ -728,8 +728,15 @@ int M1000_Device::set_serial(std::string serial)
 
 	// set serial number
 	ret = ctrl_transfer(0x40, 0x05, 0, 0, (unsigned char*)&serial_data, 36, 100);
+	if (ret < 0)
+		return -libusb_to_errno(ret);
 
-	return libusb_errno_or_zero(ret);
+	// update serial number for device in the session available list
+	ret = m_session->scan();
+
+	if (ret < 0)
+		return ret;
+	return 0;
 }
 
 int M1000_Device::set_mode(unsigned channel, unsigned mode, bool restore)
