@@ -428,6 +428,8 @@ cdef class Device:
         """Return device's serial number."""
         def __get__(self):
             return self._device.m_serial.decode()
+        def __set__(self, serial):
+            self._device.set_serial(serial)
 
     property fwver:
         """Return device's firmware revision."""

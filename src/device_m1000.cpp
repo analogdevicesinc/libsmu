@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <condition_variable>
@@ -699,6 +700,32 @@ Signal* M1000_Device::signal(unsigned channel, unsigned signal)
 	} else {
 		return NULL;
 	}
+}
+
+int M1000_Device::set_serial(std::string serial)
+{
+	int ret = 0;
+	unsigned char serial_data[36] = {0};
+
+	// setting custom serial numbers is only supported in firmware versions 2.10 and on
+	if (atof(m_fwver.c_str()) < 2.10)
+		return -1;
+
+	std::vector<unsigned char> serial_prefix;
+	if (serial.length() > 0) {
+		serial_prefix = {0x01, 0xee, 0x02, 0xdd};
+	} else {
+		// reset to built-in serial number by using an invalid prefix
+		serial_prefix = {0xde, 0xad, 0xbe, 0xef};
+	}
+
+	std::copy(serial_prefix.begin(), serial_prefix.end(), serial_data);
+	std::copy(serial.c_str(), serial.c_str() + 32, serial_data + 4);
+
+	// set serial number
+	ret = ctrl_transfer(0x40, 0x05, 0, 0, (unsigned char*)&serial_data, 36, 100);
+
+	return libusb_errno_or_zero(ret);
 }
 
 int M1000_Device::set_mode(unsigned channel, unsigned mode, bool restore)

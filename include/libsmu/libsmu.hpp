@@ -326,6 +326,13 @@ namespace smu {
 		/// as 2.06 will be coerced to 2.6.0, i.e. major=2, minor=6, patch=0.
 		virtual int fwver_sem(std::array<unsigned, 3>& components) = 0;
 
+		/// @brief Set a custom serial number for the device.
+		/// @param serial The custom serial number to set.
+		/// @return On success, 0 is returned.
+		/// @return On error, a negative integer is returned relating to the error status.
+		/// This method should not be called while the session is active.
+		virtual int set_serial(std::string serial) = 0;
+
 		/// @brief Set the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
 		/// @param mode An unsigned integer relating to the requested mode.
