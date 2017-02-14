@@ -429,7 +429,10 @@ cdef class Device:
         def __get__(self):
             return self._device.m_serial.decode()
         def __set__(self, serial):
-            self._device.set_serial(serial)
+            cdef int ret = 0
+            ret = self._device.set_serial(serial)
+            if ret < 0:
+                raise DeviceError('failed setting custom serial number')
 
     property fwver:
         """Return device's firmware revision."""
