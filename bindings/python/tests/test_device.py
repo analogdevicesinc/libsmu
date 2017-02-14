@@ -6,7 +6,7 @@ import tempfile
 import pytest
 
 from pysmu import Session, DeviceError
-from misc import prompt, OLD_FW, NEW_FW
+from misc import prompt, OLD_FW, NEW_FW, DEV_FW
 
 
 @pytest.fixture(scope='module')
@@ -27,6 +27,42 @@ def device(session):
 
 def test_device_serial(device):
     assert device.serial
+
+
+@pytest.mark.interactive
+def test_device_serial_custom(session, device):
+    assert len(session.available_devices) == 1
+
+    if float(device.fwver) < 2.10:
+        # update to the latest firmware version (that supports custom serial numbers)
+        session.add(device)
+        session.devices[0].flash_firmware(DEV_FW)
+        sys.stdout.write('\n')
+        prompt('unplug/replug the device')
+        session.scan()
+        device = session.available_devices[0]
+
+    # can't set serial numbers for devices in active sessions
+    session.add_all()
+    session.start(0)
+    with pytest.raises(DeviceError):
+        session.devices[0].serial = ''
+    session.end()
+
+    assert float(device.fwver) >= 2.10
+    orig_serial = device.serial
+    device.serial = 'foo'
+    device = session.available_devices[0]
+    assert device.serial == 'foo'
+    device.serial = ''
+    device = session.available_devices[0]
+    assert device.serial == orig_serial
+    device.serial = 'my device'
+    device = session.available_devices[0]
+    assert device.serial == 'my device'
+    device.serial = orig_serial
+    device = session.available_devices[0]
+    assert device.serial == orig_serial
 
 
 def test_device_fwver(device):
