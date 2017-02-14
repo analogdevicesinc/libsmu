@@ -208,7 +208,7 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 
 void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 {
-	std::lock_guard<std::mutex> lock(m_lock_devlist);
+	std::unique_lock<std::mutex> lock(m_lock_devlist);
 
 	// if no devices are specified, flash all supported devices on the system
 	if (devices.size() == 0)
@@ -306,6 +306,11 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		libusb_release_interface(usb_handle, 1);
 		libusb_close(usb_handle);
 	};
+
+	// Removing devices and putting them into SAM-BA mode triggers hotplug
+	// routines which can cause the m_lock_devlist to be reacquired if any
+	// hotplug callbacks exist.
+	lock.unlock();
 
 	// force all specified devices into SAM-BA mode
 	// TODO: revert to unsigned index when VS supports OpenMP 3.0
