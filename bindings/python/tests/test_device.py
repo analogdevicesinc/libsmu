@@ -50,7 +50,6 @@ def test_write_calibration(session, device):
     session.flash_firmware(OLD_FW)
     sys.stdout.write('\n')
     prompt('unplug/replug the device')
-    session.scan()
     session.add_all()
     device = session.devices[0]
     assert float(device.fwver) < 2.06
@@ -61,7 +60,6 @@ def test_write_calibration(session, device):
     # update to firmware supporting calibration
     session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
-    session.scan()
     session.add_all()
     device = session.devices[0]
 
@@ -98,7 +96,6 @@ def test_write_calibration(session, device):
     # make sure calibration data survives firmware updates
     session.flash_firmware(NEW_FW)
     prompt('unplug/replug the device')
-    session.scan()
     session.add_all()
     device = session.devices[0]
     assert new_cal == device.calibration
