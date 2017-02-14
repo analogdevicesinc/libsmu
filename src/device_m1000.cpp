@@ -379,8 +379,10 @@ uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 				while (!m_out_samples_q[channel]->pop(val)) {
 					auto clk_end = std::chrono::high_resolution_clock::now();
 					auto clk_diff = std::chrono::duration_cast<std::chrono::milliseconds>(clk_end - clk_start);
-					if (clk_diff.count() > m_write_timeout)
-						throw std::system_error(EBUSY, std::system_category(), "data write timeout, no available samples");
+					if (clk_diff.count() > m_write_timeout) {
+						DEBUG("%s: waited %i ms for samples to write\n", __func__, (int)m_write_timeout);
+						clk_start = std::chrono::high_resolution_clock::now();
+					}
 					std::this_thread::sleep_for(std::chrono::microseconds(1));
 				}
 			}
