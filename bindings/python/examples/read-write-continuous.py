@@ -54,7 +54,7 @@ if __name__ == '__main__':
         # Start a continuous session.
         session.start(0)
         i = 0
-        num_samples = 1000
+        num_samples = session.queue_size + 1
         start = time.time()
 
         while True:

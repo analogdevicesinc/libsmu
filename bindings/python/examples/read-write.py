@@ -49,7 +49,7 @@ if __name__ == '__main__':
         #chan_b.mode = Mode.SIMV
 
         i = 0
-        num_samples = 1000
+        num_samples = session.queue_size + 1
         start = time.time()
 
         while True:
