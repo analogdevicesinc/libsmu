@@ -146,6 +146,7 @@ namespace smu {
 		uint16_t encode_out(unsigned chan, bool peek = false);
 
 		/// @brief Read ADM1177 status.
+		/// See http://www.analog.com/media/en/technical-documentation/data-sheets/ADM1177.pdf for technical documentation.
 		/// @return If an overcurrent event occurred in the most recent data request, 1 is returned.
 		/// @return If no overcurrent event occurred, 0 is returned.
 		/// @return On error, a negative integer is returned relating to the error status.
