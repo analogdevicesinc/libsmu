@@ -359,6 +359,8 @@ int Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		throw std::runtime_error("failed to scan for devices in SAM-BA mode");
 	else if (device_count == 0)
 		throw std::runtime_error("no devices found in SAM-BA mode");
+	else if (device_count < (int)devices.size())
+		throw std::runtime_error("failed forcing devices into SAM-BA mode");
 
 	// flash all devices in SAM-BA mode
 	#pragma omp parallel for
