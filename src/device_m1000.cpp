@@ -127,15 +127,15 @@ int M1000_Device::read_adm1177()
 	} else if (ret == 1) {
 		// Check the HS_OC bit of the status byte to see if an overcurrent
 		// event occurred during the most recent data acquisition.
-		unsigned status_bit = 0x4;
+		unsigned alert_bit = 0x4;
 
 		if (atof(m_fwver.c_str()) >= 2.11) {
 			// Check the HS_ALERT bit of the status byte to see if an overcurrent
 			// event occurred during the most recent data acquisition.
-			status_bit = 0x8;
+			alert_bit = 0x8;
 		}
 
-		if ((status & status_bit) == 0)
+		if ((status & alert_bit) == 0)
 			ret = 0;
 	} else {
 		ret = -libusb_to_errno(ret);
