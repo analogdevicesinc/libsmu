@@ -231,8 +231,9 @@ int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
 	return samba_devs.size();
 }
 
-void Session::flash_firmware(std::string file, std::vector<Device*> devices)
+int Session::flash_firmware(std::string file, std::vector<Device*> devices)
 {
+	int device_count = 0;
 	std::unique_lock<std::mutex> lock(m_lock_devlist);
 
 	// if no devices are specified, flash all supported devices on the system
@@ -353,16 +354,15 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	}
 
 	std::vector<libusb_device*> samba_devs;
-	if (scan_samba_devs(samba_devs) < 0) {
+	device_count = scan_samba_devs(samba_devs);
+	if (device_count < 0)
 		throw std::runtime_error("failed to scan for devices in SAM-BA mode");
-	} else if (samba_devs.size() == 0) {
+	else if (device_count == 0)
 		throw std::runtime_error("no devices found in SAM-BA mode");
-	}
 
 	// flash all devices in SAM-BA mode
-	// TODO: revert to unsigned index when VS supports OpenMP 3.0
 	#pragma omp parallel for
-	for (int i = 0; i < (int)samba_devs.size(); i++) {
+	for (int i = 0; i < device_count; i++) {
 		try {
 			flash_device(samba_devs[i]);
 		} catch (...) {
@@ -376,6 +376,8 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		e_ptr = nullptr;
 		std::rethrow_exception(new_e_ptr);
 	}
+
+	return device_count;
 }
 
 int Session::destroy(Device *dev)

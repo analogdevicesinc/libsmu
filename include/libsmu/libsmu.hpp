@@ -218,8 +218,9 @@ namespace smu {
 		/// @param file Path to firmware file.
 		/// @param devices The device(s) targeted for updating. If empty or
 		/// unset, all the attached devices in SAM-BA mode are updated.
+		/// @return On success, the number of devices flashed is returned.
 		/// @throws std::runtime_error for various USB failures causing aborted flashes.
-		void flash_firmware(std::string file, std::vector<Device*> devices = {});
+		int flash_firmware(std::string file, std::vector<Device*> devices = {});
 
 		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();
