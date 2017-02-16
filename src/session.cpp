@@ -208,7 +208,6 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 
 int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
 {
-	int ret = 0;
 	unsigned int device_count;
 	libusb_device **usb_devs;
 	struct libusb_device_descriptor usb_info;
@@ -229,7 +228,7 @@ int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
 	}
 
 	libusb_free_device_list(usb_devs, 1);
-	return ret;
+	return samba_devs.size();
 }
 
 void Session::flash_firmware(std::string file, std::vector<Device*> devices)
