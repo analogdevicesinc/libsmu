@@ -208,6 +208,12 @@ namespace smu {
 		/// @brief Flush the read and write queues for all devices in a session.
 		void flush();
 
+		/// @brief Scan system for devices in SAM-BA mode.
+		/// @param samba_devs Vector of libusb devices in SAM-BA mode. 
+		/// @return On success, the number of devices found is returned.
+		/// @return On error, a negative errno code is returned.
+		int scan_samba_devs(std::vector<libusb_device*>& samba_devs);
+
 		/// @brief Update firmware for the target device(s).
 		/// @param file Path to firmware file.
 		/// @param devices The device(s) targeted for updating. If empty or

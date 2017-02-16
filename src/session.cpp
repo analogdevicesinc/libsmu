@@ -206,6 +206,32 @@ static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data
 	}
 }
 
+int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
+{
+	int ret = 0;
+	unsigned int device_count;
+	libusb_device **usb_devs;
+	struct libusb_device_descriptor usb_info;
+	std::vector<uint16_t> samba_device_id;
+
+	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
+	if (device_count < 0)
+		return -libusb_to_errno(device_count);
+
+	// Walk the list of USB devices looking for devices in SAM-BA mode.
+	for (unsigned int i = 0; i < device_count; i++) {
+		libusb_get_device_descriptor(usb_devs[i], &usb_info);
+		samba_device_id = {usb_info.idVendor, usb_info.idProduct};
+		if (std::find(SAMBA_DEVICES.begin(), SAMBA_DEVICES.end(), samba_device_id)
+				!= SAMBA_DEVICES.end()) {
+			samba_devs.push_back(usb_devs[i]);
+		}
+	}
+
+	libusb_free_device_list(usb_devs, 1);
+	return ret;
+}
+
 void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 {
 	std::unique_lock<std::mutex> lock(m_lock_devlist);
@@ -327,30 +353,10 @@ void Session::flash_firmware(std::string file, std::vector<Device*> devices)
 		}
 	}
 
-	unsigned int device_count;
-	libusb_device **usb_devs;
-	std::vector<libusb_device *> samba_devs;
-	struct libusb_device_descriptor usb_info;
-	std::vector<uint16_t> samba_device_id;
-
-	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
-	if (device_count <= 0) {
-		throw std::runtime_error("error enumerating USB devices");
-	}
-
-	// Walk the list of USB devices looking for devices in SAM-BA mode.
-	for (unsigned int i = 0; i < device_count; i++) {
-		libusb_get_device_descriptor(usb_devs[i], &usb_info);
-		samba_device_id = {usb_info.idVendor, usb_info.idProduct};
-		if (std::find(SAMBA_DEVICES.begin(), SAMBA_DEVICES.end(), samba_device_id)
-				!= SAMBA_DEVICES.end()) {
-			samba_devs.push_back(usb_devs[i]);
-		}
-	}
-
-	libusb_free_device_list(usb_devs, 1);
-
-	if (samba_devs.size() == 0) {
+	std::vector<libusb_device*> samba_devs;
+	if (scan_samba_devs(samba_devs) < 0) {
+		throw std::runtime_error("failed to scan for devices in SAM-BA mode");
+	} else if (samba_devs.size() == 0) {
 		throw std::runtime_error("no devices found in SAM-BA mode");
 	}
 
