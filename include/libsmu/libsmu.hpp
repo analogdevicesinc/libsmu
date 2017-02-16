@@ -210,10 +210,8 @@ namespace smu {
 
 		/// @brief Update firmware for the target device(s).
 		/// @param file Path to firmware file.
-		/// @param devices The device(s) targeted for updating.
-		/// If device is NULL the first attached device in a session will be
-		/// used instead. If no configured devices are found, devices in SAM-BA
-		/// bootloader mode are searched for and the first matching device is used.
+		/// @param devices The device(s) targeted for updating. If empty or
+		/// unset, all the attached devices in SAM-BA mode are updated.
 		/// @throws std::runtime_error for various USB failures causing aborted flashes.
 		void flash_firmware(std::string file, std::vector<Device*> devices = {});
 
