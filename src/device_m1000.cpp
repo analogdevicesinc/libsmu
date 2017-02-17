@@ -436,7 +436,7 @@ void M1000_Device::on() {
 /// get current microframe index, set m_sof_start to be time in the future
 void M1000_Device::sync() {
 	libusb_control_transfer(m_usb, 0xC0, 0x6F, 0, 0, (unsigned char*)&m_sof_start, 2, 100);
-	m_sof_start = (m_sof_start+0xff)&0x3c00;
+	m_sof_start = (((m_sof_start >> 3) + 0x1f) & 0x7FF) << 3;
 }
 
 /// command device to start sampling

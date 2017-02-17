@@ -398,11 +398,13 @@ void Session::wait_for_completion() {
 void Session::start(uint64_t nsamples) {
 	m_min_progress = 0;
 	m_cancellation = 0;
-	for (auto i: m_devices) {
+	for (auto i : m_devices) {
 		i->on();
 		if (m_devices.size() > 1) {
 			i->sync();
 		}
+	}
+	for (auto i : m_devices) {
 		i->start_run(nsamples);
 		m_active_devices += 1;
 	}
