@@ -5,7 +5,7 @@
 //   Ian Daniher <itdaniher@gmail.com>
 
 #ifdef USE_CUSTOM_GETOPT
-#include "getopt.h"
+#include "getopt_internal.h"
 #else
 #include <getopt.h>
 #endif
