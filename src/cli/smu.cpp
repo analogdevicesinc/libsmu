@@ -4,11 +4,15 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifdef _WIN32
+#ifdef USE_CUSTOM_GETOPT
 #include "getopt.h"
-#include <io.h>
 #else
 #include <getopt.h>
+#endif
+
+#if _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
 #endif
 
