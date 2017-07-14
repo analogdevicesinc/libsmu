@@ -9,7 +9,7 @@ include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 if(NOT GETOPT_FOUND)
 	# use internal getopt implementation
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src/cli)
-	set(GETOPT_C_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../src/cli/getopt.c)
+	set(GETOPT_C_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../src/cli/getopt_internal.c)
 endif()
 
 add_executable(hotplug hotplug.cpp ${GETOPT_C_FILE})
