@@ -4,15 +4,15 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#ifdef WIN32
-#define _USE_MATH_DEFINES // needed for VS to define math constants (e.g. M_PI)
-#endif
 
 #include <cmath>
 #include <vector>
 
 #include "debug.hpp"
 #include <libsmu/libsmu.hpp>
+#include <boost/math/constants/constants.hpp>
+
+const double PI = boost::math::constants::pi<double>();
 
 using namespace smu;
 
@@ -141,7 +141,7 @@ float Signal::get_sample()
 					return m_src_v2 - floorf(norm_phase * 10) * peak_to_peak / 9;
 
 				case SINE:
-					return m_src_v1 + (1 + cos(norm_phase * 2 * M_PI)) * peak_to_peak / 2;
+                    return m_src_v1 + (1 + cos(norm_phase * 2 * PI)) * peak_to_peak / 2;
 
 				case TRIANGLE:
 					return m_src_v1 + fabs(1 - norm_phase * 2) * peak_to_peak;
