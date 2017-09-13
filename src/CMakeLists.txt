@@ -8,7 +8,7 @@ endif()
 
 if(APPLE)
 	# build universal binaries by default
-	set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
+	set(CMAKE_OSX_ARCHITECTURES "x86_64")
 endif()
 
 # use pkg-config for everything that's not Windows

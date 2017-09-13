@@ -69,7 +69,7 @@ before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
 
 install:
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/cb21e9ac30e47e3ea161c4247a6397967f83c83f/Formula/libusb.rb --universal ; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install ${PYTHON} || true; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake || true; fi
 
