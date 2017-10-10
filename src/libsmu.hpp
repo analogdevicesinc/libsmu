@@ -443,7 +443,10 @@ public:
 				else
 					max_int_phase = int_period;
 
-				return m_src_v2 - int_phase / max_int_phase * peak_to_peak;
+                auto nphase = int_phase / max_int_phase;
+                if(nphase < 0)
+                    nphase += 1;
+                return m_src_v2 - nphase * peak_to_peak;
 			}
 
 			case SRC_STAIRSTEP:
