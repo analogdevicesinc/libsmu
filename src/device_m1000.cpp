@@ -515,12 +515,22 @@ int M1000_Device::submit_in_transfer(libusb_transfer* t)
 	return -1;
 }
 
-ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout)
+ssize_t M1000_Device::read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout,bool skipsamples)
 {
 	buf.clear();
 	std::array<float, 4> sample = {};
 	uint32_t remaining_samples = samples;
-
+	
+	if(skipsamples){
+		if(m_in_samples_avail > samples){
+			int s = m_in_samples_avail-samples;
+        	for(int i=0;i<s;i++){
+           		m_in_samples_q.pop(sample);
+        	}
+			m_in_samples_avail -= s;
+		}
+    }
+	
 	auto clk_start = std::chrono::high_resolution_clock::now();
 	while (remaining_samples > 0) {
 		// we can only grab up to the amount of samples that are available

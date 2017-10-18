@@ -336,7 +336,7 @@ cdef class Session:
         except RuntimeError as e:
             raise SessionError(str(e))
 
-    def read(self, size_t num_samples, int timeout=0):
+    def read(self, size_t num_samples, int timeout=0,skipsamples=False):
         """Acquire all signal samples from all device in the session.
 
         Args:
@@ -350,7 +350,7 @@ cdef class Session:
         """
         samples = []
         for dev in self.devices:
-            samples.append(dev.read(num_samples, timeout=timeout))
+            samples.append(dev.read(num_samples, timeout=timeout,skipsamples=skipsamples))
         return samples
 
     def write(self, data, bint cyclic=False):
@@ -595,7 +595,7 @@ cdef class SessionDevice(Device):
         def __get__(self):
             return self._device.m_overcurrent
 
-    def read(self, size_t num_samples, int timeout=0):
+    def read(self, size_t num_samples, int timeout=0,bint skipsamples = False):
         """Acquire all signal samples from a device.
 
         Args:
@@ -611,7 +611,7 @@ cdef class SessionDevice(Device):
         cdef vector[array[float, cpp_libsmu.four]] buf
 
         try:
-            ret = self._device.read(buf, num_samples, timeout)
+            ret = self._device.read(buf, num_samples, timeout,skipsamples)
         except SystemError as e:
             raise DeviceError(str(e))
         except RuntimeError as e:

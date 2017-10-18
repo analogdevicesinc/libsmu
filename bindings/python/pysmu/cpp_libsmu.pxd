@@ -56,7 +56,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int get_mode(int channel)
         int fwver_sem(array[unsigned, three]& components)
         int set_serial(string serial)
-        ssize_t read(vector[array[float, four]]& buf, size_t samples, int timeout) except +
+        ssize_t read(vector[array[float, four]]& buf, size_t samples, int timeout, bint skipsamples) except +
         int write(vector[float]& buf, unsigned channel, bint cyclic) except +
         void flush(int channel, bint read)
         int ctrl_transfer(

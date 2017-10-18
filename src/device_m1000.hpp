@@ -57,7 +57,7 @@ namespace smu {
 		int get_mode(unsigned channel) override;
 		int fwver_sem(std::array<unsigned, 3>& components) override;
 		int set_serial(std::string serial) override;
-		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout) override;
+		ssize_t read(std::vector<std::array<float, 4>>& buf, size_t samples, int timeout,bool skipsamples) override;
 		int write(std::vector<float>& buf, unsigned channel, bool cyclic) override;
 		void flush(int channel, bool read) override;
 		int sync() override;
