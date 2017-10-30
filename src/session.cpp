@@ -587,7 +587,7 @@ int Session::run(uint64_t samples)
 		// continuous mode doesn't work
 		return -EBUSY;
 	}
-
+    m_samples = samples;
 	ret = start(samples);
 	if (ret)
 		return ret;
@@ -608,7 +608,8 @@ int Session::end()
 	// Wait up to a second for devices to finish streaming.
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(1), [&]{ return m_active_devices == 0; });
+    uint64_t waitTime = (m_samples/m_sample_rate + 1) +1;
+    auto res = m_completion.wait_until(lk, now + std::chrono::seconds(waitTime), [&]{ return m_active_devices == 0; });
 	if (!res) {
 		DEBUG("%s: timed out waiting for completion\n", __func__);
 	}

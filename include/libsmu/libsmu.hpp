@@ -129,6 +129,8 @@ namespace smu {
 		/// devices are added to a session otherwise they'll use the default.
 		unsigned m_queue_size = 10000;
 
+
+        unsigned m_samples;
 		/// @brief Scan system for all supported devices.
 		/// Updates the list of available, supported devices for the session
 		/// (m_available_devices).
