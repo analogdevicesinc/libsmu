@@ -65,6 +65,7 @@ namespace smu {
 		int read_calibration() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
+        void set_led(LED led,bool status) override;
 
 	protected:
 		friend class Session;
@@ -191,4 +192,5 @@ namespace smu {
 		int cancel() override;
 		int run(uint64_t samples) override;
 	};
+
 }

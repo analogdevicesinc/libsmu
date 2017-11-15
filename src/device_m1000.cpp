@@ -1032,3 +1032,25 @@ int M1000_Device::samba_mode()
 		return -libusb_to_errno(ret);
 	return 0;
 }
+
+void M1000_Device::set_led(LED led,bool status){
+
+    unsigned req;
+
+    if(status){ // on
+        req = 0x50;
+    }
+    else{//off
+        req = 0x51;
+    }
+
+    if(led == LED::ALL){
+        //toggle all LEDs together
+        ctrl_transfer(0x40, req, LED::RED, 0, 0, 0, 100);
+        ctrl_transfer(0x40, req, LED::GREEN, 0, 0, 0, 100);
+        ctrl_transfer(0x40, req, LED::BLUE, 0, 0, 0, 100);
+    }
+    else{
+        ctrl_transfer(0x40, req, led, 0, 0, 0, 100);
+    }
+}

@@ -90,6 +90,13 @@ enum Mode {
 	SIMV, ///< Source current, measure voltage.
 };
 
+enum LED{
+    RED = 47,
+    GREEN = 29,
+    BLUE = 28,
+    ALL = 0
+};
+
 namespace smu {
 	class Device;
 	class Signal;
@@ -429,6 +436,11 @@ namespace smu {
 		/// @brief Overcurrent status for the most recent data request.
 		///   Is 1 if an overcurrent event occurred in the most recent data request, 0 otherwise.
 		int m_overcurrent = 0;
+
+        /// @brief Set device LEDs on or off.
+        /// @param led Specific LED (red, green, blue) to control.
+        /// @param status boolean on or off
+        virtual void set_led(LED led,bool status) = 0;
 
 	protected:
 		/// @brief Device constructor.
