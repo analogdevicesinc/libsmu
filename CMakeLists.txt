@@ -6,6 +6,8 @@ else()
 endif()
 project(libsmu CXX C)
 
+set (CMAKE_CXX_STANDARD 11)
+
 # libsmu versioning
 set(LIBSMU_VERSION_MAJOR 0)
 set(LIBSMU_VERSION_MINOR 8)

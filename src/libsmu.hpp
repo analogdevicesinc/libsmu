@@ -17,6 +17,7 @@
 #include <thread>
 #include <cmath>
 #include <vector>
+#include <functional>
 
 using std::vector;
 
