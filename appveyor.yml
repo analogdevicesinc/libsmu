@@ -94,14 +94,12 @@ build_script:
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   # gtest libraries for test executables
-  - if(%CONFIGURATION%==Release){
-        copy ..\32\googletest-build\googlemock\gtest\%CONFIGURATION%\gtest.* c:\libsmu\32
-        copy ..\64\googletest-build\googlemock\gtest\%CONFIGURATION%\gtest.* c:\libsmu\64
-    }
-    else{
-        copy ..\32\googletest-build\googlemock\gtest\%CONFIGURATION%\gtestd.* c:\libsmu\32
-        copy ..\64\googletest-build\googlemock\gtest\%CONFIGURATION%\gtestd.* c:\libsmu\64
-    }
+  - ps: |
+      if (Test-Path "..\32\googletest-build\googlemock\gtest\Release\gtest.*") { copy ..\32\googletest-build\googlemock\gtest\Release\gtest.* c:\libsmu\32 }
+      if (Test-Path "..\64\googletest-build\googlemock\gtest\Release\gtest.*") { copy ..\64\googletest-build\googlemock\gtest\Release\gtest.* c:\libsmu\64 }
+      if (Test-Path "..\32\googletest-build\googlemock\gtest\Debug\gtestd.*") { copy ..\32\googletest-build\googlemock\gtest\Debug\gtestd.* c:\libsmu\32 }
+      if (Test-Path "..\64\googletest-build\googlemock\gtest\Debug\gtestd.*") { copy ..\64\googletest-build\googlemock\gtest\Debug\gtestd.* c:\libsmu\64 }
+  
   # executables including examples and tests
   - copy ..\32\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\32
   - copy ..\64\src\cli\%CONFIGURATION%\smu.exe c:\libsmu\64
