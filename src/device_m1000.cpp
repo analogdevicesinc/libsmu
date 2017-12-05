@@ -1032,3 +1032,12 @@ int M1000_Device::samba_mode()
 		return -libusb_to_errno(ret);
 	return 0;
 }
+
+int M1000_Device::set_led(unsigned leds){
+	if(leds > 7)
+		return -1;
+
+	ctrl_transfer(0x40,0x03,leds,0,0,0,100);
+
+	return 0;
+}
