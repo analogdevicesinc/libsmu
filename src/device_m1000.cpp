@@ -344,7 +344,7 @@ int M1000_Device::configure(uint32_t sampleRate)
 	// convert back to the actual sample rate
 	set_sample_rate = round((1.0 / sample_time) / 2.0);
 
-    unsigned transfers = 4;
+    unsigned transfers = 2;
 	m_packets_per_transfer = ceil(BUFFER_TIME / (sample_time * chunk_size) / transfers);
 	m_samples_per_transfer = m_packets_per_transfer * IN_SAMPLES_PER_PACKET;
 
