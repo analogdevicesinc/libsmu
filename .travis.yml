@@ -74,8 +74,10 @@ install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake || true; fi
 
   # for python bindings
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo easy_install pip; fi
   - ${PIP} install --only-binary ":all:" --disable-pip-version-check --upgrade pip
-  - ${PIP} install --only-binary ":all:" wheel cython
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo ${PIP} install --only-binary ":all:" wheel cython ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PIP} install --only-binary ":all:" wheel cython ; fi
 
 script:
   - mkdir -p build && cd build
