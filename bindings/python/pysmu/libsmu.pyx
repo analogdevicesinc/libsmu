@@ -487,32 +487,14 @@ cdef class Device:
         if ret:
             raise DeviceError('failed to enable SAM-BA mode', ret)
 
-    def set_led(self, led, status):
-        """Set device LEDs on or off.
+    def set_led(self, leds):
+        """Set device LEDs.
 
         Args:
-            led: specific LED (red, green, blue) to control
-            status (bool): on or off
-
-        Raises: ValueError if an invalid LED is passed.
+            leds: an integer number, the bits of the number represents the states of the leds (1-on 0-off) in order (RGB or DS3,DS2,DS1 on rev F) 
         Raises: IOError on USB failures.
         """
-        if led not in LED:
-            raise ValueError('invalid LED: {}'.format(led))
-
-        if status:
-            # on
-            req = 0x50
-        else:
-            # off
-            req = 0x51
-
-        if led == LED.all:
-            # toggle all LEDs together
-            for x in (l for l in LED if l != LED.all):
-                self.ctrl_transfer(0x40, req, x.value, 0, 0, 0, 100)
-        else:
-            self.ctrl_transfer(0x40, req, led.value, 0, 0, 0, 100)
+        self._device.set_led(led)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):

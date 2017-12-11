@@ -65,7 +65,7 @@ namespace smu {
 		int read_calibration() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
-        void set_led(LED led,bool status) override;
+        int set_led(unsigned leds) override;
 
 	protected:
 		friend class Session;
@@ -184,7 +184,7 @@ namespace smu {
 
 		// Override virtual methods of the base Device class.
 		int get_default_rate() override;
-		int claim() override;
+        int claim() override;
 		int release() override;
 		int configure(unsigned sampleRate) override;
 		int on() override;

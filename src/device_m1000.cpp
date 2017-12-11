@@ -1033,24 +1033,11 @@ int M1000_Device::samba_mode()
 	return 0;
 }
 
-void M1000_Device::set_led(LED led,bool status){
+int M1000_Device::set_led(unsigned leds){
+	if(leds > 7)
+		return -1;
 
-    unsigned req;
+	ctrl_transfer(0x40,0x03,leds,0,0,0,100);
 
-    if(status){ // on
-        req = 0x50;
-    }
-    else{//off
-        req = 0x51;
-    }
-
-    if(led == LED::ALL){
-        //toggle all LEDs together
-        ctrl_transfer(0x40, req, LED::RED, 0, 0, 0, 100);
-        ctrl_transfer(0x40, req, LED::GREEN, 0, 0, 0, 100);
-        ctrl_transfer(0x40, req, LED::BLUE, 0, 0, 0, 100);
-    }
-    else{
-        ctrl_transfer(0x40, req, led, 0, 0, 0, 100);
-    }
+	return 0;
 }

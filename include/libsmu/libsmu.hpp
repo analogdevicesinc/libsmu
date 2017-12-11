@@ -438,11 +438,10 @@ namespace smu {
 		/// @brief Overcurrent status for the most recent data request.
 		///   Is 1 if an overcurrent event occurred in the most recent data request, 0 otherwise.
 		int m_overcurrent = 0;
-
-        /// @brief Set device LEDs on or off.
-        /// @param led Specific LED (red, green, blue) to control.
-        /// @param status boolean on or off
-        virtual void set_led(LED led,bool status) = 0;
+		
+		/// @brief Set the leds states for device.
+        /// @param leds value between [0, 7], each bit of the value represents the state of an LED (1-on 0-off) in this order (RGB or DS3,DS2,DS1 on rev F hardware)
+        virtual int set_led(unsigned leds) = 0;
 
 	protected:
 		/// @brief Device constructor.

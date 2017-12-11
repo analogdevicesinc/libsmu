@@ -22,7 +22,5 @@ if __name__ == '__main__':
     while True:
         val = randrange(0, 8)
         for dev in session.devices:
-            dev.set_led(LED.red, (val & 0b001))
-            dev.set_led(LED.green, (val & 0b010))
-            dev.set_led(LED.blue, (val & 0b100))
+            dev.set_led(val)
         time.sleep(.25)
