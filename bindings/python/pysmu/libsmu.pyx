@@ -494,7 +494,7 @@ cdef class Device:
             leds: an integer number, the bits of the number represents the states of the leds (1-on 0-off) in order (RGB or DS3,DS2,DS1 on rev F) 
         Raises: IOError on USB failures.
         """
-        self._device.set_led(led)
+        self._device.set_led(leds)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
