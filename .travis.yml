@@ -22,11 +22,12 @@ before_install:
 install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python || true; fi
-
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo easy_install pip; fi
 
   # for python bindings
   - pip install --disable-pip-version-check --upgrade pip
-  - pip install wheel cython
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo pip install wheel cython; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then pip install wheel cython; fi
 
 script:
   - mkdir build
