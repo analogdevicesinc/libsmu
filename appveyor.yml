@@ -160,6 +160,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win32.whl | % { pip install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%.win32-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
 
   ## build 32 bit python3.4 bindings
   # add python dirs to PATH
@@ -191,6 +194,7 @@ build_script:
   # build exe from python script
   - "build_exe -b 0 -d exe32 bin/pysmu"
   - rmdir /q /s bin\__pycache__
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
 
   ## build 32 bit python3.5 bindings
   # add python dirs to PATH
@@ -216,6 +220,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win32.whl | % { pip install "$_" }
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win32-py.zip" pysmu-*win32-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win32.zip"
 
   ## build 64 bit python2.7 bindings
   # add python dirs to PATH
@@ -241,6 +248,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win_amd64.whl | % { pip install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
 
   ## build 64 bit python3.4 bindings
   # add python dirs to PATH
@@ -272,6 +282,7 @@ build_script:
   # build exe from python script
   - "build_exe -b 0 -d exe64 bin/pysmu"
   - rmdir /q /s bin\__pycache__
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
 
   ## build 64 bit python3.5 bindings
   # add python dirs to PATH
@@ -297,6 +308,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win_amd64.whl | % { pip install "$_" }
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win-amd64-py.zip" pysmu-*win-amd64-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win-amd64.zip"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
@@ -367,15 +381,14 @@ build_script:
   - copy c:\projects\libsmu\dist\m1k-winusbx86.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
   - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  # gtest libraries for test executables
-  - if(%CONFIGURATION%==Release){
-        copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-    }
-    else{
-        copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-    }
+   # gtest libraries for test executables
+  - ps: |
+      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
+      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
   - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # batch file to run test suite
+  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\libusb-mingw\MinGW32\static\libusb-1.0.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win32"
   - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
@@ -390,14 +403,13 @@ build_script:
   - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   # gtest libraries for test executables
-  - if(%CONFIGURATION%==Release){
-        copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-    }
-    else{
-        copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-    }
+  - ps: |
+      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
+      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
   - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+   # batch file to run test suite
+  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\libusb-mingw64\libusb\.libs\libusb-1.0.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win64"
   - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
@@ -429,6 +441,9 @@ build_script:
   - "python2 setup.py bdist --format zip --bdist-base=%PWDD%"
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-mingw.whl | % { pip2 install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%-mingw-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
 
   ## build 32 bit python 3.6 bindings
   - set PATH=C:\\msys64\\mingw32\\lib\\python3.6;C:\\msys64\\mingw32\\lib\\python3.6\\Tools\\scripts;%PATH%
@@ -450,6 +465,10 @@ build_script:
   - "python3 setup.py bdist --format zip --bdist-base=%PWDD%"
   # test local install
   - ps: Get-ChildItem dist/*-cp36-*-mingw.whl | % { pip3 install "$_" }
+   # Create a folder to keep pysmu for all the python versions
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%-mingw-py.zip" pysmu-*mingw-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*mingw.zip"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
