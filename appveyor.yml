@@ -1,6 +1,11 @@
 os: Visual Studio 2015
 clone_depth: 1
 
+environment:
+    MSYSTEM: MINGW64
+    # Tell msys2 to inherit the current directory when starting the shell
+    CHERE_INVOKING: 1
+
 configuration:
   - Release
   - Debug
@@ -155,6 +160,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win32.whl | % { pip install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%.win32-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
 
   ## build 32 bit python3.4 bindings
   # add python dirs to PATH
@@ -186,6 +194,7 @@ build_script:
   # build exe from python script
   - "build_exe -b 0 -d exe32 bin/pysmu"
   - rmdir /q /s bin\__pycache__
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
 
   ## build 32 bit python3.5 bindings
   # add python dirs to PATH
@@ -211,6 +220,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win32.whl | % { pip install "$_" }
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win32-py.zip" pysmu-*win32-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win32.zip"
 
   ## build 64 bit python2.7 bindings
   # add python dirs to PATH
@@ -236,6 +248,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp27-*-win_amd64.whl | % { pip install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
 
   ## build 64 bit python3.4 bindings
   # add python dirs to PATH
@@ -267,6 +282,7 @@ build_script:
   # build exe from python script
   - "build_exe -b 0 -d exe64 bin/pysmu"
   - rmdir /q /s bin\__pycache__
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
 
   ## build 64 bit python3.5 bindings
   # add python dirs to PATH
@@ -292,6 +308,9 @@ build_script:
 
   # test local install
   - ps: Get-ChildItem dist/*-cp35-*-win_amd64.whl | % { pip install "$_" }
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win-amd64-py.zip" pysmu-*win-amd64-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win-amd64.zip"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
@@ -320,6 +339,139 @@ build_script:
   - ren C:\libsmu-setup-x64.exe libsmu-%LIBSMU_VERSION%-setup-x64.exe
   - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x86.exe
   - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x64.exe
+
+  ##### MinGW build
+  - set OPT_PATH=C:\msys64\mingw32\bin;C:\msys64\mingw64\bin;
+  - set PATH=%OPT_PATH%%PATH%
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
+
+  # Install MinGW dependencies for 32 bit
+  - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-i686-gcc-ada mingw-w64-i686-gcc-fortran mingw-w64-i686-gcc-libgfortran mingw-w64-i686-gcc-objc"
+  - C:\msys64\usr\bin\bash -lc "rm /mingw32/etc/gdbinit"
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-gcc mingw-w64-i686-cmake mingw-w64-i686-pkg-config mingw-w64-i686-python2-pip mingw-w64-i686-openblas mingw-w64-i686-lapack"
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-python3 mingw-w64-i686-python3-pip mingw-w64-i686-binutils"
+  # Install MinGW dependencies for 64 bit
+  - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-x86_64-gcc-ada mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-gcc-libgfortran mingw-w64-x86_64-gcc-objc"
+  - C:\msys64\usr\bin\bash -lc "rm /mingw64/etc/gdbinit"
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config mingw-w64-x86_64-python2-pip mingw-w64-x86_64-openblas mingw-w64-x86_64-lapack"
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-python3 mingw-w64-x86_64-python3-pip mingw-w64-x86_64-binutils"
+
+  # Get libusb hotplug for 32 bit
+  - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/build/libusb-1.0-hp.7z", "c:\libusb.7z")
+  - 7z x -y "c:\libusb.7z" -o"C:\libusb-mingw" > nul
+  # Compile libusb hotplug for 64 bit
+  - git clone --branch=hotplug https://github.com/analogdevicesinc/libusb.git "C:\libusb-mingw64"
+  - C:\msys64\usr\bin\bash -lc "cd C:/libusb-mingw64 && ./autogen.sh && ./configure --prefix=/mingw64 --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 && make -j4"
+
+  # Build libsmu MinGW 32 bit
+  - echo "Running cmake for MinGW 32..."
+  - mkdir c:\projects\libsmu\mingw-32
+  - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-32 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw32 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/libusb-mingw/MinGW32/static/libusb-1.0.a -DLIBUSB_INCLUDE_DIRS=C:/libusb-mingw/include/libusb-1.0 -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_62_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
+
+  # Build libsmu MinGW 64 bit
+  - echo "Running cmake for MinGW 64..."
+  - mkdir c:\projects\libsmu\mingw-64
+  - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-64 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw64 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/libusb-mingw64/libusb/.libs/libusb-1.0.a -DLIBUSB_INCLUDE_DIRS=C:/libusb-mingw64/libusb -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_62_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
+
+  # Create libsmu zip artifact for 32 bit
+  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  - copy c:\projects\libsmu\dist\m1k-winusbx86.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+   # gtest libraries for test executables
+  - ps: |
+      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
+      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
+  - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # batch file to run test suite
+  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\libusb-mingw\MinGW32\static\libusb-1.0.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win32"
+  - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip
+
+  # Create libsmu zip artifact for 64 bit
+  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  - copy c:\projects\libsmu\dist\m1k-winusbx64.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # gtest libraries for test executables
+  - ps: |
+      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
+      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
+  - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+   # batch file to run test suite
+  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\libusb-mingw64\libusb\.libs\libusb-1.0.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win64"
+  - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip
+
+  ### Prepare for python bindings
+  ## build 32 bit python 2.7 bindings
+  - "python2 --version"
+  - "python2 -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # update pip to keep it from complaining
+  - "pip2 install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip2 install --only-binary :all: wheel"
+  # cython is required for generating the extensions
+  - "pip2 install cython"
+
+  # build python dist files
+  - cd C:\projects\libsmu\bindings\python
+  - "python2 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\libusb-mingw\\include\\libusb-1.0"
+  - "python2 setup.py build"
+  - "python2 setup.py bdist_wheel --skip-build"
+  - "python2 setup.py bdist --skip-build --format msi"
+  - ps: $PWD = Convert-Path .
+  - ps: $PWD = $PWD + "\build-temp"
+  - ps: $PWD
+  - ps: $PWD = ($PWD -replace "\\","/").Trim("/")
+  - ps: $PWD
+  - ps: $env:PWDD=$PWD
+  - "python2 setup.py bdist --format zip --bdist-base=%PWDD%"
+  # test local install
+  - ps: Get-ChildItem dist/*-cp27-*-mingw.whl | % { pip2 install "$_" }
+  # Create a folder to keep pysmu for all the python versions
+  - mkdir "pysmu-%LIBSMU_VERSION%-mingw-py"
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
+
+  ## build 32 bit python 3.6 bindings
+  - set PATH=C:\\msys64\\mingw32\\lib\\python3.6;C:\\msys64\\mingw32\\lib\\python3.6\\Tools\\scripts;%PATH%
+  - "python3 --version"
+  - "python3 -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # update pip to keep it from complaining
+  - "pip3 install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # wheel needs to be installed in order to build binary wheels for pysmu
+  - "pip3 install --only-binary :all: wheel"
+  # cython is required for generating the extensions
+  - "pip3 install cython"
+
+  # build python dist files
+  - cd C:\projects\libsmu\bindings\python
+  - "python3 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\libusb-mingw\\include\\libusb-1.0"
+  - "python3 setup.py build"
+  - "python3 setup.py bdist_wheel --skip-build"
+  - "python3 setup.py bdist --skip-build --format msi"
+  - "python3 setup.py bdist --format zip --bdist-base=%PWDD%"
+  # test local install
+  - ps: Get-ChildItem dist/*-cp36-*-mingw.whl | % { pip3 install "$_" }
+   # Create a folder to keep pysmu for all the python versions
+  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
+  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%-mingw-py.zip" pysmu-*mingw-py
+  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*mingw.zip"
+
+  # push all dist files as artifacts
+  - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
 cache:
   # cache innosetup download
