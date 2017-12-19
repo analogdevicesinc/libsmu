@@ -382,9 +382,7 @@ build_script:
   - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
    # gtest libraries for test executables
-  - ps: |
-      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
-      if (Test-Path "c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32 }
+  - copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   # batch file to run test suite
@@ -403,9 +401,7 @@ build_script:
   - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   # gtest libraries for test executables
-  - ps: |
-      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtestd* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
-      if (Test-Path "c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest*") { copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64 }
+  - copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
    # batch file to run test suite
