@@ -3,6 +3,7 @@
 *.so.*
 *.pc
 smu
+include/libsmu/version.hpp
 
 # cmake
 /build

@@ -1,2 +1,4 @@
-# allow "plugdev" group read/write access to ADI M1K devices
+# allow "plugdev" group read/write access to ADALM1000 devices
 SUBSYSTEM=="usb", ATTRS{idVendor}=="064b", ATTRS{idProduct}=="784c", MODE="0664", GROUP="plugdev"
+# allow "plugdev" group read/write access to ADALM1000 devices in SAM-BA mode
+SUBSYSTEM=="usb", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="6124", MODE="0664", GROUP="plugdev"

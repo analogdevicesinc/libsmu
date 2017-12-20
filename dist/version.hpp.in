@@ -1,0 +1,42 @@
+// Released under the terms of the BSD License
+// (C) 2016, Analog Devices, Inc.
+
+/// @file version.hpp
+/// @brief Library versioning support.
+/// Versioning for libsmu follows the guidelines of semantic versioning for
+/// shared libraries (http://semver.org/).
+
+#pragma once
+
+/// @brief The major version of the libsmu library (X.0.0).
+#define LIBSMU_VERSION_MAJOR @LIBSMU_VERSION_MAJOR@
+
+/// @brief The minor version of the libsmu library (0.X.0).
+#define LIBSMU_VERSION_MINOR @LIBSMU_VERSION_MINOR@
+
+/// @brief The patch version of the libsmu library (0.0.X).
+#define LIBSMU_VERSION_PATCH @LIBSMU_VERSION_PATCH@
+
+/// @brief A numerical libsmu library version.
+#define LIBSMU_VERSION ((LIBSMU_VERSION_MAJOR << 16) |\
+			(LIBSMU_VERSION_MINOR << 8) |\
+			LIBSMU_VERSION_PATCH)
+
+/// @brief A string representing the libsmu library version.
+#define LIBSMU_VERSION_STR "@LIBSMU_VERSION_STR@"
+
+inline const char* libsmu_version_str() {
+	    return LIBSMU_VERSION_STR;
+}
+
+inline uint32_t libsmu_version_major() {
+	    return LIBSMU_VERSION_MAJOR;
+}
+
+inline uint32_t libsmu_version_minor() {
+	    return LIBSMU_VERSION_MINOR;
+}
+
+inline uint32_t libsmu_version_patch() {
+	    return LIBSMU_VERSION_PATCH;
+}

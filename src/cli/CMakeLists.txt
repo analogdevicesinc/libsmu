@@ -11,7 +11,8 @@ if(GETOPT_FOUND)
 	add_executable(smu_bin smu.cpp)
 else(GETOPT_FOUND)
 	# use internal getopt implementation
-	add_executable(smu_bin smu.cpp getopt.c)
+	add_executable(smu_bin smu.cpp getopt_internal.c)
+	add_definitions(-DUSE_CUSTOM_GETOPT=1)
 endif(GETOPT_FOUND)
 
 include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})

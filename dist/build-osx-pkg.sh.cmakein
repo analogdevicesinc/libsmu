@@ -11,7 +11,7 @@ make DESTDIR=${DESTDIR} install
 
 pkgbuild \
 	--root ${DESTDIR} \
-	--identifier libsmu --version @LIBSMU_VERSION@ \
+	--identifier libsmu --version @LIBSMU_VERSION_STR@ \
 	--install-location / "@LIBSMU_TEMP_PKG@"
 
 productbuild --distribution distribution.xml "@LIBSMU_PKG@"

@@ -1,37 +1,86 @@
+env:
+  global:
+    # coverity token
+    - secure: "UP0F0/tspgDnPsxZ4uCdRUcfhBrmHKtdWZ7fhGuTq4rHBeC9CxwqVB//JKEr0XTqzDHhQ2J53S7j7XY90h9P+9kQoTmkuOxLs1FNYXg011/rVkwEwu0427M+Oye2CbENWgaf4OycPgkbZR2USKwKg53oGniAyyz6/xm8IlAZRng="
+
 matrix:
   fast_finish: true
   include:
     - os: linux
-      language: python
       sudo: required
       dist: trusty
+      language: python
+      python: 2.7
+      env: PYTHON=python PIP=pip
+      cache: pip
+    - os: linux
+      sudo: required
+      dist: trusty
+      language: python
+      python: 3.4
+      env: PYTHON=python PIP=pip
+      cache: pip
+    - os: linux
+      sudo: required
+      dist: trusty
+      language: python
+      python: 3.5
+      env: PYTHON=python PIP=pip
+      cache: pip
     - os: osx
       osx_image: xcode61
-
-cache: pip
+      env: PYTHON=python PIP=pip
+      cache: $HOME/Library/Caches/pip
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python3 PIP=pip3
+      cache: $HOME/Library/Caches/pip
+  allow_failures:
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python PIP=pip
+      cache: $HOME/Library/Caches/pip
+    - os: osx
+      osx_image: xcode61
+      env: PYTHON=python3 PIP=pip3
+      cache: $HOME/Library/Caches/pip
 
 addons:
   apt:
     packages:
       - libusb-1.0
       - libboost-all-dev
+  coverity_scan:
+    project:
+      name: analogdevicesinc/libsmu
+      version: 0.9.0
+      description: "Software abstractions for the analog signal exploration tools (ADALM1000)"
+    notification_email: timothy.harder@analog.com
+    build_command_prepend: "mkdir -p build && cd build && cmake -DBUILD_PYTHON=OFF .."
+    build_command: make
+    branch_pattern: coverity_scan
+
+# build from all branches except appveyor (windows builds)
+branches:
+  except:
+    - appveyor
 
 before_install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
 
 install:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install libusb; fi
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install python || true; fi
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo easy_install pip; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew install ${PYTHON} || true; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew upgrade cmake || true; fi
 
   # for python bindings
-  - pip install --disable-pip-version-check --upgrade pip
-  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo pip install wheel cython; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then pip install wheel cython; fi
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo easy_install pip; fi
+  - ${PIP} install --only-binary ":all:" --disable-pip-version-check --upgrade pip
+  - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo ${PIP} install --only-binary ":all:" wheel cython ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PIP} install --only-binary ":all:" wheel cython ; fi
 
 script:
-  - mkdir build
-  - pushd build
+  - mkdir -p build && cd build
   - cmake -DBUILD_PYTHON=OFF ..
   - make
 
@@ -42,13 +91,12 @@ script:
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then chmod +x build-osx-pkg.sh; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then ./build-osx-pkg.sh; fi
 
-  - popd
-
-  # check python version
-  - python --version
-  - python -c "import struct; print(struct.calcsize('P') * 8)"
   # build python bindings
-  - pushd bindings/python
-  - python setup.py build_ext -L ../../build/src
-  - python setup.py build
-  - python setup.py bdist_wheel --skip-build
+  - cd "${TRAVIS_BUILD_DIR}"/bindings/python
+  # check python info
+  - ${PYTHON} --version
+  - ${PYTHON} -c "import struct; print(struct.calcsize('P') * 8)"
+  # build extension linking to previously built library
+  - ${PYTHON} setup.py build_ext -L "${TRAVIS_BUILD_DIR}"/build/src
+  - ${PYTHON} setup.py build
+  - ${PYTHON} setup.py bdist_wheel --skip-build

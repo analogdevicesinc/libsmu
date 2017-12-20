@@ -4,25 +4,37 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "libsmu.hpp"
-#include <iostream>
-#include <cstdint>
-#include <vector>
-#include <thread>
-#include <string.h>
-#include <libusb.h>
-
-#ifdef WIN32
-#include "getopt.h"
+#ifdef USE_CUSTOM_GETOPT
+#include "getopt_internal.h"
 #else
 #include <getopt.h>
+#endif
+
+#if _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+#include <cstdint>
+#include <cstring>
+#include <chrono>
+#include <iostream>
+#include <vector>
+#include <system_error>
+#include <thread>
+
+#include <libsmu/libsmu.hpp>
+
+#ifndef _WIN32
+int (*_isatty)(int) = &isatty;
 #endif
 
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::string;
-using std::vector;
+
+using namespace smu;
 
 static void list_devices(Session* session)
 {
@@ -30,9 +42,9 @@ static void list_devices(Session* session)
 		cerr << "smu: no supported devices plugged in" << endl;
 	} else {
 		for (auto dev: session->m_devices) {
-			printf("%s: serial %s: fw %s: hw %s\n",
-					dev->info()->label, dev->serial(),
-					dev->fwver(), dev->hwver());
+			printf("%s: serial %s : fw %s : hw %s\n",
+					dev->info()->label, dev->m_serial.c_str(),
+					dev->m_fwver.c_str(), dev->m_hwver.c_str());
 		}
 	}
 }
@@ -42,9 +54,10 @@ static void display_usage(void)
 	printf("smu: utility for managing M1K devices\n"
 		"\n"
 		" -h, --help                   print this help message and exit\n"
-		" -l, --list                   list supported devices currently attached to the system\n"
-		" -p, --hotplug                simple session device hotplug testing\n"
-		" -s, --stream                 stream samples to stdout from a single attached device\n"
+		" --version                    show libsmu version\n"
+		" -l, --list-devices           list supported devices currently attached to the system\n"
+		" -p, --hotplug-devices        simple session device hotplug testing\n"
+		" -s, --stream-samples         stream samples to stdout from a single attached device\n"
 		" -d, --display-calibration    display calibration data from all attached devices\n"
 		" -r, --reset-calibration      reset calibration data to the defaults on all attached devices\n"
 		" -w, --write-calibration <cal file> write calibration data to a single attached device\n"
@@ -55,20 +68,35 @@ static void stream_samples(Session* session)
 {
 	auto dev = *(session->m_devices.begin());
 	auto dev_info = dev->info();
-	for (unsigned ch_i=0; ch_i < dev_info->channel_count; ch_i++) {
-		auto ch_info = dev->channel_info(ch_i);
-		dev->set_mode(ch_i, DISABLED);
-		for (unsigned sig_i=0; sig_i < ch_info->signal_count; sig_i++) {
-			auto sig = dev->signal(ch_i, sig_i);
-			auto sig_info = sig->info();
-			sig->measure_callback([=](float d){
-				printf("Channel %s, %s: %f\n", ch_info->label, sig_info->label, d);
-			});
-		}
+	for (unsigned ch_i = 0; ch_i < dev_info->channel_count; ch_i++) {
+		dev->set_mode(ch_i, HI_Z);
 	}
+
 	session->configure(dev->get_default_rate());
 	session->start(0);
-	while ( 1 == 1 ) {session->wait_for_completion();};
+	std::vector<std::array<float, 4>> buf;
+	unsigned dev_index;
+
+	while (true) {
+		dev_index = 0;
+		for (auto dev: session->m_devices) {
+			try {
+				dev->read(buf, 1000, -1);
+			} catch (const std::runtime_error& e) {
+				// Only error out if stdout isn't a tty, otherwise it usually
+				// can't keep up anyway.
+				if (!_isatty(1)) {
+					cerr << "smu: stopping stream: " << e.what() << endl;
+					return;
+				}
+			}
+
+			for (auto x: buf) {
+				printf("dev %u: %f %f %f %f\n", dev_index, x[0], x[1], x[2], x[3]);
+			}
+			dev_index++;
+		}
+	};
 }
 
 int write_calibration(Session* session, const char *file)
@@ -76,10 +104,10 @@ int write_calibration(Session* session, const char *file)
 	int ret;
 	auto dev = *(session->m_devices.begin());
 	ret = dev->write_calibration(file);
-	if (ret <= 0) {
+	if (ret < 0) {
 		if (ret == -EINVAL)
 			cerr << "smu: invalid calibration data format" << endl;
-		else if (ret == LIBUSB_ERROR_PIPE)
+		else if (ret == -EPIPE)
 			cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 		else
 			perror("smu: failed to write calibration data");
@@ -90,11 +118,11 @@ int write_calibration(Session* session, const char *file)
 
 void display_calibration(Session* session)
 {
-	vector<vector<float>> cal;
+	std::vector<std::vector<float>> cal;
 	for (auto dev: session->m_devices) {
 		printf("%s: serial %s: fw %s: hw %s\n",
-			dev->info()->label, dev->serial(),
-			dev->fwver(), dev->hwver());
+			dev->info()->label, dev->m_serial.c_str(),
+			dev->m_fwver.c_str(), dev->m_hwver.c_str());
 		dev->calibration(&cal);
 		for (int i = 0; i < 8; i++) {
 			switch (i) {
@@ -120,8 +148,8 @@ int reset_calibration(Session* session)
 	int ret;
 	for (auto dev: session->m_devices) {
 		ret = dev->write_calibration(NULL);
-		if (ret <= 0) {
-			if (ret == LIBUSB_ERROR_PIPE)
+		if (ret < 0) {
+			if (ret == -EPIPE)
 				cerr << "smu: firmware version doesn't support calibration (update to 2.06 or later)" << endl;
 			else
 				perror("smu: failed to reset calibration data");
@@ -144,20 +172,15 @@ int main(int argc, char **argv)
 
 	Session* session = new Session();
 	// add all available devices to the session at startup
-	if (session->update_available_devices()) {
-		cerr << "error initializing session" << endl;
+	if (session->add_all() < 0) {
+		perror("smu: error initializing session");
 		return 1;
 	}
-	for (auto dev: session->m_available_devices) {
-		session->add_device(&*dev);
-	}
-
-	session->m_completion_callback = [=](unsigned status){};
-	session->m_progress_callback = [=](uint64_t n){};
 
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
+		{"version",     no_argument, 0, 'v'},
 		{"hotplug",  no_argument, 0, 'p'},
 		{"list",     no_argument, 0, 'l'},
 		{"stream",   no_argument, 0, 's'},
@@ -168,24 +191,28 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	while ((opt = getopt_long(argc, argv, "hplsdrw:f:",
+	while ((opt = getopt_long(argc, argv, "hvplsdrw:f:",
 			long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'p':
-				session->m_hotplug_detach_callback = [=](Device* device){
+				session->hotplug_detach([=](Device* device, void* data){
 					session->cancel();
-					session->remove_device(device);
-					printf("removed device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->serial(),
-							device->fwver(), device->hwver());
-				};
+					if (!session->remove(device, true)) {
+						printf("removed device: %s: serial %s: fw %s: hw %s\n",
+							device->info()->label, device->m_serial.c_str(),
+							device->m_fwver.c_str(), device->m_hwver.c_str());
+					}
+				});
 
-				session->m_hotplug_attach_callback = [=](Device* device){
-					if (session->add_device(device))
+				session->hotplug_attach([=](Device* device, void* data){
+					if (!session->add(device)) {
 						printf("added device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->serial(),
-							device->fwver(), device->hwver());
-				};
+							device->info()->label, device->m_serial.c_str(),
+							device->m_fwver.c_str(), device->m_hwver.c_str());
+					}
+				});
+
+				cout << "waiting for hotplug events..." << endl;
 
 				// wait around doing nothing (hotplug testing)
 				while (1)
@@ -234,7 +261,7 @@ int main(int argc, char **argv)
 				cout << "smu: successfully updated calibration data" << endl;
 				break;
 			case 'f':
-				// flash firmware image to an attached m1k device
+				// flash firmware image to all attached m1k devices
 				try {
 					session->flash_firmware(optarg);
 				} catch (const std::exception& e) {
@@ -242,10 +269,13 @@ int main(int argc, char **argv)
 					return EXIT_FAILURE;
 				}
 				cout << "smu: successfully updated firmware" << endl;
-				cout << "Please unplug and replug the device to finish the process." << endl;
+				cout << "Please unplug and replug the device(s) to finish the process." << endl;
 				break;
 			case 'h':
 				display_usage();
+				break;
+			case 'v':
+				cout << LIBSMU_VERSION_STR << endl;
 				break;
 			default:
 				display_usage();

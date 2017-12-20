@@ -4,492 +4,710 @@
 //   Kevin Mehall <km@kevinmehall.net>
 //   Ian Daniher <itdaniher@gmail.com>
 
-#include "libsmu.hpp"
+#include <ctime>
+#include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <libusb.h>
+#include <functional>
 #include <string.h>
+
+#include <libusb.h>
+
+#include "debug.hpp"
 #include "device_m1000.hpp"
+#include "usb.hpp"
+#include <libsmu/libsmu.hpp>
 
-using std::shared_ptr;
+extern std::exception_ptr e_ptr;
 
-extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+using namespace std::placeholders;  // for _1, _2, _3...
+using namespace smu;
 
-/// session constructor
-Session::Session() {
+// Callback for libusb hotplug events, proxies to Session::attached() and Session::detached().
+extern "C" int LIBUSB_CALL usb_hotplug_callback(
+	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
+{
+	int ret;
+
+	libusb_device_descriptor usb_desc;
+	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
+	if (!ret) {
+		// only try to run hotplug callbacks for supported devices
+		std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
+		if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
+				!= SUPPORTED_DEVICES.end()) {
+			Session *session = (Session *) user_data;
+			if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+				session->attached(usb_dev);
+			} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+				session->detached(usb_dev);
+			}
+		}
+	}
+	return 0;
+}
+
+Session::Session()
+{
 	m_active_devices = 0;
+	int ret;
 
-	if (int r = libusb_init(&m_usb_cx) != 0) {
-		smu_debug("libusb init failed: %i\n", r);
+	ret = libusb_init(&m_usb_ctx);
+	if (ret != 0) {
+		DEBUG("%s: libusb init failed: %s\n", __func__, libusb_error_name(ret));
 		abort();
 	}
 
+	// Enable USB hotplugging capabilities. If the platform doesn't support
+	// this (we're currently using a custom-patched version of libusb to
+	// support hotplugging on Windows) we fallback to using all the devices
+	// currently plugged in.
 	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-		smu_debug("Using libusb hotplug\n");
-		if (int r = libusb_hotplug_register_callback(NULL,
+		ret = libusb_hotplug_register_callback(
+			NULL,
 			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
 			(libusb_hotplug_flag) 0,
 			LIBUSB_HOTPLUG_MATCH_ANY,
 			LIBUSB_HOTPLUG_MATCH_ANY,
 			LIBUSB_HOTPLUG_MATCH_ANY,
-			hotplug_callback_usbthread,
+			usb_hotplug_callback,
 			this,
-			NULL
-		) != 0) {
-		smu_debug("libusb hotplug cb reg failed: %i\n", r);
-	};
+			&m_usb_cb);
+		if (ret != 0)
+			DEBUG("%s: libusb hotplug callback registration failed: %s\n", __func__, libusb_error_name(ret));
 	} else {
-		smu_debug("Libusb hotplug not supported. Only devices already attached will be used.\n");
+		DEBUG("%s: libusb hotplug not supported, only currently attached devices will be used.\n", __func__);
 	}
-	start_usb_thread();
 
+	struct timeval zero_tv;
+	zero_tv.tv_sec = 0;
+	zero_tv.tv_usec = 1;
+
+	// Spawn a thread to handle pending USB events.
+	m_usb_thread_loop = true;
+	m_usb_thread = std::thread([=]() {
+		while (m_usb_thread_loop) {
+			libusb_handle_events_timeout_completed(m_usb_ctx, const_cast<timeval *>(&zero_tv), NULL);
+		}
+	});
+
+	// Add default hotplug detach support to cancel/end a session and remove the related device.
+	hotplug_detach([=](Device* dev, void* data) {
+		if (m_devices.find(dev) != m_devices.end()) {
+			cancel();
+			end();
+			remove(dev, true);
+			destroy(dev);
+			throw std::runtime_error("device detached");
+		}
+	});
+
+	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
 	if (getenv("LIBUSB_DEBUG")) {
-		libusb_set_debug(m_usb_cx, 4);
+		libusb_set_debug(m_usb_ctx, 4);
 	}
 }
 
-/// session destructor
-Session::~Session() {
+Session::~Session()
+{
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	// Run device destructors before libusb_exit
-	m_usb_thread_loop = 0;
+
+	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
+
+	// Cancel all outstanding transfers.
+	cancel();
+	
+	// Run device destructors before libusb_exit().
+	for (Device* dev: m_devices) {
+		// reset devices to high impedance mode before removing
+		dev->set_mode(0, HI_Z);
+		dev->set_mode(1, HI_Z);
+		delete dev;
+	}
+
 	m_devices.clear();
 	m_available_devices.clear();
+
+	// Stop USB thread loop. This must be called right before libusb_exit() so
+	// all USB events, including closing devices, are handled properly. Certain
+	// events (such as those triggered by libusb_close()) can cause hangs
+	// within libusb if called after event handling is stopped.
 	if (m_usb_thread.joinable()) {
+		m_usb_thread_loop = false;
 		m_usb_thread.join();
 	}
-	libusb_exit(m_usb_cx);
+
+	libusb_exit(m_usb_ctx);
 }
 
-/// callback for device attach events
-void Session::attached(libusb_device *device) {
-	shared_ptr<Device> dev = probe_device(device);
-	if (dev) {
-		std::lock_guard<std::mutex> lock(m_lock_devlist);
-		m_available_devices.push_back(dev);
-		smu_debug("Session::attached ser: %s\n", dev->serial());
-		if (this->m_hotplug_attach_callback) {
-			this->m_hotplug_attach_callback(&*dev);
-		}
-	}
-}
-
-// callback for device detach events
-void Session::detached(libusb_device *device)
+void Session::hotplug_attach(std::function<void(Device* device, void* data)> func, void* data)
 {
-	if (this->m_hotplug_detach_callback) {
-		shared_ptr<Device> dev = this->find_existing_device(device);
+	m_hotplug_attach_callbacks.push_back(std::bind(func, _1, data));
+}
+
+void Session::hotplug_detach(std::function<void(Device* device, void* data)> func, void* data)
+{
+	m_hotplug_detach_callbacks.push_back(std::bind(func, _1, data));
+}
+
+void Session::attached(libusb_device *usb_dev)
+{
+	if (!m_hotplug_attach_callbacks.empty()) {
+		Device* dev = probe_device(usb_dev);
 		if (dev) {
-			smu_debug("Session::detached ser: %s\n", dev->serial());
-			this->m_hotplug_detach_callback(&*dev);
+			std::lock_guard<std::mutex> lock(m_lock_devlist);
+			m_available_devices.push_back(dev);
+			for (auto callback: m_hotplug_attach_callbacks) {
+				// Store exceptions to rethrow them in the main thread in read()/write().
+				try {
+					callback(dev);
+				} catch (...) {
+					e_ptr = std::current_exception();
+				}
+			}
 		}
 	}
 }
 
-/// Internal function to write raw SAM-BA commands to a libusb handle.
-static void samba_usb_write(libusb_device_handle *handle, const char* data) {
+void Session::detached(libusb_device *usb_dev)
+{
+	if (!m_hotplug_detach_callbacks.empty()) {
+		Device* dev = find_existing_device(usb_dev);
+		if (dev) {
+			for (auto callback: m_hotplug_detach_callbacks) {
+				// Store exceptions to rethrow them in the main thread in read()/write().
+				try {
+					callback(dev);
+				} catch (...) {
+					e_ptr = std::current_exception();
+				}
+			}
+		}
+	}
+}
+
+// Internal function to write raw SAM-BA commands to a libusb handle.
+static void samba_usb_write(libusb_device_handle *usb_handle, const char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x01, (unsigned char *)data, strlen(data), &transferred, 100);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to write SAM-BA command: " + libusb_error_str);
 	}
 }
 
-/// Internal function to read raw SAM-BA commands to a libusb handle.
-static void samba_usb_read(libusb_device_handle *handle, unsigned char* data) {
+// Internal function to read raw SAM-BA commands to a libusb handle.
+static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data) {
 	int transferred, ret;
-	ret = libusb_bulk_transfer(handle, 0x82, data, 512, &transferred, 1);
+	ret = libusb_bulk_transfer(usb_handle, 0x82, data, 512, &transferred, 100);
 	if (ret < 0) {
 		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
 		throw std::runtime_error("failed to read SAM-BA response: " + libusb_error_str);
 	}
 }
 
-/// Update device firmware for the specified device or the first device
-/// found, either in the current session or in SAMBA command mode.
-void Session::flash_firmware(const char *file, Device *dev)
+int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
 {
-	struct libusb_device *usb_dev = NULL;
-	struct libusb_device_handle *usb_handle = NULL;
-	struct libusb_device **usb_devs;
+	unsigned int device_count;
+	libusb_device **usb_devs;
 	struct libusb_device_descriptor usb_info;
-	const uint16_t SAMBA_VENDOR_ID = 0x03eb;
-	const uint16_t SAMBA_PRODUCT_ID = 0x6124;
-	unsigned char usb_data[512];
-	unsigned int device_count, page;
-	int ret;
+	std::vector<uint16_t> samba_device_id;
+
+	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
+	if (device_count < 0)
+		return -libusb_to_errno(device_count);
+
+	// Walk the list of USB devices looking for devices in SAM-BA mode.
+	for (unsigned int i = 0; i < device_count; i++) {
+		libusb_get_device_descriptor(usb_devs[i], &usb_info);
+		samba_device_id = {usb_info.idVendor, usb_info.idProduct};
+		if (std::find(SAMBA_DEVICES.begin(), SAMBA_DEVICES.end(), samba_device_id)
+				!= SAMBA_DEVICES.end()) {
+			samba_devs.push_back(usb_devs[i]);
+		}
+	}
+
+	libusb_free_device_list(usb_devs, 1);
+	return samba_devs.size();
+}
+
+int Session::flash_firmware(std::string file, std::vector<Device*> devices)
+{
+	int device_count = 0;
+	std::unique_lock<std::mutex> lock(m_lock_devlist);
+
+	// if no devices are specified, flash all supported devices on the system
+	if (devices.size() == 0)
+		devices = m_available_devices;
 
 	std::ifstream firmware (file, std::ios::in | std::ios::binary);
 	long firmware_size;
-	const uint32_t flashbase = 0x80000;
-
-	if (!dev && this->m_devices.size() > 1) {
-		throw std::runtime_error("multiple devices attached, flashing only works on a single device");
-	}
 
 	if (!firmware.is_open()) {
 		throw std::runtime_error("failed to open firmware file");
 	}
 
-	// force attached m1k into command mode
-	if (dev || !this->m_devices.empty()) {
-		if (!dev)
-			dev = *(this->m_devices.begin());
-		dev->samba_mode();
-	}
-
-	device_count = libusb_get_device_list(NULL, &usb_devs);
-	if (device_count <= 0) {
-		throw std::runtime_error("error enumerating USB devices");
-	}
-
-	// Walk the list of USB devices looking for the device in SAM-BA mode.
-	for (unsigned int i = 0; i < device_count; i++) {
-		libusb_get_device_descriptor(usb_devs[i], &usb_info);
-		if (usb_info.idVendor == SAMBA_VENDOR_ID && usb_info.idProduct == SAMBA_PRODUCT_ID) {
-			// Take the first device found, we disregard multiple devices.
-			usb_dev = usb_devs[i];
-			break;
-		}
-	}
-
-	if (usb_dev == NULL) {
-		libusb_free_device_list(usb_devs, 1);
-		throw std::runtime_error("no supported devices plugged in");
-	}
-
-	ret = libusb_open(usb_dev, &usb_handle);
-	if (ret < 0) {
-		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		libusb_free_device_list(usb_devs, 1);
-		throw std::runtime_error("failed opening USB device: " + libusb_error_str);
-	}
-#ifndef WIN32
-	libusb_detach_kernel_driver(usb_handle, 0);
-	libusb_detach_kernel_driver(usb_handle, 1);
-#endif
-	libusb_claim_interface(usb_handle, 1);
-
-	// erase flash
-	samba_usb_write(usb_handle, "W400E0804,5A000005#");
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	samba_usb_read(usb_handle, usb_data);
-	// check if flash is erased
-	samba_usb_write(usb_handle, "w400E0808,4#");
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-
+	// TODO: verify that file is a compatible firmware file
 	// read firmware file into buffer
 	firmware.seekg(0, std::ios::end);
 	firmware_size = firmware.tellg();
 	firmware_size = firmware_size + (256 - firmware_size % 256);
 	firmware.seekg(0, std::ios::beg);
-	auto buf = std::unique_ptr<char[]>{ new char[firmware_size] };
-	firmware.read(buf.get(), firmware_size);
+	auto fwdata = std::unique_ptr<char[]>{ new char[firmware_size] };
+	firmware.read(fwdata.get(), firmware_size);
 	firmware.close();
 
-	// write firmware
-	page = 0;
-	char cmd[20];
-	uint32_t data;
-	for (auto pos = 0; pos < firmware_size; pos += 4) {
-		data = (uint8_t)buf[pos] | (uint8_t)buf[pos+1] << 8 |
-			(uint8_t)buf[pos+2] << 16 | (uint8_t)buf[pos+3] << 24;
-		snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
-		samba_usb_write(usb_handle, cmd);
-		samba_usb_read(usb_handle, usb_data);
-		samba_usb_read(usb_handle, usb_data);
-		// On page boundaries, write the page.
-		if ((pos & 0xFC) == 0xFC) {
-			snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
-			samba_usb_write(usb_handle, cmd);
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			// Verify page is written.
-			samba_usb_write(usb_handle, "w400E0808,4#");
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			samba_usb_read(usb_handle, usb_data);
-			// TODO: check page status
-			page++;
+	auto flash_device = [&](libusb_device *usb_dev) {
+		libusb_device_handle *usb_handle = NULL;
+		unsigned char usb_data[512];
+		unsigned int page;
+		const uint32_t flashbase = 0x80000;
+		int ret;
+
+		ret = libusb_open(usb_dev, &usb_handle);
+		if (ret < 0) {
+			std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
+			throw std::runtime_error("failed opening USB device: " + libusb_error_str);
+		}
+#ifndef _WIN32
+		libusb_detach_kernel_driver(usb_handle, 0);
+		libusb_detach_kernel_driver(usb_handle, 1);
+#endif
+		libusb_claim_interface(usb_handle, 1);
+
+		// ease of use abbreviations
+		auto samba_write = std::bind(samba_usb_write, usb_handle, _1);
+		auto samba_read = std::bind(samba_usb_read, usb_handle, usb_data);
+
+		// erase flash
+		samba_write("W400E0804,5A000005#");
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		samba_read();
+		// check if flash is erased
+		samba_write("w400E0808,4#");
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		samba_read();
+		samba_read();
+		samba_read();
+
+		// write firmware
+		page = 0;
+		char cmd[20];
+		uint32_t data;
+		for (auto pos = 0; pos < firmware_size; pos += 4) {
+			data = (uint8_t)fwdata[pos] | (uint8_t)fwdata[pos+1] << 8 |
+				(uint8_t)fwdata[pos+2] << 16 | (uint8_t)fwdata[pos+3] << 24;
+			snprintf(cmd, sizeof(cmd), "W%.8X,%.8X#", flashbase + pos, data);
+			samba_write(cmd);
+			samba_read();
+			samba_read();
+			// On page boundaries, write the page.
+			if ((pos & 0xFC) == 0xFC) {
+				snprintf(cmd, sizeof(cmd), "W400E0804,5A00%.2X03#", page);
+				samba_write(cmd);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				samba_read();
+				samba_read();
+				// Verify page is written.
+				samba_write("w400E0808,4#");
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				samba_read();
+				samba_read();
+				samba_read();
+				// TODO: check page status
+				page++;
+			}
+		}
+
+		// TODO: verify flashed data
+
+		// disable SAM-BA
+		samba_write("W400E0804,5A00010B#");
+		samba_read();
+		samba_read();
+		// jump to flash
+		samba_write("G00000000#");
+		samba_read();
+
+		libusb_release_interface(usb_handle, 1);
+		libusb_close(usb_handle);
+	};
+
+	// Removing devices and putting them into SAM-BA mode triggers hotplug
+	// routines which can cause the m_lock_devlist to be reacquired if any
+	// hotplug callbacks exist.
+	lock.unlock();
+
+	// force all specified devices into SAM-BA mode
+	// TODO: revert to unsigned index when VS supports OpenMP 3.0
+	#pragma omp parallel for
+	for (int i = 0; i < (int)devices.size(); i++) {
+		Device* dev = devices[i];
+		if (dev) {
+			#pragma omp critical
+			{
+				remove(dev);
+			}
+			dev->samba_mode();
+			delete dev;
 		}
 	}
 
-	// disable SAM-BA
-	samba_usb_write(usb_handle, "W400E0804,5A00010B#");
-	samba_usb_read(usb_handle, usb_data);
-	samba_usb_read(usb_handle, usb_data);
-	// jump to flash
-	samba_usb_write(usb_handle, "G00000000#");
-	samba_usb_read(usb_handle, usb_data);
+	std::vector<libusb_device*> samba_devs;
+	device_count = scan_samba_devs(samba_devs);
+	if (device_count < 0)
+		throw std::runtime_error("failed to scan for devices in SAM-BA mode");
+	else if (device_count == 0)
+		throw std::runtime_error("no devices found in SAM-BA mode");
+	else if (device_count < (int)devices.size())
+		throw std::runtime_error("failed forcing devices into SAM-BA mode");
 
-	libusb_release_interface(usb_handle, 1);
-	libusb_close(usb_handle);
-	libusb_free_device_list(usb_devs, 1);
-}
-
-/// remove a specified Device from the list of available devices
-void Session::destroy_available(Device *dev) {
-	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	if (dev)
-		for (unsigned i = 0; i < m_available_devices.size(); i++)
-			if (m_available_devices[i]->serial() == dev->serial())
-				m_available_devices.erase(m_available_devices.begin()+i);
-}
-
-/// low-level callback for hotplug events, proxies to session methods
-extern "C" int LIBUSB_CALL hotplug_callback_usbthread(
-	libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
-	(void) ctx;
-	Session *sess = (Session *) user_data;
-	if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-		sess->attached(device);
-	} else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-		sess->detached(device);
+	// flash all devices in SAM-BA mode
+	#pragma omp parallel for
+	for (int i = 0; i < device_count; i++) {
+		try {
+			flash_device(samba_devs[i]);
+		} catch (...) {
+			e_ptr = std::current_exception();
+		}
 	}
-	return 0;
+
+	if (e_ptr) {
+		// copy exception pointer for throwing and reset it
+		std::exception_ptr new_e_ptr = e_ptr;
+		e_ptr = nullptr;
+		std::rethrow_exception(new_e_ptr);
+	}
+
+	return device_count;
 }
 
-/// spawn thread for USB transaction handling
-void Session::start_usb_thread() {
-	m_usb_thread_loop = true;
-	m_usb_thread = std::thread([=]() {
-		while(m_usb_thread_loop) libusb_handle_events_completed(m_usb_cx, NULL);
-	});
+int Session::destroy(Device *dev)
+{
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
+	if (dev) {
+		for (unsigned i = 0; i < m_available_devices.size(); i++) {
+			if (m_available_devices[i]->m_serial.compare(dev->m_serial) == 0) {
+				m_available_devices.erase(m_available_devices.begin() + i);
+				return 0;
+			}
+		}
+	}
+	return -ENODEV;
 }
 
-/// update list of attached USB devices
-int Session::update_available_devices() {
+int Session::scan()
+{
+	int device_count = 0;
+	int devices_found = 0;
+
 	m_lock_devlist.lock();
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
-	libusb_device** list;
-	int num = libusb_get_device_list(m_usb_cx, &list);
-	if (num < 0) return num;
+	libusb_device **usb_devs;
+	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
+	if (device_count < 0)
+		return -libusb_to_errno(device_count);
 
-	for (int i=0; i<num; i++) {
-		shared_ptr<Device> dev = probe_device(list[i]);
+	// Iterate over the attached USB devices on the system, adding supported
+	// devices to the available list.
+	for (int i = 0; i < device_count; i++) {
+		Device* dev = probe_device(usb_devs[i]);
 		if (dev) {
 			m_lock_devlist.lock();
 			m_available_devices.push_back(dev);
 			m_lock_devlist.unlock();
+			devices_found++;
 		}
 	}
 
-	libusb_free_device_list(list, true);
-	return 0;
+	libusb_free_device_list(usb_devs, 1);
+	return devices_found;
 }
 
-/// identify devices supported by libsmu
-shared_ptr<Device> Session::probe_device(libusb_device* device) {
-	shared_ptr<Device> dev = find_existing_device(device);
+Device* Session::probe_device(libusb_device* usb_dev)
+{
+	int ret;
+	Device* dev = find_existing_device(usb_dev);
 
-	libusb_device_descriptor desc;
-	int r = libusb_get_device_descriptor(device, &desc);
-	if (r != 0) {
-		smu_debug("Error %i in get_device_descriptor\n", r);
+	libusb_device_descriptor usb_desc;
+	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
+	if (ret != 0) {
+		DEBUG("%s: error %i in get_device_descriptor\n", __func__, ret);
 		return NULL;
 	}
 
-	if (desc.idVendor == 0x0456 && desc.idProduct == 0xCEE2) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
-	} else if (desc.idVendor == 0x064B && desc.idProduct == 0x784C) {
-		dev = shared_ptr<Device>(new M1000_Device(this, device));
-	}
+	// check if device is supported
+	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
+	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
+			!= SUPPORTED_DEVICES.end()) {
+		libusb_device_handle *usb_handle = NULL;
 
-	if (dev) {
-		if (dev->init() == 0) {
-			libusb_get_string_descriptor_ascii(dev->m_usb, desc.iSerialNumber, (unsigned char*)&dev->serial_num, 32);
-			libusb_control_transfer(dev->m_usb, 0xC0, 0x00, 0, 0, (unsigned char*)&dev->m_hw_version, 64, 100);
-			libusb_control_transfer(dev->m_usb, 0xC0, 0x00, 0, 1, (unsigned char*)&dev->m_fw_version, 64, 100);
+		// probably lacking permission to open the underlying usb device
+		if (libusb_open(usb_dev, &usb_handle) != 0)
+			return NULL;
 
-			return dev;
-		} else {
-			perror("Error initializing device");
-		}
+		char serial[32] = "";
+		char fwver[32] = "";
+		char hwver[32] = "";
+
+		// serial/hw/fw versions should exist otherwise the USB cable probably has issues
+		ret = libusb_get_string_descriptor_ascii(usb_handle, usb_desc.iSerialNumber, (unsigned char*)&serial, 32);
+		if (ret <= 0 || (strncmp(serial, "", 1) == 0))
+			return NULL;
+		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 0, (unsigned char*)&hwver, 64, 100);
+		if (ret <= 0 || (strncmp(hwver, "", 1) == 0))
+			return NULL;
+		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 1, (unsigned char*)&fwver, 64, 100);
+		if (ret <= 0 || (strncmp(fwver, "", 1) == 0))
+			return NULL;
+
+		dev = new M1000_Device(this, usb_dev, usb_handle, hwver, fwver, serial);
+		dev->read_calibration();
+		return dev;
 	}
 	return NULL;
 }
 
-shared_ptr<Device> Session::find_existing_device(libusb_device* device) {
+Device* Session::find_existing_device(libusb_device* usb_dev)
+{
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
-	for (auto d: m_available_devices) {
-		if (d->m_device == device) {
-			return d;
+	for (Device* dev: m_available_devices) {
+		if (dev->m_usb_dev == usb_dev) {
+			return dev;
 		}
 	}
 	return NULL;
 }
 
-/// get the device matching a given serial from the session
-Device* Session::get_device(const char* serial) {
-	for (auto d: m_devices) {
-		if (strncmp(d->serial(), serial, 31) == 0) {
-			return d;
-		}
+int Session::add(Device* device)
+{
+	int ret = -1;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
+	if (device) {
+		ret = device->claim();
+		if (!ret)
+			m_devices.insert(device);
 	}
-	return NULL;
+	return ret;
 }
 
-/// adds a new device to the session
-Device* Session::add_device(Device* device) {
-	if ( device ) {
-		m_devices.insert(device);
-		smu_debug("device insert: %s\n", device->serial());
-		device->added();
-		return device;
+int Session::add_all()
+{
+	int ret;
+	int num_devices = 0;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
+	ret = scan();
+	if (ret < 0)
+		return ret;
+
+	std::lock_guard<std::mutex> lock(m_lock_devlist);
+	for (Device* dev: m_available_devices) {
+		ret = add(dev);
+		if (ret)
+			break;
+		num_devices++;
 	}
-	return NULL;
+
+	if (ret < 0)
+		return ret;
+	return num_devices;
 }
 
-/// removes an existing device from the session
-void Session::remove_device(Device* device) {
-	if ( device ) {
-		m_devices.erase(device);
-		device->removed();
+int Session::remove(Device* device, bool detached)
+{
+	int ret = -1;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
+	if (device) {
+		ret = device->release();
+
+		// device has already been detached from the system
+		if (detached && (ret == -19))
+			ret = 0;
+
+		if (!ret)
+			m_devices.erase(device);
 	}
-	else {
-		smu_debug("no device removed\n");
-	}
+	return ret;
 }
 
-/// configures sampling for all devices
-void Session::configure(uint64_t sampleRate) {
-	for (auto i: m_devices) {
-		i->configure(sampleRate);
+int Session::configure(uint32_t sampleRate)
+{
+	int ret = 0;
+
+	// This method may not be called while the session is active.
+	if (m_active_devices)
+		return -EBUSY;
+
+	// Nothing to configure if the session has no devices.
+	if (m_devices.size() == 0)
+		return ret;
+
+	// Passing a sample rate of 0 defaults to the initial device's default
+	// sample rate.
+	if (sampleRate == 0) {
+		Device* dev = *(m_devices.begin());
+		sampleRate = dev->get_default_rate();
 	}
+
+	for (Device* dev: m_devices) {
+		ret = dev->configure(sampleRate);
+		if (ret < 0)
+			break;
+	}
+
+	if (ret > 0)
+		m_sample_rate = ret;
+
+	return ret;
 }
 
-/// stream nsamples, then stop
-void Session::run(uint64_t nsamples) {
-	start(nsamples);
-	end();
+int Session::run(uint64_t samples)
+{
+	int ret;
+
+	if (samples > 0 && m_continuous) {
+		// running session in noncontinuous mode while already running in
+		// continuous mode doesn't work
+		return -EBUSY;
+	}
+    m_samples = samples;
+	ret = start(samples);
+	if (ret)
+		return ret;
+	ret = end();
+	return ret;
 }
 
-/// wait for completion of sample stream, disable all devices
-void Session::end() {
-	// completion lock
+int Session::end()
+{
+	int ret = 0;
+
+	// cancel continuous sessions before ending them
+	if (m_continuous) {
+		cancel();
+		m_continuous = false;
+	}
+
+	// Wait up to a second for devices to finish streaming.
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
-	auto res = m_completion.wait_until(lk, now + std::chrono::milliseconds(1000), [&]{ return m_active_devices == 0; });
-	//	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
-	// wait on m_completion, return m_active_devices compared with 0
-	if (!res) {
-		smu_debug("timed out\n");
-	}
-	for (auto i: m_devices) {
-		i->off();
-	}
-}
-/// wait for completion of sample stream
-void Session::wait_for_completion() {
-	// completion lock
-	std::unique_lock<std::mutex> lk(m_lock);
-	m_completion.wait(lk, [&]{ return m_active_devices == 0; });
-}
+    uint64_t waitTime;
+    if(m_sample_rate != 0){
+         waitTime = (m_samples/m_sample_rate + 1) + 1;
+    }
+    else{
+        waitTime = 0;
+    }
 
-/// start streaming data
-void Session::start(uint64_t nsamples) {
-	m_min_progress = 0;
-	m_cancellation = 0;
-	for (auto i : m_devices) {
-		i->on();
-		if (m_devices.size() > 1) {
-			i->sync();
+    auto res = m_completion.wait_until(lk, now + std::chrono::seconds(waitTime), [&]{ return m_active_devices == 0; });
+	if (!res) {
+		DEBUG("%s: timed out waiting for completion\n", __func__);
+	}
+
+	for (Device* dev: m_devices) {
+		ret = dev->off();
+		if (ret == -ENODEV) {
+			// the device has already been detached
+			ret = 0;
+			continue;
+		} else if (ret) {
+			break;
 		}
 	}
-	for (auto i : m_devices) {
-		i->start_run(nsamples);
-		m_active_devices += 1;
+	return ret;
+}
+
+void Session::flush()
+{
+	for (Device* dev: m_devices) {
+		// flush all read/write queues
+		dev->flush(0, true);
+		dev->flush(1, true);
 	}
 }
 
-/// cancel all pending USB transactions
-void Session::cancel() {
+int Session::start(uint64_t samples)
+{
+	int ret = 0;
+	m_cancellation = 0;
+	m_continuous = (samples == 0);
+
+	// if session is unconfigured, use device default sample rate
+	if (m_sample_rate == 0)
+		configure(0);
+
+	for (Device* dev: m_devices) {
+		ret = dev->on();
+		if (ret)
+			break;
+		// make sure all devices are synchronized
+		if (m_devices.size() > 1) {
+			ret = dev->sync();
+			if (ret)
+				break;
+		}
+		ret = dev->run(samples);
+		if (ret)
+			break;
+		m_active_devices++;
+	}
+	return ret;
+}
+
+int Session::cancel()
+{
+	int ret = 0;
+
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
-	for (auto i: m_devices) {
-		i->cancel();
+	for (Device* dev: m_devices) {
+		ret = dev->cancel();
+		if (ret)
+			break;
 	}
+	return ret;
 }
 
-/// Called on the USB thread when a device encounters an error
-void Session::handle_error(int status, const char * tag) {
+void Session::handle_error(int status, const char * tag)
+{
 	std::lock_guard<std::mutex> lock(m_lock);
 	// a canceled transfer completing is not an error...
 	if ((m_cancellation == 0) && (status != LIBUSB_TRANSFER_CANCELLED) ) {
-		smu_debug("error condition at %s: %s\n", tag, libusb_error_name(status));
+		DEBUG("%s: error condition at %s: %s\n", __func__, tag, libusb_error_name(status));
 		m_cancellation = status;
 		cancel();
 	}
 }
 
-/// called upon completion of a sample stream
-void Session::completion() {
-	// On USB thread
+void Session::completion()
+{
+	// on USB thread
 	m_active_devices -= 1;
-	std::lock_guard<std::mutex> lock(m_lock);
+
+	// don't lock for cancelled sessions
+	if (m_cancellation == 0)
+		std::unique_lock<std::mutex> lock(m_lock);
+
 	if (m_active_devices == 0) {
 		if (m_completion_callback) {
-			m_completion_callback(m_cancellation != 0);
+			m_completion_callback(m_cancellation);
 		}
 		m_completion.notify_all();
-	}
-}
-
-void Session::progress() {
-	uint64_t min_progress = ULLONG_MAX;
-	for (auto i: m_devices) {
-		if (i->m_in_sampleno < min_progress) {
-			min_progress = i->m_in_sampleno;
-		}
-	}
-
-	if (min_progress > m_min_progress) {
-		m_min_progress = min_progress;
-		if (m_progress_callback) {
-			m_progress_callback(m_min_progress);
-		}
-	}
-}
-
-Device::Device(Session* s, libusb_device* d): m_session(s), m_device(d) {
-	libusb_ref_device(m_device);
-}
-
-// generic device init - libusb_open
-int Device::init() {
-	int r = libusb_open(m_device, &m_usb);
-	return r;
-}
-
-// generic device teardown - libusb_close
-Device::~Device() {
-	if (m_usb)
-		libusb_close(m_usb);
-	if (m_device)
-		libusb_unref_device(m_device);
-}
-
-// generic implementation of ctrl_transfers
-int Device::ctrl_transfer(unsigned bmRequestType, unsigned bRequest, unsigned wValue, unsigned wIndex, unsigned char *data, unsigned wLength, unsigned timeout)
-{
-	return libusb_control_transfer(m_usb, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
-}
-
-// Force the device into SAM-BA command mode.
-void Device::samba_mode() {
-	int ret;
-
-	ret = this->ctrl_transfer(0x40, 0xbb, 0, 0, NULL, 0, 500);
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	if (ret < 0 && (ret != LIBUSB_ERROR_IO && ret != LIBUSB_ERROR_PIPE)) {
-		std::string libusb_error_str(libusb_strerror((enum libusb_error)ret));
-		throw std::runtime_error("failed to enable SAM-BA command mode: " + libusb_error_str);
 	}
 }

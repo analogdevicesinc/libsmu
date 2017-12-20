@@ -1,7 +1,7 @@
 [Setup]
 AppId={{351792B2-1445-4489-945F-DD0649DD403F}
 AppName="libsmu (x64)"
-AppVersion="@LIBSMU_VERSION@"
+AppVersion="@LIBSMU_VERSION_STR@"
 AppPublisher="Analog Devices, Inc."
 AppPublisherURL="http://www.analog.com"
 AppSupportURL="http://www.analog.com"
@@ -44,18 +44,18 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "C:\libsmu-python\pysmu-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu27-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu34-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu35-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
-Source: "C:\libsmu\64\msvcp140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
-Source: "C:\libsmu\64\vcruntime140.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "C:\libsmu\64\*.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\amd64\dpinst.exe"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.inf"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusbx64.cat"; DestDir: "{app}\drivers"; Tasks: drivers
 
-Source: "C:\libsmu\64\libsmu.dll"; DestDir: "{app}"
 Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Tasks: visualstudio
-Source: "C:\libsmu\libsmu.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
+Source: "C:\libsmu\include\libsmu\*.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
 Source: "C:\libsmu\64\smu.exe"; DestDir: "{app}"
 
 [Tasks]
@@ -63,10 +63,14 @@ Source: "C:\libsmu\64\smu.exe"; DestDir: "{app}"
 Name: drivers; Description: Install WinUSB drivers for the M1K; OnlyBelowVersion: 6.2
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
 Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
-Name: python; Description: Install python bindings for libsmu; Flags: unchecked
+Name: python27; Description: Install python-2.7 bindings for libsmu; Flags: unchecked
+Name: python34; Description: Install python-3.4 bindings for libsmu; Flags: unchecked
+Name: python35; Description: Install python-3.5 bindings for libsmu; Flags: unchecked
 
 [Run]
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu-amd64.msi"""; Flags: hidewizard; Tasks: python
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu27-amd64.msi"""; Flags: hidewizard; Tasks: python27
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu34-amd64.msi"""; Flags: hidewizard; Tasks: python34
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu35-amd64.msi"""; Flags: hidewizard; Tasks: python35
 Filename: "{app}\drivers\dpinst.exe"; Parameters: "/sa /path ""{app}\drivers"""; Flags: waituntilterminated; Tasks: drivers
 
 [Code]

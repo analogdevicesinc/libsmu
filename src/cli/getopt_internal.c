@@ -26,7 +26,7 @@
 
 #include <stddef.h>
 #include <string.h>
-#include "getopt.h"
+#include "getopt_internal.h"
 
 const int no_argument = 0;
 const int required_argument = 1;

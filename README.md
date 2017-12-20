@@ -1,5 +1,6 @@
 [![appveyor status](https://ci.appveyor.com/api/projects/status/p30uj8rqulrxsqvs/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libsmu/branch/master)
 [![travis-ci status](https://travis-ci.org/analogdevicesinc/libsmu.svg?branch=master)](https://travis-ci.org/analogdevicesinc/libsmu)
+[![coverity status](https://scan.coverity.com/projects/analogdevicesinc-libsmu/badge.svg)](https://scan.coverity.com/projects/analogdevicesinc-libsmu)
 
 ### libsmu
 
@@ -8,12 +9,14 @@ analog interface devices, currently supporting the Analog Devices' ADALM1000.
 Building off of LibUSB for cross-platform operation, it offers the sourcing of
 repeated waveforms, configuration of hardware, and measuring of signals.
 
-This project also includes 'pysmu,' an initial binding of libsmu for Python2.7.
+Python bindings are also provided in the form of the pysmu module. See
+instructions below for how to build them.
 
-#### Building libsmu
+#### Building
 
-Build dependencies are cmake, pkgconfig, and libusb-1.0. To build and install
-the library and command line application use the following steps:
+Build dependencies are cmake, pkgconfig, boost (headers only), and libusb-1.0.
+To build and install the library and command line application use the following
+steps:
 
 Clone the repo:
 ```
@@ -22,7 +25,7 @@ $ git clone https://github.com/analogdevicesinc/libsmu.git
 
 Configure via cmake:
 ```
-$ cmake .
+$ mkdir build && cd build && cmake ..
 ```
 
 Compile:
@@ -35,15 +38,52 @@ Install:
 $ sudo make install
 ```
 
-Bindings for python2.7 are also available and are built if enabled via the
-following cmake command before running make:
+##### Docs
+
+Doxygen-based documentation is available at
+https://analogdevicesinc.github.io/libsmu/.
+
+This can also be built locally if enabled using the following cmake option
+before running make:
 
 ```
-$ cmake -DBUILD_PYTHON=ON .
+cmake -DWITH_DOC=ON ..
 ```
 
-They can also be built manually via the setup.py script in the regular python
-manner if libsmu has already been built and/or installed on the host machine.
+After make is run, the generated documentation files can then be found in the
+html subdir of the build directory.
+
+##### Testing
+
+The [Google Test framework](https://github.com/google/googletest) is used to
+run various streaming tests. Make sure it's installed on the host system and then use the
+following to build and run tests:
+
+```
+cmake -DBUILD_TESTS=ON ..
+make check
+```
+
+Note that at least one device should be inserted to the system for the checks
+to run properly.
+
+##### Python
+
+Bindings for python (2.7, 3.4, and 3.5) are available and can be enabled
+explicitly via the following cmake command (they're enabled by default):
+
+```
+$ cmake -DBUILD_PYTHON=ON ..
+```
+
+Note that this will build only one versions of python for the first supported
+implementation it finds installed on the system. To build them for other
+versions it's easiest to build them manually via the setup.py script in the
+regular python manner if libsmu has already been built and/or installed on the
+host machine.
+
+Note that they also require a recent version of cython to be installed when
+building from git.
 
 ##### Linux
 
@@ -86,16 +126,21 @@ python versions.
 ##### OS X
 
 For systems running OS X, first install [homebrew](http://brew.sh). Then use
-brew to install libusb, cmake, pkg-config, and optionally python (to build the
-python bindings):
+brew to install libusb, cmake, boost, pkg-config, and optionally python to
+build the python bindings. In addition, cython needs to be installed via pip to
+generate the python extension.
+
+Note that libusb is built for both 32 and 64 bit architectures since the
+current build system for libsmu builds universal binaries by default.
 
 ```
 brew install libusb --universal
-brew install cmake pkg-config python
+brew install cmake boost pkg-config python
+pip install cython
 ```
 
-Then the command line instructions in the previous section should work on OS X
-as well.
+After the above dependencies are installed, the command line instructions in
+the previous sections should work on OS X as well.
 
 ##### Windows
 
