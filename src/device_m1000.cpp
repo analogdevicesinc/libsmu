@@ -966,10 +966,14 @@ end:
 
 int M1000_Device::cancel()
 {
+    lock();
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
-	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0))
+    if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0)){
+        unlock();
 		return -1;
+    }
+    unlock();
 	return 0;
 }
 
