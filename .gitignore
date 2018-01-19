@@ -1,0 +1,15 @@
+# generated files
+*.so
+*.so.*
+*.pc
+smu
+include/libsmu/version.hpp
+
+# cmake
+/build
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
