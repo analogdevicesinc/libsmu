@@ -59,8 +59,7 @@ Source: "C:\libsmu\include\libsmu\*.hpp"; DestDir: "{pf32}\Microsoft Visual Stud
 Source: "C:\libsmu\32\smu.exe"; DestDir: "{app}"
 
 [Tasks]
-; Only allow driver installs for Windows 7 (version 6.2 maps to Windows 8).
-Name: drivers; Description: Install WinUSB drivers for the M1K; OnlyBelowVersion: 6.2
+Name: drivers; Description: Install WinUSB drivers for the M1K;
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
 Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
 Name: python27; Description: Install python-2.7 bindings for libsmu; Flags: unchecked
