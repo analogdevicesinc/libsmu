@@ -145,8 +145,8 @@ the previous sections should work on OS X as well.
 ##### Windows
 
 On Windows, it's easiest to use the provided installers,
-[libsmu-setup-x86.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup-x86.exe?branch=master&job=Configuration%3A%20Release) and
-[libsmu-setup-x64.exe](https://ci.appveyor.com/api/projects/analogdevicesinc/libsmu/artifacts/libsmu-setup-x64.exe?branch=master&job=Configuration%3A%20Release)
+[libsmu-setup-x86.exe](https://github.com/analogdevicesinc/libsmu/releases/latest) and
+[libsmu-setup-x64.exe](https://github.com/analogdevicesinc/libsmu/releases/latest)
 that install either 32 or 64 bit support, respectively. During the
 install process options are provided to install python and Visual Studio
 development support.
