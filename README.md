@@ -15,6 +15,20 @@ instructions below for how to build them.
 #### Building
 
 Build dependencies are cmake, pkgconfig, boost (headers only), and libusb-1.0.
+
+Bindings for Python are enabled by default. To be able to build libsmu with 
+Python bindings, use the following steps, before compiling the library:
+
+Install pip and setup tools for Python:
+```
+$ sudo apt-get install python-setuptools python-pip
+```
+
+Install Cython
+```
+$ sudo pip install cython
+```
+
 To build and install the library and command line application use the following
 steps:
 
@@ -82,8 +96,6 @@ versions it's easiest to build them manually via the setup.py script in the
 regular python manner if libsmu has already been built and/or installed on the
 host machine.
 
-Note that they also require a recent version of cython to be installed when
-building from git.
 
 ##### Linux
 
