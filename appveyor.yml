@@ -89,8 +89,7 @@ build_script:
   - copy "C:\\libusb\\libusb\libusb.h" c:\libsmu\include\libsmu
   # drivers
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
-  - copy ..\dist\m1k-winusbx64.cat c:\libsmu\drivers
-  - copy ..\dist\m1k-winusbx86.cat c:\libsmu\drivers
+  - copy ..\dist\m1k-winusb.cat c:\libsmu\drivers
   # libraries
   - copy C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.* c:\libsmu\32
   - copy C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.* c:\libsmu\32
@@ -381,7 +380,11 @@ build_script:
   - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
   - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
-  - copy c:\projects\libsmu\dist\m1k-winusbx86.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  - copy c:\projects\libsmu\dist\amd64 c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\
+  - copy c:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
+  - copy c:\projects\libsmu\dist\x86 c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\
+  - copy c:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
   - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
    # gtest libraries for test executables
@@ -400,7 +403,11 @@ build_script:
   - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
   - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
-  - copy c:\projects\libsmu\dist\m1k-winusbx64.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  - copy c:\projects\libsmu\dist\amd64 c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\
+  - copy c:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
+  - copy c:\projects\libsmu\dist\x86 c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\
+  - copy c:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
   - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   # gtest libraries for test executables

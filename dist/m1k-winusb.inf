@@ -1,40 +1,98 @@
-; Install the WinUSB drivers for the M1K.
+; M1K.inf
+; Copyright (c) 2010-2014 libusb (GNU LGPL)
+[Strings]
+VendorName = "Analog Devices, Inc."
+SourceName = "M1k Install Disk"
+M1kID   = "VID_064B&PID_784C"
+M1kDeviceName = "ADALM1000 WinUSB driver"
+M1kSambaID   = "VID_03EB&PID_6124"
+M1kSambaName = "ADALM1000 SAM-BA WinUSB driver"
 
-[Version]                                                       ; Version section
-Signature="$Windows NT$"                                        ; All Windows versions
-Class=USBDevice                                                 ; Use the WinUSB driver
-ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}                ; Associated GUID
-Provider=%ADI%                                                  ; Driver is provided by Analog Devices, Inc.
-DriverVer=08/14/2018,1.0.0.0                               ; Driver version
-CatalogFile.NTx86=m1k-winusbx86.cat
-CatalogFile.NTAMD64=m1k-winusbx64.cat
+[Version]
+Signature   = "$Windows NT$"
+Class       = "Universal Serial Bus devices"
+ClassGuid   = {88bae032-5a81-49f0-bc3d-a4ff138216d6}
+Provider    = "Analog Devices, Inc."
+CatalogFile = m1k-winusb.cat
+DriverVer   = 09/10/2018, 6.1.7600.16385
 
-[DestinationDirs]                                               ; DestinationDirs section
-DefaultDestDir=12                                               ; Default install directory is \drivers or \IOSubSys
+[ClassInstall32]
+Addreg = WinUSBDeviceClassReg
 
-[Manufacturer]                                                  ; Manufacturer section
-%ADI%=ADI,NTamd64                                               ; Models section is named ADI
+[WinUSBDeviceClassReg]
+HKR,,,0,"Universal Serial Bus devices"
+HKR,,Icon,,-20
 
-[ADI]                                                           ; Models section
-%M1K%=WinUSB_Install,USB\VID_064B&PID_784C                      ; M1K device in regular mode
-%M1K_SAMBA%=WinUSB_Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
+[Manufacturer]
+%VendorName% = libusbDevice_WinUSB,NTx86,NTamd64,NTia64
 
-[ADI.NTamd64]                                                   ; Models section
-%M1K%=WinUSB_Install,USB\VID_064B&PID_784C                      ; M1K device in regular mode
-%M1K_SAMBA%=WinUSB_Install,USB\VID_03EB&PID_6124                ; M1K device in SAM-BA mode
+[libusbDevice_WinUSB.NTx86]
+%M1kDeviceName% = USB_Install, USB\%M1kID%
+%M1kSambaName% = USB_Install, USB\%M1kSambaID%
 
-[WinUSB_Install]                                                ; Install section
-Include=winusb.inf
-AddReg=WinUSB_AddReg                                            ; Registry keys to add are listed in WinUSB_AddReg
+[libusbDevice_WinUSB.NTamd64]
+%M1kDeviceName% = USB_Install, USB\%M1kID%
+%M1kSambaName% = USB_Install, USB\%M1kSambaID%
 
-[WinUSB_AddReg]                                                 ; AddReg section
-HKR,,DeviceInterfaceGUIDs,0x10000,"{9f543223-cede-4fa3-b376-a25ce9a30e74}"
+[libusbDevice_WinUSB.NTia64]
+%M1kDeviceName% = USB_Install, USB\%M1kID%
+%M1kSambaName% = USB_Install, USB\%M1kSambaID%
 
-[WinUSB_Install.Services]                                       ; Services section
-Include=winusb.inf
-Needs=WINUSB.NT.Services
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
 
-[Strings]                                                       ; Strings section
-ADI="Analog Devices, Inc."                                      ; String value for the ADI symbol
-M1K="ADALM1000 WinUSB driver"                                   ; String value for the M1K symbol
-M1K_SAMBA="ADALM1000 SAM-BA WinUSB driver"                      ; String value for the M1K_SAMBA symbol
+[USB_Install.Services]
+Include    = winusb.inf
+AddService = WinUSB,0x00000002,WinUSB_ServiceInstall
+
+[WinUSB_ServiceInstall]
+DisplayName   = "WinUSB - Kernel Driver 09/10/2018 6.1.7600.16385"
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\WinUSB.sys
+
+[USB_Install.Wdf]
+KmdfService = WINUSB, WinUsb_Install
+
+[WinUSB_Install]
+KmdfLibraryVersion = 1.11
+
+[USB_Install.HW]
+AddReg = AddDeviceInterfaceGUID
+
+[NoDeviceInterfaceGUID]
+; Avoids adding a DeviceInterfaceGUID for generic driver
+
+[AddDeviceInterfaceGUID]
+HKR,,DeviceInterfaceGUIDs,0x10000,%DeviceGUID%
+
+[USB_Install.CoInstallers]
+AddReg    = CoInstallers_AddReg
+CopyFiles = CoInstallers_CopyFiles
+
+[CoInstallers_AddReg]
+HKR,,CoInstallers32,0x00010000,"WdfCoInstaller01011.dll,WdfCoInstaller","WinUSBCoInstaller2.dll"
+
+[CoInstallers_CopyFiles]
+WinUSBCoInstaller2.dll
+WdfCoInstaller01011.dll
+
+[DestinationDirs]
+CoInstallers_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %SourceName%
+
+[SourceDisksFiles.x86]
+WinUSBCoInstaller2.dll  = 1,x86
+WdfCoInstaller01011.dll = 1,x86
+
+[SourceDisksFiles.amd64]
+WinUSBCoInstaller2.dll  = 1,amd64
+WdfCoInstaller01011.dll = 1,amd64
+
+[SourceDisksFiles.ia64]
+WinUSBCoInstaller2.dll  = 1,ia64
+WdfCoInstaller01011.dll = 1,ia64
