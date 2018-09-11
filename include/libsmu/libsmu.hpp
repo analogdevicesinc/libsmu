@@ -88,6 +88,9 @@ enum Mode {
 	HI_Z, ///< Channel is floating.
 	SVMI, ///< Source voltage, measure current.
 	SIMV, ///< Source current, measure voltage.
+	HI_Z_SPLIT,
+	SVMI_SPLIT,
+	SIMV_SPLIT,
 };
 
 enum LED{

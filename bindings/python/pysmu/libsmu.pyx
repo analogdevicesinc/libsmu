@@ -36,6 +36,9 @@ class Mode(Enum):
     HI_Z = 0 # floating
     SVMI = 1 # source voltage, measure current
     SIMV = 2 # source current, measure voltage
+    HI_Z_SPLIT = 3
+    SVMI_SPLIT = 4
+    SIMV_SPLIT = 5
 
 
 class LED(Enum):
