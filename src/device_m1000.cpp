@@ -59,8 +59,8 @@ using namespace smu;
 static const sl_device_info m1000_info = {"ADALM1000", 2};
 
 static const sl_channel_info m1000_channel_info[2] = {
-	{"A", 3, 2},
-	{"B", 3, 2},
+        {"A", 6, 2},
+        {"B", 6, 2},
 };
 
 M1000_Device::~M1000_Device()
@@ -378,7 +378,7 @@ uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 	float val;
 	int v = 32768 * 4 / 5;
 
-	if ((m_mode[channel] != HI_Z) && (m_mode[channel] != HI_Z_SPLIT)) {
+        if ((m_mode[channel] != HI_Z)  && (m_mode[channel] != HI_Z_SPLIT)) {
 		if (m_sample_count == 0 || m_out_samples_avail[channel] > 0) {
 			if (!std::isnan(m_next_output[channel])) {
 				val = m_next_output[channel];
@@ -420,11 +420,11 @@ uint16_t M1000_Device::encode_out(unsigned channel, bool peek)
 		}
 	}
 
-	if ((m_mode[channel] == SVMI) || (m_mode[channel] == SVMI_SPLIT)) {
+        if ((m_mode[channel] == SVMI) || (m_mode[channel] == SVMI_SPLIT)) {
 		val = (val - m_cal.offset[channel*4+2]) * m_cal.gain_p[channel*4+2];
 		val = constrain(val, m_signals[channel][0].info()->min, m_signals[channel][0].info()->max);
 		v = val * (1/m_signals[channel][0].info()->resolution);
-	} else if ((m_mode[channel] == SIMV) || (m_mode[channel] == SIMV_SPLIT)) {
+        } else if ((m_mode[channel] == SIMV) || (m_mode[channel] == SIMV_SPLIT)) {
 		if (val > 0) {
 			val = (val - m_cal.offset[channel*4+3]) * m_cal.gain_p[channel*4+3];
 		}
@@ -808,7 +808,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode, bool restore)
 	}
 
 	// save the current mode to restore before the next data acquisition
-	if (restore)
+        if (restore)
 		m_mode[channel] = mode;
 
 	return 0;
@@ -848,12 +848,12 @@ int M1000_Device::on()
 		return -libusb_to_errno(ret);
 
 	// initialize channel modes to the default or previous setting
-	ret = set_mode(CHAN_A, m_mode[CHAN_A]);
-	if (ret < 0)
-		return ret;
-	ret = set_mode(CHAN_B, m_mode[CHAN_B]);
-	if (ret < 0)
-		return ret;
+        ret = set_mode(CHAN_A, m_mode[CHAN_A]);
+        if (ret < 0)
+                return ret;
+        ret = set_mode(CHAN_B, m_mode[CHAN_B]);
+        if (ret < 0)
+                return ret;
 
 	// make sure device isn't currently sampling
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
