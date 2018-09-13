@@ -90,6 +90,11 @@ build_script:
   # drivers
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
   - copy ..\dist\m1k-winusb.cat c:\libsmu\drivers
+  - if not exist "c:\libsmu\drivers\amd64" mkdir c:\libsmu\drivers\amd64
+  - copy ..\dist\amd64\* c:\libsmu\drivers\amd64
+  - if not exist "c:\libsmu\drivers\x86" mkdir c:\libsmu\drivers\x86
+  - copy ..\dist\x86\* c:\libsmu\drivers\x86
+
   # libraries
   - copy C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.* c:\libsmu\32
   - copy C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.* c:\libsmu\32
