@@ -381,10 +381,12 @@ build_script:
   - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
   - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
-  - copy c:\projects\libsmu\dist\amd64 c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\
-  - copy c:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
-  - copy c:\projects\libsmu\dist\x86 c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\
-  - copy c:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
+  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
+  - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
+  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
+  - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
+
+
   - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
    # gtest libraries for test executables
@@ -404,10 +406,11 @@ build_script:
   - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
   - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
-  - copy c:\projects\libsmu\dist\amd64 c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\
-  - copy c:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
-  - copy c:\projects\libsmu\dist\x86 c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\
-  - copy c:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
+  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
+  - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
+  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
+  - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
+
   - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   # gtest libraries for test executables

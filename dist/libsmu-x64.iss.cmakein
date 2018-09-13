@@ -53,6 +53,8 @@ Source: "C:\libsmu\64\*.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\amd64\dpinst.exe"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.inf"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.cat"; DestDir: "{app}\drivers"; Tasks: drivers
+Source: "C:\libsmu\drivers\amd64\*"; DestDir: "{app}\drivers\amd64"; Tasks: drivers
+Source: "C:\libsmu\drivers\x86\*"; DestDir: "{app}\drivers\x86"; Tasks: drivers
 
 Source: "C:\libsmu\64\libsmu.lib"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\lib\amd64"; Tasks: visualstudio
 Source: "C:\libsmu\include\libsmu\*.hpp"; DestDir: "{pf32}\Microsoft Visual Studio 14.0\VC\include"; Tasks: visualstudio
