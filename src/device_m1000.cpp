@@ -848,12 +848,12 @@ int M1000_Device::on()
 		return -libusb_to_errno(ret);
 
 	// initialize channel modes to the default or previous setting
-        ret = set_mode(CHAN_A, m_mode[CHAN_A]);
-        if (ret < 0)
-                return ret;
-        ret = set_mode(CHAN_B, m_mode[CHAN_B]);
-        if (ret < 0)
-                return ret;
+//        ret = set_mode(CHAN_A, m_mode[CHAN_A]);
+//        if (ret < 0)
+//                return ret;
+//        ret = set_mode(CHAN_B, m_mode[CHAN_B]);
+//        if (ret < 0)
+//                return ret;
 
 	// make sure device isn't currently sampling
 	ret = ctrl_transfer(0x40, 0xC5, 0, 0, 0, 0, 100);
