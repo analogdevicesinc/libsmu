@@ -40,6 +40,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int cancel()
         bint cancelled()
         void flush()
+        void put_in_samba_before_flash()
         int flash_firmware(const char* path, vector[Device*]) except +
         int end()
         void hotplug_attach(void (Device *dev, void *data) nogil, void *data)

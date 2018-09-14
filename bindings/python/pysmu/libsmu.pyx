@@ -313,11 +313,11 @@ cdef class Session:
         if ret:
             raise SessionError('failed ending session stream', ret)
 
-    def put_in_samba_before_flash():
+    def put_in_samba_before_flash(self):
         try:
             self._session.put_in_samba_before_flash()
         except:
-            raise SessionError("Putting devs in programming mode failed");
+            raise SessionError("Cannot prepare devices for flashing");
 
     def flash_firmware(self, path, devices=()):
         """Update firmware for a given device.
