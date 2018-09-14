@@ -338,29 +338,29 @@ int Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	// hotplug callbacks exist.
 	lock.unlock();
 
-	// force all specified devices into SAM-BA mode
-	// TODO: revert to unsigned index when VS supports OpenMP 3.0
-	#pragma omp parallel for
-	for (int i = 0; i < (int)devices.size(); i++) {
-		Device* dev = devices[i];
-		if (dev) {
-			#pragma omp critical
-			{
-				remove(dev);
-			}
-			dev->samba_mode();
-			delete dev;
-		}
-	}
+//	// force all specified devices into SAM-BA mode
+//	// TODO: revert to unsigned index when VS supports OpenMP 3.0
+//	#pragma omp parallel for
+//	for (int i = 0; i < (int)devices.size(); i++) {
+//		Device* dev = devices[i];
+//		if (dev) {
+//			#pragma omp critical
+//			{
+//				remove(dev);
+//			}
+//			dev->samba_mode();
+//			delete dev;
+//		}
+//	}
 
-	std::vector<libusb_device*> samba_devs;
-	device_count = scan_samba_devs(samba_devs);
-	if (device_count < 0)
-		throw std::runtime_error("failed to scan for devices in SAM-BA mode");
-	else if (device_count == 0)
-		throw std::runtime_error("no devices found in SAM-BA mode");
-	else if (device_count < (int)devices.size())
-		throw std::runtime_error("failed forcing devices into SAM-BA mode");
+        std::vector<libusb_device*> samba_devs;
+        device_count = scan_samba_devs(samba_devs);
+        if (device_count < 0)
+                throw std::runtime_error("failed to scan for devices in SAM-BA mode");
+        else if (device_count == 0)
+                throw std::runtime_error("no devices found in SAM-BA mode");
+        else if (device_count < (int)devices.size())
+                throw std::runtime_error("failed forcing devices into SAM-BA mode");
 
 	// flash all devices in SAM-BA mode
 	#pragma omp parallel for
@@ -380,6 +380,45 @@ int Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	}
 
 	return device_count;
+}
+
+int Session::put_in_samba_before_flash()
+{
+    std::vector<Device*> devices;
+
+    int device_count = 0;
+    std::unique_lock<std::mutex> lock(m_lock_devlist);
+
+    // if no devices are specified, flash all supported devices on the system
+    if (devices.size() == 0) {
+            devices = m_available_devices;
+    }
+
+    lock.unlock();
+
+    // force all specified devices into SAM-BA mode
+    // TODO: revert to unsigned index when VS supports OpenMP 3.0
+    #pragma omp parallel for
+    for (int i = 0; i < (int)devices.size(); i++) {
+            Device* dev = devices[i];
+            if (dev) {
+                    #pragma omp critical
+                    {
+                            remove(dev);
+                    }
+                    dev->samba_mode();
+                    delete dev;
+            }
+    }
+
+//    std::vector<libusb_device*> samba_devs;
+//    device_count = scan_samba_devs(samba_devs);
+//    if (device_count < 0)
+//            throw std::runtime_error("failed to scan for devices in SAM-BA mode");
+//    else if (device_count == 0)
+//            throw std::runtime_error("no devices found in SAM-BA mode");
+//    else if (device_count < (int)devices.size())
+//            throw std::runtime_error("failed forcing devices into SAM-BA mode");
 }
 
 int Session::destroy(Device *dev)
