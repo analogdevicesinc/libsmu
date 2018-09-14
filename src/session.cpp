@@ -382,7 +382,7 @@ int Session::flash_firmware(std::string file, std::vector<Device*> devices)
 	return device_count;
 }
 
-int Session::put_in_samba_before_flash()
+void Session::put_in_samba_before_flash()
 {
     std::vector<Device*> devices;
 

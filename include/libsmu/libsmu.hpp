@@ -234,6 +234,8 @@ namespace smu {
 		/// @throws std::runtime_error for various USB failures causing aborted flashes.
 		int flash_firmware(std::string file, std::vector<Device*> devices = {});
 
+                void put_in_samba_before_flash();
+
 		/// internal: Called by devices on the USB thread when they are complete.
 		void completion();
 		/// internal: Called by devices on the USB thread when a device encounters an error.
