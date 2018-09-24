@@ -797,7 +797,7 @@ int M1000_Device::set_mode(unsigned channel, unsigned mode, bool restore)
 		return -libusb_to_errno(ret);
 
 	// set mode
-	ret = ctrl_transfer(0x40, 0x53, channel, mode, 0, 0, 100);
+	ret = ctrl_transfer(0x40, 0x53, channel, mode % 3, 0, 0, 100);
 	if (ret < 0)
 		return -libusb_to_errno(ret);
 
