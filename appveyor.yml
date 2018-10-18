@@ -1,6 +1,10 @@
 os: Visual Studio 2015
 clone_depth: 1
 
+#init:
+#    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+
 environment:
     MSYSTEM: MINGW64
     # Tell msys2 to inherit the current directory when starting the shell
@@ -354,11 +358,13 @@ build_script:
   - C:\msys64\usr\bin\bash -lc "rm /mingw32/etc/gdbinit"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-gcc mingw-w64-i686-cmake mingw-w64-i686-pkg-config mingw-w64-i686-python2-pip mingw-w64-i686-openblas mingw-w64-i686-lapack"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-python3 mingw-w64-i686-python3-pip mingw-w64-i686-binutils"
+  - C:\msys64\usr\bin\bash -lc "pacman -U --noconfirm http://repo.msys2.org/mingw/i686/mingw-w64-i686-curl-7.61.1-2-any.pkg.tar.xz "
   # Install MinGW dependencies for 64 bit
   - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-x86_64-gcc-ada mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-gcc-libgfortran mingw-w64-x86_64-gcc-objc"
   - C:\msys64\usr\bin\bash -lc "rm /mingw64/etc/gdbinit"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config mingw-w64-x86_64-python2-pip mingw-w64-x86_64-openblas mingw-w64-x86_64-lapack"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-python3 mingw-w64-x86_64-python3-pip mingw-w64-x86_64-binutils"
+  - C:\msys64\usr\bin\bash -lc "pacman -U --noconfirm http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-curl-7.61.1-2-any.pkg.tar.xz"
 
   # Get libusb hotplug for 32 bit
   - ps: (new-object System.Net.WebClient).Downloadfile("http://swdownloads.analog.com/cse/build/libusb-1.0-hp.7z", "c:\libusb.7z")
@@ -392,7 +398,9 @@ build_script:
   - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
    # gtest libraries for test executables
-  - copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  #- copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\projects\libsmu\mingw-32\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  - copy c:\projects\libsmu\mingw-32\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
   # batch file to run test suite
@@ -416,7 +424,9 @@ build_script:
   - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   # gtest libraries for test executables
-  - copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  #- copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\projects\libsmu\mingw-64\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  - copy c:\projects\libsmu\mingw-64\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
    # batch file to run test suite
@@ -457,27 +467,27 @@ build_script:
   - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
 
   ## build 32 bit python 3.6 bindings
-  - set PATH=C:\\msys64\\mingw32\\lib\\python3.6;C:\\msys64\\mingw32\\lib\\python3.6\\Tools\\scripts;%PATH%
-  - "python3 --version"
-  - "python3 -c \"import struct; print(struct.calcsize('P') * 8)\""
+  #- set PATH=C:\\msys64\\mingw32\\lib\\python3.6;C:\\msys64\\mingw32\\lib\\python3.6\\Tools\\scripts;%PATH%
+  #- "python3 --version"
+  #- "python3 -c \"import struct; print(struct.calcsize('P') * 8)\""
   # update pip to keep it from complaining
-  - "C:/msys64/mingw32/bin/python3.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  #- "C:/msys64/mingw32/bin/python3.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "C:/msys64/mingw32/bin/python3.exe -m pip install --only-binary :all: wheel"
+  #- "C:/msys64/mingw32/bin/python3.exe -m pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "C:/msys64/mingw32/bin/python3.exe -m pip install cython"
+  #- "C:/msys64/mingw32/bin/python3.exe -m pip install cython"
 
   # build python dist files
   - cd C:\projects\libsmu\bindings\python
-  - "python3 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\libusb-mingw\\include\\libusb-1.0"
-  - "python3 setup.py build"
-  - "python3 setup.py bdist_wheel --skip-build"
-  - "python3 setup.py bdist --skip-build --format msi"
-  - "python3 setup.py bdist --format zip --bdist-base=%PWDD%"
+  #- "python3 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\libusb-mingw\\include\\libusb-1.0"
+  #- "python3 setup.py build"
+  #- "python3 setup.py bdist_wheel --skip-build"
+  #- "python3 setup.py bdist --skip-build --format msi"
+  #- "python3 setup.py bdist --format zip --bdist-base=%PWDD%"
   # test local install
-  - ps: Get-ChildItem dist/*-cp36-*-mingw.whl | % { pip3 install "$_" }
+  #- ps: Get-ChildItem dist/*-cp36-*-mingw.whl | % { pip3 install "$_" }
    # Create a folder to keep pysmu for all the python versions
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
+  #- 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
   - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%-mingw-py.zip" pysmu-*mingw-py
   - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*mingw.zip"
 
@@ -487,3 +497,6 @@ build_script:
 cache:
   # cache innosetup download
   - C:\Users\appveyor\AppData\Local\Temp\chocolatey
+
+#on_finish:
+#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
