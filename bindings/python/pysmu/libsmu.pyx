@@ -40,14 +40,12 @@ class Mode(Enum):
     SVMI_SPLIT = 4
     SIMV_SPLIT = 5
 
-
 class LED(Enum):
     """Available device LEDs to control."""
     red = 47
     green = 29
     blue = 28
     all = 0
-
 
 cdef class Session:
     # pointer to the underlying C++ smu::Session object
@@ -498,6 +496,15 @@ cdef class Device:
         Raises: IOError on USB failures.
         """
         self._device.set_led(leds)
+
+    def set_adc_mux(self, adc_mux):
+        """Set ADC Mux mode.
+
+        Args:
+            adc_mux: an integer number, the number represents 1 of 7 poaaible adc MUX settings 
+        Raises: IOError on USB failures.
+        """
+        self._device.set_adc_mux(adc_mux)
 
     def ctrl_transfer(self, bm_request_type, b_request, wValue, wIndex,
                       data, wLength, timeout):
@@ -1276,6 +1283,19 @@ cdef class _DeviceSignal(Signal):
         """
         def __get__(self):
             return self._signal.info().max
+
+    property resolution:
+        """Get the signal's resolution value.
+
+        >>> from pysmu import Session, Mode
+        >>> dev = session.devices[0]
+        >>> chan_a = dev.channels['A']
+        >>> chan_a.mode = Mode.SVMI
+        >>> chan_a.signal.resolution
+        0.2
+        """
+        def __get__(self):
+            return self._signal.info().resolution
 
     @staticmethod
     cdef _create(cpp_libsmu.Signal *signal) with gil:

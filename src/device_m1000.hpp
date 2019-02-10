@@ -66,6 +66,7 @@ namespace smu {
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
         int set_led(unsigned leds) override;
+		int set_adc_mux(unsigned adc_mux); // New function added;
 
 	protected:
 		friend class Session;
