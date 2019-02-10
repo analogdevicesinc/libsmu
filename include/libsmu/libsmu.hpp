@@ -445,6 +445,8 @@ namespace smu {
 		/// @brief Set the leds states for device.
         /// @param leds value between [0, 7], each bit of the value represents the state of an LED (1-on 0-off) in this order (RGB or DS3,DS2,DS1 on rev F hardware)
         virtual int set_led(unsigned leds) = 0;
+		/// set adc mux mode
+		virtual int set_adc_mux(unsigned adc_mux) = 0;
 
 	protected:
 		/// @brief Device constructor.
