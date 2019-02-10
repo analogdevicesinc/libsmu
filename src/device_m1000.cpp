@@ -63,6 +63,8 @@ static const sl_channel_info m1000_channel_info[2] = {
         {"B", 6, 2},
 };
 
+int ADC_MUX_Mode = 0; // global variable for selecting ADC MUX modes
+
 M1000_Device::~M1000_Device()
 {
 	// Stop channel write threads.
@@ -669,14 +671,62 @@ void M1000_Device::handle_in_transfer(libusb_transfer* t)
 		for (unsigned i = 0; i < chunk_size; i++) {
 			// M1K firmware versions >= 2.00 use an interleaved data format.
 			if (std::atof(m_fwver.c_str()) >= 2) {
-				v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
-				samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
-				v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
-				samples[1] = (v - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
-				v = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution;
-				samples[2] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
-				v = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
-				samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+				if (::ADC_MUX_Mode == 0) { // default 4 channel measurement
+					v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution;
+					samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
+					v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+					samples[1] = (v - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+					v = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution;
+					samples[2] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
+					v = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+					samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+				}
+				if (::ADC_MUX_Mode == 1) { // 2 channel voltage only measurement
+					v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution; // channel A odd sample
+					samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
+					v = (buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[1][0].info()->resolution; // channel B odd sample
+					samples[1] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
+					v = (buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution; // channel B even sample
+					samples[2] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
+					v = (buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[0][0].info()->resolution; // channel A even sample
+					samples[3] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
+				}
+				if (::ADC_MUX_Mode == 2) { // 2  channel current only measurement
+					v = (((buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+					samples[0] = (v - m_cal.offset[5]) * (samples[0] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+					v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+					samples[1] = (v - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+					v = (((buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+					samples[2] = (v - m_cal.offset[1]) * (samples[2] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+					v = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+					samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+				}
+				if (::ADC_MUX_Mode == 4) { // measure CHA Voltage and Current
+					v = (buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[0][0].info()->resolution; // channel A V odd sample
+					samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
+					v = (((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+					samples[1] = (v - m_cal.offset[1]) * (samples[1] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+					v = (((buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[0][1].info()->resolution) - 0.195)*1.25;
+					samples[2] = (v - m_cal.offset[1]) * (samples[2] > 0 ? m_cal.gain_p[1] : m_cal.gain_n[1]);
+					v = (buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[0][0].info()->resolution; // channel A V even sample
+					samples[3] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
+				}
+				if (::ADC_MUX_Mode == 5) { // measure CHB Voltage and Current
+					v = (((buf[i*8+0] << 8 | buf[i*8+1]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+					samples[0] = (v - m_cal.offset[5]) * (samples[0] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+					v = ((buf[i*8+2] << 8 | buf[i*8+3]) * m_signals[1][0].info()->resolution);
+					samples[1] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
+					v = ((buf[i*8+4] << 8 | buf[i*8+5]) * m_signals[1][0].info()->resolution);
+					samples[2] = (v - m_cal.offset[4]) * m_cal.gain_p[4];
+					v = (((buf[i*8+6] << 8 | buf[i*8+7]) * m_signals[1][1].info()->resolution) - 0.195)*1.25;
+					samples[3] = (v - m_cal.offset[5]) * (samples[3] > 0 ? m_cal.gain_p[5] : m_cal.gain_n[5]);
+				}
+				if (::ADC_MUX_Mode == 7) { // Return Raw un-calibrated data scaled by 4096/65536
+					samples[0] = ((buf[i*8+0] << 8 | buf[i*8+1]) * 0.0625);
+					samples[1] = ((buf[i*8+2] << 8 | buf[i*8+3]) * 0.0625);
+					samples[2] = ((buf[i*8+4] << 8 | buf[i*8+5]) * 0.0625);
+					samples[3] = ((buf[i*8+6] << 8 | buf[i*8+7]) * 0.0625);
+				}
 			} else {
 				v = (buf[(i+chunk_size*0)*2] << 8 | buf[(i+chunk_size*0)*2+1]) * m_signals[0][0].info()->resolution;
 				samples[0] = (v - m_cal.offset[0]) * m_cal.gain_p[0];
@@ -1064,6 +1114,53 @@ int M1000_Device::set_led(unsigned leds){
 		return -1;
 
 	ctrl_transfer(0x40,0x03,leds,0,0,0,100);
+
+	return 0;
+}
+
+int M1000_Device::set_adc_mux(unsigned adc_mux){
+	if(adc_mux > 7)
+		return -1;
+	::ADC_MUX_Mode = adc_mux; // set global variable
+	
+	if(adc_mux == 0) { // Change ADC MUX to 4 signal measure
+		ctrl_transfer(0x40, 0x20, 0x20F1, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x21, 0x20F7, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x22, 0x20F7, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x23, 0x20F1, 0, 0, 0, 100);
+	}
+	if(adc_mux == 1) { // Change ADC MUX to 2 voltage measure
+		ctrl_transfer(0x40, 0x20, 0x20F1, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x21, 0x20F1, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x22, 0x20F1, 0, 0, 0, 100);
+		ctrl_transfer(0x40, 0x23, 0x20F1, 0, 0, 0, 100);
+	}
+	if(adc_mux == 2) { // Change ADC MUX to 2 current measure
+		ctrl_transfer(0x40, 0x20, 0x2071, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x21, 0x20F7, 0, 0, 0, 100); // ADC U11
+		ctrl_transfer(0x40, 0x22, 0x20F7, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x23, 0x2071, 0, 0, 0, 100); // ADC U11
+	}
+	if(adc_mux == 4) { // change ADC MUX to CHA Voltage and Current
+		ctrl_transfer(0x40, 0x20, 0x2071, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x21, 0x20F7, 0, 0, 0, 100); // ADC U11
+		ctrl_transfer(0x40, 0x22, 0x20F7, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x23, 0x2071, 0, 0, 0, 100); // ADC U11
+		ctrl_transfer(0x40, 0x20, 0x20F1, 0, 0, 0, 100); // ADC U12, 0x20F1, 0x21F1
+		ctrl_transfer(0x40, 0x21, 0x20F1, 0, 0, 0, 100); // ADC U12, 0x20F1, 0x21F1
+    	ctrl_transfer(0x40, 0x22, 0x2071, 0, 0, 0, 100); // ADC U11, 0x2171, 0x2071
+		ctrl_transfer(0x40, 0x23, 0x2071, 0, 0, 0, 100); // ADC U11, 0x2171, 0x2071
+	}
+	if(adc_mux == 5) { // change ADC MUX to CHB Voltage and Current
+		ctrl_transfer(0x40, 0x20, 0x2071, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x21, 0x20F7, 0, 0, 0, 100); // ADC U11
+		ctrl_transfer(0x40, 0x22, 0x20F7, 0, 0, 0, 100); // ADC U12
+		ctrl_transfer(0x40, 0x23, 0x2071, 0, 0, 0, 100); // ADC U11
+		ctrl_transfer(0x40, 0x20, 0x2071, 0, 0, 0, 100); // ADC U12, 0x2071, 0x2171
+		ctrl_transfer(0x40, 0x21, 0x2071, 0, 0, 0, 100); // ADC U12, 0x2071, 0x2171
+        ctrl_transfer(0x40, 0x22, 0x20F1, 0, 0, 0, 100); // ADC U11, 0x21F1, 0x20F1
+		ctrl_transfer(0x40, 0x23, 0x20F1, 0, 0, 0, 100); // ADC U11, 0x21F1, 0x20F1
+	}
 
 	return 0;
 }
