@@ -70,6 +70,7 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         int write_calibration(const char* path)
         void calibration(vector[vector[float]]* cal)
         int set_led(unsigned leds)
+        int set_adc_mux(unsigned adc_mux)
 
     cdef cppclass Signal:
         sl_signal_info* info()
