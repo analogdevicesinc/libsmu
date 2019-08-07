@@ -180,8 +180,7 @@ int main(int argc, char **argv)
 	// map long options to short ones
 	static struct option long_options[] = {
 		{"help",     no_argument, 0, 'a'},
-		{"version",     no_argument, 0, 'v'},
-		{"hotplug",  no_argument, 0, 'p'},
+        {"version",     no_argument, 0, 'v'},
 		{"list",     no_argument, 0, 'l'},
 		{"stream",   no_argument, 0, 's'},
 		{"display-calibration", no_argument, 0, 'd'},
@@ -194,30 +193,6 @@ int main(int argc, char **argv)
 	while ((opt = getopt_long(argc, argv, "hvplsdrw:f:",
 			long_options, &option_index)) != -1) {
 		switch (opt) {
-			case 'p':
-				session->hotplug_detach([=](Device* device, void* data){
-					session->cancel();
-					if (!session->remove(device, true)) {
-						printf("removed device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->m_serial.c_str(),
-							device->m_fwver.c_str(), device->m_hwver.c_str());
-					}
-				});
-
-				session->hotplug_attach([=](Device* device, void* data){
-					if (!session->add(device)) {
-						printf("added device: %s: serial %s: fw %s: hw %s\n",
-							device->info()->label, device->m_serial.c_str(),
-							device->m_fwver.c_str(), device->m_hwver.c_str());
-					}
-				});
-
-				cout << "waiting for hotplug events..." << endl;
-
-				// wait around doing nothing (hotplug testing)
-				while (1)
-					std::this_thread::sleep_for(std::chrono::seconds(10));
-				break;
 			case 'l':
 				// list attached device info
 				list_devices(session);

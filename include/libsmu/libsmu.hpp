@@ -256,11 +256,6 @@ namespace smu {
 		/// cancelled session.
 		std::function<void(unsigned)> m_completion_callback;
 
-		/// @brief Register USB hotplug attach callback.
-		void hotplug_attach(std::function<void(Device* device, void* data)> func, void *data = NULL);
-		/// @brief Register USB hotplug detach callback.
-		void hotplug_detach(std::function<void(Device* device, void* data)> func, void *data = NULL);
-
 		/// @brief Session sample rate.
 		uint64_t m_sample_rate = 0;
 
