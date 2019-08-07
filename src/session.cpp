@@ -23,30 +23,6 @@ extern std::exception_ptr e_ptr;
 using namespace std::placeholders;  // for _1, _2, _3...
 using namespace smu;
 
-// Callback for libusb hotplug events, proxies to Session::attached() and Session::detached().
-extern "C" int LIBUSB_CALL usb_hotplug_callback(
-	libusb_context *usb_ctx, libusb_device *usb_dev, libusb_hotplug_event usb_event, void *user_data)
-{
-	int ret;
-
-	libusb_device_descriptor usb_desc;
-	ret = libusb_get_device_descriptor(usb_dev, &usb_desc);
-	if (!ret) {
-		// only try to run hotplug callbacks for supported devices
-		std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
-		if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
-				!= SUPPORTED_DEVICES.end()) {
-			Session *session = (Session *) user_data;
-			if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-				session->attached(usb_dev);
-			} else if (usb_event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-				session->detached(usb_dev);
-			}
-		}
-	}
-	return 0;
-}
-
 Session::Session()
 {
 	m_active_devices = 0;
@@ -56,27 +32,6 @@ Session::Session()
 	if (ret != 0) {
 		DEBUG("%s: libusb init failed: %s\n", __func__, libusb_error_name(ret));
 		abort();
-	}
-
-	// Enable USB hotplugging capabilities. If the platform doesn't support
-	// this (we're currently using a custom-patched version of libusb to
-	// support hotplugging on Windows) we fallback to using all the devices
-	// currently plugged in.
-	if (libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
-		ret = libusb_hotplug_register_callback(
-			NULL,
-			(libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-			(libusb_hotplug_flag) 0,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			LIBUSB_HOTPLUG_MATCH_ANY,
-			usb_hotplug_callback,
-			this,
-			&m_usb_cb);
-		if (ret != 0)
-			DEBUG("%s: libusb hotplug callback registration failed: %s\n", __func__, libusb_error_name(ret));
-	} else {
-		DEBUG("%s: libusb hotplug not supported, only currently attached devices will be used.\n", __func__);
 	}
 
 	struct timeval zero_tv;
@@ -91,17 +46,6 @@ Session::Session()
 		}
 	});
 
-	// Add default hotplug detach support to cancel/end a session and remove the related device.
-	hotplug_detach([=](Device* dev, void* data) {
-		if (m_devices.find(dev) != m_devices.end()) {
-			cancel();
-			end();
-			remove(dev, true);
-			destroy(dev);
-			throw std::runtime_error("device detached");
-		}
-	});
-
 	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
 	if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_ctx, 4);
@@ -112,11 +56,9 @@ Session::~Session()
 {
 	std::lock_guard<std::mutex> lock(m_lock_devlist);
 
-	libusb_hotplug_deregister_callback(m_usb_ctx, m_usb_cb);
-
 	// Cancel all outstanding transfers.
 	cancel();
-	
+
 	// Run device destructors before libusb_exit().
 	for (Device* dev: m_devices) {
 		// reset devices to high impedance mode before removing
@@ -138,16 +80,6 @@ Session::~Session()
 	}
 
 	libusb_exit(m_usb_ctx);
-}
-
-void Session::hotplug_attach(std::function<void(Device* device, void* data)> func, void* data)
-{
-	m_hotplug_attach_callbacks.push_back(std::bind(func, _1, data));
-}
-
-void Session::hotplug_detach(std::function<void(Device* device, void* data)> func, void* data)
-{
-	m_hotplug_detach_callbacks.push_back(std::bind(func, _1, data));
 }
 
 void Session::attached(libusb_device *usb_dev)
@@ -495,8 +427,20 @@ int Session::add(Device* device)
 	if (device) {
 		ret = device->claim();
 		if (!ret)
+		{
+			for (auto it : m_devices)
+			{
+				if (it->m_serial.compare(device->m_serial) == 0)
+				{
+					m_devices.erase(it);
+					break;
+				}
+			}
+
 			m_devices.insert(device);
+		}
 	}
+
 	return ret;
 }
 
@@ -587,7 +531,8 @@ int Session::run(uint64_t samples)
 		// continuous mode doesn't work
 		return -EBUSY;
 	}
-    m_samples = samples;
+
+	m_samples = samples;
 	ret = start(samples);
 	if (ret)
 		return ret;
@@ -608,15 +553,15 @@ int Session::end()
 	// Wait up to a second for devices to finish streaming.
 	std::unique_lock<std::mutex> lk(m_lock);
 	auto now = std::chrono::system_clock::now();
-    uint64_t waitTime;
-    if(m_sample_rate != 0){
-         waitTime = (m_samples/m_sample_rate + 1) + 1;
-    }
-    else{
-        waitTime = 0;
-    }
+	uint64_t waitTime;
+	if(m_sample_rate != 0){
+		waitTime = (m_samples/m_sample_rate + 1) + 1;
+	}
+	else{
+		waitTime = 0;
+	}
 
-    auto res = m_completion.wait_until(lk, now + std::chrono::seconds(waitTime), [&]{ return m_active_devices == 0; });
+	auto res = m_completion.wait_until(lk, now + std::chrono::seconds(waitTime), [&]{ return m_active_devices == 0; });
 	if (!res) {
 		DEBUG("%s: timed out waiting for completion\n", __func__);
 	}
@@ -680,6 +625,7 @@ int Session::cancel()
 		ret = dev->cancel();
 		if (ret)
 			break;
+		//delete dev;
 	}
 	return ret;
 }
