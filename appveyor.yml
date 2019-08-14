@@ -138,8 +138,8 @@ build_script:
   # build 32 and 64 bit pysmu modules for all supported python versions, currently 2.7, 3.6, and 3.7
   # TODO: drop the duplication and loop over supported python versions
   - mkdir c:\libsmu-python
+  # check the python versions installed on appveyor
   - ls c:\
-  - set OLDPATH=%PATH%
   ## build 32 bit python2.7 bindings
   # add python dirs to PATH
   - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
@@ -159,6 +159,7 @@ build_script:
   - set DISTUTILS_USE_SDK=1
   - set MSSdk=1
   - set PATH=C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC;%PATH%
+  - set OLDPATH=%PATH%
 
   - "vcvarsall.bat x86"
   - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
