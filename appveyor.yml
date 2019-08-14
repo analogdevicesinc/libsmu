@@ -203,8 +203,8 @@ build_script:
   # test local install
   - ps: Get-ChildItem dist/*-cp36-*-win32.whl | % { pip install "$_" }
   # build exe from python script
-  - "build_exe -b 0 -d exe32 bin/pysmu"
-  - rmdir /q /s bin\__pycache__
+  # "build_exe -b 0 -d exe32 bin/pysmu"
+  # rmdir /q /s bin\__pycache__
   - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
   - set PATH=%OLDPATH%
 
@@ -294,8 +294,8 @@ build_script:
   # test local install
   - ps: Get-ChildItem dist/*-cp36-*-win_amd64.whl | % { pip install "$_" }
   # build exe from python script
-  - "build_exe -b 0 -d exe64 bin/pysmu"
-  - rmdir /q /s bin\__pycache__
+  # "build_exe -b 0 -d exe64 bin/pysmu"
+  # rmdir /q /s bin\__pycache__
   - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
   - set PATH=%OLDPATH%
 
