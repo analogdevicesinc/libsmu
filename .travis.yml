@@ -10,21 +10,14 @@ matrix:
       sudo: required
       dist: trusty
       language: python
-      python: 2.7
+      python: 3.6
       env: PYTHON=python PIP=pip
       cache: pip
     - os: linux
       sudo: required
       dist: trusty
       language: python
-      python: 3.4
-      env: PYTHON=python PIP=pip
-      cache: pip
-    - os: linux
-      sudo: required
-      dist: trusty
-      language: python
-      python: 3.5
+      python: 3.7
       env: PYTHON=python PIP=pip
       cache: pip
     - os: osx
