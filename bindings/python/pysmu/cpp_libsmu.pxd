@@ -42,8 +42,6 @@ cdef extern from "libsmu/libsmu.hpp" namespace "smu" nogil:
         void flush()
         int flash_firmware(const char* path, vector[Device*]) except +
         int end()
-        void hotplug_attach(void (Device *dev, void *data) nogil, void *data)
-        void hotplug_detach(void (Device *dev, void *data) nogil, void *data)
 
     cdef cppclass Device:
         string m_serial

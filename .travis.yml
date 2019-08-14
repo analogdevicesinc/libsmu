@@ -15,7 +15,7 @@ matrix:
       cache: pip
     - os: linux
       sudo: required
-      dist: trusty
+      dist: xenial
       language: python
       python: 3.7
       env: PYTHON=python PIP=pip
