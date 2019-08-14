@@ -91,28 +91,6 @@ cdef class Session:
         signal(SIGINT, SIG_DFL)
         os.kill(os.getpid(), SIGINT)
 
-    def hotplug_attach(self, *funcs):
-        """Register a function to run on a device attach event.
-
-        Attributes:
-            funcs: Python function(s) to run on device attach events. The
-                function should accept a single parameter, the device object
-                being attached.
-        """
-        for f in funcs:
-            self._session.hotplug_attach(self._hotplug_callback, <void*>f)
-
-    def hotplug_detach(self, *funcs):
-        """Register a function to run on a device detach event.
-
-        Attributes:
-            funcs: Python function(s) to run on device detach events. The
-                function should accept a single parameter, the device object
-                being detached.
-        """
-        for f in funcs:
-            self._session.hotplug_detach(self._hotplug_callback, <void*>f)
-
     @staticmethod
     cdef void _hotplug_callback(cpp_libsmu.Device *device, void *func) with gil:
         """Internal proxy to run the python hotplug functions from the C++ side."""
