@@ -339,10 +339,10 @@ build_script:
   # copy python binding MSIs for installer
   - ps: Copy-Item dist\pysmu-*amd64-py2.7.msi c:\libsmu-python\pysmu27-amd64.msi
   - ps: Copy-Item dist\pysmu-*win32-py2.7.msi c:\libsmu-python\pysmu27-win32.msi
-  - ps: Copy-Item dist\pysmu-*amd64-py3.4.msi c:\libsmu-python\pysmu34-amd64.msi
-  - ps: Copy-Item dist\pysmu-*win32-py3.4.msi c:\libsmu-python\pysmu34-win32.msi
-  - ps: Copy-Item dist\pysmu-*amd64-py3.5.msi c:\libsmu-python\pysmu35-amd64.msi
-  - ps: Copy-Item dist\pysmu-*win32-py3.5.msi c:\libsmu-python\pysmu35-win32.msi
+  - ps: Copy-Item dist\pysmu-*amd64-py3.6.msi c:\libsmu-python\pysmu36-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py3.6.msi c:\libsmu-python\pysmu36-win32.msi
+  - ps: Copy-Item dist\pysmu-*amd64-py3.7.msi c:\libsmu-python\pysmu37-amd64.msi
+  - ps: Copy-Item dist\pysmu-*win32-py3.7.msi c:\libsmu-python\pysmu37-win32.msi
   - ps: popd
 
   # create libsmu installers

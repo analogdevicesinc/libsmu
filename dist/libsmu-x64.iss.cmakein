@@ -45,8 +45,8 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
 Source: "C:\libsmu-python\pysmu27-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
-Source: "C:\libsmu-python\pysmu34-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
-Source: "C:\libsmu-python\pysmu35-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu36-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu37-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 Source: "C:\libsmu\64\*.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
@@ -65,13 +65,13 @@ Name: drivers; Description: Install WinUSB drivers for the M1K;
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
 Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
 Name: python27; Description: Install python-2.7 bindings for libsmu; Flags: unchecked
-Name: python34; Description: Install python-3.4 bindings for libsmu; Flags: unchecked
-Name: python35; Description: Install python-3.5 bindings for libsmu; Flags: unchecked
+Name: python36; Description: Install python-3.6 bindings for libsmu; Flags: unchecked
+Name: python37; Description: Install python-3.7 bindings for libsmu; Flags: unchecked
 
 [Run]
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu27-amd64.msi"""; Flags: hidewizard; Tasks: python27
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu34-amd64.msi"""; Flags: hidewizard; Tasks: python34
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu35-amd64.msi"""; Flags: hidewizard; Tasks: python35
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu36-amd64.msi"""; Flags: hidewizard; Tasks: python36
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu37-amd64.msi"""; Flags: hidewizard; Tasks: python37
 Filename: "{app}\drivers\dpinst.exe"; Parameters: "/sa /path ""{app}\drivers"""; Flags: waituntilterminated; Tasks: drivers
 
 [Code]
