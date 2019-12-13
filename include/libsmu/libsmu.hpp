@@ -19,6 +19,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <map>
 
 #include <libusb.h>
 
@@ -124,6 +125,12 @@ namespace smu {
 
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
+
+		/*
+		 *		Map for the workaround described in session.cpp -> probe_device().
+		 */
+
+		std::map<libusb_device*, libusb_device_handle*> m_deviceHandles;
 
 		/// @brief Size of input/output sample queues for every device.
 		/// Alter this if necessary to make continuous data flow work for the
@@ -355,6 +362,8 @@ namespace smu {
 		/// @return On error, a negative integer is returned relating to the error status.
 		/// This method may not be called while the session is active.
 		virtual int set_mode(unsigned channel, unsigned mode, bool restore = true) = 0;
+
+		void set_usb(libusb_device_handle* usb) {m_usb = usb;}
 
 		/// @brief Get the mode of the specified channel.
 		/// @param channel An unsigned integer relating to the requested channel.
