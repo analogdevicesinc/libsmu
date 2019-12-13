@@ -379,9 +379,26 @@ Device* Session::probe_device(libusb_device* usb_dev)
 			!= SUPPORTED_DEVICES.end()) {
 		libusb_device_handle *usb_handle = NULL;
 
+		/* TO DO:
+		 *		This is a workaround for the bug from libusb (libusb_open returns -3 when opening the device's interface for the second time).
+		 *		Instead of requesting another interface on each search, we save the device's first given libusb interface in m_deviceHandles and use it every time when
+		 *		the function returns -3.
+		 *
+		 *		Check this when newer libusb versions are released.
+		 */
+
+		int open_errorcode = libusb_open(usb_dev, &usb_handle);
+
 		// probably lacking permission to open the underlying usb device
-		if (libusb_open(usb_dev, &usb_handle) != 0)
-			return NULL;
+		if (open_errorcode != 0) {
+			if (open_errorcode != -3) {
+				return NULL;
+			} else {
+				usb_handle = m_deviceHandles[usb_dev];
+			}
+		}
+
+		m_deviceHandles[usb_dev] = usb_handle;
 
 		char serial[32] = "";
 		char fwver[32] = "";
