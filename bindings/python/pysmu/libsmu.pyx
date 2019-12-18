@@ -242,13 +242,14 @@ cdef class Session:
         except RuntimeError as e:
             write_timeout_err = 'data write timeout'
             sample_drop_err = 'data sample dropped'
-            if e.message[:len(sample_drop_err)] == sample_drop_err:
+            error_message = str(e)
+            if error_message[:len(sample_drop_err)] == sample_drop_err:
                 if not self.ignore_dataflow:
-                    raise SampleDrop(e.message)
-            elif e.message[:len(write_timeout_err)] == write_timeout_err:
-                raise WriteTimeout(e.message)
+                    raise SampleDrop(error_message)
+            elif error_message[:len(write_timeout_err)] == write_timeout_err:
+                raise WriteTimeout(error_message)
             else:
-                raise SessionError(str(e))
+                raise SessionError(error_message)
 
         if ret:
             raise SessionError('failed running session stream', ret)
@@ -586,11 +587,12 @@ cdef class SessionDevice(Device):
             raise DeviceError(str(e))
         except RuntimeError as e:
             err = 'data sample dropped'
-            if e.message[:len(err)] == err:
+            error_message = str(e)
+            if error_message[:len(err)] == err:
                 if not self.ignore_dataflow:
-                    raise SampleDrop(e.message)
+                    raise SampleDrop(error_message)
             else:
-                raise DeviceError(str(e))
+                raise DeviceError(error_message)
 
         if ret < 0:
             raise DeviceError('failed reading from device', ret)
@@ -621,13 +623,15 @@ cdef class SessionDevice(Device):
         except RuntimeError as e:
             write_timeout_err = 'data write timeout'
             sample_drop_err = 'data sample dropped'
-            if e.message[:len(sample_drop_err)] == sample_drop_err:
+            error_message = str(e)
+
+            if error_message[:len(sample_drop_err)] == sample_drop_err:
                 if not self.ignore_dataflow:
-                    raise SampleDrop(e.message)
-            elif e.message[:len(write_timeout_err)] == write_timeout_err:
-                raise WriteTimeout(e.message)
+                    raise SampleDrop(error_message)
+            elif error_message[:len(write_timeout_err)] == write_timeout_err:
+                raise WriteTimeout(error_message)
             else:
-                raise DeviceError(str(e))
+                raise DeviceError(error_message)
 
         if ret < 0:
             raise DeviceError('failed writing to device', ret)
