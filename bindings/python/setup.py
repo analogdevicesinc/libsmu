@@ -124,13 +124,8 @@ class build_ext(dst_build_ext):
         return dst_build_ext.build_extensions(self)
 
     def run(self):
-        # only regenerate cython extensions if requested or required
-        USE_CYTHON = (
-            os.environ.get('USE_CYTHON', False) or
-            any(not os.path.exists(x) for ext in self.no_cythonize() for x in ext.sources))
-        if USE_CYTHON:
-            from Cython.Build import cythonize
-            cythonize(self.extensions)
+        from Cython.Build import cythonize
+        cythonize(self.extensions)
 
         self.extensions = self.no_cythonize()
         return dst_build_ext.run(self)
