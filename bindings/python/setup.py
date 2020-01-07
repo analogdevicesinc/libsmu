@@ -206,7 +206,8 @@ class PyTest(Command):
 
 
 version = ''
-with open('pysmu/__init__.py', 'r') as fd:
+PY_INIT_FILE = os.path.join(BINDINGS_DIR, 'pysmu', '__init__.py')
+with open(PY_INIT_FILE, 'r') as fd:
     reg = re.compile(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]')
     for line in fd:
         m = reg.match(line)
