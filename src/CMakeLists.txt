@@ -1,4 +1,5 @@
 option(BUILD_STATIC_LIB "Build static library" OFF)
+option(OSX_PACKAGE "Do not create an OSX package by default" OFF)
 
 if(UNIX OR MINGW)
 	find_library(PTHREAD_LIBRARIES pthread REQUIRED)
@@ -53,7 +54,8 @@ add_library(smu SHARED ${LIBSMU_CPPFILES} ${LIBSMU_HEADERS})
 set_target_properties(smu PROPERTIES
 	VERSION ${LIBSMU_VERSION}
 	SOVERSION ${LIBSMU_VERSION_MAJOR}
-	PUBLIC_HEADER "${LIBSMU_HEADERS}")
+	PUBLIC_HEADER "${LIBSMU_HEADERS}"
+)
 target_link_libraries(smu ${LIBS_TO_LINK})
 
 # build static library if requested
@@ -69,9 +71,21 @@ endif()
 if (MSVC)
 	set_target_properties(smu PROPERTIES OUTPUT_NAME libsmu)
 endif()
+if (APPLE)
+	set_target_properties(smu PROPERTIES FRAMEWORK FALSE)
+	if(OSX_PACKAGE)
+		set_target_properties(smu PROPERTIES FRAMEWORK TRUE OUTPUT_NAME libsmu)
+		set(OSX_INSTALL_FRAMEWORKSDIR "/Library/Frameworks" CACHE STRING "Installation directory for frameworks")
+		get_filename_component(OSX_INSTALL_FRAMEWORKSDIR "${OSX_INSTALL_FRAMEWORKSDIR}" REALPATH BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+		set(CMAKE_MACOSX_RPATH OFF)
+		set(SKIP_INSTALL_ALL ${OSX_PACKAGE})
+	endif()
+endif()
 
 install(TARGETS smu
 	ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 	LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
 	RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-	PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsmu")
+	PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsmu"
+	FRAMEWORK DESTINATION "${OSX_INSTALL_FRAMEWORKSDIR}")

@@ -36,17 +36,6 @@ endif()
 # write version info to file -- used for CI artifact versioning
 file(WRITE ${CMAKE_BINARY_DIR}/.version ${LIBSMU_VERSION_STR})
 
-# support creating some basic binpkgs via `make package`
-set(CPACK_GENERATOR STGZ;TGZ)
-set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
-set(CPACK_PACKAGE_VERSION_MAJOR ${LIBSMU_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${LIBSMU_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${LIBSMU_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION ${LIBSMU_VERSION_STR})
-set(CPACK_BUNDLE_NAME libsmu)
-set(CPACK_SET_DESTDIR ON)
-include(CPack)
-
 # generate version header
 configure_file(${CMAKE_SOURCE_DIR}/dist/version.hpp.in
 	${CMAKE_SOURCE_DIR}/include/libsmu/version.hpp @ONLY)
@@ -148,6 +137,4 @@ endif()
 if(APPLE)
 	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION_STR}.pkg)
 	set(LIBSMU_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION_STR}-temp.pkg)
-	configure_file(dist/distribution.xml.cmakein ${CMAKE_CURRENT_BINARY_DIR}/distribution.xml @ONLY)
-	configure_file(dist/build-osx-pkg.sh.cmakein ${CMAKE_CURRENT_BINARY_DIR}/build-osx-pkg.sh @ONLY)
 endif()
