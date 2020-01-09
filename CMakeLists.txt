@@ -134,8 +134,55 @@ if(WITH_DOC)
 	install(DIRECTORY ${HTML_DEST_DIR} DESTINATION ${CMAKE_INSTALL_DOCDIR})
 endif()
 
-# create a package build script for OS X
-if(APPLE)
+# Create an installer if compiling for OSX
+if(OSX_PACKAGE)
 	set(LIBSMU_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION_STR}.pkg)
 	set(LIBSMU_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libsmu-${LIBSMU_VERSION_STR}-temp.pkg)
+	set(LIBSMU_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/Distribution.xml)
+	set(LIBSMU_FRAMEWORK_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/libsmu.framework)
+	configure_file(Distribution.xml.cmakein ${LIBSMU_DISTRIBUTION_XML} @ONLY)
+
+	find_program(PKGBUILD_EXECUTABLE
+		NAMES pkgbuild
+		DOC "OSX Package builder (pkgbuild)")
+	mark_as_advanced(PKGBUILD_EXECUTABLE)
+
+	find_program(PRODUCTBUILD_EXECUTABLE
+		NAMES productbuild
+		DOC "OSX Package builder (productbuild)")
+	mark_as_advanced(PRODUCTBUILD_EXECUTABLE)
+
+	add_custom_command(OUTPUT ${LIBSMU_PKG}
+		COMMAND ${PKGBUILD_EXECUTABLE}
+			--component ${LIBSMU_FRAMEWORK_DIR}
+			--identifier libsmu --version ${LIBSMU_VERSION_STR}
+			--install-location ${OSX_INSTALL_FRAMEWORKSDIR} ${LIBSMU_TEMP_PKG}
+		COMMAND ${PRODUCTBUILD_EXECUTABLE}
+			--distribution ${LIBSMU_DISTRIBUTION_XML} ${LIBSMU_PKG}
+		COMMAND ${CMAKE_COMMAND} -E remove ${LIBSMU_TEMP_PKG}
+		DEPENDS smu ${LIBSMU_DISTRIBUTION_XML}
+	)
+
+	if (PKGBUILD_EXECUTABLE AND PRODUCTBUILD_EXECUTABLE)
+		add_custom_target(libsmu-pkg ALL DEPENDS ${LIBSMU_PKG})
+
+		install(CODE "execute_process(COMMAND /usr/sbin/installer -pkg ${LIBSMU_PKG} -target /)")
+	else()
+		message(WARNING "Missing pkgbuild or productbuild: OSX installer won't be created.")
+	endif()
+endif()
+
+if (NOT OSX_PACKAGE)
+	# Support creating some basic binpkgs via `make package`.
+	# Disabled if OSX_PACKAGE is enabled, as tarballs would end up empty otherwise.
+	option(ENABLE_PACKAGING "Create .deb/.rpm or .tar.gz packages via 'make package'" OFF)
+
+	if(ENABLE_PACKAGING)
+		if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+			include(cmake/DarwinPackaging.cmake)
+		endif()
+		if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+			include(cmake/LinuxPackaging.cmake)
+		endif()
+	endif()
 endif()
