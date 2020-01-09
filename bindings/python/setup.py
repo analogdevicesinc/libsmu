@@ -207,13 +207,14 @@ class PyTest(Command):
 
 version = ''
 PY_INIT_FILE = os.path.join(BINDINGS_DIR, 'pysmu', '__init__.py')
-with open(PY_INIT_FILE, 'r') as fd:
-    reg = re.compile(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]')
-    for line in fd:
-        m = reg.match(line)
-        if m:
-            version = m.group(1)
-            break
+if (os.path.isfile(PY_INIT_FILE)):
+    with open(PY_INIT_FILE, 'r') as fd:
+        reg = re.compile(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]')
+        for line in fd:
+            m = reg.match(line)
+            if m:
+                version = m.group(1)
+                break
 
 if not version:
     raise RuntimeError('Cannot find version information')
@@ -230,6 +231,7 @@ setup(
     url='https://github.com/analogdevicesinc/libsmu',
     license='BSD',
     maintainer='Analog Devices, Inc.',
+    maintainer_email='alexandra.trifan@analog.com',
     packages=find_packages(),
     ext_modules=extensions,
     scripts=glob.glob('bin/*'),
