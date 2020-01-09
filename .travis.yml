@@ -1,14 +1,13 @@
 env:
   global:
-    # coverity token
-    - secure: "UP0F0/tspgDnPsxZ4uCdRUcfhBrmHKtdWZ7fhGuTq4rHBeC9CxwqVB//JKEr0XTqzDHhQ2J53S7j7XY90h9P+9kQoTmkuOxLs1FNYXg011/rVkwEwu0427M+Oye2CbENWgaf4OycPgkbZR2USKwKg53oGniAyyz6/xm8IlAZRng="
+    - secure: UP0F0/tspgDnPsxZ4uCdRUcfhBrmHKtdWZ7fhGuTq4rHBeC9CxwqVB//JKEr0XTqzDHhQ2J53S7j7XY90h9P+9kQoTmkuOxLs1FNYXg011/rVkwEwu0427M+Oye2CbENWgaf4OycPgkbZR2USKwKg53oGniAyyz6/xm8IlAZRng=
 
 matrix:
   fast_finish: true
   include:
     - os: linux
       sudo: required
-      dist: trusty
+      dist: bionic
       language: python
       python: 3.6
       env: PYTHON=python PIP=pip
@@ -17,26 +16,17 @@ matrix:
       sudo: required
       dist: xenial
       language: python
-      python: 3.7
+      python: 3.6
       env: PYTHON=python PIP=pip
       cache: pip
     - os: osx
-      osx_image: xcode61
-      env: PYTHON=python PIP=pip
-      cache: $HOME/Library/Caches/pip
-    - os: osx
-      osx_image: xcode61
+      osx_image: xcode10.1
       env: PYTHON=python3 PIP=pip3
-      cache: $HOME/Library/Caches/pip
-  allow_failures:
+      cache: "$HOME/Library/Caches/pip"
     - os: osx
-      osx_image: xcode61
-      env: PYTHON=python PIP=pip
-      cache: $HOME/Library/Caches/pip
-    - os: osx
-      osx_image: xcode61
+      osx_image: xcode11
       env: PYTHON=python3 PIP=pip3
-      cache: $HOME/Library/Caches/pip
+      cache: "$HOME/Library/Caches/pip"
 
 addons:
   apt:
@@ -46,10 +36,10 @@ addons:
   coverity_scan:
     project:
       name: analogdevicesinc/libsmu
-      version: 0.9.0
-      description: "Software abstractions for the analog signal exploration tools (ADALM1000)"
+      version: 1.0.2
+      description: Software abstractions for the analog signal exploration tools (ADALM1000)
     notification_email: timothy.harder@analog.com
-    build_command_prepend: "mkdir -p build && cd build && cmake -DBUILD_PYTHON=OFF .."
+    build_command_prepend: mkdir -p build && cd build && cmake -DBUILD_PYTHON=OFF ..
     build_command: make
     branch_pattern: coverity_scan
 
