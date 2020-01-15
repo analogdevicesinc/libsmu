@@ -74,6 +74,9 @@ cdef class Session:
             queue_size (int, optional): Size of input/output sample queues for
                 every device (defaults to 10000).
         """
+
+        self.queue_size = 100000
+
         if queue_size is not None:
             self.queue_size = queue_size
 
