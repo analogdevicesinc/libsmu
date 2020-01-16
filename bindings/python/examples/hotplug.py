@@ -10,28 +10,39 @@ import time
 
 from pysmu import Session
 
+session = Session()
+last_devices = session.available_devices
 
-def attached(dev):
-    """Run when a device is plugged in."""
-    print('device attached: {}'.format(dev))
-
-def detached(dev):
-    """Run when a device is unplugged."""
-    print('device detached: {}'.format(dev))
-
-
-if __name__ == '__main__':
-    # don't throw KeyboardInterrupt on Ctrl-C
-    signal(SIGINT, SIG_DFL)
-
-    session = Session()
-
-    # Register the functions above to get triggered during physical attach or
-    # detach events. Multiple functions can be registered for either trigger if
-    # required.
-    session.hotplug_attach(attached)
-    session.hotplug_detach(detached)
-
-    print('waiting for hotplug events...')
-    while True:
-        time.sleep(1)
+while True:
+    time.sleep(2)
+    
+    session.scan()
+    available_devices = session.available_devices
+    
+    for other_device in last_devices:
+        found = False
+        
+        for device in available_devices:
+            if other_device.serial == device.serial:
+                found = True
+                break
+               
+        if not found:
+            print("Device detached!")
+            tmp = list(last_devices)
+            tmp.remove(other_device)
+            last_devices = tuple(tmp)
+            
+    for device in available_devices:
+        found = False
+        
+        for other_device in last_devices:
+            if other_device.serial == device.serial:
+                found = True
+                break
+                
+        if not found:
+            print("Device attached")            
+            
+    last_devices = available_devices
+    print("Number of available devices: " + str(len(last_devices)))
