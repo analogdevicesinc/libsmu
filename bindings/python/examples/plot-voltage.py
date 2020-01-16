@@ -32,7 +32,7 @@ if __name__ == '__main__':
     chan_b = defaultdict(list)
 
     # Run the session in noncontinuous mode.
-    for _x in xrange(10):
+    for _x in range(10):
         for i, samples in enumerate(session.get_samples(waveform_samples / 5)):
             chan_a[i].extend([x[0][0] for x in samples])
             chan_b[i].extend([x[1][0] for x in samples])
