@@ -64,8 +64,8 @@ if __name__ == '__main__':
                 start = time.time()
 
             # Write iterating voltage values to both channels.
-            chan_a.write(refill_data(num_samples, i % 6))
-            chan_b.write(refill_data(num_samples, i % 6))
+            chan_a.write(refill_data(num_samples, i % 6), -1)
+            chan_b.write(refill_data(num_samples, i % 6), -1)
 
             # Read incoming samples in a non-blocking fashion.
             samples = dev.read(num_samples)
