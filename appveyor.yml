@@ -25,7 +25,7 @@ matrix:
 
 install:
   # libusb patched for windows hotplug support
-  - git clone https://github.com/analogdevicesinc/libusb.git "C:\libusb"
+  - git clone https://github.com/libusb/libusb.git "C:\libusb"
   # install innosetup for creating installers
   - choco install InnoSetup
   - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
@@ -34,7 +34,7 @@ build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
   # see https://github.com/libusb/libusb/issues/86
   - ps: pushd "C:\libusb"
-  - git checkout hotplug
+  - git checkout v1.0.21
   - msbuild msvc\libusb_2015.sln /p:Platform=Win32 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - msbuild msvc\libusb_2015.sln /p:Platform=x64 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - ps: popd
