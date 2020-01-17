@@ -8,7 +8,7 @@ if(WIN32 OR APPLE)
 	download_project(
 		PROJ                googletest
 		GIT_REPOSITORY      https://github.com/google/googletest.git
-		GIT_TAG             master
+		GIT_TAG             v1.10.x
 		${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 
