@@ -342,6 +342,8 @@ namespace smu {
 		/// serial number
 		const std::string m_serial;
 
+		std::pair<uint8_t, uint8_t> m_usb_addr;
+
 		/// @brief Get the array of firmware version components (major, minor, patch).
 		/// Note that this method assumes semantic versioning so versions such
 		/// as 2.06 will be coerced to 2.6.0, i.e. major=2, minor=6, patch=0.
@@ -453,6 +455,8 @@ namespace smu {
         virtual int set_led(unsigned leds) = 0;
 		/// set adc mux mode
 		virtual int set_adc_mux(unsigned adc_mux) = 0;
+
+		virtual void set_usb_device_addr(std::pair<uint8_t, uint8_t> usb_addr) = 0;
 
 	protected:
 		/// @brief Device constructor.
