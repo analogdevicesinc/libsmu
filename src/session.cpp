@@ -82,6 +82,12 @@ Session::~Session()
 	libusb_exit(m_usb_ctx);
 }
 
+void Session::set_off(Device* dev)
+{
+	M1000_Device *m_dev = dynamic_cast<M1000_Device*>(dev);
+	m_dev->m_state.unlock();
+}
+
 void Session::attached(libusb_device *usb_dev)
 {
 	if (!m_hotplug_attach_callbacks.empty()) {
@@ -560,10 +566,8 @@ int Session::run(uint64_t samples)
 int Session::end()
 {
 	int ret = 0;
-
 	// cancel continuous sessions before ending them
-	if (m_continuous) {
-		cancel();
+	if (m_continuous && m_cancellation) {
 		m_continuous = false;
 	}
 
@@ -639,10 +643,11 @@ int Session::cancel()
 
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (Device* dev: m_devices) {
+		set_off(dev);
 		ret = dev->cancel();
+
 		if (ret)
 			break;
-		//delete dev;
 	}
 	return ret;
 }

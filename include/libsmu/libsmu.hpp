@@ -111,6 +111,8 @@ namespace smu {
 		Session();
 		~Session();
 
+		void set_off(Device*);
+
 		/// @brief Devices that are present on the system.
 		/// Note that these devices consist of all supported devices currently
 		/// recognized on the system; however, the devices aren't necessarily
