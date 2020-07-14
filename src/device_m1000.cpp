@@ -85,6 +85,7 @@ M1000_Device::~M1000_Device()
 	// free USB transfers
 	m_in_transfers.clear();
 	m_out_transfers.clear();
+	unlock();
 }
 
 int M1000_Device::get_default_rate()
@@ -161,6 +162,7 @@ int M1000_Device::read_calibration()
 
 	if (ret > 0)
 		ret = 0;
+
 	return ret;
 }
 
@@ -980,8 +982,10 @@ int M1000_Device::run(uint64_t samples)
 			cv.wait(lk, [&buf,&stop]{ return (buf.size() || stop < 0); });
 
 			// signaled to exit
-			if (stop < 0)
+			if (stop < 0) {
+				lk.unlock();
 				return;
+			}
 			stop = 0;
 start:
 			it = buf.begin();
@@ -1031,7 +1035,7 @@ end:
 				m_out_samples_cv[ch_i].notify_one();
 			}
 		}
-	}
+    }
 
 	return 0;
 }
@@ -1039,13 +1043,14 @@ end:
 int M1000_Device::cancel()
 {
     lock();
+
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
-    if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0)){
+	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0)){
         unlock();
 		return -1;
-    }
-    unlock();
+	}
+	unlock();
 	return 0;
 }
 
@@ -1163,4 +1168,9 @@ int M1000_Device::set_adc_mux(unsigned adc_mux){
 	}
 
 	return 0;
+}
+
+void M1000_Device::set_usb_device_addr(std::pair<uint8_t, uint8_t> addr)
+{
+	m_usb_addr = addr;
 }

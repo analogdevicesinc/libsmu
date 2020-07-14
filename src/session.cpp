@@ -82,6 +82,12 @@ Session::~Session()
 	libusb_exit(m_usb_ctx);
 }
 
+void Session::set_off(Device* dev)
+{
+	M1000_Device *m_dev = dynamic_cast<M1000_Device*>(dev);
+	m_dev->m_state.unlock();
+}
+
 void Session::attached(libusb_device *usb_dev)
 {
 	if (!m_hotplug_attach_callbacks.empty()) {
@@ -387,6 +393,11 @@ Device* Session::probe_device(libusb_device* usb_dev)
 		 *		Check this when newer libusb versions are released.
 		 */
 
+
+		uint8_t addr = libusb_get_device_address(usb_dev);
+		uint8_t bus = libusb_get_bus_number(usb_dev);
+		std::pair<uint8_t, uint8_t> usb_id_addr(bus, addr);
+
 		int open_errorcode = libusb_open(usb_dev, &usb_handle);
 
 		// probably lacking permission to open the underlying usb device
@@ -395,6 +406,13 @@ Device* Session::probe_device(libusb_device* usb_dev)
 				return NULL;
 			} else {
 				usb_handle = m_deviceHandles[usb_dev];
+			}
+		}
+
+		for (auto d : m_devices) {
+			if ((d->m_usb_addr.first == usb_id_addr.first) &&
+				(d->m_usb_addr.second == usb_id_addr.second)) {
+				return d;
 			}
 		}
 
@@ -416,6 +434,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 			return NULL;
 
 		dev = new M1000_Device(this, usb_dev, usb_handle, hwver, fwver, serial);
+		dev->set_usb_device_addr(usb_id_addr);
 		dev->read_calibration();
 		return dev;
 	}
@@ -560,10 +579,8 @@ int Session::run(uint64_t samples)
 int Session::end()
 {
 	int ret = 0;
-
 	// cancel continuous sessions before ending them
-	if (m_continuous) {
-		cancel();
+	if (m_continuous && m_cancellation) {
 		m_continuous = false;
 	}
 
@@ -639,10 +656,11 @@ int Session::cancel()
 
 	m_cancellation = LIBUSB_TRANSFER_CANCELLED;
 	for (Device* dev: m_devices) {
+		set_off(dev);
 		ret = dev->cancel();
+
 		if (ret)
 			break;
-		//delete dev;
 	}
 	return ret;
 }

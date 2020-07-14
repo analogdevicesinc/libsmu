@@ -65,8 +65,9 @@ namespace smu {
 		int read_calibration() override;
 		void calibration(std::vector<std::vector<float>>* cal) override;
 		int samba_mode() override;
-        int set_led(unsigned leds) override;
+		int set_led(unsigned leds) override;
 		int set_adc_mux(unsigned adc_mux); // New function added;
+		void set_usb_device_addr(std::pair<uint8_t, uint8_t> usb_addr);
 
 	protected:
 		friend class Session;
