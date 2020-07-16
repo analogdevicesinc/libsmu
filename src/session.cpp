@@ -165,7 +165,6 @@ int Session::scan_samba_devs(std::vector<libusb_device*>& samba_devs)
 		}
 	}
 
-	libusb_free_device_list(usb_devs, 1);
 	return samba_devs.size();
 }
 
