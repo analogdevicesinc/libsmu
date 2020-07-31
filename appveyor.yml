@@ -148,7 +148,7 @@ build_script:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # update pip to keep it from complaining
-  - "c:/python27/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  - "c:/python27/python.exe -m pip install --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
   - "c:/python27/python.exe -m pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
@@ -173,7 +173,7 @@ build_script:
   # Create a folder to keep pysmu for all the python versions
   - mkdir "pysmu-%LIBSMU_VERSION%.win32-py"
   - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
-  - set PATH=%OLDPATH%  
+  - set PATH=%OLDPATH%
 
   ## build 32 bit python3.6 bindings
   # add python dirs to PATH
@@ -358,6 +358,13 @@ build_script:
   ##### MinGW build
   - set OPT_PATH=C:\msys64\mingw32\bin;C:\msys64\mingw64\bin;
   - set PATH=%OPT_PATH%%PATH%
+  # Manually updating Msys' keyring. This should be removed when appveyor updates the installer.
+  - cmd: C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/msys/x86_64/pacman-5.2.2-1-x86_64.pkg.tar.xz"
+  - cmd: C:\msys64\usr\bin\bash -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
+  - cmd: C:\msys64\usr\bin\bash -lc "curl -O http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig"
+  - cmd: C:\msys64\usr\bin\bash -lc "pacman-key --verify msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz{.sig,}"
+  - cmd: C:\msys64\usr\bin\bash -lc "pacman-key --populate"
+  - cmd: C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz"
   - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
 
   # Install MinGW dependencies for 32 bit
@@ -444,35 +451,36 @@ build_script:
   - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
   - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip
 
+  # Disable Python2 build for dist files.
   ### Prepare for python bindings
   ## build 32 bit python 2.7 bindings
-  - "python2 --version"
-  - "python2 -c \"import struct; print(struct.calcsize('P') * 8)\""
+  #- "python2 --version"
+  #- "python2 -c \"import struct; print(struct.calcsize('P') * 8)\""
   # update pip to keep it from complaining
-  - "C:/msys64/mingw32/bin/python2.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  #- "C:/msys64/mingw32/bin/python2.exe -m pip install --upgrade pip"
   # wheel needs to be installed in order to build binary wheels for pysmu
-  - "C:/msys64/mingw32/bin/python2.exe -m  pip install --only-binary :all: wheel"
+  #- "C:/msys64/mingw32/bin/python2.exe -m  pip install --only-binary :all: wheel"
   # cython is required for generating the extensions
-  - "C:/msys64/mingw32/bin/python2.exe -m  pip install cython"
+  #- "C:/msys64/mingw32/bin/python2.exe -m  pip install cython"
 
   # build python dist files
-  - cd C:\projects\libsmu\bindings\python
-  - "python2 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\msys64\\mingw64\\include\\libusb-1.0"
-  - "python2 setup.py build"
-  - "python2 setup.py bdist_wheel --skip-build"
-  - "python2 setup.py bdist --skip-build --format msi"
-  - ps: $PWD = Convert-Path .
-  - ps: $PWD = $PWD + "\build-temp"
-  - ps: $PWD
-  - ps: $PWD = ($PWD -replace "\\","/").Trim("/")
-  - ps: $PWD
-  - ps: $env:PWDD=$PWD
-  - "python2 setup.py bdist --format zip --bdist-base=%PWDD%"
+  #- cd C:\projects\libsmu\bindings\python
+  #- "python2 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\msys64\\mingw64\\include\\libusb-1.0"
+  #- "python2 setup.py build"
+  #- "python2 setup.py bdist_wheel --skip-build"
+  #- "python2 setup.py bdist --skip-build --format msi"
+  #- ps: $PWD = Convert-Path .
+  #- ps: $PWD = $PWD + "\build-temp"
+  #- ps: $PWD
+  #- ps: $PWD = ($PWD -replace "\\","/").Trim("/")
+  #- ps: $PWD
+  #- ps: $env:PWDD=$PWD
+  #- "python2 setup.py bdist --format zip --bdist-base=%PWDD%"
   # test local install
-  - ps: Get-ChildItem dist/*-cp27-*-mingw.whl | % { pip2 install "$_" }
+  #- ps: Get-ChildItem dist/*-cp27-*-mingw.whl | % { pip2 install "$_" }
   # Create a folder to keep pysmu for all the python versions
-  - mkdir "pysmu-%LIBSMU_VERSION%-mingw-py"
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
+  #- mkdir "pysmu-%LIBSMU_VERSION%-mingw-py"
+  #- 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
 
   ## build 32 bit python 3.6 bindings
   #- set PATH=C:\\msys64\\mingw32\\lib\\python3.6;C:\\msys64\\mingw32\\lib\\python3.6\\Tools\\scripts;%PATH%
@@ -486,7 +494,7 @@ build_script:
   #- "C:/msys64/mingw32/bin/python3.exe -m pip install cython"
 
   # build python dist files
-  - cd C:\projects\libsmu\bindings\python
+  #- cd C:\projects\libsmu\bindings\python
   #- "python3 setup.py build_ext --compiler=mingw32 -L C:\\projects\\libsmu\\mingw-32\\src -I C:\\libusb-mingw\\include\\libusb-1.0"
   #- "python3 setup.py build"
   #- "python3 setup.py bdist_wheel --skip-build"
@@ -496,8 +504,8 @@ build_script:
   #- ps: Get-ChildItem dist/*-cp36-*-mingw.whl | % { pip3 install "$_" }
    # Create a folder to keep pysmu for all the python versions
   #- 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*mingw.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%-mingw-py"
-  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%-mingw-py.zip" pysmu-*mingw-py
-  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*mingw.zip"
+  #- 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%-mingw-py.zip" pysmu-*mingw-py
+  #- C:\msys64\usr\bin\bash -lc "rm dist/pysmu*mingw.zip"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
