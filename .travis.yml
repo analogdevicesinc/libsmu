@@ -19,6 +19,13 @@ matrix:
       python: 3.6
       env: PYTHON=python PIP=pip
       cache: pip
+    - os: linux
+      sudo: required
+      dist: focal
+      language: python
+      python: 3.8
+      env: PYTHON=python PIP=pip
+      cache: pip
     - os: osx
       osx_image: xcode10.1
       env: PYTHON=python3 PIP=pip3
