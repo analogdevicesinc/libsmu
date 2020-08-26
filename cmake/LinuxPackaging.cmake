@@ -6,7 +6,7 @@ FIND_PROGRAM(RPMBUILD_CMD rpmbuild)
 if (RPMBUILD_CMD)
 	set(CPACK_PACKAGE_RELOCATABLE OFF)
 	set(CPACK_GENERATOR ${CPACK_GENERATOR};RPM)
-	set(CPACK_RPM_PACKAGE_REQUIRES "boost-all >= 0.1.0, libusb1 >= 1.0.9")
+	set(CPACK_RPM_PACKAGE_REQUIRES "libboost-all >= 0.1.0, libusb-1.0-0 >= 1.0.21")
 endif()
 #-- Package dependencies (.deb): libusb-1.0-0 (>= 2:1.0.21), libboost-date-time1.65.1 (>= 1.65.1), libboost-filesystem1.65.1 (>= 1.65.1), libboost-iostreams1.65.1 (>= 1.65.1), libboost-locale1.65.1 (>= 1.65.1), libboost-system1.65.1 (>= 1.65.1), libboost-thread1.65.1 (>= 1.65.1)
 
@@ -48,7 +48,7 @@ if(DEB_DETECT_DEPENDENCIES AND DPKG_CMD AND DPKGQ_CMD)
 		OUTPUT_STRIP_TRAILING_WHITESPACE)
 	# don't add a package dependancy if it is not installed locally
 	# these should be the debian package names
-		set(PACKAGES "${PACKAGES} libusb-1")
+		set(PACKAGES "${PACKAGES} libusb-1.0-0")
 		set(PACKAGES "${PACKAGES} libboost-all")
 
 	# find the version of the installed package, which is hard to do in
@@ -103,7 +103,7 @@ if(DEB_DETECT_DEPENDENCIES AND DPKG_CMD AND DPKGQ_CMD)
 		${CPACK_DEBIAN_PACKAGE_DEPENDS})
 else()
 	# assume everything is turned on, and running on a modern OS
-	set(CPACK_DEBIAN_PACKAGE_DEPENDS "boost-all (>=0.1.0), libusb-1.0-0 (>= 2:1.0.17)")
+	set(CPACK_DEBIAN_PACKAGE_DEPENDS "libboost-all (>=0.1.0), libusb-1.0-0 (>= 2:1.0.21)")
 	message(STATUS "Using default dependencies for packaging")
 endif()
 
