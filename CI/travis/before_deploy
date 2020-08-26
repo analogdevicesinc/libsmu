@@ -27,6 +27,14 @@ if [ -z "${LDIST}" ] ; then
 	export LDIST="-$(get_ldist)"
 fi
 
+rename_python_deb()
+{
+name="${LDIST}.deb"
+for x in ${TRAVIS_BUILD_DIR}/bindings/python/*.deb ; do mv $x ${x%_*.deb}$name ; done
+for x in ${TRAVIS_BUILD_DIR}/bindings/python/*.deb ; do RELEASE_PY_FILE_DEB=$x ; done
+}
+rename_python_deb
+
 check_file()
 {
 temp=""
@@ -140,3 +148,4 @@ fi
 echo "===" ${RELEASE_PKG_FILE_PKG}
 echo "===" ${RELEASE_PKG_FILE_TGZ}
 echo "===" ${RELEASE_PKG_FILE_DEB}
+echo "===" ${RELEASE_PY_FILE_DEB}
