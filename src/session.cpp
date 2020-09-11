@@ -579,7 +579,8 @@ int Session::end()
 {
 	int ret = 0;
 	// cancel continuous sessions before ending them
-	if (m_continuous && m_cancellation) {
+	if (m_continuous) {
+		cancel();
 		m_continuous = false;
 	}
 
