@@ -1,6 +1,13 @@
 env:
   global:
+    # coverity token
     - secure: UP0F0/tspgDnPsxZ4uCdRUcfhBrmHKtdWZ7fhGuTq4rHBeC9CxwqVB//JKEr0XTqzDHhQ2J53S7j7XY90h9P+9kQoTmkuOxLs1FNYXg011/rVkwEwu0427M+Oye2CbENWgaf4OycPgkbZR2USKwKg53oGniAyyz6/xm8IlAZRng=
+    # GITHUB_DOC_TOKEN
+    - secure: XaFrbDbgsUb5ZKjHYsjFDHWEScquJxqMhxL/jZtHCAVO/btQgY5MrSjI8VFG1SS9sq2zo5ZGQ6Z6t3itbZQgX9wfcssJjOT3/4w38m47wAcAqZQLaQQocmPNtc6bFukcL9tUTf6V/6v0ujBdnahc5gH6GYJ9Dg6Thv4Kuvln3vQ=
+
+cache:
+  directories:
+    - ${TRAVIS_BUILD_DIR}/deps
 
 matrix:
   fast_finish: true
@@ -38,6 +45,10 @@ matrix:
       osx_image: xcode12
       env: PYTHON=python3 PIP=pip3
       cache: "$HOME/Library/Caches/pip"
+    - os: linux
+      dist: bionic
+      env:
+        - OS_TYPE=doxygen
 
 addons:
   apt:
@@ -58,6 +69,13 @@ branches:
   except:
     - appveyor
 before_install:
+  - export DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS_DIR}
+
+  # Configure git user for Travis CI to push doc
+  - git config --global user.name "Travis Bot"
+  - git config --global user.email "<>"
+
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then brew update; fi
   - if [[ ${TRAVIS_OS_NAME} == linux ]]; then sudo apt-get update ; fi
 
@@ -68,45 +86,45 @@ install:
 
   # for python bindings
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo easy_install pip; fi
-  - ${PIP} install --only-binary ":all:" --disable-pip-version-check --upgrade pip
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PIP} install --only-binary ":all:" --disable-pip-version-check --upgrade pip; fi
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then sudo ${PIP} install --only-binary ":all:" wheel cython ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PYTHON} -m pip install --upgrade pip stdeb stdeb3 setuptools cython ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PYTHON} -m pip install setuptools wheel stdeb ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} -m pip install --upgrade pip stdeb stdeb3 setuptools cython ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} -m pip install setuptools wheel stdeb ; fi
   - if [[ ${TRAVIS_OS_NAME} == linux ]]; then sudo apt-get install devscripts cython3 python3-setuptools python3-stdeb fakeroot dh-python python3-all debhelper python3-dev python3-all-dev python3-wheel ; fi
 
 script:
   # build tar containg python files
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then mkdir -p build_tar && cd build_tar; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then cmake -DDEB_DETECT_DEPENDENCIES=ON -DENABLE_PACKAGING=ON -DUSE_PYTHON2=OFF -DBUILD_PYTHON=ON ..; make package; rm *.deb; cd .. ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then mkdir -p build_tar && cd build_tar; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then cmake -DDEB_DETECT_DEPENDENCIES=ON -DENABLE_PACKAGING=ON -DUSE_PYTHON2=OFF -DBUILD_PYTHON=ON ..; make package; rm *.deb; cd .. ; fi
 
   - mkdir -p build && cd build
   - if [[ ${TRAVIS_OS_NAME} == linux ]]; then cmake -DDEB_DETECT_DEPENDENCIES=ON -DENABLE_PACKAGING=ON -DUSE_PYTHON2=OFF -DBUILD_PYTHON=OFF ..; make package; rm *.tar.gz; fi
+  - if [[ ${TRAVIS_OS_NAME} == "linux" && ${OS_TYPE} ==  "doxygen" ]]; then "${TRAVIS_BUILD_DIR}/CI/travis/build_deploy_doc.sh"; fi
+
 
   # Build tar.gz for OSX (contains libraries and smu)
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then cmake -DENABLE_PACKAGING=ON -DBUILD_PYTHON=OFF ..; make package; fi
 
   # Build pkg for OSX (contains libsmu.framework - only base library)
   - if [[ ${TRAVIS_OS_NAME} == osx ]]; then cmake -DOSX_PACKAGE=ON -DENABLE_PACKAGING=OFF -DUSE_PYTHON2=OFF .. ; fi
-  - make
-  - sudo make install
-  - ls
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then make && sudo make install ; fi
 
-  - cd "${TRAVIS_BUILD_DIR}"/bindings/python
-  - "${PYTHON} --version"
-  - ${PYTHON} -c "import struct; print(struct.calcsize('P') * 8)"
-  - ${PYTHON} setup.py build_ext -L "${TRAVIS_BUILD_DIR}"/build/src
-  - "${PYTHON} setup.py build"
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PYTHON} -c "from Cython.Build import cythonize" ; fi
-  - "${PYTHON} setup.py bdist_wheel --skip-build"
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then sudo sed -i 's/my\ \$ignore_missing_info\ =\ 0;/my\ \$ignore_missing_info\ =\ 1;/' /usr/bin/dpkg-shlibdeps ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then ${PYTHON} setup.py --command-packages=stdeb.command sdist_dsc ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then cd "$(find . -type d -name "debian" | head -n 1)"/.. ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then debuild -us -uc ; fi
-  - if [[ ${TRAVIS_OS_NAME} == linux ]]; then cp ${TRAVIS_BUILD_DIR}/bindings/python/deb_dist/*.deb ${TRAVIS_BUILD_DIR}/bindings/python ; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then cd "${TRAVIS_BUILD_DIR}"/bindings/python; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} --version; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} -c "import struct; print(struct.calcsize('P') * 8)"; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} setup.py build_ext -L "${TRAVIS_BUILD_DIR}"/build/src; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} setup.py build; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} -c "from Cython.Build import cythonize" ; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} setup.py bdist_wheel --skip-build; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux   && ${OS_TYPE} !=  "doxygen" ]]; then sudo sed -i 's/my\ \$ignore_missing_info\ =\ 0;/my\ \$ignore_missing_info\ =\ 1;/' /usr/bin/dpkg-shlibdeps ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then ${PYTHON} setup.py --command-packages=stdeb.command sdist_dsc ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then cd "$(find . -type d -name "debian" | head -n 1)"/.. ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then debuild -us -uc ; fi
+  - if [[ ${TRAVIS_OS_NAME} == linux && ${OS_TYPE} !=  "doxygen" ]]; then cp ${TRAVIS_BUILD_DIR}/bindings/python/deb_dist/*.deb ${TRAVIS_BUILD_DIR}/bindings/python ; fi
 
 
 before_deploy:
-  - ". ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy"
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ". ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy"; fi
 
 
 deploy:
@@ -121,7 +139,7 @@ deploy:
     on:
       repo: analogdevicesinc/libsmu
       tags: true
-      condition: "($TRAVIS_OS_NAME = linux)"
+      condition: "($TRAVIS_OS_NAME = linux) && ($OS_TYPE != doxygen)"
   - provider: releases
     api_key:
       secure: LW6KL6nixaLLEkZKE/knz9qGtbUmJU3G3F1Rexo8xMEQyUOePS99OTNANjI38zlOWP3Cbcrrl2Palz7B9ZXkFYnT9NjRNB15ox1LOEeZTGKT65+N11Te8WpHHcQVXFc5e3BupmYdwv7vMh+a4RTbq/nRF0X/OzbV/Nyxlzlw6fA=

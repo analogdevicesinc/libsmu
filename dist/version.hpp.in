@@ -25,18 +25,22 @@
 /// @brief A string representing the libsmu library version.
 #define LIBSMU_VERSION_STR "@LIBSMU_VERSION_STR@"
 
+/// @private
 inline const char* libsmu_version_str() {
 	    return LIBSMU_VERSION_STR;
 }
 
+/// @private
 inline uint32_t libsmu_version_major() {
 	    return LIBSMU_VERSION_MAJOR;
 }
 
+/// @private
 inline uint32_t libsmu_version_minor() {
 	    return LIBSMU_VERSION_MINOR;
 }
 
+/// @private
 inline uint32_t libsmu_version_patch() {
 	    return LIBSMU_VERSION_PATCH;
 }

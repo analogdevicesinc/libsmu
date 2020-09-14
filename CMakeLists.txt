@@ -126,17 +126,7 @@ endif()
 
 # generate API docs with doxygen
 if(WITH_DOC)
-	find_package(Doxygen REQUIRED)
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-	set(HTML_DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/html)
-
-	add_custom_target(doc ALL
-		COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMENT "Generating API documentation with Doxygen" VERBATIM
-	)
-
-	install(DIRECTORY ${HTML_DEST_DIR} DESTINATION ${CMAKE_INSTALL_DOCDIR})
+	add_subdirectory(doc)
 endif()
 
 # Create an installer if compiling for OSX

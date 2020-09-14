@@ -89,11 +89,12 @@ enum Mode {
 	HI_Z, ///< Channel is floating.
 	SVMI, ///< Source voltage, measure current.
 	SIMV, ///< Source current, measure voltage.
-	HI_Z_SPLIT,
-	SVMI_SPLIT,
-	SIMV_SPLIT,
+	HI_Z_SPLIT, ///< HI_Z with enabled switch for the input only pin added in Rev F.
+	SVMI_SPLIT, ///< SVMI with enabled switch for the input only pin added in Rev F.
+	SIMV_SPLIT, ///< SIMV with enabled switch for the input only pin added in Rev F.
 };
 
+/// @private
 enum LED{
     RED = 47,
     GREEN = 29,
@@ -111,6 +112,7 @@ namespace smu {
 		Session();
 		~Session();
 
+		/// @private
 		void set_off(Device*);
 
 		/// @brief Devices that are present on the system.
@@ -128,10 +130,7 @@ namespace smu {
 		/// @brief Number of devices currently streaming samples.
 		unsigned m_active_devices;
 
-		/*
-		 *		Map for the workaround described in session.cpp -> probe_device().
-		 */
-
+		/// @brief Map for the workaround described in session.cpp -> probe_device().
 		std::map<libusb_device*, libusb_device_handle*> m_deviceHandles;
 
 		/// @brief Size of input/output sample queues for every device.
@@ -141,8 +140,9 @@ namespace smu {
 		/// devices are added to a session otherwise they'll use the default.
 		unsigned m_queue_size = 100000;
 
+		/// @private
+		unsigned m_samples;
 
-        unsigned m_samples;
 		/// @brief Scan system for all supported devices.
 		/// Updates the list of available, supported devices for the session
 		/// (m_available_devices).
@@ -342,6 +342,7 @@ namespace smu {
 		/// serial number
 		const std::string m_serial;
 
+		/// @private
 		std::pair<uint8_t, uint8_t> m_usb_addr;
 
 		/// @brief Get the array of firmware version components (major, minor, patch).
@@ -367,6 +368,7 @@ namespace smu {
 		/// This method may not be called while the session is active.
 		virtual int set_mode(unsigned channel, unsigned mode, bool restore = true) = 0;
 
+		/// @private
 		void set_usb(libusb_device_handle* usb) {m_usb = usb;}
 
 		/// @brief Get the mode of the specified channel.
@@ -456,6 +458,7 @@ namespace smu {
 		/// set adc mux mode
 		virtual int set_adc_mux(unsigned adc_mux) = 0;
 
+		/// @private
 		virtual void set_usb_device_addr(std::pair<uint8_t, uint8_t> usb_addr) = 0;
 
 	protected:
@@ -543,6 +546,7 @@ namespace smu {
 		/// @brief Generate a constant waveform.
 		/// @param buf Buffer object to store waveform into.
 		/// @param samples Number of samples to create for the waveform.
+		/// @param val The constant value used to populate the buffer
 		void constant(std::vector<float>& buf, uint64_t samples, float val);
 
 		/// @brief Generate a square waveform.
@@ -592,11 +596,22 @@ namespace smu {
 		void triangle(std::vector<float>& buf, uint64_t samples, float midpoint, float peak, double period, double phase);
 
 	protected:
+		/// @private
 		Src m_src;
+
+		/// @private
 		float m_src_v1;
+
+		/// @private
 		float m_src_v2;
+
+		/// @private
 		double m_src_period;
+
+		/// @private
 		double m_src_duty;
+
+		/// @private
 		double m_src_phase;
 
 		/// @brief Generate value for currently selected waveform.
