@@ -124,7 +124,7 @@ script:
 
 
 before_deploy:
-  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then ". ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy"; fi
+  - if [[ ${OS_TYPE} !=  "doxygen" ]]; then . ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy; fi
 
 
 deploy:
