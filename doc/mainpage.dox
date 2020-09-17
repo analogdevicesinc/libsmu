@@ -203,6 +203,35 @@ development support.
 
 @section devices Device usage
 
+@subsection general_information General information about libsmu usage
+
+The most important classes from libsmu are Session and Device.
+Device is controlling a specific M1k device, while Session is controlling all currently connected devices.
+
+The most important members of these classes are:
+	- Session:
+		- add(Device* device): connects the given device to the current Session.
+		- add_all(): connects all plugged in devices to the current Session.
+		- m_devices: set containing the currently connected devices.
+		- run(uint64_t num_samples): generates num_samples samples on all connected devices. If num_samples == 0, it will run in a continuous fashion.
+		- start(uint64_t num_samples): configures the devices before generating the requested number of samples. It is internally called by run().
+		- cancel(): cancels all currently pending transfers from all devices.
+		- end(): completes the currently active transfers before ending the Session. If the session was running in a continuous fashion, it also cancels the pending transfers.
+		- flush(): deletes all the previously generated samples for all connected devices.
+
+	- Device:
+		- m_serial: the device's serial number.
+		- m_fwver: the device's firmware version.
+		- read(vector<array<float, 4>> buf, size_t num_samples, int timeout, bool skipsamples): reads num_samples samples from the current device and stores them in buf. It waits up to timeout milliseconds for new samples (if timeout == -1, it waits undefinetly). Skips the oldest samples if more than requested are available. Timeout defaults to 0 and skisamples to false.
+		- write(vector<array<float, 4>> buf, unsigned channel, bool cyclic): writes buf to the given channel (0 for channel A, 1 for channel B). If cyclic == true it writes the buffer continuously. cyclic defaults to false.
+		- run(uint64_t samples): similar to Session.run(), but only for the current device.
+		- flush(int channel, bool read): deletes all the previously generated samples from the specified channel. If read == true, it also deletes the incoming read queue; defaults to false.
+		- set_mode(unsigned channel, unsigned mode, bool restore): sets the specified mode to the specified channel (0 - channel A, 1 - channel B). The available modes are: Mode.HI_Z (0; channel is floating), Mode.SVMI (1; source voltage, measure current), Mode.SIMV (2; source current, measure voltage), Mode.HI_Z_SPLIT (3; HI_Z with enabled switch for the input only pin added in Rev F), Mode.SVMI_SPLIT (4; SVMI with enabled switch for the input only pin added in Rev F) and Mode.SIMV_SPLIT (5; SIMV with enabled switch for the input only pin added in Rev F).
+
+You can find libsmu's complete public API in the Classes menu. <br>
+On the main github page you can find various examples using libsmu. <br>
+In the following sections we will present you in detail the reading and writing processes using libsmu.
+
 @subsection reading_data Reading data from a device
 
 ![Caption text](img/reading.svg)
