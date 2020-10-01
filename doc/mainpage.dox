@@ -78,10 +78,12 @@ analog@analog:~$ brew install libusb cmake pkg-config boost
 ```
 Install to build Python bindings
 ```shell
-analog@analog:~$ brew install python3 python3-setuptools python3-pip
+analog@analog:~$ brew install python3
 analog@analog:~$ pip3 install --upgrade pip
 analog@analog:~$ pip3 install cython
 ```
+Setup tools and pip should be included in the "python3" package.
+
 Install to build documentation
 ```shell
 analog@analog:~$ brew install doxygen
