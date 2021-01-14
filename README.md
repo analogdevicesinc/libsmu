@@ -47,7 +47,7 @@ Based on this base library installation, you can install the Python bindings man
 Install prerequisites
 ```shell
 analog@analog:~$ sudo apt-get update
-analog@analog:~$ sudo apt-get install libusb-1.0-0-dev libboost-all-dev cmake pkgconfig
+analog@analog:~$ sudo apt-get install libusb-1.0-0-dev libboost-all-dev cmake pkg-config
 ```
 Install to build Python bindings
 ```shell
