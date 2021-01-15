@@ -21,8 +21,11 @@ import sys
 import tempfile
 from textwrap import dedent
 import time
-from urllib import urlretrieve
-import urllib2
+try: 
+    from urllib.request import urlretrieve, urlopen
+except ImportError:
+    from urllib import urlretrieve
+    from urllib2 import urlopen
 
 import pysmu
 
@@ -364,7 +367,7 @@ def flash(session, args):
             pprint(str(e))
             sys.exit(1)
     elif args.flash_auto or args.flash_dev or args.list_releases or args.select_release is not None:
-        resp = urllib2.urlopen(github_fw_releases)
+        resp = urlopen(github_fw_releases)
         releases = json.load(resp)
         if not releases or not releases[0]['assets']:
             pprint("no firmware releases available on github")
