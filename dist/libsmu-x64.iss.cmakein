@@ -26,18 +26,13 @@ Name: "dutch"; MessagesFile: "compiler:Languages\Dutch.isl"
 Name: "finnish"; MessagesFile: "compiler:Languages\Finnish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
-Name: "greek"; MessagesFile: "compiler:Languages\Greek.isl"
 Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
-Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 Name: "norwegian"; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
-Name: "scottishgaelic"; MessagesFile: "compiler:Languages\ScottishGaelic.isl"
-Name: "serbiancyrillic"; MessagesFile: "compiler:Languages\SerbianCyrillic.isl"
-Name: "serbianlatin"; MessagesFile: "compiler:Languages\SerbianLatin.isl"
 Name: "slovenian"; MessagesFile: "compiler:Languages\Slovenian.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
@@ -45,12 +40,12 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
 Source: "C:\libsmu-python\pysmu27-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
-Source: "C:\libsmu-python\pysmu36-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "C:\libsmu-python\pysmu37-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "C:\libsmu-python\pysmu38-amd64.msi"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 Source: "C:\libsmu\64\*.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
-Source: "C:\WinDDK\7600.16385.1\redist\DIFx\dpinst\EngMui\amd64\dpinst.exe"; DestDir: "{app}\drivers"; Tasks: drivers
+Source: ".\pnputil.exe"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.inf"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.cat"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\amd64\*"; DestDir: "{app}\drivers\amd64"; Tasks: drivers
@@ -65,14 +60,15 @@ Name: drivers; Description: Install WinUSB drivers for the M1K;
 Name: modifypath; Description: Add application directory to your environmental path (required for smu utility);
 Name: visualstudio; Description: Install Visual Studio 2015 support for building/linking against libsmu; Flags: unchecked
 Name: python27; Description: Install python-2.7 bindings for libsmu; Flags: unchecked
-Name: python36; Description: Install python-3.6 bindings for libsmu; Flags: unchecked
 Name: python37; Description: Install python-3.7 bindings for libsmu; Flags: unchecked
+Name: python38; Description: Install python-3.8 bindings for libsmu; Flags: unchecked
 
 [Run]
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu27-amd64.msi"""; Flags: hidewizard; Tasks: python27
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu36-amd64.msi"""; Flags: hidewizard; Tasks: python36
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu37-amd64.msi"""; Flags: hidewizard; Tasks: python37
-Filename: "{app}\drivers\dpinst.exe"; Parameters: "/sa /path ""{app}\drivers"""; Flags: waituntilterminated; Tasks: drivers
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu38-amd64.msi"""; Flags: hidewizard; Tasks: python38
+Filename: "{app}\drivers\pnputil.exe"; Parameters: "/add-driver ""{app}\drivers\m1k-winusb.inf"" /install"; Flags: waituntilterminated; Tasks: drivers
+Filename: "{app}\drivers\pnputil.exe"; Parameters: "/add-driver ""{app}\drivers\m1k-winusb.cat"" /install"; Flags: waituntilterminated; Tasks: drivers
 
 [Code]
 const
