@@ -524,7 +524,7 @@ cdef class Device:
             raise IOError(abs(ret), 'USB control transfer failed')
         else:
             if bm_request_type & 0x80 == 0x80:
-                return map(ord, data)
+                return list(bytearray(data))
             else:
                 return ret
 
