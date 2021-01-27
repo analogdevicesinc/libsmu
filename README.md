@@ -13,6 +13,10 @@ Python bindings are also provided in the form of the pysmu module. See
 instructions below for how to build them.
 
 # Simple installation
+## Conda packages
+Conda and Anaconda are cross-platform package-management tools that generally focus around python but can support any language or package generally.
+You can find documentation on the libsmu conda package [here](https://wiki.analog.com/university/tools/conda?s[]=libsmu) .
+
 ## Linux
 Download the specific libsmu .deb package for your Linux distribution from the Releases section. Currently we are supporting Ubuntu 16, 18 and 20. The package name should start with libsmu and contain the OS version.
 Go to the folder you downloaded the package in and open a terminal, then run the following command:
