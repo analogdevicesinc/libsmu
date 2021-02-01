@@ -216,6 +216,31 @@ if (os.path.isfile(PY_INIT_FILE)):
                 version = m.group(1)
                 break
 
+    with open(PY_INIT_FILE, 'r+') as fd:
+        contents = fd.readlines()
+        pattern = "from .libsmu import"
+        import_pattern = "import os"
+
+        import_command = u"import os\n\n" + \
+        u"#Import DLLs for Python versions >= 3.8\n" + \
+        u"for path in os.environ.get(\"PATH\", \"\").split(os.pathsep):\n" + \
+        u"\tif path and os.path.isabs(path):\n" + \
+        u"\t\ttry:\n" + \
+        u"\t\t\tos.add_dll_directory(path)\n" + \
+        u"\t\texcept (OSError, AttributeError):\n" + \
+        u"\t\t\tcontinue\n\n"
+
+        for index, line in enumerate(contents):
+            #the script is run multiple times; this line prevents inserting the import command multuple times
+            if import_pattern in line:
+                break
+            if pattern in line:
+                contents.insert(index, import_command)
+                break
+
+        fd.seek(0)
+        fd.writelines(contents)
+
 if not version:
     raise RuntimeError('Cannot find version information')
 
