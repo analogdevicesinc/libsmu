@@ -30,6 +30,10 @@ install:
   - choco install InnoSetup
   - set PATH=%PATH%;C:\Program Files (x86)\Inno Setup 5
 
+  # Download dpinst for Driver installing from swdownloads
+  - appveyor DownloadFile http://swdownloads.analog.com/cse/m1k/drivers/dpinst.zip -FileName C:\dpinst.zip
+  - 7z x -y "c:\dpinst.zip" -o"c:\dpinst" > nul
+
 build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
   # see https://github.com/libusb/libusb/issues/86
@@ -100,6 +104,8 @@ build_script:
   - copy ..\dist\amd64\* c:\libsmu\drivers\amd64
   - if not exist "c:\libsmu\drivers\x86" mkdir c:\libsmu\drivers\x86
   - copy ..\dist\x86\* c:\libsmu\drivers\x86
+  - copy C:\dpinst\dpinst.exe c:\libsmu\drivers
+  - copy C:\dpinst\dpinst_amd64.exe c:\libsmu\drivers
 
   # libraries
   - copy C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.* c:\libsmu\32
@@ -355,7 +361,6 @@ build_script:
   # create libsmu installers
   - copy C:\projects\libsmu\32\dist\libsmu-x86.iss C:\projects\libsmu\dist\libsmu-x86.iss
   - copy C:\projects\libsmu\32\dist\libsmu-x64.iss C:\projects\libsmu\dist\libsmu-x64.iss
-  - copy C:\Windows\System32\pnputil.exe C:\projects\libsmu\dist\pnputil.exe
   - iscc C:\projects\libsmu\dist\libsmu-x86.iss
   - iscc C:\projects\libsmu\dist\libsmu-x64.iss
   - ren C:\libsmu-setup-x86.exe libsmu-%LIBSMU_VERSION%-setup-x86.exe

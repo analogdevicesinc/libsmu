@@ -45,7 +45,7 @@ Source: "C:\libsmu-python\pysmu38-win32.msi"; DestDir: "{tmp}"; Flags: deleteaft
 
 Source: "C:\libsmu\32\*.dll"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
-Source: ".\pnputil.exe"; DestDir: "{app}\drivers"; Tasks: drivers
+Source: "C:\libsmu\drivers\dpinst.exe"; DestDir: "{app}\drivers"; Flags: ignoreversion
 Source: "C:\libsmu\drivers\m1k-winusb.inf"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\m1k-winusb.cat"; DestDir: "{app}\drivers"; Tasks: drivers
 Source: "C:\libsmu\drivers\amd64\*"; DestDir: "{app}\drivers\amd64"; Tasks: drivers
@@ -67,8 +67,7 @@ Name: python38; Description: Install python-3.8 bindings for libsmu; Flags: unch
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu27-win32.msi"""; Flags: hidewizard; Tasks: python27
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu37-win32.msi"""; Flags: hidewizard; Tasks: python37
 Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu38-win32.msi"""; Flags: hidewizard; Tasks: python38
-Filename: "{app}\drivers\pnputil.exe"; Parameters: "/add-driver ""{app}\drivers\m1k-winusb.inf"" /install"; Flags: waituntilterminated; Tasks: drivers
-Filename: "{app}\drivers\pnputil.exe"; Parameters: "/add-driver ""{app}\drivers\m1k-winusb.cat"" /install"; Flags: waituntilterminated; Tasks: drivers
+Filename: "{app}\drivers\dpinst.exe"; Parameters: "/PATH ""{app}\drivers"" {param:dpinstflags|/F}"; Flags: waituntilterminated; Tasks: drivers
 
 [Code]
 const
