@@ -1,0 +1,8 @@
+TODO
+----
+
+To build the package ensure that the path to build directory does
+not contain folders with spaces in their name. This probably a
+bug in the CMake build scripts.
+
+-- Balbir Thomas

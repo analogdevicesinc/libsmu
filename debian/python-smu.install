@@ -1,0 +1,2 @@
+bindings/python/build/*/pysmu/* usr/lib/python2.7/dist-packages/pysmu
+bindings/python/build/scripts-*/* usr/bin

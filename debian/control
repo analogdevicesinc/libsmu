@@ -1,0 +1,41 @@
+Source: libsmu
+Priority: optional
+Maintainer: Balbir Thomas <balbir.thomas@gmail.com>
+Build-Depends: debhelper (>= 9), cmake, libusb-1.0-0-dev, python2.7-dev
+Standards-Version: 3.9.5
+Section: libs
+Homepage: https://wiki.analog.com
+
+Package: libsmu-dev
+Section: libdevel
+Architecture: any
+Depends: libsmu0 (= ${binary:Version}), ${misc:Depends}
+Description: a developer toolkit for ADALM1000 from Analog Devices
+ libsmu contains abstractions for streaming data to and from USB-connected
+ analog interface devices, currently supporting the Analog Devices' ADALM1000.
+ Building off of LibUSB for cross-platform operation, it offers the sourcing of
+ repeated waveforms, configuration of hardware, and measuring of signals.
+ .
+ This package contains development headers and pkg-config files.
+
+Package: libsmu0
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: a developer toolkit for ADALM1000 from Analog Devices
+ libsmu contains abstractions for streaming data to and from USB-connected
+ analog interface devices, currently supporting the Analog Devices' ADALM1000.
+ Building off of LibUSB for cross-platform operation, it offers the sourcing of
+ repeated waveforms, configuration of hardware, and measuring of signals.
+ .
+ This package only contains the shared libraries.
+
+Package: python-smu
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: 
+ libsmu contains abstractions for streaming data to and from USB-connected
+ analog interface devices, currently supporting the Analog Devices' ADALM1000.
+ Building off of LibUSB for cross-platform operation, it offers the sourcing of
+ repeated waveforms, configuration of hardware, and measuring of signals.
+ .
+ This package contains python bindings for libsmu.
