@@ -16,7 +16,7 @@ handle_doxygen() {
 	cd ..
 	cd ..
 
-	cd ${TRAVIS_BUILD_DIR}
+	cd ${BUILD_SOURCESDIRECTORY}
 	mkdir -p build && cd build
 	cmake -DWITH_DOC=ON ..
 	cd ..
@@ -32,7 +32,7 @@ echo_green() { printf "\033[1;32m$*\033[m\n"; }
 ############################################################################
 # Check if the documentation will be generated w/o warnings or errors
 ############################################################################
-pushd ${TRAVIS_BUILD_DIR}/build
+pushd ${BUILD_SOURCESDIRECTORY}/build
 (cd doc && ! make doc 2>&1 | grep -E "warning|error") || {
         echo_red "Documentation incomplete or errors in the generation of it have occured!"
         exit 1
@@ -44,10 +44,10 @@ echo_green "Documentation was generated successfully!"
 # If the current build is not a pull request and it is on master the 
 # documentation will be pushed to the gh-pages branch
 ############################################################################
-if [[ "${TRAVIS_PULL_REQUEST}" == "false" && "${TRAVIS_BRANCH}" == "master" ]]
+if [[ "${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}" == "false" && "${SYSTEM_PULLREQUEST_TARGETBRANCH}" == "master" ]]
 then
-        pushd ${TRAVIS_BUILD_DIR}/build/doc
-        git clone https://github.com/${TRAVIS_REPO_SLUG} --depth 1 --branch=gh-pages doc/html &>/dev/null
+        pushd ${BUILD_SOURCESDIRECTORY}/build/doc
+        git clone https://github.com/${BUILD_REPOSITORY_NAME} --depth 1 --branch=gh-pages doc/html &>/dev/null
 
         pushd doc/html
         rm -rf *
@@ -61,7 +61,7 @@ then
         then
                 git add --all .
                 git commit --allow-empty --amend -m "Update documentation to ${TRAVIS_COMMIT:0:7}"
-                git push https://${GITHUB_DOC_TOKEN}@github.com/${TRAVIS_REPO_SLUG} gh-pages -f &>/dev/null
+                git push https://${GITHUB_DOC_TOKEN}@github.com/${BUILD_REPOSITORY_NAME} gh-pages -f &>/dev/null
 
                 echo_green "Documetation updated!"
         else
