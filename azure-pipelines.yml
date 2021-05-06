@@ -1,0 +1,118 @@
+trigger:
+- main
+- master
+- staging/*
+- 20*
+
+pr:
+- main
+- master
+
+jobs:
+- job: LinuxBuilds
+  strategy:
+    matrix:
+      Bionic:
+        imageName: 'ubuntu-18.04'
+        pythonVersion: 3.6
+        OS_VERSION: bionic
+        artifactNAme: 'Linux-Ubuntu-18.04'
+      Xenial:
+        imageName: 'ubuntu-16.04'
+        pythonVersion: 3.5
+        OS_VERSION: xenial
+        artifactName: 'Linux-Ubuntu-16.04'
+      Focal:
+        imageName: 'ubuntu-20.04'
+        pythonVersion: 3.8
+        OS_VERSION: focal
+        artifactName: 'Linux-Ubuntu-20.04'
+      Bionic_doxygen:
+        imageName: 'ubuntu-18.04'
+        pythonVersion: 3.8
+        OS_TYPE: 'doxygen'
+        OS_VERSION: bionic
+        artifactName: 'Linux-Ubuntu-18.04-doxygen'
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(pythonVersion)'
+  - checkout: self
+    fetchDepth: 10
+    clean: true      
+  - script: ./CI/travis/before_install_linux.sh
+    displayName: "Install dependencies"
+  - script: ./CI/travis/make_linux.sh
+    displayName: "Build"
+  - script: ./CI/travis/before_deploy_linux.sh
+    displayName: "Before deploy linux"
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+      contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: PublishPipelineArtifact@1
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)'
+      artifactName: '$(artifactName)'
+
+- job: macOSBuilds
+  strategy:
+    matrix:
+      Mojave:
+        imageName: 'macOS-10.14'
+        artifactName: 'macOS-10.14'
+      Catalina:
+        imageName: 'macOS-10.15'
+        artifactName: 'macOS-10.15'
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - checkout: self
+    fetchDepth: 10
+    clean: true
+  - script: ./CI/travis/before_install_darwin.sh
+    displayName: "Install Dependencies"
+  - script: ./CI/travis/make_darwin.sh
+    displayName: "Build"
+  - script: ./CI/travis/before_deploy_darwin.sh
+    displayName: "Before deploy"
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+      contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
+      targetFolder: '$(Build.ArtifactStagingDirectory)'
+  - task: PublishPipelineArtifact@1
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)'
+      artifactName: '$(artifactName)'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
