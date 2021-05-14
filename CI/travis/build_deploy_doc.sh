@@ -57,10 +57,10 @@ then
 
         pushd doc/html
         CURRENT_COMMIT=$(git log -1 --pretty=%B)
-        if [[ ${CURRENT_COMMIT:(-7)} != ${TRAVIS_COMMIT:0:7} ]]
+        if [[ ${CURRENT_COMMIT:(-7)} != ${BUILD_SOURCEVERSION:0:7} ]]
         then
                 git add --all .
-                git commit --allow-empty --amend -m "Update documentation to ${TRAVIS_COMMIT:0:7}"
+                git commit --allow-empty --amend -m "Update documentation to ${BUILD_SOURCEVERSION:0:7}"
                 git push https://${GITHUB_DOC_TOKEN}@github.com/${BUILD_REPOSITORY_NAME} gh-pages -f &>/dev/null
 
                 echo_green "Documetation updated!"

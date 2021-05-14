@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 export TRAVIS_API_URL="https://api.travis-ci.org"
 LOCAL_BUILD_DIR=${LOCAL_BUILD_DIR:-build}
@@ -53,7 +53,7 @@ pipeline_branch() {
 should_trigger_next_builds() {
 	local branch="$1"
 
-	[ -z "${COVERITY_SCAN_PROJECT_NAME}" ] || return 1
+#	[ -z "${COVERITY_SCAN_PROJECT_NAME}" ] || return 1
 
 	# These Travis-CI vars have to be non-empty
 	[ -n "$TRAVIS_PULL_REQUEST" ] || return 1

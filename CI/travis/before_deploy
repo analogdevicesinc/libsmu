@@ -1,22 +1,22 @@
-#!/bin/sh -e
+#!/bin/bash
 
-. "$TRAVIS_BUILD_DIR"/CI/travis/lib.sh
+. "$BUILD_SOURCESDIRECTORY"/CI/travis/lib.sh
 
 # Don't prepare a deploy on a Coverity build
-if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
+# if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
 
 deploy=0
-if [ -z "$TRAVIS_BUILD_DIR" ] ; then
+if [ -z "$BUILD_SOURCESDIRECTORY" ] ; then
 	t=$(find ./ -name CMakeCache.txt|head -1)
 	if [ -n "${t}" ] ; then
 		cd $(dirname $(dirname ${t}))
-		TRAVIS_BUILD_DIR=$(pwd)
+		BUILD_SOURCESDIRECTORY=$(pwd)
 	else
 		echo "I am confused - can't find CMakeCache.txt"
 		exit
 	fi
 else
-	cd $TRAVIS_BUILD_DIR
+	cd $BUILD_SOURCESDIRECTORY
 fi
 pwd
 
@@ -30,8 +30,8 @@ fi
 rename_python_deb()
 {
 name="${LDIST}.deb"
-for x in ${TRAVIS_BUILD_DIR}/bindings/python/*.deb ; do mv $x ${x%_*.deb}$name ; done
-for x in ${TRAVIS_BUILD_DIR}/bindings/python/*.deb ; do RELEASE_PY_FILE_DEB=$x ; done
+for x in ${BUILD_SOURCESDIRECTORY}/bindings/python/*.deb ; do mv $x ${x%_*.deb}$name ; done
+for x in ${BUILD_SOURCESDIRECTORY}/bindings/python/*.deb ; do RELEASE_PY_FILE_DEB=$x ; done
 }
 rename_python_deb
 
