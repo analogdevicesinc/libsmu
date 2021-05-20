@@ -44,7 +44,7 @@ echo_green "Documentation was generated successfully!"
 # If the current build is not a pull request and it is on master the 
 # documentation will be pushed to the gh-pages branch
 ############################################################################
-if [[ "${SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}" == "false" && "${SYSTEM_PULLREQUEST_TARGETBRANCH}" == "master" ]]
+if [[ "${BUILD_REASON}" != "PullRequest" && "${BUILD_SOURCEBRANCH}" == "master" ]] 
 then
         pushd ${BUILD_SOURCESDIRECTORY}/build/doc
         git clone https://github.com/${BUILD_REPOSITORY_NAME} --depth 1 --branch=gh-pages doc/html &>/dev/null
