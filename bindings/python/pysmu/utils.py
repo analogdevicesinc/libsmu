@@ -1,5 +1,7 @@
-from collections import Iterable
-
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 def iterify(x):
     """Return an iterable form of a given value."""
