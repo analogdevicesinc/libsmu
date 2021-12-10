@@ -4,10 +4,10 @@ PACKAGE_DIR=${1-build}
 echo "==========================================================="$PACKAGE_DIR
 
 apt-get -qq update
-apt-get install -y git devscripts cython3 python3-setuptools python3-stdeb fakeroot dh-python python3-all debhelper python3-dev python3-all-dev python3-wheel libusb-1.0-0-dev libboost-all-dev
+apt-get install -y git devscripts fakeroot libusb-1.0-0-dev libboost-all-dev
 
 python -m pip install --upgrade pip
-python -m pip install cmake setuptools wheel stdeb stdeb3 setuptools cython
+python -m pip install --upgrade cmake setuptools setuptools
 
 cmake --version
 
