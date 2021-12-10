@@ -69,6 +69,7 @@ Name: visualstudio; Description: Install Visual Studio 2015 support for building
 ;Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\pysmu38-amd64.msi"""; Flags: hidewizard; Tasks: python38
 Filename: "{app}\drivers\dpinst.exe"; Parameters: "/PATH ""{app}\drivers"" {param:dpinstflags|/F}"; Flags: waituntilterminated; Tasks: drivers
 
+
 [Code]
 const
 	ModPathName = 'modifypath';
