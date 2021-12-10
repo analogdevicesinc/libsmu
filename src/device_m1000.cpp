@@ -269,7 +269,7 @@ extern "C" void LIBUSB_CALL m1000_in_completion(libusb_transfer *t)
 
 void M1000_Device::in_completion(libusb_transfer *t)
 {
-	std::lock_guard<std::mutex> lock(m_state);
+	std::lock_guard<std::recursive_mutex> lock(m_state);
 	m_in_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
@@ -305,7 +305,7 @@ extern "C" void LIBUSB_CALL m1000_out_completion(libusb_transfer *t)
 
 void M1000_Device::out_completion(libusb_transfer *t)
 {
-	std::lock_guard<std::mutex> lock(m_state);
+	std::lock_guard<std::recursive_mutex> lock(m_state);
 	m_out_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
@@ -640,7 +640,7 @@ void M1000_Device::flush(int channel, bool read)
 	auto flush_write_queue = [=](float sample) { return; };
 
 	// make sure USB transfers aren't being processed concurrently
-	std::lock_guard<std::mutex> lock(m_state);
+	std::lock_guard<std::recursive_mutex> lock(m_state);
 
 	if (channel == CHAN_A || channel == CHAN_B) {
 		// notify write threads to stop
@@ -940,7 +940,7 @@ int M1000_Device::run(uint64_t samples)
 
 	// Method to kick off USB transfers.
 	auto start_usb_transfers = [=](M1000_Device* dev) {
-		std::unique_lock<std::mutex> lk(dev->m_state);
+		std::unique_lock<std::recursive_mutex> lk(dev->m_state);
 		for (auto t: dev->m_in_transfers) {
 			if (dev->submit_in_transfer(t)) break;
 		}
@@ -1042,13 +1042,13 @@ end:
 
 int M1000_Device::cancel()
 {
-    lock();
+	lock();
 
 	int ret_in = m_in_transfers.cancel();
 	int ret_out = m_out_transfers.cancel();
 	if ((ret_in != ret_out) || (ret_in != 0) || (ret_out != 0)){
-        unlock();
-		return -1;
+	    unlock();
+	    return -1;
 	}
 	unlock();
 	return 0;

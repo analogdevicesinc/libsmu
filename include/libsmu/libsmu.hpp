@@ -524,7 +524,7 @@ namespace smu {
 		double m_write_timeout = 100;
 
 		/// Lock for transfer state.
-		std::mutex m_state;
+		std::recursive_mutex m_state;
 
 		friend class Session;
 	};
