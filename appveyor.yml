@@ -1,9 +1,11 @@
-os: Visual Studio 2019
+image:
+  - Visual Studio 2019
+
+version: '{branch}.{build}'
 clone_depth: 1
 
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
 
 environment:
     MSYSTEM: MINGW64
@@ -17,15 +19,17 @@ configuration:
 branches:
   except:
     - gh-pages
-    - travis-ci
     - coverity_scan
 
 matrix:
   fast_finish: true
 
 install:
-  # libusb patched for windows hotplug support
-  - git clone https://github.com/libusb/libusb.git "C:\libusb"
+    - echo "Downloading deps..."
+    - cd c:\
+    - appveyor DownloadFile http://swdownloads.analog.com/cse/build/libiio-win-deps-libusb1.0.24.zip
+    - 7z x -y "c:\libiio-win-deps-libusb1.0.24.zip"
+
   # install innosetup for creating installers
   - choco install InnoSetup
   - set PATH=%PATH%;C:\Program Files (x86)\Inno Setup 5
@@ -37,11 +41,6 @@ install:
 build_script:
   # build our own libusb version with hotplug support until upstream merges related patches
   # see https://github.com/libusb/libusb/issues/86
-  - ps: pushd "C:\libusb"
-  - git checkout v1.0.23
-  - MsBuild msvc\libusb_2017.sln /p:Platform=Win32 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - MsBuild msvc\libusb_2017.sln /p:Platform=x64 /p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - ps: popd
 
   # build 32-bit version of libsmu -- python bindings are built separately
   - mkdir c:\projects\libsmu\32
@@ -50,8 +49,7 @@ build_script:
     -A Win32 \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.lib" \
-    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DLIBUSB_LIBRARIES="C:\\libs\\32\\libusb-1.0.lib" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_73_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_73_0\\lib32-msvc-14.2" \
     -DBoost_USE_STATIC_LIBS=ON \
@@ -72,8 +70,7 @@ build_script:
     -A x64 \
     -DCMAKE_BUILD_TYPE:STRING=%CONFIGURATION% \
     -DCMAKE_SYSTEM_PREFIX_PATH="C:" \
-    -DLIBUSB_LIBRARIES="C:\\libusb\\x64\\Release\\lib\\libusb-1.0.lib" \
-    -DLIBUSB_INCLUDE_DIRS="C:\\libusb\\libusb" \
+    -DLIBUSB_LIBRARIES="C:\\libs\\64\\libusb-1.0.lib" \
     -DBOOST_ROOT="C:\\Libraries\\boost_1_73_0" \
     -DBOOST_LIBRARYDIR="C:\\Libraries\\boost_1_73_0\\lib64-msvc-14.2" \
     -DBoost_USE_STATIC_LIBS=ON \
@@ -96,7 +93,7 @@ build_script:
   - xcopy c:\projects\libsmu\src c:\libsmu\src /E /H /K
   # headers
   - copy ..\include\libsmu\*.hpp c:\libsmu\include\libsmu
-  - copy "C:\\libusb\\libusb\libusb.h" c:\libsmu\include\libsmu
+  - copy "C:\include\libusb\libusb.h" c:\libsmu\include\libsmu
   # drivers
   - copy ..\dist\m1k-winusb.inf c:\libsmu\drivers
   - copy ..\dist\m1k-winusb.cat c:\libsmu\drivers
@@ -108,10 +105,8 @@ build_script:
   - copy C:\dpinst\dpinst_amd64.exe c:\libsmu\drivers
 
   # libraries
-  - copy C:\\libusb\\Win32\\Release\\lib\\libusb-1.0.* c:\libsmu\32
-  - copy C:\\libusb\\Win32\\Release\\dll\\libusb-1.0.* c:\libsmu\32
-  - copy C:\\libusb\\x64\\Release\\lib\\libusb-1.0.* c:\libsmu\64
-  - copy C:\\libusb\\x64\\Release\\dll\\libusb-1.0.* c:\libsmu\64
+  - copy C:\libs\32\libusb-1.0.* c:\libsmu\32
+  - copy C:\libs\64\libusb-1.0.* c:\libsmu\64
   - copy ..\32\src\%CONFIGURATION%\libsmu.* c:\libsmu\32
   - copy ..\64\src\%CONFIGURATION%\libsmu.* c:\libsmu\64
   # gtest libraries for test executables
@@ -132,213 +127,210 @@ build_script:
   - copy ..\tests\run-tests.bat c:\libsmu\32
   - copy ..\tests\run-tests.bat c:\libsmu\64
   # windows specific redistributable libraries
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x86\\Microsoft.VC142.CRT\\msvcp140.dll"; c:\libsmu\32
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x86\\Microsoft.VC142.OPENMP\\vcomp140.dll"; c:\libsmu\32
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x86\\Microsoft.VC142.CRT\\vcruntime140.dll"; c:\libsmu\32
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x64\\Microsoft.VC142.CRT\\msvcp140.dll"; c:\libsmu\64
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x64\\Microsoft.VC142.OpenMP\\vcomp140.dll"; c:\libsmu\64
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x64\\Microsoft.VC142.CRT\\vcruntime140.dll"; c:\libsmu\64
-  - copy "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Redist\\MSVC\\14.28.29325\\x64\\Microsoft.VC142.CRT\\vcruntime140_1.dll"; c:\libsmu\64
-  - copy "C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\DLLs\\x86\\*" c:\libsmu\32
-  - copy "C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\DLLs\\x64\\*" c:\libsmu\64
+  - copy "C:\Program Files (x86)\Microsoft Visual Studio\2019\\Community\VC\Redist\MSVC\14.29.30133\x86\Microsoft.VC142.CRT\msvcp140.dll" c:\libsmu\32
+  - copy "C:\Program Files (x86)\Microsoft Visual Studio\2019\\Community\VC\Redist\MSVC\14.29.30133\x86\Microsoft.VC142.CRT\vcruntime140.dll" c:\libsmu\32
+  - copy "C:\Program Files (x86)\Microsoft Visual Studio\2019\\Community\VC\Redist\MSVC\14.29.30133\x64\Microsoft.VC142.CRT\msvcp140.dll" c:\libsmu\64
+  - copy "C:\Program Files (x86)\Microsoft Visual Studio\2019\\Community\VC\Redist\MSVC\14.29.30133\x64\Microsoft.VC142.CRT\vcruntime140.dll" c:\libsmu\64
+  - copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86\*" c:\libsmu\32
+  - copy "C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\*" c:\libsmu\64
 
   - 7z a "c:\libsmu-%LIBSMU_VERSION%.zip" c:\libsmu
   - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%.zip
 
   # build 32 and 64 bit pysmu modules for all supported python versions, currently 2.7, 3.7, and 3.8
   # TODO: drop the duplication and loop over supported python versions
-  - mkdir c:\libsmu-python
+  # - mkdir c:\libsmu-python
   # check the python versions installed on appveyor
-  - ls c:\
+  # - ls c:\
   ## build 32 bit python2.7 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\Python27;C:\\Python27\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python27/python.exe -m pip install --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python27/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python27/python.exe -m pip install --only-binary :all: cython"
+  # # update pip to keep it from complaining
+  # - "c:/python27/python.exe -m pip install --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python27/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python27/python.exe -m pip install --only-binary :all: cython"
 
-  # build python dist files
-  - ps: pushd C:\projects\libsmu\bindings\python
-  - set DISTUTILS_USE_SDK=1
-  - set MSSdk=1
-  - set PATH=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build;%PATH%
-  - set OLDPATH=%PATH%
+  # # build python dist files
+  # - ps: pushd C:\projects\libsmu\bindings\python
+  # - set DISTUTILS_USE_SDK=1
+  # - set MSSdk=1
+  # - set PATH=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build;%PATH%
+  # - set OLDPATH=%PATH%
 
-  - "vcvarsall.bat x86"
-  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build"
-  - "python setup.py bdist_wheel --skip-build"
-  - "python setup.py bdist --skip-build --format zip"
-  - "python setup.py bdist --skip-build --format msi"
+  # - "vcvarsall.bat x86"
+  # - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "python setup.py build"
+  # - "python setup.py bdist_wheel --skip-build"
+  # - "python setup.py bdist --skip-build --format zip"
+  # - "python setup.py bdist --skip-build --format msi"
 
-  # test local install
-  - ps: Get-ChildItem dist/*-cp27-*-win32.whl | % { pip install "$_" }
-  # Create a folder to keep pysmu for all the python versions
-  - mkdir "pysmu-%LIBSMU_VERSION%.win32-py"
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
-  - set PATH=%OLDPATH%
+  # # test local install
+  # - ps: Get-ChildItem dist/*-cp27-*-win32.whl | % { pip install "$_" }
+  # # Create a folder to keep pysmu for all the python versions
+  # - mkdir "pysmu-%LIBSMU_VERSION%.win32-py"
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
+  # - set PATH=%OLDPATH%
 
   ## build 32 bit python3.7 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\Python37;C:\\Python37\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\Python37;C:\\Python37\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python37/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python37/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python37/python.exe -m pip install --only-binary :all: cython"
-  # py2exe required to build exe from pysmu script
-  - "c:/python37/python.exe -m pip install --only-binary :all: py2exe"
-  - "c:/python37/python.exe -m pip install pyreadline"
+  # # update pip to keep it from complaining
+  # - "c:/python37/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python37/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python37/python.exe -m pip install --only-binary :all: cython"
+  # # py2exe required to build exe from pysmu script
+  # - "c:/python37/python.exe -m pip install --only-binary :all: py2exe"
+  # - "c:/python37/python.exe -m pip install pyreadline"
 
-  - "vcvarsall.bat x86"
-  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build"
-  - "python setup.py bdist_wheel --skip-build"
-  - "python setup.py bdist --skip-build --format zip"
-  - "python setup.py bdist --skip-build --format msi"
-  - "python setup.py sdist"
+  # - "vcvarsall.bat x86"
+  # - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "python setup.py build"
+  # - "python setup.py bdist_wheel --skip-build"
+  # - "python setup.py bdist --skip-build --format zip"
+  # - "python setup.py bdist --skip-build --format msi"
+  # - "python setup.py sdist"
 
-  # test local install
-  - ps: Get-ChildItem dist/*-cp37-*-win32.whl | % { pip install "$_" }
-  # build exe from python script
-  # "build_exe -b 0 -d exe32 bin/pysmu"
-  # rmdir /q /s bin\__pycache__
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
-  - set PATH=%OLDPATH%
+  # # test local install
+  # - ps: Get-ChildItem dist/*-cp37-*-win32.whl | % { pip install "$_" }
+  # # build exe from python script
+  # # "build_exe -b 0 -d exe32 bin/pysmu"
+  # # rmdir /q /s bin\__pycache__
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
+  # - set PATH=%OLDPATH%
 
   ## build 32 bit python3.8 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\Python38;C:\\Python38\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\Python38;C:\\Python38\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python38/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python38/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python38/python.exe -m pip install --only-binary :all: cython"
-  # py2exe required to build exe from pysmu script
-  - "c:/python37/python.exe -m pip install --only-binary :all: py2exe"
-  - "c:/python37/python.exe -m pip install pyreadline"
+  # # update pip to keep it from complaining
+  # - "c:/python38/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python38/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python38/python.exe -m pip install --only-binary :all: cython"
+  # # py2exe required to build exe from pysmu script
+  # - "c:/python37/python.exe -m pip install --only-binary :all: py2exe"
+  # - "c:/python37/python.exe -m pip install pyreadline"
 
-  - "vcvarsall.bat x86"
-  - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build"
-  - "python setup.py bdist_wheel --skip-build"
-  - "python setup.py bdist --skip-build --format zip"
-  - "python setup.py bdist --skip-build --format msi"
-  - "python setup.py sdist"
+  # - "vcvarsall.bat x86"
+  # - "python setup.py build_ext --compiler=msvc -L ../../32/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "python setup.py build"
+  # - "python setup.py bdist_wheel --skip-build"
+  # - "python setup.py bdist --skip-build --format zip"
+  # - "python setup.py bdist --skip-build --format msi"
+  # - "python setup.py sdist"
 
-  # test local install
-  - ps: Get-ChildItem dist/*-cp38-*-win32.whl | % { pip install "$_" }
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
-  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win32-py.zip" pysmu-*win32-py
-  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win32.zip"
-  - set PATH=%OLDPATH%
+  # # test local install
+  # - ps: Get-ChildItem dist/*-cp38-*-win32.whl | % { pip install "$_" }
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win32.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win32-py"
+  # - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win32-py.zip" pysmu-*win32-py
+  # - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win32.zip"
+  # - set PATH=%OLDPATH%
 
   ## build 64 bit python2.7 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\Python27-x64;C:\\python27-x64\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\Python27-x64;C:\\python27-x64\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python27-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python27-x64/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python27-x64/python.exe -m pip install --only-binary :all: cython"
+  # # update pip to keep it from complaining
+  # - "c:/python27-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python27-x64/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python27-x64/python.exe -m pip install --only-binary :all: cython"
 
-  - "vcvarsall.bat x64"
-  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build"
-  - "python setup.py bdist_wheel --skip-build"
-  - "python setup.py bdist --skip-build --format zip"
-  - "python setup.py bdist --skip-build --format msi"
-  - "python setup.py sdist"
+  # - "vcvarsall.bat x64"
+  # - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "python setup.py build"
+  # - "python setup.py bdist_wheel --skip-build"
+  # - "python setup.py bdist --skip-build --format zip"
+  # - "python setup.py bdist --skip-build --format msi"
+  # - "python setup.py sdist"
 
-  # test local install
-  - ps: Get-ChildItem dist/*-cp27-*-win_amd64.whl | % { pip install "$_" }
-  # Create a folder to keep pysmu for all the python versions
-  - mkdir "pysmu-%LIBSMU_VERSION%.win-amd64-py"
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
-  - set PATH=%OLDPATH%
+  # # test local install
+  # - ps: Get-ChildItem dist/*-cp27-*-win_amd64.whl | % { pip install "$_" }
+  # # Create a folder to keep pysmu for all the python versions
+  # - mkdir "pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  # - set PATH=%OLDPATH%
 
   ## build 64 bit python3.7 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\python37-x64;C:\\python37-x64\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\python37-x64;C:\\python37-x64\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python37-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python37-x64/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python37-x64/python.exe -m pip install --only-binary :all: cython"
-  # py2exe required to build exe from pysmu script
-  - "c:/python37-x64/python.exe -m pip install --only-binary :all: py2exe"
-  - "c:/python37-x64/python.exe -m pip install pyreadline"
+  # # update pip to keep it from complaining
+  # - "c:/python37-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python37-x64/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python37-x64/python.exe -m pip install --only-binary :all: cython"
+  # # py2exe required to build exe from pysmu script
+  # - "c:/python37-x64/python.exe -m pip install --only-binary :all: py2exe"
+  # - "c:/python37-x64/python.exe -m pip install pyreadline"
 
-  - "vcvarsall.bat x64"
-  - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "python setup.py build"
-  - "python setup.py bdist_wheel --skip-build"
-  - "python setup.py bdist --skip-build --format zip"
-  - "python setup.py bdist --skip-build --format msi"
-  - "python setup.py sdist"
+  # - "vcvarsall.bat x64"
+  # - "python setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "python setup.py build"
+  # - "python setup.py bdist_wheel --skip-build"
+  # - "python setup.py bdist --skip-build --format zip"
+  # - "python setup.py bdist --skip-build --format msi"
+  # - "python setup.py sdist"
 
-  # test local install
-  - ps: Get-ChildItem dist/*-cp37-*-win_amd64.whl | % { pip install "$_" }
-  # build exe from python script
-  # "build_exe -b 0 -d exe64 bin/pysmu"
-  # rmdir /q /s bin\__pycache__
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
-  - set PATH=%OLDPATH%
+  # # test local install
+  # - ps: Get-ChildItem dist/*-cp37-*-win_amd64.whl | % { pip install "$_" }
+  # # build exe from python script
+  # # "build_exe -b 0 -d exe64 bin/pysmu"
+  # # rmdir /q /s bin\__pycache__
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  # - set PATH=%OLDPATH%
 
   ## build 64 bit python3.8 bindings
-  # add python dirs to PATH
-  - set PATH=C:\\python38-x64;C:\\python38-x64\\Scripts;%PATH%
-  # check we're using the right python version and arch
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  # # add python dirs to PATH
+  # - set PATH=C:\\python38-x64;C:\\python38-x64\\Scripts;%PATH%
+  # # check we're using the right python version and arch
+  # - "python --version"
+  # - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # update pip to keep it from complaining
-  - "c:/python38-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
-  # wheel needs to be installed in order to build binary wheels for pysmu
-  - "c:/python38-x64/python.exe -m pip install --only-binary :all: wheel"
-  # cython is required for generating the extensions
-  - "c:/python38-x64/python.exe -m pip install --only-binary :all: cython"
+  # # update pip to keep it from complaining
+  # - "c:/python38-x64/python.exe -m pip install --only-binary :all: --disable-pip-version-check --user --upgrade pip"
+  # # wheel needs to be installed in order to build binary wheels for pysmu
+  # - "c:/python38-x64/python.exe -m pip install --only-binary :all: wheel"
+  # # cython is required for generating the extensions
+  # - "c:/python38-x64/python.exe -m pip install --only-binary :all: cython"
 
-  - "vcvarsall.bat x64"
-  - "c:/python38-x64/python.exe setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\\libusb\\libusb"
-  - "c:/python38-x64/python.exe setup.py build"
-  - "c:/python38-x64/python.exe setup.py bdist_wheel --skip-build"
-  - "c:/python38-x64/python.exe setup.py bdist --skip-build --format zip"
-  - "c:/python38-x64/python.exe setup.py bdist --skip-build --format msi"
-  - "c:/python38-x64/python.exe setup.py sdist"
+  # - "vcvarsall.bat x64"
+  # - "c:/python38-x64/python.exe setup.py build_ext --compiler=msvc -L ../../64/src/%CONFIGURATION% -I C:\include\libusb"
+  # - "c:/python38-x64/python.exe setup.py build"
+  # - "c:/python38-x64/python.exe setup.py bdist_wheel --skip-build"
+  # - "c:/python38-x64/python.exe setup.py bdist --skip-build --format zip"
+  # - "c:/python38-x64/python.exe setup.py bdist --skip-build --format msi"
+  # - "c:/python38-x64/python.exe setup.py sdist"
 
   # test local install
-  - ps: Get-ChildItem dist/*-cp38-*-win_amd64.whl | % { pip install "$_" }
-  - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
-  - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win-amd64-py.zip" pysmu-*win-amd64-py
-  - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win-amd64.zip"
+  # - ps: Get-ChildItem dist/*-cp38-*-win_amd64.whl | % { pip install "$_" }
+  # - 7z x -y "c:\projects\libsmu\bindings\python\dist\pysmu*win-amd64.zip" -o"c:\projects\libsmu\bindings\python\pysmu-%LIBSMU_VERSION%.win-amd64-py"
+  # - 7z a -y "c:\projects\libsmu\bindings\python\dist\pysmu-%LIBSMU_VERSION%.win-amd64-py.zip" pysmu-*win-amd64-py
+  # - C:\msys64\usr\bin\bash -lc "rm dist/pysmu*win-amd64.zip"
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
@@ -348,15 +340,6 @@ build_script:
   # - ren exe64\pysmu.exe pysmu64.exe
   # - appveyor PushArtifact exe32\pysmu32.exe
   # - appveyor PushArtifact exe64\pysmu64.exe
-
-  # copy python binding MSIs for installer
-  - ps: Copy-Item dist\pysmu-*amd64-py2.7.msi c:\libsmu-python\pysmu27-amd64.msi
-  - ps: Copy-Item dist\pysmu-*win32-py2.7.msi c:\libsmu-python\pysmu27-win32.msi
-  - ps: Copy-Item dist\pysmu-*amd64-py3.7.msi c:\libsmu-python\pysmu37-amd64.msi
-  - ps: Copy-Item dist\pysmu-*win32-py3.7.msi c:\libsmu-python\pysmu37-win32.msi
-  - ps: Copy-Item dist\pysmu-*amd64-py3.8.msi c:\libsmu-python\pysmu38-amd64.msi
-  - ps: Copy-Item dist\pysmu-*win32-py3.8.msi c:\libsmu-python\pysmu38-win32.msi
-  - ps: popd
 
   # create libsmu installers
   - copy C:\projects\libsmu\32\dist\libsmu-x86.iss C:\projects\libsmu\dist\libsmu-x86.iss
@@ -368,87 +351,87 @@ build_script:
   - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x86.exe
   - appveyor PushArtifact C:\libsmu-%LIBSMU_VERSION%-setup-x64.exe
 
-  ##### MinGW build
-  - set OPT_PATH=C:\msys64\mingw32\bin;C:\msys64\mingw64\bin;
-  - set PATH=%OPT_PATH%%PATH%
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
+  # ##### MinGW build
+  # - set OPT_PATH=C:\msys64\mingw32\bin;C:\msys64\mingw64\bin;
+  # - set PATH=%OPT_PATH%%PATH%
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
 
-  # Install MinGW dependencies for 32 bit
-  - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-i686-gcc-ada mingw-w64-i686-gcc-fortran mingw-w64-i686-gcc-libgfortran mingw-w64-i686-gcc-objc"
-  - C:\msys64\usr\bin\bash -lc "rm /mingw32/etc/gdbinit"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-gcc mingw-w64-i686-cmake mingw-w64-i686-pkg-config mingw-w64-i686-python2-pip mingw-w64-i686-openblas mingw-w64-i686-lapack"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-python3 mingw-w64-i686-python3-pip mingw-w64-i686-binutils mingw-w64-i686-curl"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U https://repo.msys2.org/mingw/i686/mingw-w64-i686-libusb-1.0.23-1-any.pkg.tar.xz"
+  # # Install MinGW dependencies for 32 bit
+  # - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-i686-gcc-ada mingw-w64-i686-gcc-fortran mingw-w64-i686-gcc-libgfortran mingw-w64-i686-gcc-objc"
+  # - C:\msys64\usr\bin\bash -lc "rm /mingw32/etc/gdbinit"
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-gcc mingw-w64-i686-cmake mingw-w64-i686-pkg-config mingw-w64-i686-python2-pip mingw-w64-i686-openblas mingw-w64-i686-lapack"
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-i686-python3 mingw-w64-i686-python3-pip mingw-w64-i686-binutils mingw-w64-i686-curl"
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U https://repo.msys2.org/mingw/i686/mingw-w64-i686-libusb-1.0.23-1-any.pkg.tar.xz"
 
-  # Install MinGW dependencies for 64 bit
-  - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-x86_64-gcc-ada mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-gcc-libgfortran mingw-w64-x86_64-gcc-objc"
-  - C:\msys64\usr\bin\bash -lc "rm /mingw64/etc/gdbinit"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config mingw-w64-x86_64-python2-pip mingw-w64-x86_64-openblas mingw-w64-x86_64-lapack"
-  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-python3 mingw-w64-x86_64-python3-pip mingw-w64-x86_64-binutils mingw-w64-x86_64-curl"
-  - C:\msys64\usr\bin\bash -lc "pacman -U --noconfirm https://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-libusb-1.0.23-1-any.pkg.tar.xz"
+  # # Install MinGW dependencies for 64 bit
+  # - C:\msys64\usr\bin\bash -lc "pacman -Rs --noconfirm mingw-w64-x86_64-gcc-ada mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-gcc-libgfortran mingw-w64-x86_64-gcc-objc"
+  # - C:\msys64\usr\bin\bash -lc "rm /mingw64/etc/gdbinit"
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-pkg-config mingw-w64-x86_64-python2-pip mingw-w64-x86_64-openblas mingw-w64-x86_64-lapack"
+  # - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy mingw-w64-x86_64-python3 mingw-w64-x86_64-python3-pip mingw-w64-x86_64-binutils mingw-w64-x86_64-curl"
+  # - C:\msys64\usr\bin\bash -lc "pacman -U --noconfirm https://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-libusb-1.0.23-1-any.pkg.tar.xz"
 
-  # Build libsmu MinGW 32 bit
-  - echo "Running cmake for MinGW 32..."
-  - mkdir c:\projects\libsmu\mingw-32
-  - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-32 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw32 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/msys64/mingw32/lib/libusb-1.0.dll.a -DLIBUSB_INCLUDE_DIRS=C:/msys64/mingw32/include/libusb-1.0 -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_73_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
+  # # Build libsmu MinGW 32 bit
+  # - echo "Running cmake for MinGW 32..."
+  # - mkdir c:\projects\libsmu\mingw-32
+  # - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-32 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw32 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/msys64/mingw32/lib/libusb-1.0.dll.a -DLIBUSB_INCLUDE_DIRS=C:/msys64/mingw32/include/libusb-1.0 -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_73_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
 
-  # Build libsmu MinGW 64 bit
-  - echo "Running cmake for MinGW 64..."
-  - mkdir c:\projects\libsmu\mingw-64
-  - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-64 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw64 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/msys64/mingw64/lib/libusb-1.0.dll.a -DLIBUSB_INCLUDE_DIRS=C:/msys64/mingw64/include/libusb-1.0 -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_73_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
+  # # Build libsmu MinGW 64 bit
+  # - echo "Running cmake for MinGW 64..."
+  # - mkdir c:\projects\libsmu\mingw-64
+  # - C:\msys64\usr\bin\bash -lc "cd C:/projects/libsmu/mingw-64 && cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX=/mingw64 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_C_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-g++.exe -DLIBUSB_LIBRARIES=C:/msys64/mingw64/lib/libusb-1.0.dll.a -DLIBUSB_INCLUDE_DIRS=C:/msys64/mingw64/include/libusb-1.0 -DBoost_USE_STATIC_LIBS=ON -DBUILD_STATIC_LIB=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DBOOST_ROOT=C:/Libraries/boost_1_73_0 -DBUILD_PYTHON=OFF .. && cmake --build . --config %CONFIGURATION%"
 
-  # Create libsmu zip artifact for 32 bit
-  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
-  - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
-  - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
-  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
-  - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
-  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
-  - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
+  # # Create libsmu zip artifact for 32 bit
+  # - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  # - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  # - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers
+  # - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
+  # - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\amd64
+  # - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
+  # - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32\drivers\x86
 
 
-  - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-   # gtest libraries for test executables
-  #- copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\mingw-32\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\mingw-32\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  # batch file to run test suite
-  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - copy C:\msys64\mingw32\lib\libusb-1.0.dll.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win32"
-  - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
-  - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip
+  # - copy c:\projects\libsmu\mingw-32\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\mingw-32\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  #  # gtest libraries for test executables
+  # #- copy c:\projects\libsmu\mingw-32\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\mingw-32\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\mingw-32\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\mingw-32\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy c:\projects\libsmu\mingw-32\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # # batch file to run test suite
+  # - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - copy C:\msys64\mingw32\lib\libusb-1.0.dll.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win32"
+  # - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win32
+  # - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win32.zip
 
-  # Create libsmu zip artifact for 64 bit
-  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
-  - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
-  - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
-  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
-  - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
-  - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
-  - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
+  # # Create libsmu zip artifact for 64 bit
+  # - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  # - copy c:\projects\libsmu\include\libsmu\libsmu.hpp c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\dist\m1k-winusb.inf c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  # - copy c:\projects\libsmu\dist\m1k-winusb.cat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers
+  # - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
+  # - copy C:\projects\libsmu\dist\amd64\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\amd64
+  # - if not exist "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86" mkdir c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
+  # - copy C:\projects\libsmu\dist\x86\* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64\drivers\x86
 
-  - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  # gtest libraries for test executables
-  #- copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\mingw-64\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\mingw-64\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-   # batch file to run test suite
-  - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - copy C:\msys64\mingw64\lib\libusb-1.0.dll.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win64"
-  - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
-  - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip
+  # - copy c:\projects\libsmu\mingw-64\src\libsmu.* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\mingw-64\src\cli\smu.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # # gtest libraries for test executables
+  # #- copy c:\projects\libsmu\mingw-64\googletest-build\googlemock\gtest\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\mingw-64\bin\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\mingw-64\lib\libgtest* c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\mingw-64\examples\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy c:\projects\libsmu\mingw-64\tests\*.exe c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  #  # batch file to run test suite
+  # - copy c:\projects\libsmu\tests\run-tests.bat c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - copy C:\msys64\mingw64\lib\libusb-1.0.dll.a c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libgomp-*.dll c:/libsmu-%LIBSMU_VERSION%-MinGW-win64"
+  # - 7z a "c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip" c:\libsmu-%LIBSMU_VERSION%-MinGW-win64
+  # - appveyor PushArtifact c:\libsmu-%LIBSMU_VERSION%-MinGW-win64.zip
 
   # push all dist files as artifacts
   - ps: Get-ChildItem dist/.\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
