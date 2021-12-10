@@ -115,7 +115,7 @@ namespace smu {
 
 		// Used to keep initial USB transfer kickoff thread alive on Windows
 		// until off() is called.
-		std::condition_variable m_usb_cv;
+		std::condition_variable_any m_usb_cv;
 
 		M1000_Device(Session* s, libusb_device* d, libusb_device_handle* h,
 				const char* hw_version, const char* fw_version, const char* serial):
