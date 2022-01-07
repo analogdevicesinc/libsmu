@@ -1,8 +1,8 @@
 option(BUILD_STATIC_LIB "Build static library" OFF)
 option(OSX_PACKAGE "Do not create an OSX package by default" OFF)
 
-if(UNIX OR MINGW)
-	find_library(PTHREAD_LIBRARIES pthread REQUIRED)
+if(NOT WIN32)
+	find_library(PTHREAD_LIBRARIES pthread)
 	mark_as_advanced(PTHREAD_LIBRARIES)
 	set(LIBS_TO_LINK ${PTHREAD_LIBRARIES})
 endif()

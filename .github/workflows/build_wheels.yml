@@ -1,5 +1,4 @@
 name: Build
-
 on: [push, pull_request]
 
 jobs:
@@ -37,7 +36,7 @@ jobs:
           CIBW_BEFORE_ALL: >
                             cd {project} && ./.github/scripts/install_deps.sh {package}/../../build
           CIBW_BEFORE_BUILD: pip install Cython
-          CIBW_BUILD: "cp39-* cp310-*"
+          CIBW_BUILD: "cp37-* cp38-* cp39-* cp310-*"
       - uses: actions/upload-artifact@v2
         with:
           name: manylinux_wheels
