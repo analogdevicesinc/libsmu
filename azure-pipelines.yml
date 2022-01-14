@@ -19,109 +19,221 @@ parameters:
     - 3.8
     - 3.7
 
-jobs:
-- job: LinuxBuilds
-  strategy:
-    matrix:
-       ubuntu_18_04_x86_64:
-        imageName: 'ubuntu-latest'
-        OS_TYPE: 'ubuntu_docker'
-        OS_VERSION: bionic
-        artifactName: 'Linux-Ubuntu-18.04-x86_64'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
-      ubuntu_20_04_x86_64:
-        imageName: 'ubuntu-latest'
-        OS_TYPE: 'ubuntu_docker'
-        OS_VERSION: focal
-        artifactName: 'Linux-Ubuntu-20.04-x86_64'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
-      Bionic_doxygen:
-        imageName: 'ubuntu-18.04'
-        pythonVersion: 3.8
-        OS_TYPE: 'doxygen'
-        OS_VERSION: bionic
-        artifactName: 'Linux-Ubuntu-18.04-doxygen'
-  pool:
-    vmImage: $(imageName)
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(pythonVersion)'
-  - checkout: self
-    fetchDepth: 10
-    clean: true      
-  - script: ./CI/travis/before_install_linux.sh
-    displayName: "Install dependencies"
-  - script: ./CI/travis/make_linux.sh
-    displayName: "Build"
-  - script: ./CI/travis/before_deploy_linux.sh
-    displayName: "Before deploy linux"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
-
-- job: macOSBuilds
-  strategy:
-    matrix:
-      macOS_10_15:
-        imageName: 'macOS-10.15'
-        artifactName: 'macOS-10.15'
-      macOS_11:
-        imageName: 'macOS-11'
-        artifactName: 'macOS-11'
-  pool:
-    vmImage: $(imageName)
-  steps:
-  - checkout: self
-    fetchDepth: 10
-    clean: true
-  - script: ./CI/travis/before_install_darwin.sh
-    displayName: "Install Dependencies"
-  - script: ./CI/travis/make_darwin.sh
-    displayName: "Build"
-  - ${{ each pyVersion in parameters.pythonVersions }}:
+stages:
+- stage: Builds
+  jobs:
+  - job: LinuxBuilds
+    strategy:
+      matrix:
+        ubuntu_18_04_x86_64:
+          imageName: 'ubuntu-latest'
+          OS_TYPE: 'ubuntu_docker'
+          OS_VERSION: bionic
+          artifactName: 'Linux-Ubuntu-18.04-x86_64'
+          PACKAGE_TO_INSTALL: 'build/*.deb'
+        ubuntu_20_04_x86_64:
+          imageName: 'ubuntu-latest'
+          OS_TYPE: 'ubuntu_docker'
+          OS_VERSION: focal
+          artifactName: 'Linux-Ubuntu-20.04-x86_64'
+          PACKAGE_TO_INSTALL: 'build/*.deb'
+        Bionic_doxygen:
+          imageName: 'ubuntu-18.04'
+          pythonVersion: 3.8
+          OS_TYPE: 'doxygen'
+          OS_VERSION: bionic
+          artifactName: 'Linux-Ubuntu-18.04-doxygen'
+    pool:
+      vmImage: $(imageName)
+    steps:
     - task: UsePythonVersion@0
-      displayName: Use Python ${{ pyVersion }}
       inputs:
-        versionSpec: '${{ pyVersion }}'
+        versionSpec: '$(pythonVersion)'
+    - checkout: self
+      fetchDepth: 10
+      clean: true      
+    - script: ./CI/travis/before_install_linux.sh
+      displayName: "Install dependencies"
+    - script: ./CI/travis/make_linux.sh
+      displayName: "Build"
+    - script: ./CI/travis/before_deploy_linux.sh
+      displayName: "Before deploy linux"
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
+
+  - job: macOSBuilds
+    strategy:
+      matrix:
+        macOS_10_15:
+          imageName: 'macOS-10.15'
+          artifactName: 'macOS-10.15'
+        macOS_11:
+          imageName: 'macOS-11'
+          artifactName: 'macOS-11'
+    pool:
+      vmImage: $(imageName)
+    steps:
+    - checkout: self
+      fetchDepth: 10
+      clean: true
+    - script: ./CI/travis/before_install_darwin.sh
+      displayName: "Install Dependencies"
+    - script: ./CI/travis/make_darwin.sh
+      displayName: "Build"
+    - ${{ each pyVersion in parameters.pythonVersions }}:
+      - task: UsePythonVersion@0
+        displayName: Use Python ${{ pyVersion }}
+        inputs:
+          versionSpec: '${{ pyVersion }}'
+      - script: |
+              python3 --version
+              python3 -m pip install wheel twine build virtualenv
+              cd '$(Agent.BuildDirectory)/s/bindings/python/'
+              mkdir -p $(Agent.BuildDirectory)/s/build/wheelhouse
+              python3 -m build
+              cp dist/*.whl $(Agent.BuildDirectory)/s/build/wheelhouse
+              cd $(Agent.BuildDirectory)/s/build/
+        displayName: Wheel Python ${{ pyVersion }}
+    - script: ./CI/travis/before_deploy_darwin.sh
+      displayName: "Before deploy"
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/wheelhouse/?(*.whl)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
     - script: |
-            python3 --version
-            python3 -m pip install wheel twine build virtualenv
-            cd '$(Agent.BuildDirectory)/s/bindings/python/'
-            mkdir -p $(Agent.BuildDirectory)/s/build/wheelhouse
-            python3 -m build
-            cp dist/*.whl $(Agent.BuildDirectory)/s/build/wheelhouse
-            cd $(Agent.BuildDirectory)/s/build/
-      displayName: Wheel Python ${{ pyVersion }}
-  - script: ./CI/travis/before_deploy_darwin.sh
-    displayName: "Before deploy"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/wheelhouse/?(*.whl)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
-  - script: |
-      python -m pip install --upgrade pip twine
-      python -m twine upload --repository "testpypi" '$(Agent.BuildDirectory)/s/build/wheelhouse/*.whl'
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
-    displayName: "Upload to PyPI"
-    env:
-      TWINE_USERNAME: '__token__'
-      TWINE_PASSWORD: $(TWINE_PASSWORD)
+        python -m pip install --upgrade pip twine
+        python -m twine upload --repository "testpypi" '$(Agent.BuildDirectory)/s/build/wheelhouse/*.whl'
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
+      displayName: "Upload to PyPI"
+      env:
+        TWINE_USERNAME: '__token__'
+        TWINE_PASSWORD: $(TWINE_PASSWORD)
+
+  - job: WindowsBuilds
+    strategy:
+      matrix:
+        VS2019_Win32:
+          imageName: 'windows-2019'
+          COMPILER: 'Visual Studio 16 2019'
+          ARCH: 'Win32'
+          artifactName: 'Windows-VS-16-2019-Win32'
+        VS2019_Win64:
+          imageName: 'windows-2019'
+          COMPILER: 'Visual Studio 16 2019'
+          ARCH: 'x64'
+          artifactName: 'Windows-VS-16-2019-x64'
+    pool:
+      vmImage: $[ variables['imageName'] ]
+    steps:
+    - checkout: self
+      fetchDepth: 1
+      clean: true
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\install_deps_win.ps1
+      displayName: Dependencies
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\build_win.ps1
+      displayName: Build
+    - task: CopyFiles@2
+      displayName: 'Copy libraries'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build-$(ARCH)/src/Release'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy smu.exe'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build-$(ARCH)/src/cli/Release'
+        contents: 'smu.exe'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy examples'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build-$(ARCH)/examples/Release'
+        contents: '*.exe'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy tests'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build-$(ARCH)/tests/Release'
+        contents: '*.exe'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy tests script'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/tests'
+        contents: 'run-tests.bat'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PowerShell@2
+      displayName: 'Copy dependencies'
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\publish_deps.ps1
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
+    - ${{ each pyVersion in parameters.pythonVersions }}:
+      - task: UsePythonVersion@0
+        displayName: Use Python ${{ pyVersion }}
+        inputs:
+          versionSpec: '${{ pyVersion }}'
+      - script: |
+              python3 --version
+              python3 -m pip install wheel twine build virtualenv cython
+              cd '$(Agent.BuildDirectory)/s/bindings/python/'
+              mkdir -p $(Agent.BuildDirectory)/s/build/wheelhouse
+              python3 setup.py build_ext --compiler=msvc -L $(Build.ArtifactStagingDirectory) -I $(Build.ArtifactStagingDirectory)\include\libsmu
+              python3 setup.py build
+              python3 setup.py bdist_wheel
+              cp dist/*.whl $(Agent.BuildDirectory)/s/build/wheelhouse
+              cd $(Agent.BuildDirectory)/s/build/
+        displayName: Wheel Python ${{ pyVersion }}
+
+- stage: PushArtifacts
+  dependsOn: Builds
+  jobs:
+  - job: GenerateSetupExe
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
+    pool:
+      vmImage: 'windows-2019'
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          path: '$(Build.ArtifactStagingDirectory)'
+      - task: PowerShell@2
+        inputs:
+          targetType: 'filePath'
+          filePath: .\CI\generate_exe.ps1
+        displayName: "Generate libsmu setup for 32bit and 64bit"
+      - task: PublishPipelineArtifact@1
+        condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+        inputs:
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+          artifactName: 'libsmu-setup-exe'

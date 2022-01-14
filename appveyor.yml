@@ -141,7 +141,7 @@ build_script:
     - cd c:\projects\libsmu\bindings\python
     - python --version
     - python -m pip install --upgrade pip
-    - python -m pip install cibuildwheel twine setuptools build virtualenv wheel Cython
+    - python -m pip install twine setuptools build virtualenv wheel cython
     - python -m build
 
     # build 32 and 64 bit pysmu modules for all supported python versions
