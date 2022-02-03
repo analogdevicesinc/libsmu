@@ -1,26 +1,70 @@
-if (NOT ${USE_PYTHON2})
-	set(Python_ADDITIONAL_VERSIONS 3)
+cmake_minimum_required(VERSION 3.4)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+string(REGEX MATCHALL "([^\ ]+\ |[^\ ]+$)" CMAKE_CXX_LIST "${CMAKE_CXX_FLAGS}")
+FOREACH(CXX_COMPILE_FLAG ${CMAKE_CXX_LIST})
+	string(REPLACE " " "" CXX_COMPILE_FLAG "${CXX_COMPILE_FLAG}")
+	set(EXTRA_COMPILE_FLAGS '${CXX_COMPILE_FLAG}',${EXTRA_COMPILE_FLAGS})
+ENDFOREACH()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+string(REGEX MATCHALL "([^\ ]+\ |[^\ ]+$)" CMAKE_CXX_LIST "${CMAKE_CXX_FLAGS}")
+FOREACH(CXX_COMPILE_FLAG ${CMAKE_CXX_LIST})
+	string(REPLACE " " "" CXX_COMPILE_FLAG "${CXX_COMPILE_FLAG}")
+	set(EXTRA_COMPILE_FLAGS '${CXX_COMPILE_FLAG}',${EXTRA_COMPILE_FLAGS})
+ENDFOREACH()
+
+if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+	if (NOT WIN32)
+		set(Python_ADDITIONAL_VERSIONS 3)
+	endif()
+
+	include(FindPythonInterp)
+	include(FindPythonLibs)
+
+	set(Python_Interpreter_FOUND ${PYTHONINTERP_FOUND})
+	set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+	set(Python_LIBRARIES ${PYTHON_LIBRARIES})
+	set(Python_INCLUDE_PATH ${PYTHON_INCLUDE_PATH})
+	set(Python_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
 else()
-	set(Python_ADDITIONAL_VERSIONS 2.7 3.4 3.5)
+	find_package(Python COMPONENTS Interpreter Development)
 endif()
 
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-	find_package(PythonLibs REQUIRED)
+string(REPLACE " " "','" CXX_COMPILE_FLAG "${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
+set(EXTRA_COMPILE_FLAGS '${CXX_COMPILE_FLAG}',${EXTRA_COMPILE_FLAGS})
 
-	set(SETUP_PY "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
-	set(DEPS "${CMAKE_CURRENT_SOURCE_DIR}/pysmu/__init__.py")
-	set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
-
-	add_custom_command(OUTPUT ${OUTPUT}
-		COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}/src"
-		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-		DEPENDS ${DEPS})
-	add_custom_target(python ALL DEPENDS smu ${OUTPUT})
-
-	install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
-
+if(NOT APPLE)
+	string(REPLACE " " "','" CXX_LINK_FLAG "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
+	set(EXTRA_LINK_FLAGS '${CXX_LINK_FLAG}',${EXTRA_LINK_FLAGS})
 else()
-	message(STATUS "Skipping building python bindings, python interpreter not found")
+	set(EXTRA_LINK_FLAGS '-flat_namespace','-undefined','suppress',${EXTRA_LINK_FLAGS})
+	if (${OSX_PACKAGE})
+		set(EXTRA_LINK_FLAGS '-F${CMAKE_BINARY_DIR}/src',${EXTRA_LINK_FLAGS})
+		set(EXTRA_LINK_FLAGS '-framework','${PROJECT_NAME}',${EXTRA_LINK_FLAGS})
+	endif()
+	message(${CMAKE_OSX_DEPLOYMENT_TARGET})
+	set(EXTRA_LINK_FLAGS '-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}',${EXTRA_LINK_FLAGS})
+	string(REPLACE " " "','" CXX_COMPILE_FLAG "${CMAKE_SHARED_MODULE_CREATE_CXX_FLAGS}")
+	set(EXTRA_LINK_FLAGS '${CXX_COMPILE_FLAG}',${EXTRA_LINK_FLAGS})
 endif()
+
+set(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.cmakein)
+set(SETUP_PY ${CMAKE_BINARY_DIR}/setup.py)
+configure_file(${SETUP_PY_IN} ${SETUP_PY})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml ${CMAKE_BINARY_DIR}/pyproject.toml)
+set(DEPS "${CMAKE_CURRENT_SOURCE_DIR}/pysmu/__init__.py")
+set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
+
+#${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}/src"
+add_custom_command(OUTPUT ${OUTPUT}
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/pysmu ${CMAKE_BINARY_DIR}/pysmu
+	COMMAND ${Python_EXECUTABLE} -m build
+	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+	DEPENDS ${DEPS})
+add_custom_target(python ALL DEPENDS smu ${OUTPUT})
+
+install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
