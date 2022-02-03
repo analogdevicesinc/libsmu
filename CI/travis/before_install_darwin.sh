@@ -15,6 +15,5 @@ brew install boost
 brew upgrade cmake
 
 # for python bindings
-sudo easy_install pip
-pip3 install --only-binary ":all:" --disable-pip-version-check --upgrade pip
-sudo pip3 install --only-binary ":all:" wheel cython
+python3 -m pip install --upgrade pip
+python3 -m pip install twine build virtualenv wheel cython
