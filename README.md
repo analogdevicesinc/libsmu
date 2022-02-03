@@ -1,5 +1,3 @@
-[![appveyor status](https://ci.appveyor.com/api/projects/status/p30uj8rqulrxsqvs/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libsmu/branch/master)
-[![travis-ci status](https://travis-ci.org/analogdevicesinc/libsmu.svg?branch=master)](https://travis-ci.org/analogdevicesinc/libsmu)
 [![coverity status](https://scan.coverity.com/projects/analogdevicesinc-libsmu/badge.svg)](https://scan.coverity.com/projects/analogdevicesinc-libsmu)
 
 # libsmu
@@ -24,15 +22,9 @@ Go to the folder you downloaded the package in and open a terminal, then run the
 analog@analog:~$ sudo apt install -f ./<libsmu_package_name>.deb
 ```
 
-## Python bindings for Linux
-If you want to install pysmu (the Python bindings for libsmu), you can download the specific .deb package. Currently we are supporting the default Python versions for each Ubuntu version (3.5 for Ubuntu 16, 3.6 for Ubuntu 18, 3.8 for Ubuntu 20). The package name should start with python3 and contain the OS version. These packages contain the Python bindings for libsmu.
-Go to the folder you downloaded the package in and open a terminal, then run the following command:
-```shell
-analog@analog:~$ sudo apt install -f ./<python_package_name>.deb
-```
 
 ## MacOS
-Download the specific libsmu .pkg package for your MacOS distribution from the Releases section. Currently we are supporting MacOS 10.13, 10.14 and 10.15. The package name should start with libsmu and contain the MacOS version.
+Download the specific libsmu .pkg package for your MacOS distribution from the Releases section. Currently we are supporting MacOS 10.15, 11.0. The package name should start with libsmu and contain the MacOS version.
 
 Open a terminal and run the following command which will install only the base library in /Library/Frameworks.
 ```shell
@@ -43,7 +35,27 @@ A different way to install libsmu on MacOS is by using the .tar.gz located in th
 ```shell
 tar -xzvf <libsmu_package_name>.tar.gz --strip=3 -C /usr/local
 ```
-Based on this base library installation, you can install the Python bindings manually for the desired Python version. Check the **Python** section below.
+Based on this base library installation, you can install the Python bindings manually for the desired Python version. Check the **Python** section below or you can use the wheel packages provided in the official installer. Check out the next section:
+
+## Python bindings for Windows, Linux and MacOS
+If you want to install pysmu (the Python bindings for libsmu), you can download the specific wheel for your version.
+We provide python wheel packages for the following Python versions: py3.7, py3.8, py3.9, py3.10. You can download the .whl
+for your Python version from the official releases or use the ones provided on test.pypi.org (soon from the official pypi.org as well).
+On Linux:
+```shell
+# If you are installing from test.pypi.org:
+analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ libsmu
+# If you are installing the .whl downloaded from our official github release:
+analog@analog:~$ python3 -m pip install pysmu-1.x.y-cp3x-cp3x-manylinux_2_24_x86_64.whl
+```
+On MacOS:
+```shell
+# If you are installing from test.pypi.org:
+analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ libsmu
+# If you are installing the .whl downloaded from our official github release:
+analog@analog:~$ python3 -m pip install pysmu-1.x.y-cp3x-cp3x-macos_10_15_x86_64.whl
+```
+Please note that in order to use these bindings you need the core C++ library they depend upon. This is not packaged with the pypi release but you can install the [latest release](https://github.com/analogdevicesinc/libsmu/releases/latest) or the latest **untested** binaries from the [master branch](https://ci.appveyor.com/project/analogdevicesinc/libsmu).
 
 
 # Build instructions for libsmu on Linux
@@ -97,7 +109,6 @@ CMake Options       | Default | Description                                    |
 `BUILD_PYTHON`   | ON | Build python bindings                            |
 `WITH_DOC`          | OFF | Generate documentation with Doxygen and Sphinx     |
 `BUILD_EXAMPLES`        |  OFF | Build examples                            |
-`USE_PYTHON2`  | ON | By default, CMake will search for Python 2 or 3. If USE_PYTHON2 is set to OFF, then only Python3 will be used.        |
 `INSTALL_UDEV_RULES` |  ON | Install a udev rule for detection of USB devices   |
 
 Configure via cmake:
@@ -152,9 +163,10 @@ host machine.
 
 ```shell
 analog@analog:~$ git clone https://github.com/analogdevicesinc/libsmu.git
-analog@analog:~$ cd libsmu/bindings/python
-analog@analog:~$ python3 setup.py build
-analog@analog:~$ sudo python3 setup.py install
+analog@analog:~$ cd libsmu/build
+analog@analog:~$ cmake -DBUILD_PYTHON=ON .. #this will generate a setup.py file in the current directory
+analog@analog:~$ python3 -m build #this will create .whl files in a dist/ directory
+# the .whl files can then be installed using "pip install"
 ```
 
 # Linux FAQ
@@ -202,5 +214,9 @@ On Windows, it's easiest to use the provided installers,
 [libsmu-setup-x86.exe](https://github.com/analogdevicesinc/libsmu/releases/latest) and
 [libsmu-setup-x64.exe](https://github.com/analogdevicesinc/libsmu/releases/latest)
 that install either 32 or 64 bit support, respectively. During the
-install process options are provided to install drivers, Python bindings and Visual Studio
+install process options are provided to install drivers and Visual Studio
 development support.
+
+Note that after v1.0.3, libsmu Windows installers no longer provide the option to install
+Python bindings. The process for installing pysmu on Windows is similar to the one described above for 
+MacOS and Linux.
