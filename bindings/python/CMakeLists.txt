@@ -55,6 +55,7 @@ set(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.cmakein)
 set(SETUP_PY ${CMAKE_BINARY_DIR}/setup.py)
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml ${CMAKE_BINARY_DIR}/pyproject.toml)
+configure_file(${CMAKE_SOURCE_DIR}/bindings/python/README.md ${CMAKE_BINARY_DIR}/README.md COPYONLY)
 set(DEPS "${CMAKE_CURRENT_SOURCE_DIR}/pysmu/__init__.py")
 set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
 
