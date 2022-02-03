@@ -10,12 +10,13 @@ import shutil
 import subprocess
 import sys
 
-from distutils.command.build_ext import build_ext as dst_build_ext
-from distutils.command.sdist import sdist as dst_sdist
+from setuptools.command.build_py import build_py
+from setuptools.command.build_ext import build_ext as dst_build_ext
+from setuptools.command.sdist import sdist as dst_sdist
 from setuptools import setup, find_packages, Extension, Command
 
 # top level bindings directory
-BINDINGS_DIR = os.path.dirname(os.path.abspath(__file__))
+BINDINGS_DIR = '${CMAKE_CURRENT_SOURCE_DIR}'
 # top level repo directory
 TOPDIR = os.path.dirname(os.path.dirname(BINDINGS_DIR))
 
@@ -41,16 +42,22 @@ def pkgconfig(*packages, **kw):
 
 
 # configure various required compile flags
-ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include')]}
-if os.path.exists(os.path.join(TOPDIR, 'build', 'src')):
+ext_kwargs = {'include_dirs': [os.path.join(TOPDIR, 'include'), '${LIBUSB_INCLUDE_DIRS}']}
+if os.path.exists(os.path.join('${CMAKE_BINARY_DIR}', 'src')):
     # link against locally built library if build dir exists
-    ext_kwargs['library_dirs'] = [os.path.join(TOPDIR, 'build', 'src')]
+    ext_kwargs['library_dirs'] = [os.path.join('${CMAKE_BINARY_DIR}', 'src')]
 
 if sys.platform == 'win32':
     ext_kwargs['libraries'] = ['libsmu']
-else:
+elif sys.platform == "linux":
     ext_kwargs['libraries'] = ['smu']
     ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
+elif sys.platform == "darwin":
+    ext_kwargs['libraries'] = []
+    ext_kwargs = pkgconfig('libusb-1.0', **ext_kwargs)
+
+ext_kwargs['extra_compile_args']=[${EXTRA_COMPILE_FLAGS}]
+ext_kwargs['extra_link_args']=[${EXTRA_LINK_FLAGS}]
 
 # cython extensions to generate/build
 extensions = []
@@ -71,9 +78,9 @@ class sdist(dst_sdist):
         from Cython.Build import cythonize
         build_ext = self.reinitialize_command('build_ext')
         build_ext.ensure_finalized()
-        cythonize(build_ext.extensions)
+        cythonize(build_ext.extensions,
+                    compiler_directives={'language_level' : "3"})
         dst_sdist.run(self)
-
 
 class build_ext(dst_build_ext):
     """Add custom compile flags for compiled extensions."""
@@ -125,85 +132,11 @@ class build_ext(dst_build_ext):
 
     def run(self):
         from Cython.Build import cythonize
-        cythonize(self.extensions)
+        cythonize(self.extensions,
+                    compiler_directives={'language_level' : "3"})
 
         self.extensions = self.no_cythonize()
         return dst_build_ext.run(self)
-
-
-class PyTest(Command):
-    """Run tests using pytest against a built copy."""
-
-    user_options = [
-        ('pytest-args=', 'a', 'arguments to pass to py.test'),
-        ('coverage', 'c', 'generate coverage info'),
-        ('report=', 'r', 'generate and/or show a coverage report'),
-        ('match=', 'k', 'run only tests that match the provided expressions'),
-        ('skip-build', 's', 'skip building the extension and instead test against an installed version'),
-    ]
-
-    default_test_dir = os.path.join(BINDINGS_DIR, 'tests')
-
-    def initialize_options(self):
-        self.pytest_args = ''
-        self.coverage = False
-        self.skip_build = False
-        self.match = None
-        self.report = None
-
-    def finalize_options(self):
-        self.test_args = ['-s', '-v', self.default_test_dir]
-        self.coverage = bool(self.coverage)
-        self.skip_build = bool(self.skip_build)
-        if self.match is not None:
-            self.test_args.extend(['-k', self.match])
-
-        if self.coverage:
-            try:
-                import pytest_cov
-                self.test_args.extend(['--cov', 'pysmu'])
-            except ImportError:
-                sys.stderr.write('error: install pytest-cov for coverage support\n')
-                sys.exit(1)
-
-            if self.report is None:
-                # disable coverage report output
-                self.test_args.extend(['--cov-report='])
-            else:
-                self.test_args.extend(['--cov-report', self.report])
-
-        # add custom pytest args
-        self.test_args.extend(shlex.split(self.pytest_args))
-
-    def run(self):
-        try:
-            import pytest
-        except ImportError:
-            sys.stderr.write('error: pytest is not installed\n')
-            sys.exit(1)
-
-        if self.skip_build:
-            # run tests from the parent directory so the local dir isn't used for module imports
-            builddir = os.path.abspath("..")
-        else:
-            # build extensions and byte-compile python
-            build_ext = self.reinitialize_command('build_ext')
-            build_py = self.reinitialize_command('build_py')
-            build_ext.ensure_finalized()
-            build_py.ensure_finalized()
-            self.run_command('build_ext')
-            self.run_command('build_py')
-
-            # Change the current working directory to the builddir during testing
-            # so coverage paths are correct.
-            builddir = os.path.abspath(build_py.build_lib)
-            if self.coverage and os.path.exists(os.path.join(TOPDIR, '.coveragerc')):
-                shutil.copyfile(os.path.join(TOPDIR, '.coveragerc'),
-                                os.path.join(builddir, '.coveragerc'))
-
-        ret = subprocess.call([sys.executable, '-m', 'pytest'] + self.test_args, cwd=builddir)
-        sys.exit(ret)
-
 
 version = ''
 PY_INIT_FILE = os.path.join(BINDINGS_DIR, 'pysmu', '__init__.py')
@@ -259,19 +192,19 @@ setup(
     maintainer_email='alexandra.trifan@analog.com',
     packages=find_packages(),
     ext_modules=extensions,
-    scripts=glob.glob('bin/*'),
+    scripts=glob.glob('${CMAKE_CURRENT_SOURCE_DIR}/bin/*'),
     tests_require=test_requirements,
     cmdclass={
-        'build_ext': build_ext,
-        'sdist': sdist,
-        'test': PyTest,
+      'build_py': build_py,
+      'build_ext': build_ext,
+      'sdist': sdist
     },
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 )
