@@ -16,7 +16,6 @@ set(LIBSMU_VERSION_MAJOR 1)
 set(LIBSMU_VERSION_MINOR 0)
 set(LIBSMU_VERSION_PATCH 3)
 set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERSION_PATCH})
-set(USE_PYTHON2 ON CACHE BOOL "Build Python bindings using Python2 by default")
 
 # determine a more descriptive project version using git info if available
 set(LIBSMU_VERSION_STR ${LIBSMU_VERSION})
@@ -48,7 +47,7 @@ configure_file(${CMAKE_SOURCE_DIR}/dist/version.hpp.in
 include_directories(${CMAKE_SOURCE_DIR}/include/)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -std=c++11")
+	set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++11 ${CMAKE_CXX_FLAGS}")
 endif()
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG_BUILD")
 
