@@ -19,4 +19,11 @@ include_directories(SYSTEM ${LIBUSB_INCLUDE_DIRS})
 set_target_properties(smu_bin PROPERTIES OUTPUT_NAME smu)
 target_link_libraries(smu_bin smu)
 
-install(TARGETS smu_bin RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	install(TARGETS smu_bin RUNTIME DESTINATION ${OSX_INSTALL_FRAMEWORKSDIR}/libsmu.framework/cli)
+else()
+	install(TARGETS smu_bin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+# Make the test targets available to the main CMakeLists.txt
+set(SMUCLI_TARGET smu_bin PARENT_SCOPE)
