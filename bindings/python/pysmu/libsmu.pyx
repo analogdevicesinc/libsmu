@@ -28,6 +28,9 @@ __version__ = cpp_libsmu.libsmu_version_str().decode()
 cdef extern from "Python.h" nogil:
     void PyEval_InitThreads()
 
+def getVersion():
+    return __version__
+
 
 # Workaround only py34 and up having native enum support; switch to cython
 # import methods once sourcing the C++ definition directly is supported.
