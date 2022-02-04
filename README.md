@@ -44,14 +44,14 @@ for your Python version from the official releases or use the ones provided on t
 On Linux:
 ```shell
 # If you are installing from test.pypi.org:
-analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ libsmu
+analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ pysmu
 # If you are installing the .whl downloaded from our official github release:
 analog@analog:~$ python3 -m pip install pysmu-1.x.y-cp3x-cp3x-manylinux_2_24_x86_64.whl
 ```
 On MacOS:
 ```shell
 # If you are installing from test.pypi.org:
-analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ libsmu
+analog@analog:~$ python3 -m pip install --index-url https://test.pypi.org/simple/ pysmu
 # If you are installing the .whl downloaded from our official github release:
 analog@analog:~$ python3 -m pip install pysmu-1.x.y-cp3x-cp3x-macos_10_15_x86_64.whl
 ```
@@ -68,8 +68,8 @@ analog@analog:~$ sudo apt-get install libusb-1.0-0-dev libboost-all-dev cmake pk
 Install to build Python bindings
 ```shell
 analog@analog:~$ sudo apt-get install python3 python3-setuptools python3-pip
-analog@analog:~$ pip3 install --upgrade pip
-analog@analog:~$ sudo pip3 install cython
+analog@analog:~$ python3 -m pip install --upgrade pip
+analog@analog:~$ sudo python3 -m pip install cython setuptools build wheel
 ```
 Install to build documentation
 ```shell
@@ -87,8 +87,8 @@ analog@analog:~$ brew install libusb cmake pkg-config boost
 Install to build Python bindings
 ```shell
 analog@analog:~$ brew install python3
-analog@analog:~$ pip3 install --upgrade pip
-analog@analog:~$ pip3 install cython
+analog@analog:~$ python3 -m pip install --upgrade pip
+analog@analog:~$ python3 -m pip install cython setuptools build wheel
 ```
 Setup tools and pip should be included in the "python3" package.
 
