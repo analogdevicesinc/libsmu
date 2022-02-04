@@ -243,7 +243,7 @@ stages:
   dependsOn: Builds
   jobs:
   - job: GenerateSetupExe
-    #TBD uncomment this: condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/tags/v')))
     pool:
       vmImage: 'windows-2019'
     steps:
@@ -261,7 +261,6 @@ stages:
           filePath: .\CI\generate_exe.ps1
         displayName: "Generate libsmu setup for 32bit and 64bit"
       - task: PublishPipelineArtifact@1
-        #TBD uncomment this: condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
         inputs:
           targetPath: '$(Build.ArtifactStagingDirectory)'
           artifactName: 'Windows-VS-16-2019-setup'
