@@ -28,115 +28,6 @@ parameters:
 stages:
 - stage: Builds
   jobs:
-  - job: LinuxBuilds
-    strategy:
-      matrix:
-        ubuntu_18_04_x86_64:
-          imageName: 'ubuntu-latest'
-          OS_TYPE: 'ubuntu_docker'
-          OS_VERSION: bionic
-          artifactName: 'Linux-Ubuntu-18.04-x86_64'
-          PACKAGE_TO_INSTALL: 'build/*.deb'
-          pythonVersion: 3.8
-        ubuntu_20_04_x86_64:
-          imageName: 'ubuntu-latest'
-          OS_TYPE: 'ubuntu_docker'
-          OS_VERSION: focal
-          artifactName: 'Linux-Ubuntu-20.04-x86_64'
-          PACKAGE_TO_INSTALL: 'build/*.deb'
-          pythonVersion: 3.8
-        Bionic_doxygen:
-          imageName: 'ubuntu-18.04'
-          pythonVersion: 3.8
-          OS_TYPE: 'doxygen'
-          OS_VERSION: bionic
-          artifactName: 'Linux-Ubuntu-18.04-doxygen'
-    pool:
-      vmImage: $(imageName)
-    steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(pythonVersion)'
-    - checkout: self
-      fetchDepth: 10
-      clean: true
-    - script: ./CI/travis/before_install_linux.sh
-      displayName: "Install dependencies"
-    - script: ./CI/travis/make_linux.sh
-      displayName: "Build"
-    - script: ./CI/travis/before_deploy_linux.sh
-      displayName: "Before deploy linux"
-    - task: CopyFiles@2
-      inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-        contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - task: PublishPipelineArtifact@1
-      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)'
-        artifactName: '$(artifactName)'
-
-  - job: macOSBuilds
-    strategy:
-      matrix:
-        macOS_10_15:
-          imageName: 'macOS-10.15'
-          artifactName: 'macOS-10.15'
-        macOS_11:
-          imageName: 'macOS-11'
-          artifactName: 'macOS-11'
-    pool:
-      vmImage: $(imageName)
-    steps:
-    - checkout: self
-      fetchDepth: 10
-      clean: true
-    - script: ./CI/travis/before_install_darwin.sh
-      displayName: "Install Dependencies"
-    - script: ./CI/travis/make_darwin.sh
-      displayName: "Build"
-    - ${{ each pyVersion in parameters.pythonVersions }}:
-      - task: UsePythonVersion@0
-        displayName: Use Python ${{ pyVersion }}
-        inputs:
-          versionSpec: ${{ pyVersion }}
-      - script: |
-              uname -a
-              python3 --version
-              python3 -m pip install wheel twine build virtualenv cython
-              cd '$(Agent.BuildDirectory)/s/build'
-              mkdir -p $(Agent.BuildDirectory)/s/build/wheelhouse
-              python3 -m build
-              cp dist/*.whl $(Agent.BuildDirectory)/s/build/wheelhouse
-              cd $(Agent.BuildDirectory)/s/build/
-        displayName: Wheel Python ${{ pyVersion }}
-    - script: ./CI/travis/before_deploy_darwin.sh
-      displayName: "Before deploy"
-    - task: CopyFiles@2
-      inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-        contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - task: CopyFiles@2
-      inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-        contents: '$(Agent.BuildDirectory)/s/build/wheelhouse/?(*.whl)'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - task: PublishPipelineArtifact@1
-      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)'
-        artifactName: '$(artifactName)'
-    - script: |
-        python -m pip install --upgrade pip twine
-        python -m twine upload --repository "testpypi" '$(Agent.BuildDirectory)/s/build/wheelhouse/*.whl'
-      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'))
-      displayName: "Upload to PyPI"
-      env:
-        TWINE_USERNAME: '__token__'
-        TWINE_PASSWORD: $(TWINE_PASSWORD)
-
   - job: WindowsBuilds
     strategy:
       matrix:
@@ -182,19 +73,19 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy smu.exe'
       inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/src/cli/Release'
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/src/cli/Debug'
         contents: 'smu.exe'
         targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
       displayName: 'Copy examples'
       inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/examples/Release'
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/examples/Debug'
         contents: '*.exe'
         targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
       displayName: 'Copy tests'
       inputs:
-        sourceFolder: '$(Agent.BuildDirectory)/s/build/tests/Release'
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/tests/Debug'
         contents: '*.exe'
         targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: CopyFiles@2
