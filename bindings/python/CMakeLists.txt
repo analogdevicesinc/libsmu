@@ -62,7 +62,7 @@ set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/timestamp")
 #${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}/src"
 add_custom_command(OUTPUT ${OUTPUT}
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/pysmu ${CMAKE_BINARY_DIR}/pysmu
-	COMMAND ${Python_EXECUTABLE} -m build
+	COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} build build_ext -L "${CMAKE_BINARY_DIR}/src"
 	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
 	DEPENDS ${DEPS})
 add_custom_target(python ALL DEPENDS smu ${OUTPUT})
