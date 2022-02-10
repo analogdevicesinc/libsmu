@@ -14,7 +14,7 @@ endif()
 # libsmu versioning
 set(LIBSMU_VERSION_MAJOR 1)
 set(LIBSMU_VERSION_MINOR 0)
-set(LIBSMU_VERSION_PATCH 3)
+set(LIBSMU_VERSION_PATCH 4)
 set(LIBSMU_VERSION ${LIBSMU_VERSION_MAJOR}.${LIBSMU_VERSION_MINOR}.${LIBSMU_VERSION_PATCH})
 
 # determine a more descriptive project version using git info if available
