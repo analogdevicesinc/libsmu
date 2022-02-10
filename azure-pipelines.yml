@@ -1,3 +1,9 @@
+variables:
+  IS_PULL_REQUEST: ${{ eq('$(Build.Reason)', 'PullRequest') }}
+  BRANCH_NAME: $(Build.SourceBranchName)
+  REPO_SLUG: $(Build.Repository.Name)
+  CURRENT_COMMIT: $(Build.SourceVersion)
+
 trigger:
   branches:
     include:

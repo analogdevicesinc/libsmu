@@ -12,3 +12,5 @@ cmake -DDEB_DETECT_DEPENDENCIES=ON -DENABLE_PACKAGING=ON -DBUILD_PYTHON=OFF ..; 
 if [[ ${OS_TYPE} == "doxygen" ]]; then "${BUILD_SOURCESDIRECTORY}/CI/travis/build_deploy_doc.sh" ; fi
 
 if [[ ${OS_TYPE} != "doxygen" ]]; then make && sudo make install ; fi
+
+cd ${BUILD_SOURCESDIRECTORY}
