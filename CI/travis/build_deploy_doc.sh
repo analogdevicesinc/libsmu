@@ -58,8 +58,6 @@ then
         cp -R ${TOP_DIR}/build/doc/doxygen_doc/html/* ${TOP_DIR}
 
         sudo rm -rf ${TOP_DIR}/build/doc
-        ls -l
-        sudo rm -rf ${TOP_DIR}/build
 
         GH_CURRENT_COMMIT=$(git log -1 --pretty=%B)
         if [[ ${GH_CURRENT_COMMIT:(-7)} != ${CURRENT_COMMIT:0:7} ]]
@@ -78,3 +76,7 @@ then
 else
         echo_green "Documentation will be updated when this commit gets on master!"
 fi
+
+git fetch origin
+git checkout ${BRANCH_NAME}
+cd ${TOP_DIR}
