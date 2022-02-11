@@ -66,6 +66,7 @@ stages:
     - checkout: self
       fetchDepth: 10
       clean: true
+      persistCredentials: true
     - script: ./CI/travis/before_install_linux.sh
       displayName: "Install dependencies"
     - script: ./CI/travis/make_linux.sh
