@@ -117,9 +117,10 @@ configure_file(dist/libsmu.pc.cmakein ${LIBSMU_PC} @ONLY)
 install(FILES ${LIBSMU_PC} DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 # install udev rules on Linux
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND INSTALL_UDEV_RULES)
+if(${CMAKE_SYSTEM_NAME} MATCHES "^Linux" AND INSTALL_UDEV_RULES)
+	message("UDEV rules ====")
 	set(LIBSMU_UDEV_RULES "${CMAKE_CURRENT_SOURCE_DIR}/dist/53-adi-m1k-usb.rules")
-	set(UDEV_RULES_PATH "/etc/udev/rules.d" CACHE STRING "Target directory for udev rule installation.")
+	set(UDEV_RULES_PATH /lib/udev/rules.d CACHE PATH "Target directory for udev rule installation.")
 	install(FILES ${LIBSMU_UDEV_RULES} DESTINATION ${UDEV_RULES_PATH})
 endif()
 

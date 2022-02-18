@@ -47,9 +47,9 @@ Session::Session()
 	});
 
 	// Enable libusb debugging if LIBUSB_DEBUG is set in the environment.
-	if (getenv("LIBUSB_DEBUG")) {
+	//if (getenv("LIBUSB_DEBUG")) {
 		libusb_set_debug(m_usb_ctx, 4);
-	}
+	//}
 }
 
 Session::~Session()
@@ -349,9 +349,12 @@ int Session::scan()
 	m_available_devices.clear();
 	m_lock_devlist.unlock();
 	libusb_device **usb_devs;
-	device_count = libusb_get_device_list(m_usb_ctx, &usb_devs);
-	if (device_count < 0)
+	libusb_context *ctx;
+	device_count = libusb_get_device_list(ctx, &usb_devs);
+	if (device_count < 0) {
+		libusb_exit(ctx);
 		return -libusb_to_errno(device_count);
+	}
 
 	// Iterate over the attached USB devices on the system, adding supported
 	// devices to the available list.
@@ -365,13 +368,15 @@ int Session::scan()
 		}
 	}
 
-	libusb_free_device_list(usb_devs, 1);
+	libusb_free_device_list(usb_devs, true);
+	libusb_exit(ctx);
 	return devices_found;
 }
 
 Device* Session::probe_device(libusb_device* usb_dev)
 {
 	int ret;
+	std::cout << "probing device 1 \n";
 	Device* dev = find_existing_device(usb_dev);
 
 	libusb_device_descriptor usb_desc;
@@ -381,8 +386,10 @@ Device* Session::probe_device(libusb_device* usb_dev)
 		return NULL;
 	}
 
+	std::cout << "probing device 2\n";
 	// check if device is supported
 	std::vector<uint16_t> device_id = {usb_desc.idVendor, usb_desc.idProduct};
+	std::cout << "device id: " <<  usb_desc.idVendor << " : " << usb_desc.idProduct << "\n";
 	if (std::find(SUPPORTED_DEVICES.begin(), SUPPORTED_DEVICES.end(), device_id)
 			!= SUPPORTED_DEVICES.end()) {
 		libusb_device_handle *usb_handle = NULL;
@@ -396,6 +403,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 		 */
 
 
+		std::cout << "HERE\n";
 		uint8_t addr = libusb_get_device_address(usb_dev);
 		uint8_t bus = libusb_get_bus_number(usb_dev);
 		std::pair<uint8_t, uint8_t> usb_id_addr(bus, addr);
@@ -405,6 +413,7 @@ Device* Session::probe_device(libusb_device* usb_dev)
 		// probably lacking permission to open the underlying usb device
 		if (open_errorcode != 0) {
 			if (open_errorcode != -3) {
+				std::cout << "ret NULL device 2\n";
 				return NULL;
 			} else {
 				usb_handle = m_deviceHandles[usb_dev];
@@ -426,20 +435,27 @@ Device* Session::probe_device(libusb_device* usb_dev)
 
 		// serial/hw/fw versions should exist otherwise the USB cable probably has issues
 		ret = libusb_get_string_descriptor_ascii(usb_handle, usb_desc.iSerialNumber, (unsigned char*)&serial, 32);
-		if (ret <= 0 || (strncmp(serial, "", 1) == 0))
+		if (ret <= 0 || (strncmp(serial, "", 1) == 0)) {
+			std::cout << "ret NULL device 3\n";
 			return NULL;
+		}
 		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 0, (unsigned char*)&hwver, 64, 100);
-		if (ret <= 0 || (strncmp(hwver, "", 1) == 0))
+		if (ret <= 0 || (strncmp(hwver, "", 1) == 0)) {
+			std::cout << "ret NULL device 4\n";
 			return NULL;
+		}
 		ret = libusb_control_transfer(usb_handle, 0xC0, 0x00, 0, 1, (unsigned char*)&fwver, 64, 100);
-		if (ret <= 0 || (strncmp(fwver, "", 1) == 0))
+		if (ret <= 0 || (strncmp(fwver, "", 1) == 0)) {
+			std::cout << "ret NULL device 5\n";
 			return NULL;
+		}
 
 		dev = new M1000_Device(this, usb_dev, usb_handle, hwver, fwver, serial);
 		dev->set_usb_device_addr(usb_id_addr);
 		dev->read_calibration();
 		return dev;
 	}
+	std::cout << "ret NULL device \n";
 	return NULL;
 }
 
