@@ -18,11 +18,6 @@ if(NOT WIN32)
 	set(LIBS_TO_LINK ${PTHREAD_LIBRARIES})
 endif()
 
-if(APPLE)
-	# build universal binaries by default
-	set(CMAKE_OSX_ARCHITECTURES "x86_64")
-endif()
-
 # use pkg-config for everything that's not Windows
 if(NOT WIN32)
 	include(FindPkgConfig REQUIRED)
