@@ -298,9 +298,9 @@ namespace smu {
 		/// @brief libusb hotplug callback handle.
 		libusb_hotplug_callback_handle m_usb_cb;
 
-		/// @brief Callbacks called on the USB thread when a device is removed from the system.
-		std::vector<std::function<void(Device* device)>> m_hotplug_attach_callbacks;
 		/// @brief Callbacks called on the USB thread when a device is plugged into the system.
+		std::vector<std::function<void(Device* device)>> m_hotplug_attach_callbacks;
+		/// @brief Callbacks called on the USB thread when a device is removed from the system.
 		std::vector<std::function<void(Device* device)>> m_hotplug_detach_callbacks;
 
 		/// @brief Identify devices supported by libsmu.
@@ -447,7 +447,6 @@ namespace smu {
 		/// @param cal A vector of vectors containing calibration values.
 		virtual void calibration(std::vector<std::vector<float>>* cal) = 0;
 
-		/// @brief Session this device is associated with.
 		/// @brief Overcurrent status for the most recent data request.
 		///   Is 1 if an overcurrent event occurred in the most recent data request, 0 otherwise.
 		int m_overcurrent = 0;

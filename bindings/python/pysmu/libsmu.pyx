@@ -486,7 +486,7 @@ cdef class Device:
         """Set ADC Mux mode.
 
         Args:
-            adc_mux: an integer number, the number represents 1 of 7 poaaible adc MUX settings 
+            adc_mux: an integer number, the number represents 1 of 7 possible adc MUX settings
         Raises: IOError on USB failures.
         """
         self._device.set_adc_mux(adc_mux)

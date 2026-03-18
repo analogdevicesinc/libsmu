@@ -137,7 +137,7 @@ static void samba_usb_write(libusb_device_handle *usb_handle, const char* data) 
 	}
 }
 
-// Internal function to read raw SAM-BA commands to a libusb handle.
+// Internal function to read raw SAM-BA responses from a libusb handle.
 static void samba_usb_read(libusb_device_handle *usb_handle, unsigned char* data) {
 	int transferred, ret;
 	ret = libusb_bulk_transfer(usb_handle, 0x82, data, 512, &transferred, 100);
