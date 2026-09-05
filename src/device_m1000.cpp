@@ -309,7 +309,6 @@ void M1000_Device::out_completion(libusb_transfer *t)
 	m_out_transfers.num_active--;
 
 	if (t->status == LIBUSB_TRANSFER_COMPLETED) {
-		// Store exceptions to rethrow them in the main thread in read()/write().
 		if (!m_session->cancelled())
 			submit_out_transfer(t);
 
@@ -343,8 +342,8 @@ int M1000_Device::configure(uint32_t sampleRate)
 	else if (m_sam_per > m_max_per)
 		m_sam_per = m_max_per;
 
-	// convert back to the actual sample time;
-	sample_time = m_sam_per / M1K_timer_clock; // convert back to get the actual sample time;
+	// convert back to the actual sample time
+	sample_time = m_sam_per / M1K_timer_clock;
 	// convert back to the actual sample rate
 	set_sample_rate = round((1.0 / sample_time) / 2.0);
 
