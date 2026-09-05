@@ -18,9 +18,9 @@ if(NOT WIN32)
 	set(LIBS_TO_LINK ${PTHREAD_LIBRARIES})
 endif()
 
-if(APPLE)
-	# build universal binaries by default
-	set(CMAKE_OSX_ARCHITECTURES "x86_64")
+if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
+	# default to the host architecture
+	set(CMAKE_OSX_ARCHITECTURES "${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
 # use pkg-config for everything that's not Windows
