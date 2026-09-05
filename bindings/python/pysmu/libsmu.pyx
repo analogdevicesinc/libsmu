@@ -504,32 +504,37 @@ cdef class Device:
             wValue: the value field for the setup packet
             wIndex: the index field for the setup packet
             data: a suitably-sized data buffer for either input or output
+                (bytes, bytearray, or int for device-to-host transfers)
             wLength: the length field for the setup packet
             timeout: timeout (in milliseconds) that this function should wait
                 before giving up due to no response being received
 
-        Returns: the number of bytes actually transferred
+        Returns: For device-to-host transfers, a list of received bytes.
+            For host-to-device transfers, the number of bytes transferred.
         Raises: IOError on USB failures
         """
         cdef int ret = 0
 
-        data = str(data).encode()
-
         if bm_request_type & 0x80 == 0x80:
-            if data == '0':
-                data = '\x00' * wLength
+            # Device-to-host: allocate a receive buffer of the requested length.
+            data = bytearray(wLength)
         else:
-            wLength = 0
+            # Host-to-device: ensure data is bytes.
+            if isinstance(data, int):
+                data = bytes([data])
+            elif not isinstance(data, (bytes, bytearray)):
+                data = bytes(data)
+            wLength = len(data)
 
         ret = self._device.ctrl_transfer(bm_request_type, b_request, wValue,
                                          wIndex, data, wLength, timeout)
         if ret < 0:
             raise IOError(abs(ret), 'USB control transfer failed')
+
+        if bm_request_type & 0x80 == 0x80:
+            return list(data[:ret])
         else:
-            if bm_request_type & 0x80 == 0x80:
-                return list(bytearray(data))
-            else:
-                return ret
+            return ret
 
 
 cdef class SessionDevice(Device):
